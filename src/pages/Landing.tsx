@@ -543,8 +543,8 @@ export default function Landing() {
                       
                       <div>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-5xl font-bold">{plan.price}€</span>
-                          <span className="text-muted-foreground text-lg">/mois</span>
+                          <span className="text-4xl font-bold">{plan.price}€</span>
+                          <span className="text-muted-foreground">/mois</span>
                         </div>
                       </div>
                     </CardHeader>
