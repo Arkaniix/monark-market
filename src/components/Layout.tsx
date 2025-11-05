@@ -232,9 +232,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div>
               <h3 className="font-semibold mb-3">Légal</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors">CGU</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">RGPD</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Mentions légales</a></li>
+                <li><Link to="/cgu" className="hover:text-foreground transition-colors">CGU</Link></li>
+                <li><Link to="/rgpd" className="hover:text-foreground transition-colors">RGPD</Link></li>
+                <li><Link to="/legal-notice" className="hover:text-foreground transition-colors">Mentions légales</Link></li>
               </ul>
             </div>
             <div>

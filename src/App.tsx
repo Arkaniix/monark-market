@@ -21,6 +21,9 @@ import Community from "./pages/Community";
 import Training from "./pages/Training";
 import Admin from "./pages/Admin";
 import MyAccount from "./pages/MyAccount";
+import CGU from "./pages/CGU";
+import RGPD from "./pages/RGPD";
+import LegalNotice from "./pages/LegalNotice";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +69,11 @@ const App = () => {
               <Route path="/training" element={<Training />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/my-account" element={<MyAccount />} />
+              
+              {/* Legal pages */}
+              <Route path="/cgu" element={<CGU />} />
+              <Route path="/rgpd" element={<RGPD />} />
+              <Route path="/legal-notice" element={<LegalNotice />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
