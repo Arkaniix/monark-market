@@ -42,12 +42,14 @@ import {
 } from "lucide-react";
 import { mockModels, mockAds } from "@/lib/mockData";
 import ModelComparator from "@/components/ModelComparator";
+import ScrapModal from "@/components/ScrapModal";
 
 export default function ModelDetail() {
   const { id } = useParams();
   const model = mockModels.find((m) => m.id === id);
   const [selectedPeriod, setSelectedPeriod] = useState("30");
   const [showComparator, setShowComparator] = useState(false);
+  const [showScrapModal, setShowScrapModal] = useState(false);
 
   if (!model) {
     return (
@@ -234,7 +236,7 @@ export default function ModelDetail() {
             </DialogContent>
           </Dialog>
 
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setShowScrapModal(true)}>
             <Zap className="h-4 w-4" />
             Lancer un scan
           </Button>
@@ -244,6 +246,13 @@ export default function ModelDetail() {
             Ajouter à la watchlist
           </Button>
         </div>
+
+        {/* Scrap Modal */}
+        <ScrapModal
+          open={showScrapModal}
+          onOpenChange={setShowScrapModal}
+          preselectedModel={model.id}
+        />
 
         {/* Price Evolution Chart */}
         <Card className="mb-8">

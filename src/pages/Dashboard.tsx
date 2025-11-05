@@ -10,8 +10,11 @@ import {
   Calendar,
   Zap,
 } from "lucide-react";
+import { useState } from "react";
+import ScrapModal from "@/components/ScrapModal";
 
 export default function Dashboard() {
+  const [showScrapModal, setShowScrapModal] = useState(false);
   const userCredits = 87;
   const maxCredits = 120;
   const creditPercentage = (userCredits / maxCredits) * 100;
@@ -119,7 +122,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-4 gap-4">
-              <Button className="h-auto py-4 flex-col gap-2">
+              <Button className="h-auto py-4 flex-col gap-2" onClick={() => setShowScrapModal(true)}>
                 <Zap className="h-5 w-5" />
                 Lancer un scrap
               </Button>
@@ -138,6 +141,9 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Scrap Modal */}
+        <ScrapModal open={showScrapModal} onOpenChange={setShowScrapModal} />
 
         {/* Scrap History */}
         <Card>
