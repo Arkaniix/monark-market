@@ -128,6 +128,32 @@ export default function Landing() {
   const [plans, setPlans] = useState<any[]>([]);
   const [mostPopularPlanId, setMostPopularPlanId] = useState<string | null>(null);
 
+  // Fonctionnalités par plan
+  const planFeaturesMap: Record<string, string[]> = {
+    'Basic': [
+      'Accès au catalogue complet',
+      'Estimations de prix',
+      'Alertes de nouvelles annonces',
+      'Support par email'
+    ],
+    'Pro': [
+      'Tout du plan Basic',
+      'Comparateur de modèles avancé',
+      'Statistiques de marché détaillées',
+      'Alertes personnalisées prioritaires',
+      'Support prioritaire',
+      'Historique des tendances'
+    ],
+    'Elite': [
+      'Tout du plan Pro',
+      'Analyses prédictives IA',
+      'Conseils d\'investissement',
+      'Accès API pour intégrations',
+      'Support dédié 24/7',
+      'Rapports personnalisés mensuels'
+    ]
+  };
+
   useEffect(() => {
     const fetchPlans = async () => {
       // Récupérer les plans
@@ -507,7 +533,7 @@ export default function Landing() {
           >
             {plans.map((plan, i) => {
               const isPopular = plan.id === mostPopularPlanId;
-              const planFeatures = plan.features?.features || [];
+              const planFeatures = planFeaturesMap[plan.name] || [];
               
               // Définir les icônes pour chaque plan
               const planIcons: Record<string, any> = {
