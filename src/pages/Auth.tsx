@@ -358,7 +358,7 @@ export default function Auth() {
                   <Label className="text-base">Choisissez votre plan d'abonnement</Label>
                   <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="gap-3">
                     {plans.map((plan, index) => {
-                      const isPopular = plan.name === 'Pro';
+                      const isPopular = plan.name === 'Basic';
                       const isPremium = plan.name === 'Elite';
                       const PlanIcon = plan.name === 'Basic' ? TrendingUp : plan.name === 'Pro' ? Star : Crown;
                       
