@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
         user_id: adminUser.user.id,
         plan_id: elitePlanId,
         status: 'active',
-        credits_remaining: 300,
+        credits_remaining: 400,
         credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       })
     }
@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
         user_id: regularUser.user.id,
         plan_id: proPlanId,
         status: 'active',
-        credits_remaining: 120,
+        credits_remaining: 150,
         credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       })
     }
