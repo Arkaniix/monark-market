@@ -328,11 +328,11 @@ export default function MyAccount() {
 
   const getPlanIcon = (planName: string) => {
     switch (planName.toLowerCase()) {
-      case "starter":
+      case "basic":
         return <Zap className="h-6 w-6" />;
       case "pro":
         return <Crown className="h-6 w-6" />;
-      case "enterprise":
+      case "elite":
         return <Building2 className="h-6 w-6" />;
       default:
         return <CreditCard className="h-6 w-6" />;
@@ -340,32 +340,47 @@ export default function MyAccount() {
   };
 
   const renderFeatures = (features: any) => {
-    if (!features || typeof features !== 'object') return null;
+    if (!features) return null;
     
-    return Object.entries(features as Record<string, any>).map(([key, value]) => {
-      let displayValue = value;
-      if (value === true) displayValue = "Inclus";
-      if (value === "unlimited") displayValue = "Illimité";
-      
-      const featureNames: Record<string, string> = {
-        alerts: "Alertes",
-        scanner: "Scanner de prix",
-        community: "Accès communauté",
-        training: "Formations",
-        advanced_analytics: "Analytics avancés",
-        api_access: "Accès API",
-        priority_support: "Support prioritaire",
-      };
-
-      return (
-        <div key={key} className="flex items-center gap-2">
-          <Check className="h-4 w-4 text-primary" />
-          <span className="text-sm">
-            {featureNames[key] || key}: <strong>{displayValue}</strong>
-          </span>
+    // Handle array of features (new format)
+    if (Array.isArray(features)) {
+      return features.map((feature, index) => (
+        <div key={index} className="flex items-center gap-3">
+          <Check className="h-4 w-4 text-primary flex-shrink-0" />
+          <span className="text-sm">{feature}</span>
         </div>
-      );
-    });
+      ));
+    }
+    
+    // Handle object of features (old format)
+    if (typeof features === 'object') {
+      return Object.entries(features as Record<string, any>).map(([key, value]) => {
+        let displayValue = value;
+        if (value === true) displayValue = "Inclus";
+        if (value === "unlimited") displayValue = "Illimité";
+        
+        const featureNames: Record<string, string> = {
+          alerts: "Alertes",
+          scanner: "Scanner de prix",
+          community: "Accès communauté",
+          training: "Formations",
+          advanced_analytics: "Analytics avancés",
+          api_access: "Accès API",
+          priority_support: "Support prioritaire",
+        };
+
+        return (
+          <div key={key} className="flex items-center gap-3">
+            <Check className="h-4 w-4 text-primary flex-shrink-0" />
+            <span className="text-sm">
+              {featureNames[key] || key}: <strong>{displayValue}</strong>
+            </span>
+          </div>
+        );
+      });
+    }
+    
+    return null;
   };
 
   // Watchlist handlers
@@ -663,41 +678,51 @@ export default function MyAccount() {
         </TabsContent>
 
         {/* Subscription Tab */}
-        <TabsContent value="subscription" className="space-y-6">
+        <TabsContent value="subscription" className="space-y-8">
           {currentSubscription && (
-            <Card className="border-primary">
+            <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-accent/5">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-primary/10">
                       {getPlanIcon(currentSubscription.subscription_plans.name)}
-                      Abonnement actuel
-                    </CardTitle>
-                    <CardDescription>
-                      Vous êtes abonné au plan {currentSubscription.subscription_plans.name}
-                    </CardDescription>
+                    </div>
+                    <div>
+                      <CardTitle className="text-2xl">Abonnement actuel</CardTitle>
+                      <CardDescription className="text-base mt-1">
+                        Vous êtes abonné au plan {currentSubscription.subscription_plans.name}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <Badge variant="default">Actif</Badge>
+                  <Badge variant="default" className="px-3 py-1">Actif</Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">
-                      Début: {format(new Date(currentSubscription.started_at), "dd MMMM yyyy", { locale: fr })}
-                    </span>
-                  </div>
-                  {currentSubscription.expires_at && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        Expire le: {format(new Date(currentSubscription.expires_at), "dd MMMM yyyy", { locale: fr })}
-                      </span>
-                    </div>
-                  )}
+              <CardContent className="space-y-6">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    Début: {format(new Date(currentSubscription.started_at), "dd MMMM yyyy", { locale: fr })}
+                  </span>
                 </div>
-                <div className="space-y-2">
+
+                {currentSubscription.credits_remaining !== null && currentSubscription.credits_remaining !== undefined && (
+                  <div className="space-y-3 p-4 rounded-lg bg-background/50 border">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-primary" />
+                        <span className="font-semibold">Crédits restants</span>
+                      </div>
+                      <span className="text-2xl font-bold">{currentSubscription.credits_remaining}</span>
+                    </div>
+                    {currentSubscription.credits_reset_date && (
+                      <p className="text-xs text-muted-foreground">
+                        Renouvellement le {format(new Date(currentSubscription.credits_reset_date), "dd MMMM yyyy", { locale: fr })}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-3">
                   {renderFeatures(currentSubscription.subscription_plans.features)}
                 </div>
               </CardContent>
@@ -705,36 +730,55 @@ export default function MyAccount() {
           )}
 
           <div>
-            <h2 className="text-2xl font-bold mb-4">Plans disponibles</h2>
+            <h2 className="text-2xl font-bold mb-6">Plans disponibles</h2>
             <div className="grid gap-6 md:grid-cols-3">
               {plans.map((plan) => {
                 const isCurrentPlan = currentSubscription?.plan_id === plan.id;
+                const isPro = plan.name.toLowerCase() === "pro";
                 return (
-                  <Card key={plan.id} className={isCurrentPlan ? "border-primary" : ""}>
-                    <CardHeader>
-                      <div className="flex items-center gap-2 mb-2">
-                        {getPlanIcon(plan.name)}
-                        <CardTitle>{plan.name}</CardTitle>
+                  <Card 
+                    key={plan.id} 
+                    className={`relative transition-all hover:shadow-lg ${
+                      isCurrentPlan ? "border-primary shadow-md" : ""
+                    } ${isPro ? "border-primary/50" : ""}`}
+                  >
+                    {isPro && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-primary">Populaire</Badge>
                       </div>
-                      <CardDescription>{plan.description}</CardDescription>
-                      <div className="pt-4">
-                        <span className="text-4xl font-bold">{plan.price}€</span>
-                        <span className="text-muted-foreground">/mois</span>
+                    )}
+                    <CardHeader className="space-y-4 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${
+                          plan.name.toLowerCase() === "basic" ? "bg-muted" :
+                          plan.name.toLowerCase() === "pro" ? "bg-primary/10" :
+                          "bg-accent/10"
+                        }`}>
+                          {getPlanIcon(plan.name)}
+                        </div>
+                        <CardTitle className="text-xl">{plan.name}</CardTitle>
+                      </div>
+                      <CardDescription className="min-h-[40px]">{plan.description}</CardDescription>
+                      <div className="pt-2">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-bold">{plan.price}€</span>
+                          <span className="text-muted-foreground">/mois</span>
+                        </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-2">
+                    <CardContent className="space-y-3 pb-6">
                       {renderFeatures(plan.features)}
                     </CardContent>
                     <CardFooter>
                       {isCurrentPlan ? (
-                        <Button disabled className="w-full">
+                        <Button disabled className="w-full" variant="secondary">
                           Plan actuel
                         </Button>
                       ) : (
                         <Button
                           onClick={() => handleSubscribe(plan.id)}
                           className="w-full"
-                          variant={plan.name === "Pro" ? "default" : "outline"}
+                          variant={isPro ? "default" : "outline"}
                         >
                           Choisir ce plan
                         </Button>
