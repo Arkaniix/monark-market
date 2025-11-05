@@ -10,6 +10,7 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
+import InitTestAccounts from "./pages/InitTestAccounts";
 import Deals from "./pages/Deals";
 import Trends from "./pages/Trends";
 import Dashboard from "./pages/Dashboard";
@@ -50,8 +51,9 @@ const App = () => {
           <Layout>
             <Routes>
               {/* Public landing page for non-authenticated users */}
-              <Route path="/" element={user ? <Home /> : <Landing />} />
-              <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={user ? <Home /> : <Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/init-test-accounts" element={<InitTestAccounts />} />
               
               {/* Authenticated routes */}
               <Route path="/deals" element={<Deals />} />
