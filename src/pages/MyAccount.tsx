@@ -342,7 +342,7 @@ export default function MyAccount() {
   const renderFeatures = (features: any) => {
     if (!features) return null;
     
-    // Handle array of features (new format)
+    // Handle array of features (mockData format)
     if (Array.isArray(features)) {
       return features.map((feature, index) => (
         <div key={index} className="flex items-center gap-3">
@@ -352,32 +352,52 @@ export default function MyAccount() {
       ));
     }
     
-    // Handle object of features (old format)
+    // Handle object of features from database (convert to readable format)
     if (typeof features === 'object') {
-      return Object.entries(features as Record<string, any>).map(([key, value]) => {
-        let displayValue = value;
-        if (value === true) displayValue = "Inclus";
-        if (value === "unlimited") displayValue = "Illimité";
-        
-        const featureNames: Record<string, string> = {
-          alerts: "Alertes",
-          scanner: "Scanner de prix",
-          community: "Accès communauté",
-          training: "Formations",
-          advanced_analytics: "Analytics avancés",
-          api_access: "Accès API",
-          priority_support: "Support prioritaire",
-        };
+      const featureLabels: Record<string, string> = {
+        credits: "Crédits",
+        estimator: "Estimateur",
+        alertes_email: "Alertes email",
+        historique_30j: "Historique 30 jours",
+        scrap_personnel: "Scrap personnel",
+        catalogue_complet: "Catalogue complet",
+        comparateur: "Comparateur de modèles",
+        alertes_temps_reel: "Alertes temps réel",
+        historique_complet: "Historique complet",
+        analyses_detaillees: "Analyses détaillées",
+        api_access: "Accès API",
+        support_prioritaire: "Support prioritaire",
+        alertes_instantanees: "Alertes instantanées",
+      };
 
-        return (
-          <div key={key} className="flex items-center gap-3">
-            <Check className="h-4 w-4 text-primary flex-shrink-0" />
-            <span className="text-sm">
-              {featureNames[key] || key}: <strong>{displayValue}</strong>
-            </span>
-          </div>
-        );
-      });
+      return Object.entries(features as Record<string, any>).map(([key, value]) => {
+        // Skip if value is false or empty
+        if (value === false || value === "" || value === null) return null;
+        
+        const label = featureLabels[key] || key;
+        
+        // For credits, show the number
+        if (key === "credits" && typeof value === "number") {
+          return (
+            <div key={key} className="flex items-center gap-3">
+              <Check className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="text-sm">{value} crédits/mois</span>
+            </div>
+          );
+        }
+        
+        // For boolean true or "Inclus" value, just show the label
+        if (value === true || value === "Inclus") {
+          return (
+            <div key={key} className="flex items-center gap-3">
+              <Check className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="text-sm">{label}</span>
+            </div>
+          );
+        }
+        
+        return null;
+      }).filter(Boolean);
     }
     
     return null;
