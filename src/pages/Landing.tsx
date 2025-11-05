@@ -126,16 +126,47 @@ const testimonials = [
 
 export default function Landing() {
   const [plans, setPlans] = useState<any[]>([]);
+  const [mostPopularPlanId, setMostPopularPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPlans = async () => {
-      const { data } = await supabase
+      // Récupérer les plans
+      const { data: plansData } = await supabase
         .from("subscription_plans")
         .select("*")
         .eq("is_active", true)
         .order("price", { ascending: true });
       
-      if (data) setPlans(data);
+      if (plansData) {
+        setPlans(plansData);
+
+        // Compter les utilisateurs actifs pour chaque plan
+        const { data: subscriptionsData } = await supabase
+          .from("user_subscriptions")
+          .select("plan_id")
+          .eq("status", "active");
+
+        if (subscriptionsData) {
+          // Compter les abonnés par plan
+          const planCounts = subscriptionsData.reduce((acc: Record<string, number>, sub) => {
+            acc[sub.plan_id] = (acc[sub.plan_id] || 0) + 1;
+            return acc;
+          }, {});
+
+          // Trouver le plan avec le plus d'abonnés
+          let maxCount = 0;
+          let popularPlanId = null;
+          
+          for (const [planId, count] of Object.entries(planCounts)) {
+            if (count > maxCount) {
+              maxCount = count;
+              popularPlanId = planId;
+            }
+          }
+
+          setMostPopularPlanId(popularPlanId);
+        }
+      }
     };
 
     fetchPlans();
@@ -474,52 +505,59 @@ export default function Landing() {
             viewport={{ once: true }}
             className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto"
           >
-            {plans.map((plan, i) => (
-              <motion.div key={plan.id} variants={itemVariants}>
-                <Card className={`h-full relative ${i === 1 ? 'border-primary shadow-lg scale-105' : ''}`}>
-                  {i === 1 && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground">
-                        Plus populaire
-                      </Badge>
-                    </div>
-                  )}
-                  <CardHeader>
-                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                    <CardDescription>{plan.description}</CardDescription>
-                    <div className="mt-4">
-                      <span className="text-4xl font-bold">{plan.price}€</span>
-                      <span className="text-muted-foreground">
-                        /{plan.duration_months === 1 ? 'mois' : `${plan.duration_months} mois`}
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {plan.features && (
-                      <ul className="space-y-3">
-                        {(plan.features as any).features?.map((feature: string, idx: number) => (
-                          <li key={idx} className="flex items-start gap-3">
-                            <div className="h-5 w-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <Check className="h-3 w-3 text-success" />
-                            </div>
-                            <span className="text-sm">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
+            {plans.map((plan, i) => {
+              const isPopular = plan.id === mostPopularPlanId;
+              const planFeatures = plan.features?.features || [];
+              
+              return (
+                <motion.div key={plan.id} variants={itemVariants}>
+                  <Card className={`h-full relative ${isPopular ? 'border-primary shadow-lg scale-105' : ''}`}>
+                    {isPopular && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-primary text-primary-foreground">
+                          Plus populaire
+                        </Badge>
+                      </div>
                     )}
-                    <Link to="/auth" className="block w-full">
-                      <Button 
-                        className="w-full" 
-                        variant={i === 1 ? 'default' : 'outline'}
-                        size="lg"
-                      >
-                        S'inscrire
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                    <CardHeader>
+                      <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                      <CardDescription>{plan.description}</CardDescription>
+                      <div className="mt-4">
+                        <span className="text-4xl font-bold">{plan.price}€</span>
+                        <span className="text-muted-foreground">
+                          /{plan.duration_months === 1 ? 'mois' : `${plan.duration_months} mois`}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {planFeatures.length > 0 ? (
+                        <ul className="space-y-3">
+                          {planFeatures.map((feature: string, idx: number) => (
+                            <li key={idx} className="flex items-start gap-3">
+                              <div className="h-5 w-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <Check className="h-3 w-3 text-success" />
+                              </div>
+                              <span className="text-sm">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Fonctionnalités à venir</p>
+                      )}
+                      <Link to="/auth" className="block w-full">
+                        <Button 
+                          className="w-full" 
+                          variant={isPopular ? 'default' : 'outline'}
+                          size="lg"
+                        >
+                          S'inscrire
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </motion.div>
 
           {plans.length === 0 && (
