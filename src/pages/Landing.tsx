@@ -78,21 +78,26 @@ const benefits = [
 const howItWorks = [
   {
     step: "1",
+    title: "Suivez la formation",
+    description: "Accédez à notre formation complète pour maîtriser les fondamentaux de l'achat-revente et comprendre comment utiliser l'outil efficacement.",
+  },
+  {
+    step: "2",
     title: "Scannez le marché",
     description: "Lancez un scan automatique sur les plateformes comme LeBonCoin. L'outil trouve toutes les annonces pertinentes en quelques secondes.",
   },
   {
-    step: "2",
+    step: "3",
     title: "Analysez les opportunités",
     description: "Notre IA évalue chaque annonce et vous présente les meilleures affaires avec un score de rentabilité.",
   },
   {
-    step: "3",
+    step: "4",
     title: "Achetez au bon prix",
     description: "Contactez le vendeur avec confiance grâce à notre estimateur de prix et nos données de marché.",
   },
   {
-    step: "4",
+    step: "5",
     title: "Revendez avec profit",
     description: "Utilisez nos analyses de tendances pour choisir le moment optimal de revente et maximiser vos marges.",
   },
@@ -371,11 +376,11 @@ export default function Landing() {
             </Badge>
             <h2 className="text-3xl font-bold mb-4">Comment ça fonctionne ?</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Un processus en 4 étapes pour réussir vos premiers deals
+              Un processus en 5 étapes pour réussir vos premiers deals
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
             {howItWorks.map((item, i) => (
               <motion.div
                 key={i}
