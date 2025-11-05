@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -117,69 +118,71 @@ export default function Deals() {
         >
           {filteredAds.map((ad) => (
             <motion.div key={ad.id} variants={itemVariants}>
-              <Card className="hover:border-primary transition-all hover:shadow-lg">
-                <CardHeader>
-                  <div className="flex items-start justify-between mb-3">
-                    <Badge variant={ad.dealScore > 85 ? "default" : "secondary"} className="gap-1">
-                      {ad.dealScore > 85 && <Flame className="h-3 w-3" />}
-                      Score: {ad.dealScore}
-                    </Badge>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold">{ad.price}€</div>
-                      <div className="text-xs text-muted-foreground line-through">
-                        {ad.fairValue}€
-                      </div>
-                    </div>
-                  </div>
-                  <CardTitle className="text-base leading-tight">{ad.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Badge variant="outline">{ad.component}</Badge>
-                      <Badge variant="outline">{ad.condition}</Badge>
-                    </div>
-
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        {ad.location}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(ad.date).toLocaleDateString("fr-FR")}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4" />
-                        {ad.seller}
-                      </div>
-                      {ad.shipping && (
-                        <div className="flex items-center gap-2 text-success">
-                          <Truck className="h-4 w-4" />
-                          Livraison disponible
+              <Link to={`/ad/${ad.id}`}>
+                <Card className="hover:border-primary transition-all hover:shadow-lg">
+                  <CardHeader>
+                    <div className="flex items-start justify-between mb-3">
+                      <Badge variant={ad.dealScore > 85 ? "default" : "secondary"} className="gap-1">
+                        {ad.dealScore > 85 && <Flame className="h-3 w-3" />}
+                        Score: {ad.dealScore}
+                      </Badge>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold">{ad.price}€</div>
+                        <div className="text-xs text-muted-foreground line-through">
+                          {ad.fairValue}€
                         </div>
-                      )}
-                    </div>
-
-                    <div className="pt-3 border-t flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-sm">
-                        <TrendingDown className="h-4 w-4 text-success" />
-                        <span className="font-medium text-success">
-                          -{Math.round(((ad.fairValue - ad.price) / ad.fairValue) * 100)}%
-                        </span>
-                        <span className="text-xs text-muted-foreground">vs Fair Value</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        Marge: {ad.fairValue - ad.price}€
-                      </span>
                     </div>
+                    <CardTitle className="text-base leading-tight">{ad.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Badge variant="outline">{ad.component}</Badge>
+                        <Badge variant="outline">{ad.condition}</Badge>
+                      </div>
 
-                    <Button className="w-full mt-2" variant="outline">
-                      Voir l'annonce
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          {ad.location}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(ad.date).toLocaleDateString("fr-FR")}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4" />
+                          {ad.seller}
+                        </div>
+                        {ad.shipping && (
+                          <div className="flex items-center gap-2 text-success">
+                            <Truck className="h-4 w-4" />
+                            Livraison disponible
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-3 border-t flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-sm">
+                          <TrendingDown className="h-4 w-4 text-success" />
+                          <span className="font-medium text-success">
+                            -{Math.round(((ad.fairValue - ad.price) / ad.fairValue) * 100)}%
+                          </span>
+                          <span className="text-xs text-muted-foreground">vs Fair Value</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          Marge: {ad.fairValue - ad.price}€
+                        </span>
+                      </div>
+
+                      <Button className="w-full mt-2" variant="outline">
+                        Voir l'annonce
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             </motion.div>
           ))}
         </motion.div>
