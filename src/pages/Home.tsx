@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   TrendingUp,
+  TrendingDown,
   Zap,
   Search,
   Target,
@@ -15,13 +17,19 @@ import {
   MapPin,
   Calendar,
   Clock,
-  AlertCircle,
   CheckCircle,
   Award,
+  Filter,
+  Star,
+  Package,
+  Cpu,
+  Activity,
+  Eye,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { LineChart, Line, AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -62,7 +70,10 @@ interface TopDeal {
   price: number;
   score: number;
   fair_value: number;
+  deviation_pct: number;
   city: string;
+  condition: string | undefined;
+  category: string;
   published_at: string;
 }
 
@@ -71,11 +82,25 @@ export default function Home() {
   const [recentJobs, setRecentJobs] = useState<RecentJob[]>([]);
   const [topDeals, setTopDeals] = useState<TopDeal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const { toast } = useToast();
+
+  // Données mockées pour les graphiques de tendances
+  const trendData = {
+    gpu: Array.from({ length: 30 }, (_, i) => ({
+      day: i + 1,
+      price: 450 + Math.sin(i / 3) * 50 + Math.random() * 20,
+    })),
+    cpu: Array.from({ length: 30 }, (_, i) => ({
+      day: i + 1,
+      price: 280 + Math.cos(i / 4) * 30 + Math.random() * 15,
+    })),
+  };
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [selectedCategory, selectedFilter]);
 
   const loadDashboardData = async () => {
     try {
@@ -124,19 +149,37 @@ export default function Home() {
 
       setRecentJobs(jobs || []);
 
-      // Charger les meilleurs deals
-      const { data: deals } = await supabase
+      // Charger les meilleurs deals avec filtres
+      let dealsQuery = supabase
         .from("ads")
         .select(`
           id,
           title,
           ad_prices (price),
-          ad_deal_scores (score, fair_value),
+          ad_deal_scores (score, fair_value, deviation_pct),
           city,
-          published_at
+          published_at,
+          condition,
+          hardware_models (name, category_id, hardware_categories (name))
         `)
         .eq("status", "active")
-        .not("ad_deal_scores", "is", null)
+        .not("ad_deal_scores", "is", null);
+
+      // Appliquer le filtre de catégorie
+      if (selectedCategory !== "all") {
+        dealsQuery = dealsQuery.eq("hardware_models.hardware_categories.name", selectedCategory);
+      }
+
+      // Appliquer les filtres spéciaux
+      if (selectedFilter === "new") {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        dealsQuery = dealsQuery.gte("published_at", yesterday.toISOString());
+      } else if (selectedFilter === "undervalued") {
+        dealsQuery = dealsQuery.lte("ad_deal_scores.deviation_pct", -15);
+      }
+
+      const { data: deals } = await dealsQuery
         .order("ad_deal_scores(score)", { ascending: false })
         .limit(6);
 
@@ -146,8 +189,11 @@ export default function Home() {
         price: deal.ad_prices?.[0]?.price || 0,
         score: deal.ad_deal_scores?.[0]?.score || 0,
         fair_value: deal.ad_deal_scores?.[0]?.fair_value || 0,
+        deviation_pct: deal.ad_deal_scores?.[0]?.deviation_pct || 0,
         city: deal.city || "Non spécifié",
         published_at: deal.published_at || new Date().toISOString(),
+        condition: deal.condition,
+        category: deal.hardware_models?.hardware_categories?.name || "Autre",
       })) || [];
 
       setTopDeals(formattedDeals);
@@ -163,14 +209,28 @@ export default function Home() {
     }
   };
 
+  const getConditionBadge = (condition: string | undefined) => {
+    switch (condition?.toLowerCase()) {
+      case "neuf":
+        return { label: "Neuf", variant: "default" as const };
+      case "très bon état":
+      case "bon état":
+        return { label: "Bon état", variant: "secondary" as const };
+      case "satisfaisant":
+        return { label: "Satisfaisant", variant: "outline" as const };
+      case "pour pièces":
+        return { label: "À réparer", variant: "destructive" as const };
+      default:
+        return { label: "État non précisé", variant: "outline" as const };
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
         return <CheckCircle className="h-4 w-4 text-success" />;
       case "running":
         return <Clock className="h-4 w-4 text-primary" />;
-      case "failed":
-        return <AlertCircle className="h-4 w-4 text-destructive" />;
       default:
         return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
@@ -202,17 +262,58 @@ export default function Home() {
       {/* En-tête Dashboard */}
       <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 py-8 border-b">
         <div className="container">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold mb-2">Tableau de bord</h1>
               <p className="text-muted-foreground">
-                Bienvenue ! Voici un aperçu de votre activité
+                Vue d'ensemble de votre activité et opportunités du marché
               </p>
             </div>
-            <Badge variant="secondary" className="text-lg px-4 py-2">
-              <Award className="h-4 w-4 mr-2" />
-              Plan {userStats?.planName}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="text-base px-4 py-2">
+                <Award className="h-4 w-4 mr-2" />
+                Plan {userStats?.planName}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Filtres rapides */}
+          <div className="mt-6 flex flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Filtres rapides:</span>
+            </div>
+            
+            <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+              <TabsList>
+                <TabsTrigger value="all" className="text-xs">
+                  <Package className="h-3 w-3 mr-1" />
+                  Tout
+                </TabsTrigger>
+                <TabsTrigger value="GPU" className="text-xs">
+                  <Cpu className="h-3 w-3 mr-1" />
+                  GPU
+                </TabsTrigger>
+                <TabsTrigger value="CPU" className="text-xs">
+                  <Cpu className="h-3 w-3 mr-1" />
+                  CPU
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <Tabs value={selectedFilter} onValueChange={setSelectedFilter}>
+              <TabsList>
+                <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
+                <TabsTrigger value="new" className="text-xs">
+                  <Zap className="h-3 w-3 mr-1" />
+                  Nouveautés &lt;24h
+                </TabsTrigger>
+                <TabsTrigger value="undervalued" className="text-xs">
+                  <TrendingDown className="h-3 w-3 mr-1" />
+                  Sous-évaluées &gt;15%
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </div>
       </section>
@@ -390,20 +491,120 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Meilleurs deals */}
+      {/* Tendances du marché */}
       <section className="py-8 bg-muted/30">
         <div className="container">
+          <h2 className="text-2xl font-bold mb-6">Tendances du marché</h2>
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Évolution prix GPU (30 jours)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={trendData.gpu}>
+                    <defs>
+                      <linearGradient id="colorGpu" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="day" hide />
+                    <YAxis hide domain={['dataMin - 20', 'dataMax + 20']} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                      formatter={(value: number) => [`${value.toFixed(0)}€`, 'Prix']}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="price" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2}
+                      fill="url(#colorGpu)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Prix médian actuel</p>
+                    <p className="text-2xl font-bold text-primary">452€</p>
+                  </div>
+                  <Badge variant="outline" className="gap-1">
+                    <TrendingDown className="h-3 w-3" />
+                    -5.2% vs 30j
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-accent" />
+                  Évolution prix CPU (30 jours)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={trendData.cpu}>
+                    <defs>
+                      <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="day" hide />
+                    <YAxis hide domain={['dataMin - 20', 'dataMax + 20']} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                      formatter={(value: number) => [`${value.toFixed(0)}€`, 'Prix']}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="price" 
+                      stroke="hsl(var(--accent))" 
+                      strokeWidth={2}
+                      fill="url(#colorCpu)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Prix médian actuel</p>
+                    <p className="text-2xl font-bold text-accent">287€</p>
+                  </div>
+                  <Badge variant="outline" className="gap-1">
+                    <TrendingUp className="h-3 w-3" />
+                    +2.8% vs 30j
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Top deals */}
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold">Meilleures opportunités</h2>
               <p className="text-sm text-muted-foreground">
-                Les deals les plus intéressants en ce moment
+                Deals les plus avantageux actuellement disponibles
               </p>
             </div>
             <Link to="/deals">
               <Button>
-                <Flame className="h-4 w-4 mr-2" />
-                Tous les deals
+                <Eye className="h-4 w-4 mr-2" />
+                Voir tout
               </Button>
             </Link>
           </div>
@@ -415,44 +616,79 @@ export default function Home() {
             viewport={{ once: true }}
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {topDeals.slice(0, 6).map((deal) => (
-              <motion.div key={deal.id} variants={itemVariants}>
-                <Link to={`/ad/${deal.id}`}>
-                  <Card className="hover:border-primary transition-all hover:shadow-lg">
-                    <CardHeader>
-                      <div className="flex items-start justify-between mb-2">
-                        <Badge variant={deal.score > 85 ? "default" : "secondary"}>
-                          {deal.score > 85 && <Flame className="h-3 w-3 mr-1" />}
-                          Score: {deal.score}/100
-                        </Badge>
-                        <span className="text-xl font-bold text-primary">{deal.price}€</span>
-                      </div>
-                      <CardTitle className="text-base line-clamp-2">{deal.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          {deal.city}
+            {topDeals.slice(0, 6).map((deal) => {
+              const conditionBadge = getConditionBadge(deal.condition);
+              const discount = Math.abs(Math.round(deal.deviation_pct || 0));
+              const isHotDeal = discount >= 15;
+              
+              return (
+                <motion.div key={deal.id} variants={itemVariants}>
+                  <Link to={`/ad/${deal.id}`}>
+                    <Card className="hover:border-primary transition-all hover:shadow-lg group relative overflow-hidden">
+                      {isHotDeal && (
+                        <div className="absolute top-0 right-0 bg-destructive text-destructive-foreground px-3 py-1 text-xs font-bold">
+                          HOT DEAL
                         </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(deal.published_at).toLocaleDateString("fr-FR")}
+                      )}
+                      <CardHeader className="pb-3">
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          <Badge variant="outline" className="text-xs">
+                            {deal.category}
+                          </Badge>
+                          <Badge variant={conditionBadge.variant} className="text-xs">
+                            {conditionBadge.label}
+                          </Badge>
+                          {discount >= 15 && (
+                            <Badge variant="default" className="text-xs gap-1">
+                              <TrendingDown className="h-3 w-3" />
+                              -{discount}% vs Fair Value
+                            </Badge>
+                          )}
                         </div>
-                        <div className="pt-2 flex items-center justify-between border-t">
-                          <span className="text-xs text-muted-foreground">
-                            Fair Value: {deal.fair_value}€
-                          </span>
-                          <span className="text-xs font-semibold text-success">
-                            -{Math.round(((deal.fair_value - deal.price) / deal.fair_value) * 100)}%
-                          </span>
+                        <CardTitle className="text-base line-clamp-2 group-hover:text-primary transition-colors">
+                          {deal.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-end justify-between mb-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Prix actuel</p>
+                            <p className="text-2xl font-bold text-primary">{deal.price}€</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground mb-1">Fair Value</p>
+                            <p className="text-lg font-semibold line-through text-muted-foreground">
+                              {deal.fair_value}€
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
+                        
+                        <div className="pt-3 border-t space-y-2 text-sm">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{deal.city}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Calendar className="h-3 w-3 flex-shrink-0" />
+                            {new Date(deal.published_at).toLocaleDateString("fr-FR")}
+                          </div>
+                          
+                          <div className="flex items-center justify-between pt-2">
+                            <Badge variant={deal.score > 85 ? "default" : "secondary"} className="gap-1">
+                              {deal.score > 85 && <Star className="h-3 w-3 fill-current" />}
+                              Score {deal.score}/100
+                            </Badge>
+                            <span className="text-xs font-medium text-success">
+                              Économie: {deal.fair_value - deal.price}€
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </section>
