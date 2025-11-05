@@ -503,54 +503,73 @@ export default function Landing() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto"
+            className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
           >
             {plans.map((plan, i) => {
               const isPopular = plan.id === mostPopularPlanId;
               const planFeatures = plan.features?.features || [];
               
+              // Définir les icônes pour chaque plan
+              const planIcons: Record<string, any> = {
+                'Basic': Zap,
+                'Pro': Award,
+                'Elite': Rocket,
+              };
+              
+              const PlanIcon = planIcons[plan.name] || Zap;
+              
               return (
-                <motion.div key={plan.id} variants={itemVariants}>
-                  <Card className={`h-full relative ${isPopular ? 'border-primary shadow-lg scale-105' : ''}`}>
-                    {isPopular && (
-                      <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                        <Badge className="bg-primary text-primary-foreground">
-                          Plus populaire
-                        </Badge>
+                <motion.div key={plan.id} variants={itemVariants} className="relative">
+                  {isPopular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                      <Badge className="bg-primary text-primary-foreground px-4 py-1">
+                        Populaire
+                      </Badge>
+                    </div>
+                  )}
+                  <Card className={`h-full ${isPopular ? 'border-primary border-2' : 'border-border'}`}>
+                    <CardHeader className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 flex items-center justify-center">
+                          <PlanIcon className="h-8 w-8" />
+                        </div>
+                        <div className="flex-1">
+                          <CardTitle className="text-2xl mb-1">{plan.name}</CardTitle>
+                          <CardDescription className="text-sm">
+                            {plan.description}
+                          </CardDescription>
+                        </div>
                       </div>
-                    )}
-                    <CardHeader>
-                      <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                      <CardDescription>{plan.description}</CardDescription>
-                      <div className="mt-4">
-                        <span className="text-4xl font-bold">{plan.price}€</span>
-                        <span className="text-muted-foreground">
-                          /{plan.duration_months === 1 ? 'mois' : `${plan.duration_months} mois`}
-                        </span>
+                      
+                      <div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-5xl font-bold">{plan.price}€</span>
+                          <span className="text-muted-foreground text-lg">/mois</span>
+                        </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    
+                    <CardContent className="space-y-6">
                       {planFeatures.length > 0 ? (
                         <ul className="space-y-3">
                           {planFeatures.map((feature: string, idx: number) => (
                             <li key={idx} className="flex items-start gap-3">
-                              <div className="h-5 w-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="h-3 w-3 text-success" />
-                              </div>
-                              <span className="text-sm">{feature}</span>
+                              <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                              <span className="text-sm leading-relaxed">{feature}</span>
                             </li>
                           ))}
                         </ul>
                       ) : (
                         <p className="text-sm text-muted-foreground">Fonctionnalités à venir</p>
                       )}
+                      
                       <Link to="/auth" className="block w-full">
                         <Button 
                           className="w-full" 
-                          variant={isPopular ? 'default' : 'outline'}
+                          variant="outline"
                           size="lg"
                         >
-                          S'inscrire
+                          Choisir ce plan
                         </Button>
                       </Link>
                     </CardContent>
