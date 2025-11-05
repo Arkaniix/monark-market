@@ -187,54 +187,7 @@ export default function Home() {
 
       setRecentJobs(jobs && jobs.length > 0 ? jobs : mockJobs);
 
-      // Charger les meilleurs deals avec filtres
-      let dealsQuery = supabase
-        .from("ads")
-        .select(`
-          id,
-          title,
-          ad_prices (price),
-          ad_deal_scores (score, fair_value, deviation_pct),
-          city,
-          published_at,
-          condition,
-          hardware_models (name, category_id, hardware_categories (name))
-        `)
-        .eq("status", "active")
-        .not("ad_deal_scores", "is", null);
-
-      // Appliquer le filtre de catégorie
-      if (selectedCategory !== "all") {
-        dealsQuery = dealsQuery.eq("hardware_models.hardware_categories.name", selectedCategory);
-      }
-
-      // Appliquer les filtres spéciaux
-      if (selectedFilter === "new") {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        dealsQuery = dealsQuery.gte("published_at", yesterday.toISOString());
-      } else if (selectedFilter === "undervalued") {
-        dealsQuery = dealsQuery.lte("ad_deal_scores.deviation_pct", -15);
-      }
-
-      const { data: deals } = await dealsQuery
-        .order("ad_deal_scores(score)", { ascending: false })
-        .limit(6);
-
-      const formattedDeals = deals?.map(deal => ({
-        id: deal.id,
-        title: deal.title,
-        price: deal.ad_prices?.[0]?.price || 0,
-        score: deal.ad_deal_scores?.[0]?.score || 0,
-        fair_value: deal.ad_deal_scores?.[0]?.fair_value || 0,
-        deviation_pct: deal.ad_deal_scores?.[0]?.deviation_pct || 0,
-        city: deal.city || "Non spécifié",
-        published_at: deal.published_at || new Date().toISOString(),
-        condition: deal.condition,
-        category: deal.hardware_models?.hardware_categories?.name || "Autre",
-      })) || [];
-
-      // Données factices pour les deals si vide
+      // Données factices pour les deals
       const mockDeals: TopDeal[] = [
         {
           id: 1,
@@ -310,7 +263,30 @@ export default function Home() {
         },
       ];
 
-      setTopDeals(formattedDeals && formattedDeals.length > 0 ? formattedDeals : mockDeals);
+      // Appliquer les filtres aux données mockées
+      let filteredMockDeals = [...mockDeals];
+
+      // Appliquer le filtre de catégorie
+      if (selectedCategory !== "all") {
+        filteredMockDeals = filteredMockDeals.filter(
+          deal => deal.category === selectedCategory
+        );
+      }
+
+      // Appliquer les filtres spéciaux
+      if (selectedFilter === "new") {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        filteredMockDeals = filteredMockDeals.filter(
+          deal => new Date(deal.published_at) >= yesterday
+        );
+      } else if (selectedFilter === "undervalued") {
+        filteredMockDeals = filteredMockDeals.filter(
+          deal => deal.deviation_pct <= -15
+        );
+      }
+
+      setTopDeals(filteredMockDeals);
     } catch (error) {
       console.error("Erreur lors du chargement des données:", error);
       toast({
