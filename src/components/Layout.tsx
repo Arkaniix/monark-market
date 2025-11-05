@@ -196,7 +196,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </Button>
                 </Link>
                 <Link to="/auth">
-                  <Button size="sm">Essayer gratuitement</Button>
+                  <Button size="sm">S'inscrire</Button>
                 </Link>
               </>
             )}
