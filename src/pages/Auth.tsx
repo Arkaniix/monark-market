@@ -339,14 +339,34 @@ export default function Auth() {
                               <p className="text-sm text-muted-foreground mb-3">{plan.description}</p>
                               
                               {plan.features && (
-                                <ul className="space-y-1.5">
-                                  {Object.entries(plan.features).slice(0, 3).map(([key, value]: [string, any]) => (
-                                    <li key={key} className="flex items-center gap-2 text-xs">
-                                      <Check className="h-3 w-3 text-primary flex-shrink-0" />
-                                      <span className="text-muted-foreground">{typeof value === 'boolean' ? key : `${key}: ${value}`}</span>
-                                    </li>
-                                  ))}
-                                </ul>
+                                <div className="mt-3 pt-3 border-t border-border/50">
+                                  <ul className="space-y-2">
+                                    {Object.entries(plan.features).slice(0, 3).map(([key, value]: [string, any], index) => {
+                                      const formatFeature = (k: string, v: any) => {
+                                        if (typeof v === 'boolean') {
+                                          return k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                        }
+                                        const label = k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                        return `${label} : ${v}`;
+                                      };
+                                      
+                                      return (
+                                        <li 
+                                          key={key} 
+                                          className="flex items-start gap-2.5 text-xs animate-fade-in"
+                                          style={{ animationDelay: `${index * 50}ms` }}
+                                        >
+                                          <div className="mt-0.5 h-4 w-4 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                            <Check className="h-2.5 w-2.5 text-primary" />
+                                          </div>
+                                          <span className="text-foreground/80 leading-relaxed">
+                                            {formatFeature(key, value)}
+                                          </span>
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
                               )}
                             </div>
                             <div className="ml-4 flex items-center">
