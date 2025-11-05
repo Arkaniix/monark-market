@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, TrendingUp, Home, Zap, User, Menu, Eye } from "lucide-react";
+import { Search, TrendingUp, Home, Zap, User, Menu, Eye, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -13,6 +13,7 @@ const navigation = [
   { name: "Deals", href: "/deals", icon: Zap },
   { name: "Tendances", href: "/trends", icon: TrendingUp },
   { name: "Catalogue", href: "/catalog", icon: Search },
+  { name: "Estimator", href: "/estimator", icon: Calculator },
   { name: "Watchlist", href: "/watchlist", icon: Eye },
   { name: "Dashboard", href: "/dashboard", icon: User },
 ];
