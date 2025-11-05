@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Zap } from "lucide-react";
+import { Zap, Check } from "lucide-react";
 import { z } from "zod";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const emailSchema = z.string().email("Email invalide");
 const passwordSchema = z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères");
@@ -17,6 +18,8 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -38,6 +41,26 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  useEffect(() => {
+    // Fetch subscription plans
+    const fetchPlans = async () => {
+      const { data, error } = await supabase
+        .from("subscription_plans")
+        .select("*")
+        .eq("is_active", true)
+        .order("price", { ascending: true });
+
+      if (!error && data) {
+        setPlans(data);
+        if (data.length > 0) {
+          setSelectedPlan(data[0].id);
+        }
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -46,9 +69,19 @@ export default function Auth() {
       emailSchema.parse(email);
       passwordSchema.parse(password);
 
+      if (!selectedPlan) {
+        toast({
+          title: "Plan requis",
+          description: "Veuillez sélectionner un plan d'abonnement.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -73,7 +106,20 @@ export default function Auth() {
             variant: "destructive",
           });
         }
-      } else {
+      } else if (authData.user) {
+        // Create subscription for the user
+        const { error: subError } = await supabase
+          .from("user_subscriptions")
+          .insert({
+            user_id: authData.user.id,
+            plan_id: selectedPlan,
+            status: "active",
+          });
+
+        if (subError) {
+          console.error("Error creating subscription:", subError);
+        }
+
         toast({
           title: "Succès",
           description: "Compte créé avec succès ! Vous pouvez maintenant vous connecter.",
@@ -210,6 +256,41 @@ export default function Auth() {
                     required
                   />
                 </div>
+
+                <div className="space-y-3">
+                  <Label>Choisissez votre plan</Label>
+                  <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan}>
+                    {plans.map((plan) => (
+                      <div key={plan.id} className="relative">
+                        <RadioGroupItem
+                          value={plan.id}
+                          id={plan.id}
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor={plan.id}
+                          className="flex cursor-pointer rounded-lg border-2 border-muted bg-card p-4 hover:bg-accent peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-semibold">{plan.name}</span>
+                              <span className="font-bold text-primary">
+                                {plan.price}€<span className="text-sm font-normal text-muted-foreground">/mois</span>
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{plan.description}</p>
+                          </div>
+                          <div className="ml-4 flex items-center">
+                            <div className="h-5 w-5 rounded-full border-2 border-primary flex items-center justify-center peer-data-[state=checked]:bg-primary [&:has(~[data-state=checked])]:bg-primary">
+                              <Check className="h-3 w-3 text-primary-foreground opacity-0 peer-data-[state=checked]:opacity-100 [input[data-state=checked]~*>&]:opacity-100" />
+                            </div>
+                          </div>
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Inscription..." : "S'inscrire"}
                 </Button>
