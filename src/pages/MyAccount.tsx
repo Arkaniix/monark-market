@@ -51,6 +51,8 @@ import {
   Activity,
   AlertTriangle,
   Clock,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -64,6 +66,7 @@ type SubscriptionPlan = Database["public"]["Tables"]["subscription_plans"]["Row"
 type UserSubscription = Database["public"]["Tables"]["user_subscriptions"]["Row"] & {
   subscription_plans: SubscriptionPlan;
 };
+type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 
 interface WatchlistItem {
   modelId: string;
@@ -98,6 +101,10 @@ export default function MyAccount() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null);
   const [subscriptionHistory, setSubscriptionHistory] = useState<UserSubscription[]>([]);
+
+  // Notifications states
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Dashboard states
   const [showScrapModal, setShowScrapModal] = useState(false);
@@ -166,6 +173,44 @@ export default function MyAccount() {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      // Setup realtime subscription for notifications
+      const channel = supabase
+        .channel('notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            if (payload.eventType === 'INSERT') {
+              setNotifications(prev => [payload.new as Notification, ...prev]);
+              if (!(payload.new as Notification).is_read) {
+                setUnreadCount(prev => prev + 1);
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              setNotifications(prev => 
+                prev.map(n => n.id === payload.new.id ? payload.new as Notification : n)
+              );
+              loadNotifications(user.id);
+            } else if (payload.eventType === 'DELETE') {
+              setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+              loadNotifications(user.id);
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user]);
+
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -216,6 +261,9 @@ export default function MyAccount() {
 
       if (historyError) throw historyError;
       setSubscriptionHistory(historyData || []);
+
+      // Load notifications
+      await loadNotifications(userId);
     } catch (error) {
       console.error("Error loading data:", error);
       toast({
@@ -225,6 +273,25 @@ export default function MyAccount() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadNotifications = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setNotifications(data || []);
+      
+      const unread = data?.filter(n => !n.is_read).length || 0;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error("Error loading notifications:", error);
     }
   };
 
@@ -354,6 +421,89 @@ export default function MyAccount() {
     (model) => !watchlistItems.find((item) => item.modelId === model.id)
   );
 
+  // Notification handlers
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", notificationId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de marquer la notification comme lue",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Toutes les notifications ont été marquées comme lues",
+      });
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de marquer les notifications comme lues",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", notificationId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Notification supprimée",
+      });
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la notification",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "price_drop":
+        return <TrendingDown className="h-5 w-5 text-success" />;
+      case "price_increase":
+        return <TrendingUp className="h-5 w-5 text-destructive" />;
+      case "alert":
+        return <AlertCircle className="h-5 w-5 text-warning" />;
+      case "success":
+        return <CheckCircle2 className="h-5 w-5 text-success" />;
+      default:
+        return <Bell className="h-5 w-5 text-primary" />;
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto py-8">
@@ -374,7 +524,7 @@ export default function MyAccount() {
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="dashboard" className="gap-2">
             <Activity className="h-4 w-4" />
             Dashboard
@@ -386,6 +536,15 @@ export default function MyAccount() {
           <TabsTrigger value="watchlist" className="gap-2">
             <Eye className="h-4 w-4" />
             Watchlist
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2 relative">
+            <Bell className="h-4 w-4" />
+            Notifications
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                {unreadCount}
+              </Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -953,6 +1112,101 @@ export default function MyAccount() {
               </div>
             </DialogContent>
           </Dialog>
+        </TabsContent>
+
+        {/* Notifications Tab */}
+        <TabsContent value="notifications" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Notifications</h2>
+              <p className="text-muted-foreground">
+                {unreadCount > 0 ? `${unreadCount} notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}` : 'Aucune notification non lue'}
+              </p>
+            </div>
+            {unreadCount > 0 && (
+              <Button variant="outline" onClick={markAllAsRead}>
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Tout marquer comme lu
+              </Button>
+            )}
+          </div>
+
+          {notifications.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Bell className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground text-center">
+                  Aucune notification pour le moment
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {notifications.map((notification) => (
+                <Card 
+                  key={notification.id}
+                  className={`transition-colors ${!notification.is_read ? 'border-primary/50 bg-primary/5' : ''}`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        !notification.is_read ? 'bg-primary/10' : 'bg-muted'
+                      }`}>
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h3 className={`font-semibold ${!notification.is_read ? 'text-primary' : ''}`}>
+                            {notification.title}
+                          </h3>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {!notification.is_read && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => markAsRead(notification.id)}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => deleteNotification(notification.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {notification.message}
+                        </p>
+                        
+                        <div className="flex items-center gap-4">
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(notification.created_at), "dd MMM yyyy 'à' HH:mm", { locale: fr })}
+                          </span>
+                          
+                          {notification.link && (
+                            <Button
+                              size="sm"
+                              variant="link"
+                              className="h-auto p-0 text-xs"
+                              onClick={() => window.location.href = notification.link!}
+                            >
+                              Voir détails →
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
