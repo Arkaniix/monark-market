@@ -264,7 +264,7 @@ export const subscriptionPlans = [
       "Accès complet",
       "Scrap personnel",
       "Publication données 24h après",
-      "API access",
+      "Exports personnalisés (CSV, Excel)",
       "Support prioritaire",
       "Alertes instantanées",
     ],

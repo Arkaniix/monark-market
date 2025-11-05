@@ -148,7 +148,7 @@ export default function Landing() {
       'Tout du plan Pro',
       'Analyses prédictives IA',
       'Conseils d\'investissement',
-      'Accès API pour intégrations',
+      'Exports de données personnalisés',
       'Support dédié 24/7',
       'Rapports personnalisés mensuels'
     ]

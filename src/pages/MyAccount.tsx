@@ -365,7 +365,7 @@ export default function MyAccount() {
         alertes_temps_reel: "Alertes temps réel",
         historique_complet: "Historique complet",
         analyses_detaillees: "Analyses détaillées",
-        api_access: "Accès API",
+        exports_personnalises: "Exports personnalisés",
         support_prioritaire: "Support prioritaire",
         alertes_instantanees: "Alertes instantanées",
       };
