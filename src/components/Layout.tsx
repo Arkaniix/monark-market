@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, TrendingUp, Home, Zap, User, Menu, Eye, Calculator, Users, GraduationCap, LogOut, Shield, CreditCard } from "lucide-react";
+import { Search, TrendingUp, Home, Zap, User, Menu, Eye, Calculator, Users, GraduationCap, LogOut, Shield, CreditCard, Scale, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -210,26 +210,72 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/50 mt-12">
-        <div className="container py-8">
-          <div className="grid grid-cols-2 gap-8 max-w-xl">
-            <div>
-              <h3 className="font-semibold mb-3">Légal</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/cgu" className="hover:text-foreground transition-colors">CGU</Link></li>
-                <li><Link to="/rgpd" className="hover:text-foreground transition-colors">RGPD</Link></li>
-                <li><Link to="/legal-notice" className="hover:text-foreground transition-colors">Mentions légales</Link></li>
+      <footer className="border-t bg-gradient-to-br from-muted/50 via-muted/30 to-background mt-12">
+        <div className="container py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Scale className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg">Légal</h3>
+              </div>
+              <ul className="space-y-3 ml-12">
+                <li>
+                  <Link 
+                    to="/cgu" 
+                    className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                  >
+                    <span className="h-1 w-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                    CGU
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/rgpd" 
+                    className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                  >
+                    <span className="h-1 w-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                    RGPD
+                  </Link>
+                </li>
+                <li>
+                  <Link 
+                    to="/legal-notice" 
+                    className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                  >
+                    <span className="h-1 w-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                    Mentions légales
+                  </Link>
+                </li>
               </ul>
             </div>
-            <div>
-              <h3 className="font-semibold mb-3">Communauté</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors">Discord</a></li>
+            
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <MessageCircle className="h-5 w-5 text-accent" />
+                </div>
+                <h3 className="font-semibold text-lg">Communauté</h3>
+              </div>
+              <ul className="space-y-3 ml-12">
+                <li>
+                  <a 
+                    href="#" 
+                    className="text-muted-foreground hover:text-accent transition-colors flex items-center gap-2 group"
+                  >
+                    <span className="h-1 w-1 rounded-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    Rejoindre Discord
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-            © 2025 HardwareMarket. Tous droits réservés.
+          
+          <div className="mt-12 pt-8 border-t text-center">
+            <p className="text-sm text-muted-foreground">
+              © 2025 <span className="font-semibold text-foreground">HardwareMarket</span>. Tous droits réservés.
+            </p>
           </div>
         </div>
       </footer>
