@@ -233,9 +233,9 @@ export const subscriptionPlans = [
   {
     name: "Basic",
     price: 20,
-    credits: 50,
+    credits: 30,
     features: [
-      "50 crédits/mois",
+      "30 crédits/mois",
       "Catalogue complet",
       "Alertes email quotidiennes",
       "Historique des prix 30 jours",
@@ -244,9 +244,10 @@ export const subscriptionPlans = [
   {
     name: "Pro",
     price: 45,
-    credits: 150,
+    credits: 120,
     features: [
-      "150 crédits/mois",
+      "120 crédits/mois",
+      "Catalogue complet",
       "Accès à l'estimator",
       "Alertes temps réel",
       "Historique complet",
@@ -258,15 +259,16 @@ export const subscriptionPlans = [
   {
     name: "Elite",
     price: 90,
-    credits: 400,
+    credits: 300,
     features: [
-      "400 crédits/mois",
+      "300 crédits/mois",
       "Accès complet",
       "Scrap personnel",
-      "Publication données 24h après",
-      "Exports personnalisés (CSV, Excel)",
+      "Publication anticipée 24h",
+      "Exports personnalisés",
       "Support prioritaire",
       "Alertes instantanées",
+      "Rapports mensuels",
     ],
   },
 ];

@@ -355,19 +355,21 @@ export default function MyAccount() {
     // Handle object of features from database (convert to readable format)
     if (typeof features === 'object') {
       const featureLabels: Record<string, string> = {
-        credits: "Crédits",
-        estimator: "Estimateur",
-        alertes_email: "Alertes email",
-        historique_30j: "Historique 30 jours",
-        scrap_personnel: "Scrap personnel",
+        credits_mensuels: "Crédits mensuels",
         catalogue_complet: "Catalogue complet",
-        comparateur: "Comparateur de modèles",
+        alertes_email: "Alertes email",
+        historique_prix: "Historique des prix",
+        acces_estimator: "Accès estimator",
         alertes_temps_reel: "Alertes temps réel",
-        historique_complet: "Historique complet",
         analyses_detaillees: "Analyses détaillées",
+        comparateur_modeles: "Comparateur de modèles",
+        acces_complet: "Accès complet",
+        scrap_personnel: "Scrap personnel",
+        publication_anticipee: "Publication anticipée",
         exports_personnalises: "Exports personnalisés",
         support_prioritaire: "Support prioritaire",
         alertes_instantanees: "Alertes instantanées",
+        rapports_mensuels: "Rapports mensuels",
       };
 
       return Object.entries(features as Record<string, any>).map(([key, value]) => {
