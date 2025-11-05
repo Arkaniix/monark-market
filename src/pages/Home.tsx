@@ -130,13 +130,23 @@ export default function Home() {
         .select("id, credits_earned")
         .eq("user_id", user.id);
 
+      // Utiliser des données factices si pas d'abonnement
+      const mockStats = {
+        creditsRemaining: 50,
+        planName: "Basic",
+        jobsToday: 2,
+        commJobsToday: 1,
+        totalContributions: 8,
+        creditsEarned: 15,
+      };
+
       setUserStats({
-        creditsRemaining: subscription?.credits_remaining || 0,
-        planName: subscription?.subscription_plans?.name || "Basic",
-        jobsToday: dailyLimits?.jobs_used || 0,
-        commJobsToday: dailyLimits?.comm_jobs_used || 0,
-        totalContributions: contributions?.length || 0,
-        creditsEarned: contributions?.reduce((sum, c) => sum + (c.credits_earned || 0), 0) || 0,
+        creditsRemaining: subscription?.credits_remaining ?? mockStats.creditsRemaining,
+        planName: subscription?.subscription_plans?.name || mockStats.planName,
+        jobsToday: dailyLimits?.jobs_used ?? mockStats.jobsToday,
+        commJobsToday: dailyLimits?.comm_jobs_used ?? mockStats.commJobsToday,
+        totalContributions: contributions?.length ?? mockStats.totalContributions,
+        creditsEarned: contributions?.reduce((sum, c) => sum + (c.credits_earned || 0), 0) ?? mockStats.creditsEarned,
       });
 
       // Charger les jobs récents
@@ -147,7 +157,35 @@ export default function Home() {
         .order("created_at", { ascending: false })
         .limit(5);
 
-      setRecentJobs(jobs || []);
+      // Données factices pour les jobs si vide
+      const mockJobs: RecentJob[] = [
+        {
+          id: 1,
+          keyword: "RTX 4090",
+          status: "completed",
+          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          pages_scanned: 45,
+          ads_found: 23,
+        },
+        {
+          id: 2,
+          keyword: "Ryzen 7950X3D",
+          status: "completed",
+          created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+          pages_scanned: 32,
+          ads_found: 18,
+        },
+        {
+          id: 3,
+          keyword: "Intel i9-14900K",
+          status: "running",
+          created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+          pages_scanned: 12,
+          ads_found: 7,
+        },
+      ];
+
+      setRecentJobs(jobs && jobs.length > 0 ? jobs : mockJobs);
 
       // Charger les meilleurs deals avec filtres
       let dealsQuery = supabase
@@ -196,7 +234,83 @@ export default function Home() {
         category: deal.hardware_models?.hardware_categories?.name || "Autre",
       })) || [];
 
-      setTopDeals(formattedDeals);
+      // Données factices pour les deals si vide
+      const mockDeals: TopDeal[] = [
+        {
+          id: 1,
+          title: "NVIDIA RTX 4080 SUPER - Excellente condition",
+          price: 920,
+          score: 92,
+          fair_value: 1150,
+          deviation_pct: -20,
+          city: "Paris (75)",
+          published_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+          condition: "très bon état",
+          category: "GPU",
+        },
+        {
+          id: 2,
+          title: "AMD Ryzen 9 7950X - Neuf, jamais utilisé",
+          price: 480,
+          score: 88,
+          fair_value: 590,
+          deviation_pct: -18.6,
+          city: "Lyon (69)",
+          published_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+          condition: "neuf",
+          category: "CPU",
+        },
+        {
+          id: 3,
+          title: "RTX 4070 Ti ASUS TUF - Garantie 2 ans restante",
+          price: 620,
+          score: 85,
+          fair_value: 750,
+          deviation_pct: -17.3,
+          city: "Marseille (13)",
+          published_at: new Date(Date.now() - 15 * 60 * 60 * 1000).toISOString(),
+          condition: "bon état",
+          category: "GPU",
+        },
+        {
+          id: 4,
+          title: "Intel Core i7-13700K - Comme neuf",
+          price: 340,
+          score: 83,
+          fair_value: 410,
+          deviation_pct: -17.1,
+          city: "Toulouse (31)",
+          published_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          condition: "très bon état",
+          category: "CPU",
+        },
+        {
+          id: 5,
+          title: "AMD RX 7900 XTX Sapphire Nitro+",
+          price: 780,
+          score: 81,
+          fair_value: 920,
+          deviation_pct: -15.2,
+          city: "Bordeaux (33)",
+          published_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          condition: "bon état",
+          category: "GPU",
+        },
+        {
+          id: 6,
+          title: "RTX 4060 Ti MSI Gaming X - Pour pièces (ventilateur HS)",
+          price: 280,
+          score: 78,
+          fair_value: 380,
+          deviation_pct: -26.3,
+          city: "Nantes (44)",
+          published_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+          condition: "pour pièces",
+          category: "GPU",
+        },
+      ];
+
+      setTopDeals(formattedDeals && formattedDeals.length > 0 ? formattedDeals : mockDeals);
     } catch (error) {
       console.error("Erreur lors du chargement des données:", error);
       toast({
