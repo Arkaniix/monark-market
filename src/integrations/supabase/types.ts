@@ -1081,6 +1081,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_job_cost: {
+        Args: { p_job_type: string; p_pages_scanned: number }
+        Returns: number
+      }
+      can_create_job: {
+        Args: { p_job_type: string; p_pages_target: number; p_user_id: string }
+        Returns: {
+          allowed: boolean
+          reason: string
+        }[]
+      }
+      get_plan_limits: {
+        Args: { p_user_id: string }
+        Returns: {
+          can_use_strong_scrape: boolean
+          credits_per_cycle: number
+          max_comm_jobs_per_day: number
+          max_jobs_per_day: number
+          max_pages_per_job: number
+          plan_name: string
+        }[]
+      }
       get_user_credits: { Args: { p_user_id: string }; Returns: number }
       get_user_plan: { Args: { p_user_id: string }; Returns: string }
       get_user_role: { Args: { p_user_id: string }; Returns: string }
