@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, TrendingUp, Home, Zap, User, Menu, Eye, Calculator, Users, GraduationCap } from "lucide-react";
+import { Search, TrendingUp, Home, Zap, User, Menu, Eye, Calculator, Users, GraduationCap, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -7,6 +7,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 const navigation = [
   { name: "Accueil", href: "/", icon: Home },
@@ -22,6 +26,38 @@ const navigation = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const { toast } = useToast();
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de se déconnecter",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Déconnecté",
+        description: "Vous avez été déconnecté avec succès",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -38,47 +74,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.href;
-                return (
-                  <Link key={item.name} to={item.href}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "gap-2",
-                        isActive && "bg-muted text-primary font-medium"
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.name}
-                    </Button>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* Mobile Navigation */}
-          <Sheet>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left">
-              <div className="flex flex-col gap-4 mt-8">
+            {/* Desktop Navigation - Only show for authenticated users */}
+            {user && (
+              <nav className="hidden md:flex items-center gap-1">
                 {navigation.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.href;
                   return (
                     <Link key={item.name} to={item.href}>
                       <Button
-                        variant={isActive ? "secondary" : "ghost"}
-                        className="w-full justify-start gap-2"
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "gap-2",
+                          isActive && "bg-muted text-primary font-medium"
+                        )}
                       >
                         <Icon className="h-4 w-4" />
                         {item.name}
@@ -86,16 +96,59 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </Link>
                   );
                 })}
-              </div>
-            </SheetContent>
-          </Sheet>
+              </nav>
+            )}
+          </div>
+
+          {/* Mobile Navigation - Only show for authenticated users */}
+          {user && (
+            <Sheet>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <div className="flex flex-col gap-4 mt-8">
+                  {navigation.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.href;
+                    return (
+                      <Link key={item.name} to={item.href}>
+                        <Button
+                          variant={isActive ? "secondary" : "ghost"}
+                          className="w-full justify-start gap-2"
+                        >
+                          <Icon className="h-4 w-4" />
+                          {item.name}
+                        </Button>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
 
           {/* User Actions */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="hidden md:inline-flex">
-              Se connecter
-            </Button>
-            <Button size="sm">Essayer gratuitement</Button>
+            {user ? (
+              <Button variant="ghost" size="sm" className="gap-2" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" />
+                <span className="hidden md:inline">Déconnexion</span>
+              </Button>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="ghost" size="sm" className="hidden md:inline-flex">
+                    Se connecter
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button size="sm">Essayer gratuitement</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
