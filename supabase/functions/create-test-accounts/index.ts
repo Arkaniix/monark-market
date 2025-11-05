@@ -23,18 +23,25 @@ Deno.serve(async (req) => {
       }
     )
 
-    // Get Pro plan ID
-    const { data: plans } = await supabaseAdmin
+    // Get Elite and Pro plan IDs
+    const { data: elitePlan } = await supabaseAdmin
+      .from('subscription_plans')
+      .select('id')
+      .eq('name', 'Elite')
+      .single()
+
+    const { data: proPlan } = await supabaseAdmin
       .from('subscription_plans')
       .select('id')
       .eq('name', 'Pro')
       .single()
 
-    if (!plans) {
-      throw new Error('Pro plan not found')
+    if (!elitePlan || !proPlan) {
+      throw new Error('Plans not found')
     }
 
-    const proPlanId = plans.id
+    const elitePlanId = elitePlan.id
+    const proPlanId = proPlan.id
 
     // Create admin user
     const { data: adminUser, error: adminError } = await supabaseAdmin.auth.admin.createUser({
@@ -55,11 +62,13 @@ Deno.serve(async (req) => {
         role: 'admin',
       })
 
-      // Create subscription
+      // Create Elite subscription for admin
       await supabaseAdmin.from('user_subscriptions').insert({
         user_id: adminUser.user.id,
-        plan_id: proPlanId,
+        plan_id: elitePlanId,
         status: 'active',
+        credits_remaining: 300,
+        credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       })
     }
 
@@ -77,11 +86,13 @@ Deno.serve(async (req) => {
       console.error('Error creating user:', userError)
     } else if (regularUser.user) {
       // Regular users get 'user' role automatically via trigger
-      // Create subscription
+      // Create Pro subscription for regular user
       await supabaseAdmin.from('user_subscriptions').insert({
         user_id: regularUser.user.id,
         plan_id: proPlanId,
         status: 'active',
+        credits_remaining: 120,
+        credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       })
     }
 
