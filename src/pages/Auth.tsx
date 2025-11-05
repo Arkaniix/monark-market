@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Check, MessageCircle } from "lucide-react";
+import { Zap, Check, MessageCircle, Crown, Star, TrendingUp } from "lucide-react";
 import { z } from "zod";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
@@ -288,37 +288,76 @@ export default function Auth() {
                   </p>
                 </div>
 
-                <div className="space-y-3">
-                  <Label>Choisissez votre plan</Label>
-                  <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan}>
-                    {plans.map((plan) => (
-                      <div key={plan.id} className="relative">
-                        <RadioGroupItem
-                          value={plan.id}
-                          id={plan.id}
-                          className="peer sr-only"
-                        />
-                        <Label
-                          htmlFor={plan.id}
-                          className="flex cursor-pointer rounded-lg border-2 border-muted bg-card p-4 hover:bg-accent peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-semibold">{plan.name}</span>
-                              <span className="font-bold text-primary">
-                                {plan.price}€<span className="text-sm font-normal text-muted-foreground">/mois</span>
+                <div className="space-y-4">
+                  <Label className="text-base">Choisissez votre plan d'abonnement</Label>
+                  <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="gap-3">
+                    {plans.map((plan, index) => {
+                      const isPopular = plan.name === 'Pro';
+                      const isPremium = plan.name === 'Elite';
+                      const PlanIcon = plan.name === 'Basic' ? TrendingUp : plan.name === 'Pro' ? Star : Crown;
+                      
+                      return (
+                        <div key={plan.id} className="relative">
+                          {isPopular && (
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
+                              <span className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
+                                Populaire
                               </span>
                             </div>
-                            <p className="text-sm text-muted-foreground">{plan.description}</p>
-                          </div>
-                          <div className="ml-4 flex items-center">
-                            <div className="h-5 w-5 rounded-full border-2 border-primary flex items-center justify-center peer-data-[state=checked]:bg-primary [&:has(~[data-state=checked])]:bg-primary">
-                              <Check className="h-3 w-3 text-primary-foreground opacity-0 peer-data-[state=checked]:opacity-100 [input[data-state=checked]~*>&]:opacity-100" />
+                          )}
+                          <RadioGroupItem
+                            value={plan.id}
+                            id={plan.id}
+                            className="peer sr-only"
+                          />
+                          <Label
+                            htmlFor={plan.id}
+                            className={`
+                              flex cursor-pointer rounded-xl border-2 border-muted bg-gradient-to-br from-card to-card/50 p-5 
+                              transition-all duration-200 
+                              hover:border-primary/50 hover:shadow-lg hover:scale-[1.02]
+                              peer-data-[state=checked]:border-primary peer-data-[state=checked]:shadow-xl peer-data-[state=checked]:scale-[1.02]
+                              ${isPopular ? 'border-primary/30' : ''}
+                              ${isPremium ? 'bg-gradient-to-br from-accent/10 to-card' : ''}
+                            `}
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                                    isPremium ? 'bg-gradient-to-br from-accent to-accent/80' : 'bg-primary/10'
+                                  }`}>
+                                    <PlanIcon className={`h-4 w-4 ${isPremium ? 'text-accent-foreground' : 'text-primary'}`} />
+                                  </div>
+                                  <span className="font-bold text-lg">{plan.name}</span>
+                                </div>
+                                <div className="text-right">
+                                  <div className="font-bold text-2xl text-primary">{plan.price}€</div>
+                                  <div className="text-xs text-muted-foreground">/mois</div>
+                                </div>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-3">{plan.description}</p>
+                              
+                              {plan.features && (
+                                <ul className="space-y-1.5">
+                                  {Object.entries(plan.features).slice(0, 3).map(([key, value]: [string, any]) => (
+                                    <li key={key} className="flex items-center gap-2 text-xs">
+                                      <Check className="h-3 w-3 text-primary flex-shrink-0" />
+                                      <span className="text-muted-foreground">{typeof value === 'boolean' ? key : `${key}: ${value}`}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
                             </div>
-                          </div>
-                        </Label>
-                      </div>
-                    ))}
+                            <div className="ml-4 flex items-center">
+                              <div className="h-6 w-6 rounded-full border-2 border-primary flex items-center justify-center peer-data-[state=checked]:bg-primary transition-all">
+                                <Check className="h-3.5 w-3.5 text-primary-foreground opacity-0 peer-data-[state=checked]:opacity-100" />
+                              </div>
+                            </div>
+                          </Label>
+                        </div>
+                      );
+                    })}
                   </RadioGroup>
                 </div>
 
