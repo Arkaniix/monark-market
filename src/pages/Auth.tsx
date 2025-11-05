@@ -7,17 +7,19 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Check } from "lucide-react";
+import { Zap, Check, MessageCircle } from "lucide-react";
 import { z } from "zod";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const emailSchema = z.string().email("Email invalide");
 const passwordSchema = z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères");
+const discordSchema = z.string().max(100, "L'identifiant Discord doit contenir moins de 100 caractères").optional();
 
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [discordId, setDiscordId] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("");
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -68,6 +70,9 @@ export default function Auth() {
     try {
       emailSchema.parse(email);
       passwordSchema.parse(password);
+      if (discordId) {
+        discordSchema.parse(discordId);
+      }
 
       if (!selectedPlan) {
         toast({
@@ -88,6 +93,7 @@ export default function Auth() {
           emailRedirectTo: redirectUrl,
           data: {
             display_name: displayName,
+            discord_id: discordId || null,
           },
         },
       });
@@ -255,6 +261,22 @@ export default function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-discord" className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4" />
+                    Discord (optionnel)
+                  </Label>
+                  <Input
+                    id="signup-discord"
+                    type="text"
+                    placeholder="votre_pseudo#1234"
+                    value={discordId}
+                    onChange={(e) => setDiscordId(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Pour vous contacter et vous fournir un support personnalisé
+                  </p>
                 </div>
 
                 <div className="space-y-3">
