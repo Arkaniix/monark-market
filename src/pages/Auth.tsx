@@ -23,6 +23,7 @@ export default function Auth() {
   const [discordId, setDiscordId] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("");
   const [plans, setPlans] = useState<any[]>([]);
+  const [mostPopularPlanId, setMostPopularPlanId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -47,7 +48,7 @@ export default function Auth() {
   }, [navigate]);
 
   useEffect(() => {
-    // Fetch subscription plans
+    // Fetch subscription plans and determine most popular
     const fetchPlans = async () => {
       const { data, error } = await supabase
         .from("subscription_plans")
@@ -59,6 +60,29 @@ export default function Auth() {
         setPlans(data);
         if (data.length > 0) {
           setSelectedPlan(data[0].id);
+        }
+        
+        // Get the most popular plan based on active subscriptions
+        const { data: subscriptions } = await supabase
+          .from("user_subscriptions")
+          .select("plan_id")
+          .eq("status", "active");
+        
+        if (subscriptions && subscriptions.length > 0) {
+          // Count subscriptions per plan
+          const planCounts = subscriptions.reduce((acc: Record<string, number>, sub) => {
+            acc[sub.plan_id] = (acc[sub.plan_id] || 0) + 1;
+            return acc;
+          }, {});
+          
+          // Find plan with most subscribers
+          const mostPopular = Object.entries(planCounts).reduce((max, [planId, count]) => 
+            count > max.count ? { planId, count } : max
+          , { planId: '', count: 0 });
+          
+          if (mostPopular.planId) {
+            setMostPopularPlanId(mostPopular.planId);
+          }
         }
       }
     };
@@ -358,7 +382,7 @@ export default function Auth() {
                   <Label className="text-base">Choisissez votre plan d'abonnement</Label>
                   <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="gap-3">
                     {plans.map((plan, index) => {
-                      const isPopular = plan.name === 'Basic';
+                      const isPopular = plan.id === mostPopularPlanId;
                       const isPremium = plan.name === 'Elite';
                       const PlanIcon = plan.name === 'Basic' ? TrendingUp : plan.name === 'Pro' ? Star : Crown;
                       
