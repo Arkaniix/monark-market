@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Search,
   Target,
@@ -11,7 +12,15 @@ import {
   GraduationCap,
   TrendingUp,
   Check,
+  Clock,
+  Shield,
+  Rocket,
+  DollarSign,
+  Bell,
+  Award,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -43,7 +52,89 @@ const trainingModules = [
   "Gestion des risques et pièges à éviter",
 ];
 
+const benefits = [
+  {
+    icon: DollarSign,
+    title: "Maximisez vos profits",
+    description: "Identifiez les opportunités sous-évaluées et vendez au meilleur moment grâce à nos analyses de marché en temps réel.",
+  },
+  {
+    icon: Clock,
+    title: "Gagnez du temps",
+    description: "Notre scanner automatique fait le travail à votre place. Plus besoin de parcourir des centaines d'annonces manuellement.",
+  },
+  {
+    icon: Shield,
+    title: "Réduisez les risques",
+    description: "Évitez les mauvais achats grâce à notre système de scoring et nos alertes sur les prix anormaux.",
+  },
+  {
+    icon: Award,
+    title: "Devenez expert",
+    description: "Apprenez les techniques des professionnels avec notre formation complète et notre communauté active.",
+  },
+];
+
+const howItWorks = [
+  {
+    step: "1",
+    title: "Scannez le marché",
+    description: "Lancez un scan automatique sur les plateformes comme LeBonCoin. L'outil trouve toutes les annonces pertinentes en quelques secondes.",
+  },
+  {
+    step: "2",
+    title: "Analysez les opportunités",
+    description: "Notre IA évalue chaque annonce et vous présente les meilleures affaires avec un score de rentabilité.",
+  },
+  {
+    step: "3",
+    title: "Achetez au bon prix",
+    description: "Contactez le vendeur avec confiance grâce à notre estimateur de prix et nos données de marché.",
+  },
+  {
+    step: "4",
+    title: "Revendez avec profit",
+    description: "Utilisez nos analyses de tendances pour choisir le moment optimal de revente et maximiser vos marges.",
+  },
+];
+
+const testimonials = [
+  {
+    name: "Thomas D.",
+    role: "Revendeur GPU",
+    content: "J'ai doublé mes profits en 2 mois. L'outil de scanning me fait gagner 4h par jour et je ne rate plus aucune bonne affaire.",
+    profit: "+142%",
+  },
+  {
+    name: "Sarah M.",
+    role: "Débutante",
+    content: "La formation m'a permis de passer de 0 à mes premières 5 transactions rentables en 3 semaines. Tout est expliqué pas à pas.",
+    profit: "+850€",
+  },
+  {
+    name: "Kevin L.",
+    role: "Pro de l'achat-revente",
+    content: "Après 2 ans à faire ça à l'ancienne, cet outil a transformé mon business. Les alertes en temps réel sont juste incroyables.",
+    profit: "+3200€/mois",
+  },
+];
+
 export default function Landing() {
+  const [plans, setPlans] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      const { data } = await supabase
+        .from("subscription_plans")
+        .select("*")
+        .eq("is_active", true)
+        .order("price", { ascending: true });
+      
+      if (data) setPlans(data);
+    };
+
+    fetchPlans();
+  }, []);
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -65,10 +156,16 @@ export default function Landing() {
               <Link to="/auth">
                 <Button size="lg" className="gap-2">
                   <Zap className="h-5 w-5" />
-                  Commencer maintenant
+                  S'inscrire
                 </Button>
               </Link>
+              <Button size="lg" variant="outline" asChild>
+                <a href="#pricing">Voir les tarifs</a>
+              </Button>
             </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              ✓ Essai gratuit • ✓ Sans engagement • ✓ Support 7j/7
+            </p>
           </motion.div>
         </div>
 
@@ -224,6 +321,210 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Benefits Section */}
+      <section className="py-16 bg-muted/50">
+        <div className="container">
+          <div className="text-center mb-12">
+            <Badge className="mb-4" variant="secondary">
+              Pourquoi nous choisir
+            </Badge>
+            <h2 className="text-3xl font-bold mb-4">
+              Transformez votre façon d'acheter et revendre
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Des résultats concrets et mesurables dès les premières semaines
+            </p>
+          </div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-2 gap-8"
+          >
+            {benefits.map((benefit, i) => (
+              <motion.div key={i} variants={itemVariants}>
+                <Card className="h-full">
+                  <CardHeader>
+                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                      <benefit.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <CardTitle>{benefit.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{benefit.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-16">
+        <div className="container">
+          <div className="text-center mb-12">
+            <Badge className="mb-4" variant="secondary">
+              Simple et efficace
+            </Badge>
+            <h2 className="text-3xl font-bold mb-4">Comment ça fonctionne ?</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Un processus en 4 étapes pour réussir vos premiers deals
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {howItWorks.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="relative"
+              >
+                <div className="text-center">
+                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-white">
+                    {item.step}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground">{item.description}</p>
+                </div>
+                {i < howItWorks.length - 1 && (
+                  <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-primary/50 to-accent/50" />
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-16 bg-muted/50">
+        <div className="container">
+          <div className="text-center mb-12">
+            <Badge className="mb-4" variant="secondary">
+              Témoignages
+            </Badge>
+            <h2 className="text-3xl font-bold mb-4">
+              Ils ont transformé leur activité
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Rejoignez des centaines de membres qui génèrent des revenus réguliers
+            </p>
+          </div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-3 gap-8"
+          >
+            {testimonials.map((testimonial, i) => (
+              <motion.div key={i} variants={itemVariants}>
+                <Card className="h-full">
+                  <CardHeader>
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <CardTitle className="text-lg">{testimonial.name}</CardTitle>
+                        <CardDescription>{testimonial.role}</CardDescription>
+                      </div>
+                      <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+                        {testimonial.profit}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground italic">"{testimonial.content}"</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-16">
+        <div className="container">
+          <div className="text-center mb-12">
+            <Badge className="mb-4" variant="secondary">
+              Tarifs
+            </Badge>
+            <h2 className="text-3xl font-bold mb-4">
+              Choisissez le plan qui vous convient
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Tous les plans incluent la formation complète et l'accès à la communauté
+            </p>
+          </div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto"
+          >
+            {plans.map((plan, i) => (
+              <motion.div key={plan.id} variants={itemVariants}>
+                <Card className={`h-full relative ${i === 1 ? 'border-primary shadow-lg scale-105' : ''}`}>
+                  {i === 1 && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-primary text-primary-foreground">
+                        Plus populaire
+                      </Badge>
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                    <CardDescription>{plan.description}</CardDescription>
+                    <div className="mt-4">
+                      <span className="text-4xl font-bold">{plan.price}€</span>
+                      <span className="text-muted-foreground">
+                        /{plan.duration_months === 1 ? 'mois' : `${plan.duration_months} mois`}
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {plan.features && (
+                      <ul className="space-y-3">
+                        {(plan.features as any).features?.map((feature: string, idx: number) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <div className="h-5 w-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <Check className="h-3 w-3 text-success" />
+                            </div>
+                            <span className="text-sm">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <Link to="/auth" className="block w-full">
+                      <Button 
+                        className="w-full" 
+                        variant={i === 1 ? 'default' : 'outline'}
+                        size="lg"
+                      >
+                        S'inscrire
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {plans.length === 0 && (
+            <div className="text-center text-muted-foreground">
+              Chargement des plans...
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Formation */}
       <section className="py-16 bg-muted/50">
         <div className="container">
@@ -248,11 +549,16 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/auth">
-                <Button size="lg">
-                  Accéder à la formation
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/auth">
+                  <Button size="lg">
+                    S'inscrire
+                  </Button>
+                </Link>
+                <Button size="lg" variant="outline" asChild>
+                  <a href="#pricing">Voir les tarifs</a>
                 </Button>
-              </Link>
+              </div>
             </div>
 
             <Card>
@@ -297,8 +603,9 @@ export default function Landing() {
               Partagez vos trouvailles, apprenez des meilleurs et progressez ensemble dans une communauté soudée
             </p>
             <Link to="/auth">
-              <Button size="lg">
-                Commencer maintenant
+              <Button size="lg" className="gap-2">
+                <Rocket className="h-5 w-5" />
+                S'inscrire maintenant
               </Button>
             </Link>
           </div>
