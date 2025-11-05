@@ -65,7 +65,7 @@ export default function Landing() {
               <Link to="/auth">
                 <Button size="lg" className="gap-2">
                   <Zap className="h-5 w-5" />
-                  Commencer gratuitement
+                  Commencer maintenant
                 </Button>
               </Link>
             </div>
@@ -85,7 +85,7 @@ export default function Landing() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6"
           >
             <motion.div variants={itemVariants}>
               <Card>
