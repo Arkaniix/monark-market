@@ -436,8 +436,12 @@ export default function Auth() {
                               )}
                             </div>
                             <div className="ml-4 flex items-center">
-                              <div className="h-6 w-6 rounded-full border-2 border-primary flex items-center justify-center peer-data-[state=checked]:bg-primary transition-all">
-                                <Check className="h-3.5 w-3.5 text-primary-foreground opacity-0 peer-data-[state=checked]:opacity-100" />
+                              <div className={`h-6 w-6 rounded-full border-2 border-primary flex items-center justify-center transition-all ${
+                                selectedPlan === plan.id ? 'bg-primary' : ''
+                              }`}>
+                                <Check className={`h-3.5 w-3.5 text-primary-foreground transition-opacity ${
+                                  selectedPlan === plan.id ? 'opacity-100' : 'opacity-0'
+                                }`} />
                               </div>
                             </div>
                           </Label>
