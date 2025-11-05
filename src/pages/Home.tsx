@@ -82,8 +82,7 @@ export default function Home() {
   const [recentJobs, setRecentJobs] = useState<RecentJob[]>([]);
   const [topDeals, setTopDeals] = useState<TopDeal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [selectedTrend, setSelectedTrend] = useState<string>("all");
   const { toast } = useToast();
 
   // Données mockées pour les graphiques de tendances
@@ -100,7 +99,7 @@ export default function Home() {
 
   useEffect(() => {
     loadDashboardData();
-  }, [selectedCategory, selectedFilter]);
+  }, []);
 
   const loadDashboardData = async () => {
     try {
@@ -263,30 +262,7 @@ export default function Home() {
         },
       ];
 
-      // Appliquer les filtres aux données mockées
-      let filteredMockDeals = [...mockDeals];
-
-      // Appliquer le filtre de catégorie
-      if (selectedCategory !== "all") {
-        filteredMockDeals = filteredMockDeals.filter(
-          deal => deal.category === selectedCategory
-        );
-      }
-
-      // Appliquer les filtres spéciaux
-      if (selectedFilter === "new") {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        filteredMockDeals = filteredMockDeals.filter(
-          deal => new Date(deal.published_at) >= yesterday
-        );
-      } else if (selectedFilter === "undervalued") {
-        filteredMockDeals = filteredMockDeals.filter(
-          deal => deal.deviation_pct <= -15
-        );
-      }
-
-      setTopDeals(filteredMockDeals);
+      setTopDeals(mockDeals);
     } catch (error) {
       console.error("Erreur lors du chargement des données:", error);
       toast({
@@ -365,45 +341,6 @@ export default function Home() {
                 Plan {userStats?.planName}
               </Badge>
             </div>
-          </div>
-
-          {/* Filtres rapides */}
-          <div className="mt-6 flex flex-wrap gap-3">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filtres rapides:</span>
-            </div>
-            
-            <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-              <TabsList>
-                <TabsTrigger value="all" className="text-xs">
-                  <Package className="h-3 w-3 mr-1" />
-                  Tout
-                </TabsTrigger>
-                <TabsTrigger value="GPU" className="text-xs">
-                  <Cpu className="h-3 w-3 mr-1" />
-                  GPU
-                </TabsTrigger>
-                <TabsTrigger value="CPU" className="text-xs">
-                  <Cpu className="h-3 w-3 mr-1" />
-                  CPU
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <Tabs value={selectedFilter} onValueChange={setSelectedFilter}>
-              <TabsList>
-                <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
-                <TabsTrigger value="new" className="text-xs">
-                  <Zap className="h-3 w-3 mr-1" />
-                  Nouveautés &lt;24h
-                </TabsTrigger>
-                <TabsTrigger value="undervalued" className="text-xs">
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                  Sous-évaluées &gt;15%
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
           </div>
         </div>
       </section>
@@ -584,9 +521,33 @@ export default function Home() {
       {/* Tendances du marché */}
       <section className="py-8 bg-muted/30">
         <div className="container">
-          <h2 className="text-2xl font-bold mb-6">Tendances du marché</h2>
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <Card>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">Tendances du marché</h2>
+              <p className="text-sm text-muted-foreground">
+                Évolution des prix sur 30 jours
+              </p>
+            </div>
+            <Tabs value={selectedTrend} onValueChange={setSelectedTrend}>
+              <TabsList>
+                <TabsTrigger value="all" className="text-xs">
+                  <Package className="h-3 w-3 mr-1" />
+                  Tout
+                </TabsTrigger>
+                <TabsTrigger value="gpu" className="text-xs">
+                  <Cpu className="h-3 w-3 mr-1" />
+                  GPU uniquement
+                </TabsTrigger>
+                <TabsTrigger value="cpu" className="text-xs">
+                  <Cpu className="h-3 w-3 mr-1" />
+                  CPU uniquement
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          <div className={`grid gap-6 mb-8 ${selectedTrend === "all" ? "md:grid-cols-2" : "grid-cols-1"}`}>
+            {(selectedTrend === "all" || selectedTrend === "gpu") && (
+              <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5 text-primary" />
@@ -633,8 +594,10 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
+            )}
 
-            <Card>
+            {(selectedTrend === "all" || selectedTrend === "cpu") && (
+              <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5 text-accent" />
@@ -681,6 +644,7 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
+            )}
           </div>
 
           {/* Top deals */}
