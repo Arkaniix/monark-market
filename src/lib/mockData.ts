@@ -236,9 +236,9 @@ export const subscriptionPlans = [
     credits: 30,
     features: [
       "30 crédits/mois",
-      "Scraping faible uniquement",
-      "Accès aux tendances de base",
-      "Estimateur simple",
+      "Accès limité",
+      "Vues globales restreintes",
+      "Peu d'alertes",
     ],
   },
   {
@@ -247,10 +247,9 @@ export const subscriptionPlans = [
     credits: 120,
     features: [
       "120 crédits/mois",
-      "Scraping fort + gains communautaires",
-      "Alertes de prix",
-      "Analyses avancées",
-      "API access",
+      "Accès à l'estimator",
+      "Alertes avancées",
+      "Analyses détaillées",
     ],
     popular: true,
   },
@@ -260,11 +259,10 @@ export const subscriptionPlans = [
     credits: 300,
     features: [
       "300 crédits/mois",
-      "Alertes personnalisées illimitées",
-      "Analyses prédictives",
-      "Support prioritaire",
-      "Exports illimités",
-      "Dashboard custom",
+      "Accès complet",
+      "Alertes instantanées",
+      "Bouton scrap personnel",
+      "Publication données après 24h",
     ],
   },
 ];

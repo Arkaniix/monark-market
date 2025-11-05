@@ -137,6 +137,8 @@ export type Database = {
       user_subscriptions: {
         Row: {
           created_at: string
+          credits_remaining: number | null
+          credits_reset_date: string | null
           expires_at: string | null
           id: string
           plan_id: string
@@ -147,6 +149,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          credits_remaining?: number | null
+          credits_reset_date?: string | null
           expires_at?: string | null
           id?: string
           plan_id: string
@@ -157,6 +161,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          credits_remaining?: number | null
+          credits_reset_date?: string | null
           expires_at?: string | null
           id?: string
           plan_id?: string
@@ -187,6 +193,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      reset_user_credits: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"

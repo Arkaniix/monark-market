@@ -113,6 +113,13 @@ export default function Auth() {
           });
         }
       } else if (authData.user) {
+        // Get the selected plan details to set initial credits
+        const selectedPlanData = plans.find(p => p.id === selectedPlan);
+        const initialCredits = selectedPlanData?.name === 'Basic' ? 30 
+          : selectedPlanData?.name === 'Pro' ? 120 
+          : selectedPlanData?.name === 'Elite' ? 300 
+          : 30;
+
         // Create subscription for the user
         const { error: subError } = await supabase
           .from("user_subscriptions")
@@ -120,6 +127,8 @@ export default function Auth() {
             user_id: authData.user.id,
             plan_id: selectedPlan,
             status: "active",
+            credits_remaining: initialCredits,
+            credits_reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           });
 
         if (subError) {
