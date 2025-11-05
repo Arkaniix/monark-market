@@ -18,11 +18,9 @@ const navigation = [
   { name: "Tendances", href: "/trends", icon: TrendingUp },
   { name: "Catalogue", href: "/catalog", icon: Search },
   { name: "Estimator", href: "/estimator", icon: Calculator },
-  { name: "Watchlist", href: "/watchlist", icon: Eye },
   { name: "Communauté", href: "/community", icon: Users },
   { name: "Formation", href: "/training", icon: GraduationCap },
-  { name: "Abonnements", href: "/subscriptions", icon: CreditCard },
-  { name: "Dashboard", href: "/dashboard", icon: User },
+  { name: "Mon Compte", href: "/my-account", icon: User },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {

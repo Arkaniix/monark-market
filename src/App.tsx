@@ -13,16 +13,14 @@ import Auth from "./pages/Auth";
 import InitTestAccounts from "./pages/InitTestAccounts";
 import Deals from "./pages/Deals";
 import Trends from "./pages/Trends";
-import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
 import ModelDetail from "./pages/ModelDetail";
-import Watchlist from "./pages/Watchlist";
 import Estimator from "./pages/Estimator";
 import AdDetail from "./pages/AdDetail";
 import Community from "./pages/Community";
 import Training from "./pages/Training";
 import Admin from "./pages/Admin";
-import Subscriptions from "./pages/Subscriptions";
+import MyAccount from "./pages/MyAccount";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,16 +58,14 @@ const App = () => {
               {/* Authenticated routes */}
               <Route path="/deals" element={<Deals />} />
               <Route path="/trends" element={<Trends />} />
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/catalog" element={<Catalog />} />
               <Route path="/model/:id" element={<ModelDetail />} />
-              <Route path="/watchlist" element={<Watchlist />} />
               <Route path="/estimator" element={<Estimator />} />
               <Route path="/ad/:id" element={<AdDetail />} />
               <Route path="/community" element={<Community />} />
               <Route path="/training" element={<Training />} />
               <Route path="/admin" element={<Admin />} />
-              <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route path="/my-account" element={<MyAccount />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
