@@ -22,6 +22,7 @@ import AdDetail from "./pages/AdDetail";
 import Community from "./pages/Community";
 import Training from "./pages/Training";
 import Admin from "./pages/Admin";
+import Subscriptions from "./pages/Subscriptions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ const App = () => {
               <Route path="/community" element={<Community />} />
               <Route path="/training" element={<Training />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/subscriptions" element={<Subscriptions />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
