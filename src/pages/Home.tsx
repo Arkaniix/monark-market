@@ -104,7 +104,10 @@ export default function Home() {
   const loadDashboardData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       // Charger les stats utilisateur
       const { data: subscription } = await supabase
