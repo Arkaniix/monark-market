@@ -212,23 +212,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Footer */}
       <footer className="border-t bg-muted/50 mt-12">
         <div className="container py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-semibold mb-3">Produit</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/deals" className="hover:text-foreground transition-colors">Deals</Link></li>
-                <li><Link to="/trends" className="hover:text-foreground transition-colors">Tendances</Link></li>
-                <li><Link to="/catalog" className="hover:text-foreground transition-colors">Catalogue</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-3">Ressources</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">API</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Formation</a></li>
-              </ul>
-            </div>
+          <div className="grid grid-cols-2 gap-8 max-w-xl">
             <div>
               <h3 className="font-semibold mb-3">Légal</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -241,8 +225,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <h3 className="font-semibold mb-3">Communauté</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="#" className="hover:text-foreground transition-colors">Discord</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">GitHub</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Contact</a></li>
               </ul>
             </div>
           </div>
