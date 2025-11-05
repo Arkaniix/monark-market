@@ -14,6 +14,7 @@ import Watchlist from "./pages/Watchlist";
 import Estimator from "./pages/Estimator";
 import AdDetail from "./pages/AdDetail";
 import Community from "./pages/Community";
+import Training from "./pages/Training";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/estimator" element={<Estimator />} />
             <Route path="/ad/:id" element={<AdDetail />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/training" element={<Training />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
