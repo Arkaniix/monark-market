@@ -10,6 +10,7 @@ import Trends from "./pages/Trends";
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
 import ModelDetail from "./pages/ModelDetail";
+import Watchlist from "./pages/Watchlist";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/model/:id" element={<ModelDetail />} />
+            <Route path="/watchlist" element={<Watchlist />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
