@@ -160,9 +160,7 @@ export default function Landing() {
                 <a href="#pricing">Voir les tarifs</a>
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground mt-4">
-              ✓ Essai gratuit • ✓ Sans engagement • ✓ Support 7j/7
-            </p>
+            <p className="text-sm text-muted-foreground mt-4"> ✓ Sans engagement • ✓ Support 7j/7</p>
           </motion.div>
         </div>
 
