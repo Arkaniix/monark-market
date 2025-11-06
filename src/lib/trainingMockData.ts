@@ -2,7 +2,6 @@ export interface UserProgress {
   modules_completed: number[];
   total_modules: number;
   credits_earned: number;
-  badges: string[];
   hours_spent: number;
 }
 
@@ -16,13 +15,6 @@ export interface TrainingModule {
   icon: string;
 }
 
-export interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  earned: boolean;
-}
 
 export interface QuizResult {
   questions_total: number;
@@ -43,7 +35,6 @@ export const mockUserProgress: UserProgress = {
   modules_completed: [1, 2],
   total_modules: 6,
   credits_earned: 2,
-  badges: ["Observateur du marché", "Scraper intelligent"],
   hours_spent: 1.5
 };
 
@@ -148,50 +139,6 @@ export const mockTrainingModules: TrainingModule[] = [
   }
 ];
 
-export const mockBadges: Badge[] = [
-  {
-    id: "observateur",
-    name: "📊 Observateur du marché",
-    description: "Module 1 complété",
-    icon: "trending-up",
-    earned: true
-  },
-  {
-    id: "scraper",
-    name: "🔍 Scraper intelligent",
-    description: "Module 2 complété",
-    icon: "search",
-    earned: true
-  },
-  {
-    id: "analyste",
-    name: "💰 Analyste rentable",
-    description: "Module 3 complété",
-    icon: "calculator",
-    earned: false
-  },
-  {
-    id: "negociateur",
-    name: "💬 Négociateur pro",
-    description: "Module 4 complété",
-    icon: "message-circle",
-    earned: false
-  },
-  {
-    id: "vendeur",
-    name: "📸 Vendeur d'élite",
-    description: "Module 5 complété",
-    icon: "camera",
-    earned: false
-  },
-  {
-    id: "maitre",
-    name: "🏆 Maître de l'achat-revente",
-    description: "Tous les modules complétés",
-    icon: "trophy",
-    earned: false
-  }
-];
 
 
 export const mockQuizResult: QuizResult = {

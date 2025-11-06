@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { GraduationCap, Award, Clock, BookOpen, CheckCircle2, Circle, Download, ExternalLink, Hand, ShieldCheck, Lock, AlertCircle, TrendingUp, Calculator, Settings, Shield, ChevronDown, ArrowRight, MessageCircle, Users, Trophy, FileText, Video, HelpCircle } from "lucide-react";
-import { mockUserProgress, mockTrainingModules, mockBadges, mockFAQ, bestPractices, forbiddenPractices } from "@/lib/trainingMockData";
+import { mockUserProgress, mockTrainingModules, mockFAQ, bestPractices, forbiddenPractices } from "@/lib/trainingMockData";
 import { toast } from "sonner";
 export default function Training() {
   const [openFAQ, setOpenFAQ] = useState<string[]>([]);
@@ -92,7 +92,7 @@ export default function Training() {
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
                     <CheckCircle2 className="h-6 w-6 mx-auto mb-2 text-green-500" />
@@ -109,35 +109,11 @@ export default function Training() {
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <Award className="h-6 w-6 mx-auto mb-2 text-purple-500" />
-                    <p className="text-2xl font-bold">{mockUserProgress.badges.length}</p>
-                    <p className="text-xs text-muted-foreground">Badges débloqués</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
                     <Users className="h-6 w-6 mx-auto mb-2 text-orange-500" />
                     <p className="text-2xl font-bold">+{mockUserProgress.credits_earned}</p>
                     <p className="text-xs text-muted-foreground">Crédits bonus</p>
                   </CardContent>
                 </Card>
-              </div>
-
-              {/* Badges */}
-              <div>
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Award className="h-5 w-5" />
-                  Badges débloqués
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {mockBadges.map(badge => <div key={badge.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${badge.earned ? "border-primary bg-primary/10" : "border-border bg-muted/50 opacity-60"}`}>
-                      <span className="text-2xl">{badge.name.split(" ")[0]}</span>
-                      <div>
-                        <p className="text-sm font-medium">{badge.name.split(" ").slice(1).join(" ")}</p>
-                        <p className="text-xs text-muted-foreground">{badge.description}</p>
-                      </div>
-                    </div>)}
-                </div>
               </div>
 
               
