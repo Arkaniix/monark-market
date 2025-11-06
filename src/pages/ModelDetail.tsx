@@ -5,88 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { 
-  ArrowLeft, 
-  TrendingUp, 
-  TrendingDown, 
-  Bell, 
-  Star,
-  GitCompare,
-  Calculator,
-  Play,
-  ChevronDown,
-  MapPin,
-  Clock,
-  Info,
-  ExternalLink,
-  Cpu,
-  Activity,
-  BarChart3,
-  Map,
-  Sparkles,
-  History,
-  ChevronUp,
-} from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { ArrowLeft, TrendingUp, TrendingDown, Bell, Star, GitCompare, Calculator, Play, ChevronDown, MapPin, Clock, Info, ExternalLink, Cpu, Activity, BarChart3, Map, Sparkles, History, ChevronUp } from "lucide-react";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from "recharts";
 import { toast } from "sonner";
-import {
-  mockModelInfo,
-  mockModelSeries,
-  mockRegionStats,
-  mockDeals,
-  mockSpecs,
-  mockInsights,
-  mockRelatedModels,
-  estimateScrap,
-  type ModelDeal,
-  type ScrapEstimation,
-} from "@/lib/modelDetailMockData";
-
+import { mockModelInfo, mockModelSeries, mockRegionStats, mockDeals, mockSpecs, mockInsights, mockRelatedModels, estimateScrap, type ModelDeal, type ScrapEstimation } from "@/lib/modelDetailMockData";
 export default function ModelDetail() {
-  const { id } = useParams();
+  const {
+    id
+  } = useParams();
   const navigate = useNavigate();
-  
+
   // State
   const [selectedPeriod, setSelectedPeriod] = useState<"7" | "30" | "90">("30");
   const [showMovingAverage, setShowMovingAverage] = useState(false);
@@ -97,7 +34,7 @@ export default function ModelDetail() {
   const [scrapType, setScrapType] = useState<"faible" | "fort">("faible");
   const [scrapEstimation, setScrapEstimation] = useState<ScrapEstimation | null>(null);
   const [showSpecsJson, setShowSpecsJson] = useState(false);
-  
+
   // Mock data - in real app would fetch based on id
   const model = mockModelInfo;
   const series = mockModelSeries;
@@ -112,55 +49,54 @@ export default function ModelDetail() {
     const days = selectedPeriod === "7" ? 7 : selectedPeriod === "30" ? 30 : 90;
     return series.price_median.slice(-days);
   };
-
   const getFilteredVolumeData = () => {
     const days = selectedPeriod === "7" ? 7 : selectedPeriod === "30" ? 30 : 90;
     return series.volume.slice(-days);
   };
-
   const priceData = getFilteredPriceData();
   const volumeData = getFilteredVolumeData();
 
   // Filter deals by region
-  const filteredDeals = selectedRegion === "all" 
-    ? deals 
-    : deals.filter(d => d.region === selectedRegion);
+  const filteredDeals = selectedRegion === "all" ? deals : deals.filter(d => d.region === selectedRegion);
 
   // Comparison data for bar chart
-  const comparisonData = [
-    { label: "Prix médian marché", value: model.kpi.median_30d, fill: "hsl(var(--chart-1))" },
-    { label: "Fair Value 30j", value: insights.fair_value_30d, fill: "hsl(var(--chart-2))" },
-    { label: "Prix achat conseillé", value: Math.round(insights.fair_value_30d * 0.94), fill: "hsl(var(--chart-3))" },
-  ];
+  const comparisonData = [{
+    label: "Prix médian marché",
+    value: model.kpi.median_30d,
+    fill: "hsl(var(--chart-1))"
+  }, {
+    label: "Fair Value 30j",
+    value: insights.fair_value_30d,
+    fill: "hsl(var(--chart-2))"
+  }, {
+    label: "Prix achat conseillé",
+    value: Math.round(insights.fair_value_30d * 0.94),
+    fill: "hsl(var(--chart-3))"
+  }];
 
   // Handlers
   const handleToggleWatchlist = () => {
     setIsInWatchlist(!isInWatchlist);
     toast.success(isInWatchlist ? "Retiré de la watchlist" : "Ajouté à la watchlist");
   };
-
   const handleCreateAlert = () => {
     setShowAlertDialog(false);
     toast.success("Alerte créée avec succès");
   };
-
   const handleLaunchScrap = (type: "faible" | "fort") => {
     setScrapType(type);
     const estimation = estimateScrap(type);
     setScrapEstimation(estimation);
     setShowScrapDialog(true);
   };
-
   const handleConfirmScrap = () => {
     setShowScrapDialog(false);
     toast.success(`Scrap ${scrapType} lancé ! Ouverture de l'onglet...`);
     // In real app, would open new tab with filtered search
   };
-
   const handleCompare = () => {
     navigate(`/catalog?compare=${model.id}`);
   };
-
   const handleEstimate = () => {
     navigate(`/estimator?model=${model.id}`);
   };
@@ -170,11 +106,18 @@ export default function ModelDetail() {
   const formatPercent = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+    return date.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
   };
   const formatDateShort = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+    return date.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit"
+    });
   };
   const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -186,29 +129,29 @@ export default function ModelDetail() {
     const diffDays = Math.floor(diffHours / 24);
     return `il y a ${diffDays}j`;
   };
-
   const getStateColor = (state: string) => {
     switch (state) {
-      case "neuf": return "bg-green-500/10 text-green-500 border-green-500/20";
-      case "comme_neuf": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      case "bon": return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-      case "à_réparer": return "bg-red-500/10 text-red-500 border-red-500/20";
-      default: return "";
+      case "neuf":
+        return "bg-green-500/10 text-green-500 border-green-500/20";
+      case "comme_neuf":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "bon":
+        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+      case "à_réparer":
+        return "bg-red-500/10 text-red-500 border-red-500/20";
+      default:
+        return "";
     }
   };
-
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-500";
     if (score >= 60) return "text-yellow-500";
     return "text-red-500";
   };
-
   const getTrendIcon = (value: number) => {
     return value < 0 ? <TrendingDown className="h-4 w-4 text-green-500" /> : <TrendingUp className="h-4 w-4 text-red-500" />;
   };
-
-  return (
-    <div className="min-h-screen py-8">
+  return <div className="min-h-screen py-8">
       <div className="container max-w-7xl space-y-8">
         {/* Breadcrumb */}
         <Breadcrumb>
@@ -244,23 +187,23 @@ export default function ModelDetail() {
         </Breadcrumb>
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} className="space-y-4">
           <div>
             <h1 className="text-4xl font-bold mb-3">{model.brand} {model.name}</h1>
             <div className="flex gap-2 flex-wrap">
               <Badge variant="secondary">{model.category}</Badge>
               <Badge variant="outline">{model.family}</Badge>
               <Badge variant="outline">{model.generation}</Badge>
-              {model.is_popular && (
-                <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+              {model.is_popular && <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
                   <Star className="h-3 w-3 mr-1" />
                   Populaire
-                </Badge>
-              )}
+                </Badge>}
             </div>
           </div>
 
@@ -270,12 +213,15 @@ export default function ModelDetail() {
         </motion.div>
 
         {/* KPI Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.1
+      }} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Prix médian 30j</CardTitle>
@@ -308,10 +254,9 @@ export default function ModelDetail() {
             <CardContent>
               <div className="text-2xl font-bold">{(model.kpi.rarity_index * 100).toFixed(0)}%</div>
               <div className="w-full bg-muted rounded-full h-2 mt-2">
-                <div 
-                  className="bg-primary h-2 rounded-full transition-all"
-                  style={{ width: `${model.kpi.rarity_index * 100}%` }}
-                />
+                <div className="bg-primary h-2 rounded-full transition-all" style={{
+                width: `${model.kpi.rarity_index * 100}%`
+              }} />
               </div>
             </CardContent>
           </Card>
@@ -350,11 +295,15 @@ export default function ModelDetail() {
         </motion.div>
 
         {/* Quick Tools */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.2
+      }}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -364,10 +313,7 @@ export default function ModelDetail() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={isInWatchlist ? "default" : "outline"}
-                  onClick={handleToggleWatchlist}
-                >
+                <Button variant={isInWatchlist ? "default" : "outline"} onClick={handleToggleWatchlist}>
                   <Bell className="h-4 w-4 mr-2" />
                   {isInWatchlist ? "Dans la watchlist" : "Ajouter à la watchlist"}
                 </Button>
@@ -435,9 +381,9 @@ export default function ModelDetail() {
                       <div className="space-y-2">
                         <Label>Type de scrap</Label>
                         <Select value={scrapType} onValueChange={(v: any) => {
-                          setScrapType(v);
-                          setScrapEstimation(estimateScrap(v));
-                        }}>
+                        setScrapType(v);
+                        setScrapEstimation(estimateScrap(v));
+                      }}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -448,8 +394,7 @@ export default function ModelDetail() {
                         </Select>
                       </div>
 
-                      {scrapEstimation && (
-                        <Card>
+                      {scrapEstimation && <Card>
                           <CardHeader>
                             <CardTitle className="text-sm">Estimation</CardTitle>
                           </CardHeader>
@@ -471,8 +416,7 @@ export default function ModelDetail() {
                               <span className="font-medium">{scrapEstimation.expected_updates}</span>
                             </div>
                           </CardContent>
-                        </Card>
-                      )}
+                        </Card>}
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setShowScrapDialog(false)}>Annuler</Button>
@@ -485,10 +429,7 @@ export default function ModelDetail() {
                 </Dialog>
 
                 <Button variant="outline" asChild>
-                  <Link to="/community">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Scrap communautaire
-                  </Link>
+                  
                 </Button>
               </div>
             </CardContent>
@@ -496,46 +437,33 @@ export default function ModelDetail() {
         </motion.div>
 
         {/* Charts */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="space-y-6"
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.3
+      }} className="space-y-6">
           {/* Period Selector */}
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex gap-2">
-                  <Button
-                    variant={selectedPeriod === "7" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedPeriod("7")}
-                  >
+                  <Button variant={selectedPeriod === "7" ? "default" : "outline"} size="sm" onClick={() => setSelectedPeriod("7")}>
                     7j
                   </Button>
-                  <Button
-                    variant={selectedPeriod === "30" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedPeriod("30")}
-                  >
+                  <Button variant={selectedPeriod === "30" ? "default" : "outline"} size="sm" onClick={() => setSelectedPeriod("30")}>
                     30j
                   </Button>
-                  <Button
-                    variant={selectedPeriod === "90" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedPeriod("90")}
-                  >
+                  <Button variant={selectedPeriod === "90" ? "default" : "outline"} size="sm" onClick={() => setSelectedPeriod("90")}>
                     90j
                   </Button>
                 </div>
                 <Separator orientation="vertical" className="h-6" />
                 <div className="flex items-center space-x-2">
-                  <Switch
-                    id="moving-avg"
-                    checked={showMovingAverage}
-                    onCheckedChange={setShowMovingAverage}
-                  />
+                  <Switch id="moving-avg" checked={showMovingAverage} onCheckedChange={setShowMovingAverage} />
                   <Label htmlFor="moving-avg">Moyenne mobile 7j</Label>
                 </div>
               </div>
@@ -555,44 +483,13 @@ export default function ModelDetail() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={priceData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis 
-                      dataKey="date" 
-                      tickFormatter={formatDateShort}
-                      className="text-xs"
-                    />
-                    <YAxis 
-                      tickFormatter={(value) => `${value}€`}
-                      className="text-xs"
-                    />
-                    <Tooltip 
-                      formatter={(value: any) => [`${value}€`, '']}
-                      labelFormatter={formatDate}
-                    />
+                    <XAxis dataKey="date" tickFormatter={formatDateShort} className="text-xs" />
+                    <YAxis tickFormatter={value => `${value}€`} className="text-xs" />
+                    <Tooltip formatter={(value: any) => [`${value}€`, '']} labelFormatter={formatDate} />
                     <Legend />
-                    <Area
-                      type="monotone"
-                      dataKey="p75"
-                      stroke="none"
-                      fill="hsl(var(--primary))"
-                      fillOpacity={0.1}
-                      name="P75"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="p25"
-                      stroke="none"
-                      fill="hsl(var(--background))"
-                      fillOpacity={1}
-                      name="P25"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="median"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Médiane"
-                    />
+                    <Area type="monotone" dataKey="p75" stroke="none" fill="hsl(var(--primary))" fillOpacity={0.1} name="P75" />
+                    <Area type="monotone" dataKey="p25" stroke="none" fill="hsl(var(--background))" fillOpacity={1} name="P25" />
+                    <Line type="monotone" dataKey="median" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Médiane" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -613,22 +510,11 @@ export default function ModelDetail() {
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={volumeData}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis 
-                        dataKey="date" 
-                        tickFormatter={formatDateShort}
-                        className="text-xs"
-                      />
+                      <XAxis dataKey="date" tickFormatter={formatDateShort} className="text-xs" />
                       <YAxis className="text-xs" />
                       <Tooltip labelFormatter={formatDate} />
                       <Legend />
-                      <Area
-                        type="monotone"
-                        dataKey="count"
-                        stroke="hsl(var(--chart-2))"
-                        fill="hsl(var(--chart-2))"
-                        fillOpacity={0.6}
-                        name="Annonces actives"
-                      />
+                      <Area type="monotone" dataKey="count" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.6} name="Annonces actives" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -648,16 +534,9 @@ export default function ModelDetail() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={series.histogram}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis 
-                        dataKey="bucket" 
-                        tickFormatter={(value) => `${value}€`}
-                        className="text-xs"
-                      />
+                      <XAxis dataKey="bucket" tickFormatter={value => `${value}€`} className="text-xs" />
                       <YAxis className="text-xs" />
-                      <Tooltip 
-                        formatter={(value: any) => [`${value} annonces`, '']}
-                        labelFormatter={(value) => `~${value}€`}
-                      />
+                      <Tooltip formatter={(value: any) => [`${value} annonces`, '']} labelFormatter={value => `~${value}€`} />
                       <Bar dataKey="count" fill="hsl(var(--chart-3))" name="Annonces" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -679,22 +558,11 @@ export default function ModelDetail() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={comparisonData} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis 
-                      type="number" 
-                      tickFormatter={(value) => `${value}€`}
-                      className="text-xs"
-                    />
-                    <YAxis 
-                      type="category" 
-                      dataKey="label" 
-                      width={150}
-                      className="text-xs"
-                    />
+                    <XAxis type="number" tickFormatter={value => `${value}€`} className="text-xs" />
+                    <YAxis type="category" dataKey="label" width={150} className="text-xs" />
                     <Tooltip formatter={(value: any) => [`${value}€`, '']} />
                     <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-                      {comparisonData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
+                      {comparisonData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -704,11 +572,15 @@ export default function ModelDetail() {
         </motion.div>
 
         {/* Regional Map */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.4
+      }}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -721,8 +593,7 @@ export default function ModelDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {regions.map((region) => (
-                  <div key={region.code} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setSelectedRegion(region.code)}>
+                {regions.map(region => <div key={region.code} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setSelectedRegion(region.code)}>
                     <div className="flex items-center gap-3">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <div>
@@ -739,19 +610,22 @@ export default function ModelDetail() {
                         </span>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* Top Opportunities */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.5
+      }}>
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -759,11 +633,9 @@ export default function ModelDetail() {
                   <Sparkles className="h-5 w-5" />
                   Meilleures opportunités
                 </CardTitle>
-                {selectedRegion !== "all" && (
-                  <Button variant="outline" size="sm" onClick={() => setSelectedRegion("all")}>
+                {selectedRegion !== "all" && <Button variant="outline" size="sm" onClick={() => setSelectedRegion("all")}>
                     Afficher toutes les régions
-                  </Button>
-                )}
+                  </Button>}
               </div>
             </CardHeader>
             <CardContent>
@@ -779,8 +651,7 @@ export default function ModelDetail() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredDeals.map((deal) => (
-                    <TableRow key={deal.ad_id}>
+                  {filteredDeals.map(deal => <TableRow key={deal.ad_id}>
                       <TableCell>
                         <div className="font-bold text-lg">{formatPrice(deal.price)}</div>
                       </TableCell>
@@ -810,8 +681,7 @@ export default function ModelDetail() {
                           </a>
                         </Button>
                       </TableCell>
-                    </TableRow>
-                  ))}
+                    </TableRow>)}
                 </TableBody>
               </Table>
             </CardContent>
@@ -819,12 +689,15 @@ export default function ModelDetail() {
         </motion.div>
 
         {/* Specs & Insights */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="grid md:grid-cols-2 gap-6"
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.6
+      }} className="grid md:grid-cols-2 gap-6">
           {/* Specifications */}
           <Card>
             <CardHeader>
@@ -836,12 +709,10 @@ export default function ModelDetail() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                {Object.entries(specs.specs_core).map(([key, value]) => (
-                  <div key={key} className="space-y-1">
+                {Object.entries(specs.specs_core).map(([key, value]) => <div key={key} className="space-y-1">
                     <p className="text-xs text-muted-foreground">{key.replace(/_/g, " ")}</p>
                     <p className="font-medium">{value}</p>
-                  </div>
-                ))}
+                  </div>)}
               </div>
 
               <Collapsible open={showSpecsJson} onOpenChange={setShowSpecsJson}>
@@ -907,10 +778,9 @@ export default function ModelDetail() {
                   <div className="flex items-center gap-2">
                     <div className="flex-1">
                       <div className="w-full bg-muted rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${insights.resell_probability * 100}%` }}
-                        />
+                        <div className="bg-primary h-2 rounded-full transition-all" style={{
+                        width: `${insights.resell_probability * 100}%`
+                      }} />
                       </div>
                     </div>
                     <span className="font-bold">{(insights.resell_probability * 100).toFixed(0)}%</span>
@@ -927,11 +797,15 @@ export default function ModelDetail() {
         </motion.div>
 
         {/* Related Models */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.7
+      }}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -941,8 +815,7 @@ export default function ModelDetail() {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {relatedModels.map((related) => (
-                  <Link key={related.id} to={`/model/${related.id}`}>
+                {relatedModels.map(related => <Link key={related.id} to={`/model/${related.id}`}>
                     <Card className="hover:border-primary transition-colors cursor-pointer h-full">
                       <CardHeader className="pb-3">
                         <Badge variant="outline" className="w-fit mb-2">{related.category}</Badge>
@@ -971,19 +844,22 @@ export default function ModelDetail() {
                         </div>
                       </CardContent>
                     </Card>
-                  </Link>
-                ))}
+                  </Link>)}
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* Methodology */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.8
+      }}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1005,6 +881,5 @@ export default function ModelDetail() {
           </Card>
         </motion.div>
       </div>
-    </div>
-  );
+    </div>;
 }
