@@ -226,7 +226,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 lg:p-8">
-      <div className={`w-full grid gap-8 items-start ${activeTab === 'signup' ? 'max-w-[1400px] lg:grid-cols-[380px_1fr]' : 'max-w-6xl lg:grid-cols-2'}`}>
+      <div className={`w-full grid gap-8 items-start ${activeTab === 'signup' ? 'max-w-[1200px]' : 'max-w-6xl lg:grid-cols-2'}`}>
         {/* Left Panel - Marketing Content (hidden on mobile) */}
         <div className="hidden lg:flex flex-col gap-8 p-8">
           <div className="space-y-4">
@@ -356,233 +356,227 @@ export default function Auth() {
             </TabsContent>
 
             <TabsContent value="signup" className="mt-6">
-              <form onSubmit={handleSignUp} className="space-y-5">
+              <form onSubmit={handleSignUp} className="space-y-6">
+                {/* First Row: Personal Info & Security side by side */}
                 <div className="grid md:grid-cols-2 gap-5">
-                  {/* Left Column: Personal Info & Security */}
-                  <div className="space-y-5">
-                    {/* Personal Information Section */}
-                    <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-muted/30 to-muted/10 border border-border/50">
-                      <h3 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
-                        <div className="h-1 w-1 rounded-full bg-primary"></div>
-                        Informations personnelles
-                      </h3>
-                      
-                      <div className="space-y-2.5">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="signup-name" className="text-xs font-medium">Nom d'affichage</Label>
-                          <Input
-                            id="signup-name"
-                            type="text"
-                            placeholder="Votre nom"
-                            value={displayName}
-                            onChange={(e) => setDisplayName(e.target.value)}
-                            className="h-9 bg-background/50 border-border/70 focus:border-primary transition-colors"
-                          />
-                        </div>
-                        
-                        <div className="space-y-1.5">
-                          <Label htmlFor="signup-email" className="text-xs font-medium">Email</Label>
-                          <Input
-                            id="signup-email"
-                            type="email"
-                            placeholder="votre@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="h-9 bg-background/50 border-border/70 focus:border-primary transition-colors"
-                          />
-                        </div>
-                        
-                        <div className="space-y-1.5">
-                          <Label htmlFor="signup-discord" className="flex items-center gap-2 text-xs font-medium">
-                            <MessageCircle className="w-3 h-3 text-primary" />
-                            Discord <span className="text-muted-foreground font-normal">(optionnel)</span>
-                          </Label>
-                          <Input
-                            id="signup-discord"
-                            type="text"
-                            placeholder="votre_pseudo#1234"
-                            value={discordId}
-                            onChange={(e) => setDiscordId(e.target.value)}
-                            className="h-9 bg-background/50 border-border/70 focus:border-primary transition-colors"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Security Section */}
-                    <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-muted/30 to-muted/10 border border-border/50">
-                      <h3 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
-                        <div className="h-1 w-1 rounded-full bg-primary"></div>
-                        Sécurité
-                      </h3>
-                      
-                      <div className="space-y-2.5">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="signup-password" className="text-xs font-medium">Mot de passe</Label>
-                          <div className="relative">
-                            <Input
-                              id="signup-password"
-                              type={showPassword ? "text" : "password"}
-                              placeholder="••••••••"
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              required
-                              className="h-9 pr-10 bg-background/50 border-border/70 focus:border-primary transition-colors"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-3.5 w-3.5" />
-                              ) : (
-                                <Eye className="h-3.5 w-3.5" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-1.5">
-                          <Label htmlFor="signup-confirm-password" className="text-xs font-medium">Confirmer le mot de passe</Label>
-                          <div className="relative">
-                            <Input
-                              id="signup-confirm-password"
-                              type={showConfirmPassword ? "text" : "password"}
-                              placeholder="••••••••"
-                              value={confirmPassword}
-                              onChange={(e) => setConfirmPassword(e.target.value)}
-                              required
-                              className="h-9 pr-10 bg-background/50 border-border/70 focus:border-primary transition-colors"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
-                            >
-                              {showConfirmPassword ? (
-                                <EyeOff className="h-3.5 w-3.5" />
-                              ) : (
-                                <Eye className="h-3.5 w-3.5" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Subscription Plans */}
-                  <div className="space-y-4 p-5 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
-                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                      Choisissez votre plan
+                  {/* Personal Information Section */}
+                  <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-muted/30 to-muted/10 border border-border/50">
+                    <h3 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                      <div className="h-1 w-1 rounded-full bg-primary"></div>
+                      Informations personnelles
                     </h3>
                     
-                    <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="space-y-3">
-                      {plans.map((plan) => {
-                        const isPopular = plan.id === mostPopularPlanId;
-                        const isPremium = plan.name === 'Elite';
-                        const PlanIcon = plan.name === 'Basic' ? TrendingUp : plan.name === 'Pro' ? Star : Crown;
-                        
-                        return (
-                          <div key={plan.id} className="relative">
-                            {isPopular && (
-                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
-                                <span className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
-                                  ⭐ Populaire
-                                </span>
-                              </div>
+                    <div className="space-y-2.5">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="signup-name" className="text-xs font-medium">Nom d'affichage</Label>
+                        <Input
+                          id="signup-name"
+                          type="text"
+                          placeholder="Votre nom"
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          className="h-9 bg-background/50 border-border/70 focus:border-primary transition-colors"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1.5">
+                        <Label htmlFor="signup-email" className="text-xs font-medium">Email</Label>
+                        <Input
+                          id="signup-email"
+                          type="email"
+                          placeholder="votre@email.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          className="h-9 bg-background/50 border-border/70 focus:border-primary transition-colors"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1.5">
+                        <Label htmlFor="signup-discord" className="flex items-center gap-2 text-xs font-medium">
+                          <MessageCircle className="w-3 h-3 text-primary" />
+                          Discord <span className="text-muted-foreground font-normal">(optionnel)</span>
+                        </Label>
+                        <Input
+                          id="signup-discord"
+                          type="text"
+                          placeholder="votre_pseudo#1234"
+                          value={discordId}
+                          onChange={(e) => setDiscordId(e.target.value)}
+                          className="h-9 bg-background/50 border-border/70 focus:border-primary transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Security Section */}
+                  <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-muted/30 to-muted/10 border border-border/50">
+                    <h3 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                      <div className="h-1 w-1 rounded-full bg-primary"></div>
+                      Sécurité
+                    </h3>
+                    
+                    <div className="space-y-2.5">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="signup-password" className="text-xs font-medium">Mot de passe</Label>
+                        <div className="relative">
+                          <Input
+                            id="signup-password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="h-9 pr-10 bg-background/50 border-border/70 focus:border-primary transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-3.5 w-3.5" />
+                            ) : (
+                              <Eye className="h-3.5 w-3.5" />
                             )}
-                            <RadioGroupItem
-                              value={plan.id}
-                              id={plan.id}
-                              className="peer sr-only"
-                            />
-                            <Label
-                              htmlFor={plan.id}
-                              className={`
-                                flex cursor-pointer rounded-xl border-2 bg-card p-4 
-                                transition-all duration-300 
-                                hover:border-primary/50 hover:shadow-lg hover:scale-[1.01]
-                                peer-data-[state=checked]:border-primary peer-data-[state=checked]:shadow-xl peer-data-[state=checked]:bg-primary/5
-                                ${isPopular ? 'border-primary/30' : 'border-muted'}
-                                ${isPremium ? 'bg-gradient-to-br from-accent/10 to-card border-accent/30' : ''}
-                              `}
-                            >
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-3">
-                                  <div className="flex items-center gap-3">
-                                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shadow-md ${
-                                      isPremium 
-                                        ? 'bg-gradient-to-br from-accent to-accent/80' 
-                                        : 'bg-gradient-to-br from-primary/20 to-primary/10'
-                                    }`}>
-                                      <PlanIcon className={`h-5 w-5 ${
-                                        isPremium ? 'text-accent-foreground' : 'text-primary'
-                                      }`} />
-                                    </div>
-                                    <div>
-                                      <span className="font-bold text-lg">{plan.name}</span>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="font-bold text-2xl text-primary">{plan.price}€</div>
-                                    <div className="text-xs text-muted-foreground">par mois</div>
-                                  </div>
-                                </div>
-                                
-                                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{plan.description}</p>
-                                
-                                {plan.features && (
-                                  <div className="pt-3 border-t border-border/40">
-                                    <p className="text-xs font-semibold text-foreground/80 mb-2">Fonctionnalités incluses :</p>
-                                    <ul className="space-y-2">
-                                      {Object.entries(plan.features).map(([key, value]: [string, any]) => {
-                                        const formatFeature = (k: string, v: any) => {
-                                          if (typeof v === 'boolean') {
-                                            return k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                          }
-                                          const label = k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                          return `${label} : ${v}`;
-                                        };
-                                        
-                                        return (
-                                          <li 
-                                            key={key} 
-                                            className="flex items-start gap-2 text-sm"
-                                          >
-                                            <div className="h-4 w-4 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                              <Check className="h-2.5 w-2.5 text-primary" />
-                                            </div>
-                                            <span className="text-foreground/80">
-                                              {formatFeature(key, value)}
-                                            </span>
-                                          </li>
-                                        );
-                                      })}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="ml-3 flex items-start pt-1">
-                                <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                                  selectedPlan === plan.id 
-                                    ? 'border-primary bg-primary' 
-                                    : 'border-muted-foreground/30'
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1.5">
+                        <Label htmlFor="signup-confirm-password" className="text-xs font-medium">Confirmer le mot de passe</Label>
+                        <div className="relative">
+                          <Input
+                            id="signup-confirm-password"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            className="h-9 pr-10 bg-background/50 border-border/70 focus:border-primary transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-3.5 w-3.5" />
+                            ) : (
+                              <Eye className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Second Row: Subscription Plans */}
+                <div className="space-y-4 p-5 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
+                  <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                    Choisissez votre plan
+                  </h3>
+                  
+                  <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="grid md:grid-cols-3 gap-4">
+                    {plans.map((plan) => {
+                      const isPopular = plan.id === mostPopularPlanId;
+                      const isPremium = plan.name === 'Elite';
+                      const PlanIcon = plan.name === 'Basic' ? TrendingUp : plan.name === 'Pro' ? Star : Crown;
+                      
+                      return (
+                        <div key={plan.id} className="relative">
+                          {isPopular && (
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
+                              <span className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
+                                ⭐ Populaire
+                              </span>
+                            </div>
+                          )}
+                          <RadioGroupItem
+                            value={plan.id}
+                            id={plan.id}
+                            className="peer sr-only"
+                          />
+                          <Label
+                            htmlFor={plan.id}
+                            className={`
+                              flex flex-col cursor-pointer rounded-xl border-2 bg-card p-4 h-full
+                              transition-all duration-300 
+                              hover:border-primary/50 hover:shadow-lg hover:scale-[1.02]
+                              peer-data-[state=checked]:border-primary peer-data-[state=checked]:shadow-xl peer-data-[state=checked]:bg-primary/5
+                              ${isPopular ? 'border-primary/30' : 'border-muted'}
+                              ${isPremium ? 'bg-gradient-to-br from-accent/10 to-card border-accent/30' : ''}
+                            `}
+                          >
+                            <div className="flex-1">
+                              <div className="flex flex-col items-center text-center mb-3">
+                                <div className={`h-12 w-12 rounded-xl flex items-center justify-center shadow-md mb-2 ${
+                                  isPremium 
+                                    ? 'bg-gradient-to-br from-accent to-accent/80' 
+                                    : 'bg-gradient-to-br from-primary/20 to-primary/10'
                                 }`}>
-                                  <Check className={`h-3 w-3 text-primary-foreground transition-opacity ${
-                                    selectedPlan === plan.id ? 'opacity-100' : 'opacity-0'
+                                  <PlanIcon className={`h-6 w-6 ${
+                                    isPremium ? 'text-accent-foreground' : 'text-primary'
                                   }`} />
                                 </div>
+                                <span className="font-bold text-lg">{plan.name}</span>
+                                <div className="mt-2">
+                                  <div className="font-bold text-2xl text-primary">{plan.price}€</div>
+                                  <div className="text-xs text-muted-foreground">par mois</div>
+                                </div>
                               </div>
-                            </Label>
-                          </div>
-                        );
-                      })}
-                    </RadioGroup>
-                  </div>
+                              
+                              <p className="text-sm text-muted-foreground mb-4 leading-relaxed text-center">{plan.description}</p>
+                              
+                              {plan.features && (
+                                <div className="pt-3 border-t border-border/40">
+                                  <p className="text-xs font-semibold text-foreground/80 mb-2">Fonctionnalités :</p>
+                                  <ul className="space-y-2">
+                                    {Object.entries(plan.features).map(([key, value]: [string, any]) => {
+                                      const formatFeature = (k: string, v: any) => {
+                                        if (typeof v === 'boolean') {
+                                          return k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                        }
+                                        const label = k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                        return `${label} : ${v}`;
+                                      };
+                                      
+                                      return (
+                                        <li 
+                                          key={key} 
+                                          className="flex items-start gap-2 text-xs"
+                                        >
+                                          <div className="h-4 w-4 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <Check className="h-2.5 w-2.5 text-primary" />
+                                          </div>
+                                          <span className="text-foreground/80">
+                                            {formatFeature(key, value)}
+                                          </span>
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-3 flex justify-center pt-3 border-t border-border/20">
+                              <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                selectedPlan === plan.id 
+                                  ? 'border-primary bg-primary' 
+                                  : 'border-muted-foreground/30'
+                              }`}>
+                                <Check className={`h-3 w-3 text-primary-foreground transition-opacity ${
+                                  selectedPlan === plan.id ? 'opacity-100' : 'opacity-0'
+                                }`} />
+                              </div>
+                            </div>
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </RadioGroup>
                 </div>
 
                 <Button 
