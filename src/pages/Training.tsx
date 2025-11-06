@@ -234,142 +234,13 @@ export default function Training() {
         </motion.section>
 
         {/* Conclusion */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-12"
-        >
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                🏁 La méthode des 3 piliers
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg font-semibold mb-4">Observer → Analyser → Agir</p>
-              <ul className="space-y-2 mb-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-semibold">Observer :</span>
-                  <span>comprendre les cycles et les tendances</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-semibold">Analyser :</span>
-                  <span>évaluer chaque annonce avec des données et du recul</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-semibold">Agir :</span>
-                  <span>acheter bas, revendre proprement, rester cohérent</span>
-                </li>
-              </ul>
-              <p className="text-center italic text-muted-foreground">
-                "Le vendeur rentable n'a pas de chance, il a une méthode."
-              </p>
-            </CardContent>
-          </Card>
-        </motion.section>
+        
 
         {/* Best Practices & GDPR */}
-        <motion.section initial={{
-        opacity: 0,
-        y: 20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        delay: 0.4
-      }}>
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold mb-2">Bonnes Pratiques & RGPD</h2>
-            <p className="text-muted-foreground">Respecte ces principes pour contribuer de manière éthique et sécurisée</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Good Practices */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-600">
-                  <CheckCircle2 className="h-5 w-5" />
-                  À Faire
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {bestPractices.map((practice, index) => {
-                const Icon = practice.icon === "hand" ? Hand : practice.icon === "shield-check" ? ShieldCheck : practice.icon === "check-circle" ? CheckCircle2 : practice.icon === "clock" ? Clock : Lock;
-                return <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-green-500/5 border border-green-500/20">
-                      <Icon className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-sm">{practice.title}</p>
-                        <p className="text-xs text-muted-foreground">{practice.description}</p>
-                      </div>
-                    </div>;
-              })}
-                <Button variant="link" size="sm" className="p-0 h-auto" asChild>
-                  <Link to="/rgpd">Voir la politique RGPD complète →</Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Forbidden Practices */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-destructive">
-                  <AlertCircle className="h-5 w-5" />
-                  À Ne Jamais Faire
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {forbiddenPractices.map((practice, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
-                    <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-sm">{practice.title}</p>
-                      <p className="text-xs text-muted-foreground">{practice.description}</p>
-                    </div>
-                  </div>)}
-              </CardContent>
-            </Card>
-          </div>
-        </motion.section>
+        
 
         {/* Quiz Section */}
-        <motion.section initial={{
-        opacity: 0,
-        y: 20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        delay: 0.5
-      }}>
-          <Card className="border-2 border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <HelpCircle className="h-6 w-6 text-primary" />
-                Quiz Final – Vérification des Acquis
-              </CardTitle>
-              <CardDescription>
-                Teste tes connaissances avec 10 questions couvrant les 4 modules
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {quizScore === null ? <>
-                  <p className="text-sm text-muted-foreground">
-                    Score requis : 8/10 minimum pour obtenir le badge et +1 crédit bonus
-                  </p>
-                  <Button onClick={handleStartQuiz} size="lg">
-                    Commencer le quiz
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </> : <Alert className={quizScore >= 8 ? "border-green-500 bg-green-500/5" : "border-orange-500 bg-orange-500/5"}>
-                  <CheckCircle2 className="h-4 w-4" />
-                  <AlertDescription>
-                    <p className="font-semibold mb-1">Score: {quizScore}/10</p>
-                    {quizScore >= 8 ? <p className="text-sm">Bravo ! Tu maîtrises les bases. +1 crédit gagné</p> : quizScore >= 5 ? <p className="text-sm">Bien, mais révise les bonnes pratiques.</p> : <p className="text-sm">Refais la formation avant de contribuer.</p>}
-                  </AlertDescription>
-                </Alert>}
-            </CardContent>
-          </Card>
-        </motion.section>
+        
 
         {/* FAQ */}
         <motion.section initial={{
@@ -409,10 +280,7 @@ export default function Training() {
                       Discord #aide-formation
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    Poser une question
-                  </Button>
+                  
                 </div>
               </div>
             </CardContent>
