@@ -3,18 +3,108 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, Users, Package, TrendingUp, Database } from "lucide-react";
+import { Shield, Users, Package, TrendingUp, Database, Activity, CreditCard, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+
+interface Stats {
+  totalUsers: number;
+  totalJobs: number;
+  totalAds: number;
+  activeSubscriptions: number;
+  totalCreditsUsed: number;
+  recentJobs: any[];
+  recentUsers: any[];
+}
 
 export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<Stats>({
+    totalUsers: 0,
+    totalJobs: 0,
+    totalAds: 0,
+    activeSubscriptions: 0,
+    totalCreditsUsed: 0,
+    recentJobs: [],
+    recentUsers: []
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     checkAdminStatus();
   }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadStats();
+    }
+  }, [isAdmin]);
+
+  const loadStats = async () => {
+    try {
+      // Get total users count
+      const { count: usersCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Get total jobs count
+      const { count: jobsCount } = await supabase
+        .from('jobs')
+        .select('*', { count: 'exact', head: true });
+
+      // Get total ads count
+      const { count: adsCount } = await supabase
+        .from('ads')
+        .select('*', { count: 'exact', head: true });
+
+      // Get active subscriptions count
+      const { count: subsCount } = await supabase
+        .from('user_subscriptions')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+
+      // Get total credits used from credit_logs
+      const { data: creditsData } = await supabase
+        .from('credit_logs')
+        .select('delta');
+      
+      const totalCreditsUsed = creditsData?.reduce((sum, log) => sum + Math.abs(log.delta), 0) || 0;
+
+      // Get recent jobs
+      const { data: recentJobsData } = await supabase
+        .from('jobs')
+        .select('id, keyword, status, created_at, pages_scanned, ads_found, profiles(display_name)')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      // Get recent users
+      const { data: recentUsersData } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      setStats({
+        totalUsers: usersCount || 0,
+        totalJobs: jobsCount || 0,
+        totalAds: adsCount || 0,
+        activeSubscriptions: subsCount || 0,
+        totalCreditsUsed,
+        recentJobs: recentJobsData || [],
+        recentUsers: recentUsersData || []
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les statistiques",
+        variant: "destructive"
+      });
+    }
+  };
 
   const checkAdminStatus = async () => {
     try {
@@ -78,69 +168,177 @@ export default function Admin() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {/* Statistics Overview */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Gestion des utilisateurs
-            </CardTitle>
-            <CardDescription>
-              Gérer les comptes et les rôles
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Utilisateurs</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Button className="w-full">Voir les utilisateurs</Button>
+            <div className="text-2xl font-bold">{stats.totalUsers}</div>
+            <p className="text-xs text-muted-foreground">Comptes créés</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Gestion des produits
-            </CardTitle>
-            <CardDescription>
-              Modérer le catalogue
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Abonnements Actifs</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Button className="w-full">Voir les produits</Button>
+            <div className="text-2xl font-bold">{stats.activeSubscriptions}</div>
+            <p className="text-xs text-muted-foreground">Plans actifs</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Statistiques
-            </CardTitle>
-            <CardDescription>
-              Analytics et rapports
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Button className="w-full">Voir les stats</Button>
+            <div className="text-2xl font-bold">{stats.totalJobs}</div>
+            <p className="text-xs text-muted-foreground">Scrapings lancés</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Base de données
-            </CardTitle>
-            <CardDescription>
-              Accès aux données
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Annonces Trouvées</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Button className="w-full" variant="outline">
-              Ouvrir le backend
-            </Button>
+            <div className="text-2xl font-bold">{stats.totalAds}</div>
+            <p className="text-xs text-muted-foreground">Dans la base</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Recent Jobs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Jobs Récents
+          </CardTitle>
+          <CardDescription>Les 5 derniers jobs de scraping lancés</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Utilisateur</TableHead>
+                <TableHead>Mot-clé</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Pages</TableHead>
+                <TableHead>Annonces</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {stats.recentJobs.map((job) => (
+                <TableRow key={job.id}>
+                  <TableCell className="font-medium">
+                    {job.profiles?.display_name || 'Utilisateur'}
+                  </TableCell>
+                  <TableCell>{job.keyword}</TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      job.status === 'completed' ? 'default' :
+                      job.status === 'running' ? 'secondary' :
+                      job.status === 'failed' ? 'destructive' : 'outline'
+                    }>
+                      {job.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{job.pages_scanned || 0}</TableCell>
+                  <TableCell>{job.ads_found || 0}</TableCell>
+                  <TableCell>
+                    {new Date(job.created_at).toLocaleDateString('fr-FR')}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {stats.recentJobs.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    Aucun job trouvé
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Recent Users */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Nouveaux Utilisateurs
+          </CardTitle>
+          <CardDescription>Les 5 dernières inscriptions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom</TableHead>
+                <TableHead>Date d'inscription</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {stats.recentUsers.map((user) => (
+                <TableRow key={user.user_id}>
+                  <TableCell className="font-medium">
+                    {user.display_name || 'Utilisateur sans nom'}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(user.created_at).toLocaleDateString('fr-FR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {stats.recentUsers.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-center text-muted-foreground">
+                    Aucun utilisateur trouvé
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Actions Rapides
+          </CardTitle>
+          <CardDescription>Accès direct aux outils d'administration</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-3">
+          <Button variant="outline" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Voir les tendances
+          </Button>
+          <Button variant="outline" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Gérer le catalogue
+          </Button>
+          <Button variant="outline" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Plans d'abonnement
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
