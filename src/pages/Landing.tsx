@@ -553,7 +553,7 @@ export default function Landing() {
                       </Badge>
                     </div>
                   )}
-                  <Card className={`h-full ${isPopular ? 'border-primary border-2' : 'border-border'}`}>
+                  <Card className={`h-full flex flex-col ${isPopular ? 'border-primary border-2' : 'border-border'}`}>
                     <CardHeader className="space-y-4">
                       <div className="flex items-start gap-3">
                         <div className="h-10 w-10 flex items-center justify-center">
@@ -575,21 +575,23 @@ export default function Landing() {
                       </div>
                     </CardHeader>
                     
-                    <CardContent className="space-y-6">
-                      {planFeatures.length > 0 ? (
-                        <ul className="space-y-3">
-                          {planFeatures.map((feature: string, idx: number) => (
-                            <li key={idx} className="flex items-start gap-3">
-                              <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                              <span className="text-sm leading-relaxed">{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Fonctionnalités à venir</p>
-                      )}
+                    <CardContent className="flex-1 flex flex-col space-y-6">
+                      <div className="flex-1">
+                        {planFeatures.length > 0 ? (
+                          <ul className="space-y-3">
+                            {planFeatures.map((feature: string, idx: number) => (
+                              <li key={idx} className="flex items-start gap-3">
+                                <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                                <span className="text-sm leading-relaxed">{feature}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">Fonctionnalités à venir</p>
+                        )}
+                      </div>
                       
-                      <Link to="/auth" className="block w-full">
+                      <Link to="/auth" className="block w-full mt-auto">
                         <Button 
                           className="w-full" 
                           variant="outline"
