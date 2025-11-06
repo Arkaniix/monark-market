@@ -66,17 +66,7 @@ export default function Training() {
             </AlertDescription>
           </Alert>
 
-          <div className="flex items-center justify-center gap-4 pt-4">
-            <Button size="lg" asChild>
-              <a href="#modules">
-                Commencer la formation
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </a>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              
-            </Button>
-          </div>
+          
         </motion.div>
 
         {/* Progress & Badges */}
