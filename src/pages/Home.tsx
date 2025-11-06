@@ -736,7 +736,7 @@ export default function Home() {
                               Score {deal.score}/100
                             </Badge>
                             <span className="text-xs font-medium text-success">
-                              Économie: {deal.fair_value - deal.price}€
+                              Profit potentiel: {deal.fair_value - deal.price}€
                             </span>
                           </div>
                         </div>
