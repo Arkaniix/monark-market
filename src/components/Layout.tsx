@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Search, TrendingUp, Home, Zap, User, Menu, Eye, Calculator, Users, GraduationCap, LogOut, Shield, CreditCard, Scale, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Sheet,
   SheetContent,
@@ -183,6 +184,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           {/* User Actions */}
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {user ? (
               <Button variant="ghost" size="sm" className="gap-2" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4" />

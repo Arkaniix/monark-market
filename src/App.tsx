@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { ThemeProvider } from "next-themes";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Landing from "./pages/Landing";
@@ -47,10 +48,11 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Layout>
             <Routes>
               {/* Public landing page for non-authenticated users */}
@@ -81,6 +83,7 @@ const App = () => {
           </Layout>
         </BrowserRouter>
       </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
