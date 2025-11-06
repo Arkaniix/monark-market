@@ -226,7 +226,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 lg:p-8">
-      <div className={`w-full grid gap-8 items-center ${activeTab === 'signup' ? 'max-w-7xl lg:grid-cols-[1fr_2fr]' : 'max-w-6xl lg:grid-cols-2'}`}>
+      <div className={`w-full grid gap-8 items-start ${activeTab === 'signup' ? 'max-w-[1400px] lg:grid-cols-[380px_1fr]' : 'max-w-6xl lg:grid-cols-2'}`}>
         {/* Left Panel - Marketing Content (hidden on mobile) */}
         <div className="hidden lg:flex flex-col gap-8 p-8">
           <div className="space-y-4">
@@ -474,13 +474,13 @@ export default function Auth() {
                   </div>
 
                   {/* Right Column: Subscription Plans */}
-                  <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
-                    <h3 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
-                      <div className="h-1 w-1 rounded-full bg-primary"></div>
+                  <div className="space-y-4 p-5 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
                       Choisissez votre plan
                     </h3>
                     
-                    <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="space-y-2.5">
+                    <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="space-y-3">
                       {plans.map((plan) => {
                         const isPopular = plan.id === mostPopularPlanId;
                         const isPremium = plan.name === 'Elite';
@@ -489,8 +489,8 @@ export default function Auth() {
                         return (
                           <div key={plan.id} className="relative">
                             {isPopular && (
-                              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 z-10">
-                                <span className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-lg">
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
+                                <span className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
                                   ⭐ Populaire
                                 </span>
                               </div>
@@ -503,39 +503,43 @@ export default function Auth() {
                             <Label
                               htmlFor={plan.id}
                               className={`
-                                flex cursor-pointer rounded-lg border-2 bg-card p-3 
+                                flex cursor-pointer rounded-xl border-2 bg-card p-4 
                                 transition-all duration-300 
-                                hover:border-primary/50 hover:shadow-md
-                                peer-data-[state=checked]:border-primary peer-data-[state=checked]:shadow-md peer-data-[state=checked]:bg-primary/5
+                                hover:border-primary/50 hover:shadow-lg hover:scale-[1.01]
+                                peer-data-[state=checked]:border-primary peer-data-[state=checked]:shadow-xl peer-data-[state=checked]:bg-primary/5
                                 ${isPopular ? 'border-primary/30' : 'border-muted'}
                                 ${isPremium ? 'bg-gradient-to-br from-accent/10 to-card border-accent/30' : ''}
                               `}
                             >
                               <div className="flex-1">
-                                <div className="flex items-center justify-between mb-1.5">
-                                  <div className="flex items-center gap-2">
-                                    <div className={`h-7 w-7 rounded-lg flex items-center justify-center shadow-sm ${
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shadow-md ${
                                       isPremium 
                                         ? 'bg-gradient-to-br from-accent to-accent/80' 
                                         : 'bg-gradient-to-br from-primary/20 to-primary/10'
                                     }`}>
-                                      <PlanIcon className={`h-4 w-4 ${
+                                      <PlanIcon className={`h-5 w-5 ${
                                         isPremium ? 'text-accent-foreground' : 'text-primary'
                                       }`} />
                                     </div>
-                                    <span className="font-bold text-sm">{plan.name}</span>
+                                    <div>
+                                      <span className="font-bold text-lg">{plan.name}</span>
+                                    </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="font-bold text-lg text-primary">{plan.price}€</div>
+                                    <div className="font-bold text-2xl text-primary">{plan.price}€</div>
+                                    <div className="text-xs text-muted-foreground">par mois</div>
                                   </div>
                                 </div>
                                 
-                                <p className="text-[11px] text-muted-foreground mb-2 leading-relaxed">{plan.description}</p>
+                                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{plan.description}</p>
                                 
                                 {plan.features && (
-                                  <div className="pt-2 border-t border-border/40">
-                                    <ul className="space-y-1">
-                                      {Object.entries(plan.features).slice(0, 2).map(([key, value]: [string, any]) => {
+                                  <div className="pt-3 border-t border-border/40">
+                                    <p className="text-xs font-semibold text-foreground/80 mb-2">Fonctionnalités incluses :</p>
+                                    <ul className="space-y-2">
+                                      {Object.entries(plan.features).map(([key, value]: [string, any]) => {
                                         const formatFeature = (k: string, v: any) => {
                                           if (typeof v === 'boolean') {
                                             return k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -547,12 +551,12 @@ export default function Auth() {
                                         return (
                                           <li 
                                             key={key} 
-                                            className="flex items-center gap-1.5 text-[11px]"
+                                            className="flex items-start gap-2 text-sm"
                                           >
-                                            <div className="h-3 w-3 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                                              <Check className="h-1.5 w-1.5 text-primary" />
+                                            <div className="h-4 w-4 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                              <Check className="h-2.5 w-2.5 text-primary" />
                                             </div>
-                                            <span className="text-foreground/75">
+                                            <span className="text-foreground/80">
                                               {formatFeature(key, value)}
                                             </span>
                                           </li>
@@ -562,13 +566,13 @@ export default function Auth() {
                                   </div>
                                 )}
                               </div>
-                              <div className="ml-2 flex items-start pt-0.5">
-                                <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                              <div className="ml-3 flex items-start pt-1">
+                                <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
                                   selectedPlan === plan.id 
                                     ? 'border-primary bg-primary' 
                                     : 'border-muted-foreground/30'
                                 }`}>
-                                  <Check className={`h-2.5 w-2.5 text-primary-foreground transition-opacity ${
+                                  <Check className={`h-3 w-3 text-primary-foreground transition-opacity ${
                                     selectedPlan === plan.id ? 'opacity-100' : 'opacity-0'
                                   }`} />
                                 </div>
