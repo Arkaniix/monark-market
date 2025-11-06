@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Zap, Check, MessageCircle, Crown, Star, TrendingUp, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { motion, AnimatePresence } from "framer-motion";
 
 const emailSchema = z.string().email("Email invalide");
 const passwordSchema = z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères");
@@ -311,8 +312,14 @@ export default function Auth() {
               <TabsTrigger value="signup">Inscription</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
+            <TabsContent value="signin" asChild>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">Email</Label>
                   <Input
@@ -353,10 +360,17 @@ export default function Auth() {
                   {loading ? "Connexion..." : "Se connecter"}
                 </Button>
               </form>
+              </motion.div>
             </TabsContent>
 
-            <TabsContent value="signup" className="mt-6">
-              <form onSubmit={handleSignUp} className="space-y-6">
+            <TabsContent value="signup" className="mt-6" asChild>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <form onSubmit={handleSignUp} className="space-y-6">
                 {/* First Row: Personal Info & Security side by side */}
                 <div className="grid md:grid-cols-2 gap-5">
                   {/* Personal Information Section */}
@@ -594,6 +608,7 @@ export default function Auth() {
                   )}
                 </Button>
               </form>
+              </motion.div>
             </TabsContent>
           </Tabs>
         </CardContent>
