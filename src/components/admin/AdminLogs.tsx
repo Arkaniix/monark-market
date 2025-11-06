@@ -22,16 +22,84 @@ export default function AdminLogs() {
 
   const fetchLogs = async () => {
     try {
-      const [systemRes, actionRes] = await Promise.all([
-        supabase.from('system_logs').select('*').order('created_at', { ascending: false }).limit(50),
-        supabase.from('user_action_logs').select('*, profiles:user_id(display_name)').order('created_at', { ascending: false }).limit(50)
-      ]);
+      // Données factices pour les logs système
+      const mockSystemLogs = [
+        {
+          id: 1,
+          level: 'info',
+          message: 'Démarrage du service de scraping',
+          created_at: '2024-01-15T08:00:00',
+          context: { service: 'scraper', version: '2.1.0' }
+        },
+        {
+          id: 2,
+          level: 'warn',
+          message: 'Latence élevée détectée sur l\'API LeBonCoin',
+          created_at: '2024-01-15T14:23:00',
+          context: { latency_ms: 2500, threshold: 2000 }
+        },
+        {
+          id: 3,
+          level: 'error',
+          message: 'Échec de connexion à la base de données',
+          created_at: '2024-01-15T14:25:00',
+          context: { error: 'Connection timeout', retry_count: 3 }
+        },
+        {
+          id: 4,
+          level: 'info',
+          message: 'Recalcul des deal scores terminé',
+          created_at: '2024-01-15T03:15:00',
+          context: { ads_processed: 1247, duration_seconds: 45 }
+        }
+      ];
 
-      if (systemRes.error) throw systemRes.error;
-      if (actionRes.error) throw actionRes.error;
+      // Données factices pour les logs d'actions utilisateur
+      const mockActionLogs = [
+        {
+          id: 1,
+          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
+          action: 'job_created',
+          target_type: 'job',
+          target_id: '1',
+          created_at: '2024-01-15T14:30:00',
+          ip_address: '192.168.1.10',
+          profiles: { display_name: 'Etienne' }
+        },
+        {
+          id: 2,
+          user_id: 'da1fbc02-5140-4321-b36d-38d3c5ac8a4c',
+          action: 'subscription_upgraded',
+          target_type: 'subscription',
+          target_id: '2',
+          created_at: '2024-01-15T10:15:00',
+          ip_address: '192.168.1.25',
+          profiles: { display_name: 'Emre' }
+        },
+        {
+          id: 3,
+          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
+          action: 'profile_updated',
+          target_type: 'profile',
+          target_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
+          created_at: '2024-01-14T16:45:00',
+          ip_address: '192.168.1.10',
+          profiles: { display_name: 'Etienne' }
+        },
+        {
+          id: 4,
+          user_id: 'user-3',
+          action: 'ad_viewed',
+          target_type: 'ad',
+          target_id: '567',
+          created_at: '2024-01-14T12:30:00',
+          ip_address: '192.168.1.42',
+          profiles: { display_name: 'Jean Dupont' }
+        }
+      ];
 
-      setSystemLogs(systemRes.data || []);
-      setActionLogs(actionRes.data || []);
+      setSystemLogs(mockSystemLogs);
+      setActionLogs(mockActionLogs);
     } catch (error) {
       console.error('Error:', error);
       toast({

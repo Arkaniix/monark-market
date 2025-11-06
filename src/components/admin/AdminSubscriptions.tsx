@@ -22,17 +22,55 @@ export default function AdminSubscriptions() {
 
   const fetchSubscriptions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_subscriptions')
-        .select(`
-          *,
-          profiles:user_id(display_name),
-          subscription_plans:plan_id(name, price)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setSubscriptions(data || []);
+      // Données factices pour démonstration
+      const mockData = [
+        {
+          id: '1',
+          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
+          plan_id: '1',
+          status: 'active',
+          credits_remaining: 120,
+          started_at: '2024-01-01T00:00:00',
+          expires_at: '2024-02-01T00:00:00',
+          profiles: { display_name: 'Etienne' },
+          subscription_plans: { name: 'Pro', price: 19.99 }
+        },
+        {
+          id: '2',
+          user_id: 'da1fbc02-5140-4321-b36d-38d3c5ac8a4c',
+          plan_id: '2',
+          status: 'active',
+          credits_remaining: 380,
+          started_at: '2024-01-10T00:00:00',
+          expires_at: '2024-02-10T00:00:00',
+          profiles: { display_name: 'Emre' },
+          subscription_plans: { name: 'Elite', price: 39.99 }
+        },
+        {
+          id: '3',
+          user_id: 'user-3',
+          plan_id: '3',
+          status: 'expired',
+          credits_remaining: 0,
+          started_at: '2023-12-01T00:00:00',
+          expires_at: '2024-01-01T00:00:00',
+          profiles: { display_name: 'Jean Dupont' },
+          subscription_plans: { name: 'Basic', price: 9.99 }
+        },
+        {
+          id: '4',
+          user_id: 'user-4',
+          plan_id: '1',
+          status: 'canceled',
+          credits_remaining: 45,
+          started_at: '2024-01-05T00:00:00',
+          expires_at: '2024-02-05T00:00:00',
+          profiles: { display_name: 'Marie Martin' },
+          subscription_plans: { name: 'Pro', price: 19.99 }
+        }
+      ];
+      
+      setSubscriptions(mockData);
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
       toast({

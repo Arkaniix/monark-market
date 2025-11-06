@@ -24,16 +24,109 @@ export default function AdminJobs() {
 
   const fetchData = async () => {
     try {
-      const [jobsRes, shardsRes] = await Promise.all([
-        supabase.from('jobs').select('*, profiles:user_id(display_name)').order('created_at', { ascending: false }).limit(100),
-        supabase.from('job_shards').select('*, jobs(keyword, type)').limit(50)
-      ]);
+      // Données factices pour les jobs
+      const mockJobs = [
+        {
+          id: 1,
+          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
+          keyword: 'RTX 4090',
+          type: 'fort',
+          status: 'completed',
+          pages_scanned: 50,
+          pages_target: 50,
+          ads_found: 142,
+          created_at: '2024-01-15T14:30:00',
+          profiles: { display_name: 'Etienne' }
+        },
+        {
+          id: 2,
+          user_id: 'da1fbc02-5140-4321-b36d-38d3c5ac8a4c',
+          keyword: 'RTX 3080',
+          type: 'faible',
+          status: 'running',
+          pages_scanned: 15,
+          pages_target: 30,
+          ads_found: 38,
+          created_at: '2024-01-15T16:00:00',
+          profiles: { display_name: 'Emre' }
+        },
+        {
+          id: 3,
+          user_id: 'user-3',
+          keyword: 'GTX 1080 Ti',
+          type: 'communautaire',
+          status: 'completed',
+          pages_scanned: 30,
+          pages_target: 30,
+          ads_found: 95,
+          created_at: '2024-01-14T10:20:00',
+          profiles: { display_name: 'Jean Dupont' }
+        },
+        {
+          id: 4,
+          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
+          keyword: 'AMD RX 7900 XTX',
+          type: 'faible',
+          status: 'failed',
+          pages_scanned: 5,
+          pages_target: 20,
+          ads_found: 2,
+          created_at: '2024-01-14T08:45:00',
+          profiles: { display_name: 'Etienne' }
+        },
+        {
+          id: 5,
+          user_id: 'da1fbc02-5140-4321-b36d-38d3c5ac8a4c',
+          keyword: 'RTX 4070 Ti',
+          type: 'fort',
+          status: 'pending',
+          pages_scanned: 0,
+          pages_target: 40,
+          ads_found: 0,
+          created_at: '2024-01-15T17:00:00',
+          profiles: { display_name: 'Emre' }
+        }
+      ];
 
-      if (jobsRes.error) throw jobsRes.error;
-      if (shardsRes.error) throw shardsRes.error;
+      // Données factices pour les shards
+      const mockShards = [
+        {
+          id: 1,
+          job_id: 3,
+          shard_kind: 'page_range',
+          shard_from: 1,
+          shard_to: 5,
+          region_code: null,
+          price_min: null,
+          price_max: null,
+          jobs: { keyword: 'GTX 1080 Ti', type: 'communautaire' }
+        },
+        {
+          id: 2,
+          job_id: 3,
+          shard_kind: 'page_range',
+          shard_from: 6,
+          shard_to: 10,
+          region_code: null,
+          price_min: null,
+          price_max: null,
+          jobs: { keyword: 'GTX 1080 Ti', type: 'communautaire' }
+        },
+        {
+          id: 3,
+          job_id: 3,
+          shard_kind: 'region',
+          shard_from: null,
+          shard_to: null,
+          region_code: 'ile-de-france',
+          price_min: 200,
+          price_max: 500,
+          jobs: { keyword: 'GTX 1080 Ti', type: 'communautaire' }
+        }
+      ];
 
-      setJobs(jobsRes.data || []);
-      setShards(shardsRes.data || []);
+      setJobs(mockJobs);
+      setShards(mockShards);
     } catch (error) {
       console.error('Error:', error);
       toast({

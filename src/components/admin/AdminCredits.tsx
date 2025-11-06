@@ -19,16 +19,56 @@ export default function AdminCredits() {
 
   const fetchData = async () => {
     try {
-      const [policiesRes, logsRes] = await Promise.all([
-        supabase.from('scrape_policies').select('*'),
-        supabase.from('credit_logs').select('*, profiles:user_id(display_name)').order('created_at', { ascending: false }).limit(50)
-      ]);
+      const policiesRes = await supabase.from('scrape_policies').select('*');
+      
+      // Données factices pour les logs de crédits
+      const mockLogs = [
+        {
+          id: 1,
+          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
+          delta: -15,
+          reason: 'scrap_fort',
+          created_at: '2024-01-15T14:30:00',
+          profiles: { display_name: 'Etienne' }
+        },
+        {
+          id: 2,
+          user_id: 'da1fbc02-5140-4321-b36d-38d3c5ac8a4c',
+          delta: 50,
+          reason: 'monthly_refill',
+          created_at: '2024-01-15T10:00:00',
+          profiles: { display_name: 'Emre' }
+        },
+        {
+          id: 3,
+          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
+          delta: -5,
+          reason: 'scrap_faible',
+          created_at: '2024-01-14T16:20:00',
+          profiles: { display_name: 'Etienne' }
+        },
+        {
+          id: 4,
+          user_id: 'user-3',
+          delta: 10,
+          reason: 'scrap_communautaire_bonus',
+          created_at: '2024-01-14T12:45:00',
+          profiles: { display_name: 'Jean Dupont' }
+        },
+        {
+          id: 5,
+          user_id: 'da1fbc02-5140-4321-b36d-38d3c5ac8a4c',
+          delta: -20,
+          reason: 'scrap_fort',
+          created_at: '2024-01-13T09:15:00',
+          profiles: { display_name: 'Emre' }
+        }
+      ];
 
       if (policiesRes.error) throw policiesRes.error;
-      if (logsRes.error) throw logsRes.error;
 
       setPolicies(policiesRes.data || []);
-      setCreditLogs(logsRes.data || []);
+      setCreditLogs(mockLogs);
     } catch (error) {
       console.error('Error:', error);
       toast({
