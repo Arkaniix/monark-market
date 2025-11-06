@@ -16,9 +16,7 @@ import AdminMetrics from "@/components/admin/AdminMetrics";
 import AdminExternal from "@/components/admin/AdminExternal";
 import AdminHealth from "@/components/admin/AdminHealth";
 import AdminLogs from "@/components/admin/AdminLogs";
-import AdminSettings from "@/components/admin/AdminSettings";
-import AdminSupport from "@/components/admin/AdminSupport";
-import AdminMaintenance from "@/components/admin/AdminMaintenance";
+import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 
 export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -93,11 +91,7 @@ export default function Admin() {
       case "logs":
         return <AdminLogs />;
       case "settings":
-        return <AdminSettings />;
-      case "support":
-        return <AdminSupport />;
-      case "maintenance":
-        return <AdminMaintenance />;
+        return <AdminSystemSettings />;
       default:
         return <AdminDashboard />;
     }

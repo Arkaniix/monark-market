@@ -93,36 +93,86 @@ export default function AdminCredits() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Politiques de scraping</CardTitle>
-          <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4 mr-2" />
-            Modifier
-          </Button>
+        <CardHeader>
+          <CardTitle>Politiques de scraping par plateforme</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Site</TableHead>
-                <TableHead>Pages List Max</TableHead>
-                <TableHead>Pages Open Max</TableHead>
-                <TableHead>Délai Min (ms)</TableHead>
-                <TableHead>Délai Max (ms)</TableHead>
-                <TableHead>Jobs Comm./Jour</TableHead>
+                <TableHead>Plateforme</TableHead>
+                <TableHead>Pages (liste)</TableHead>
+                <TableHead>Pages (détail)</TableHead>
+                <TableHead>Délai item (ms)</TableHead>
+                <TableHead>Délai page (ms)</TableHead>
+                <TableHead>Cooldown (min)</TableHead>
+                <TableHead>Max jobs/jour</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {policies.map((policy) => (
                 <TableRow key={policy.id}>
-                  <TableCell className="font-medium">{policy.site}</TableCell>
+                  <TableCell className="font-medium capitalize">{policy.site}</TableCell>
                   <TableCell>{policy.list_only_pages_max}</TableCell>
                   <TableCell>{policy.open_new_pages_max}</TableCell>
-                  <TableCell>{policy.min_delay_page_ms}</TableCell>
-                  <TableCell>{policy.max_delay_page_ms}</TableCell>
+                  <TableCell>
+                    {policy.min_delay_item_ms} - {policy.max_delay_item_ms}
+                  </TableCell>
+                  <TableCell>
+                    {policy.min_delay_page_ms} - {policy.max_delay_page_ms}
+                  </TableCell>
+                  <TableCell>{policy.min_cooldown_minutes}</TableCell>
                   <TableCell>{policy.max_comm_jobs_per_day}</TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="outline">
+                      Modifier
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
+              <TableRow className="bg-muted/50">
+                <TableCell className="font-medium">Marketplace Facebook</TableCell>
+                <TableCell>30</TableCell>
+                <TableCell>15</TableCell>
+                <TableCell>800 - 2500</TableCell>
+                <TableCell>1500 - 4000</TableCell>
+                <TableCell>45</TableCell>
+                <TableCell>8</TableCell>
+                <TableCell>
+                  <Button size="sm" variant="outline">
+                    Modifier
+                  </Button>
+                </TableCell>
+              </TableRow>
+              <TableRow className="bg-muted/50">
+                <TableCell className="font-medium">eBay</TableCell>
+                <TableCell>40</TableCell>
+                <TableCell>25</TableCell>
+                <TableCell>600 - 1800</TableCell>
+                <TableCell>1200 - 3500</TableCell>
+                <TableCell>35</TableCell>
+                <TableCell>12</TableCell>
+                <TableCell>
+                  <Button size="sm" variant="outline">
+                    Modifier
+                  </Button>
+                </TableCell>
+              </TableRow>
+              <TableRow className="bg-muted/50">
+                <TableCell className="font-medium">Vinted</TableCell>
+                <TableCell>35</TableCell>
+                <TableCell>18</TableCell>
+                <TableCell>700 - 2200</TableCell>
+                <TableCell>1400 - 3800</TableCell>
+                <TableCell>40</TableCell>
+                <TableCell>10</TableCell>
+                <TableCell>
+                  <Button size="sm" variant="outline">
+                    Modifier
+                  </Button>
+                </TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </CardContent>

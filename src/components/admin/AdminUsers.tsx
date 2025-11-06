@@ -6,7 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Ban, CheckCircle, Search } from "lucide-react";
+import { Shield, Search, UserCog } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface User {
   user_id: string;
@@ -20,6 +23,8 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [newRole, setNewRole] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -28,15 +33,31 @@ export default function AdminUsers() {
 
   const loadUsers = async () => {
     try {
-      const { data: profilesData, error } = await supabase
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, display_name, created_at')
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
-      setUsers(profilesData || []);
+      // Load roles for each user
+      const usersWithRoles = await Promise.all(
+        (profilesData || []).map(async (profile) => {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', profile.user_id)
+            .single();
+
+          return {
+            ...profile,
+            role: roleData?.role || 'user'
+          };
+        })
+      );
+
+      setUsers(usersWithRoles);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
@@ -46,6 +67,43 @@ export default function AdminUsers() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateUserRole = async () => {
+    if (!selectedUser || !newRole) return;
+
+    try {
+      // First, delete existing role
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', selectedUser.user_id);
+
+      // Then insert new role
+      const { error } = await supabase
+        .from('user_roles')
+        .insert([{
+          user_id: selectedUser.user_id,
+          role: newRole as 'admin' | 'user'
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Rôle mis à jour avec succès"
+      });
+
+      loadUsers();
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le rôle",
+        variant: "destructive"
+      });
     }
   };
 
@@ -107,16 +165,51 @@ export default function AdminUsers() {
                     {new Date(user.created_at).toLocaleDateString('fr-FR')}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Détails
-                      </Button>
-                      <Button size="sm" variant="destructive">
-                        <Ban className="h-3 w-3 mr-1" />
-                        Suspendre
-                      </Button>
-                    </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setNewRole(user.role || 'user');
+                          }}
+                        >
+                          <UserCog className="h-3 w-3 mr-1" />
+                          Gérer
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Gérer l'utilisateur</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label>Nom d'affichage</Label>
+                            <Input value={selectedUser?.display_name || ''} disabled />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>ID Utilisateur</Label>
+                            <Input value={selectedUser?.user_id || ''} disabled className="font-mono text-xs" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Rôle</Label>
+                            <Select value={newRole} onValueChange={setNewRole}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="user">Utilisateur</SelectItem>
+                                <SelectItem value="admin">Administrateur</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button onClick={updateUserRole} className="w-full">
+                            Mettre à jour le rôle
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </TableCell>
                 </TableRow>
               ))}

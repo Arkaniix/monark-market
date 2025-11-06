@@ -227,7 +227,6 @@ export default function AdminJobs() {
                 <TableHead>Pages</TableHead>
                 <TableHead>Annonces</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -244,16 +243,6 @@ export default function AdminJobs() {
                   <TableCell>{job.pages_scanned}/{job.pages_target || '-'}</TableCell>
                   <TableCell>{job.ads_found}</TableCell>
                   <TableCell>{new Date(job.created_at).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Play className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <XCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
