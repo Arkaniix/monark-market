@@ -7,7 +7,6 @@ import { Shield, Users, Package, TrendingUp, Database, Activity, CreditCard, Bri
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-
 interface Stats {
   totalUsers: number;
   totalJobs: number;
@@ -17,7 +16,6 @@ interface Stats {
   recentJobs: any[];
   recentUsers: any[];
 }
-
 export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -31,62 +29,70 @@ export default function Admin() {
     recentUsers: []
   });
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     checkAdminStatus();
   }, []);
-
   useEffect(() => {
     if (isAdmin) {
       loadStats();
     }
   }, [isAdmin]);
-
   const loadStats = async () => {
     try {
       // Get total users count
-      const { count: usersCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      const {
+        count: usersCount
+      } = await supabase.from('profiles').select('*', {
+        count: 'exact',
+        head: true
+      });
 
       // Get total jobs count
-      const { count: jobsCount } = await supabase
-        .from('jobs')
-        .select('*', { count: 'exact', head: true });
+      const {
+        count: jobsCount
+      } = await supabase.from('jobs').select('*', {
+        count: 'exact',
+        head: true
+      });
 
       // Get total ads count
-      const { count: adsCount } = await supabase
-        .from('ads')
-        .select('*', { count: 'exact', head: true });
+      const {
+        count: adsCount
+      } = await supabase.from('ads').select('*', {
+        count: 'exact',
+        head: true
+      });
 
       // Get active subscriptions count
-      const { count: subsCount } = await supabase
-        .from('user_subscriptions')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
+      const {
+        count: subsCount
+      } = await supabase.from('user_subscriptions').select('*', {
+        count: 'exact',
+        head: true
+      }).eq('status', 'active');
 
       // Get total credits used from credit_logs
-      const { data: creditsData } = await supabase
-        .from('credit_logs')
-        .select('delta');
-      
+      const {
+        data: creditsData
+      } = await supabase.from('credit_logs').select('delta');
       const totalCreditsUsed = creditsData?.reduce((sum, log) => sum + Math.abs(log.delta), 0) || 0;
 
       // Get recent jobs
-      const { data: recentJobsData } = await supabase
-        .from('jobs')
-        .select('id, keyword, status, created_at, pages_scanned, ads_found, profiles(display_name)')
-        .order('created_at', { ascending: false })
-        .limit(5);
+      const {
+        data: recentJobsData
+      } = await supabase.from('jobs').select('id, keyword, status, created_at, pages_scanned, ads_found, profiles(display_name)').order('created_at', {
+        ascending: false
+      }).limit(5);
 
       // Get recent users
-      const { data: recentUsersData } = await supabase
-        .from('profiles')
-        .select('user_id, display_name, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
+      const {
+        data: recentUsersData
+      } = await supabase.from('profiles').select('user_id, display_name, created_at').order('created_at', {
+        ascending: false
+      }).limit(5);
       setStats({
         totalUsers: usersCount || 0,
         totalJobs: jobsCount || 0,
@@ -105,34 +111,36 @@ export default function Admin() {
       });
     }
   };
-
   const checkAdminStatus = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         navigate("/auth");
         return;
       }
 
       // Check if user has admin role
-      const { data, error } = await supabase.rpc('has_role', {
+      const {
+        data,
+        error
+      } = await supabase.rpc('has_role', {
         _user_id: user.id,
         _role: 'admin'
       });
-
       if (error) throw error;
-
       if (!data) {
         toast({
           title: "Accès refusé",
           description: "Vous n'avez pas les permissions nécessaires",
-          variant: "destructive",
+          variant: "destructive"
         });
         navigate("/");
         return;
       }
-
       setIsAdmin(true);
     } catch (error) {
       console.error("Error checking admin status:", error);
@@ -141,23 +149,17 @@ export default function Admin() {
       setLoading(false);
     }
   };
-
   if (loading) {
-    return (
-      <div className="container mx-auto py-8">
+    return <div className="container mx-auto py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!isAdmin) {
     return null;
   }
-
-  return (
-    <div className="container mx-auto py-8 space-y-8">
+  return <div className="container mx-auto py-8 space-y-8">
       <div className="flex items-center gap-3">
         <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
           <Shield className="h-6 w-6 text-primary-foreground" />
@@ -237,18 +239,13 @@ export default function Admin() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {stats.recentJobs.map((job) => (
-                <TableRow key={job.id}>
+              {stats.recentJobs.map(job => <TableRow key={job.id}>
                   <TableCell className="font-medium">
                     {job.profiles?.display_name || 'Utilisateur'}
                   </TableCell>
                   <TableCell>{job.keyword}</TableCell>
                   <TableCell>
-                    <Badge variant={
-                      job.status === 'completed' ? 'default' :
-                      job.status === 'running' ? 'secondary' :
-                      job.status === 'failed' ? 'destructive' : 'outline'
-                    }>
+                    <Badge variant={job.status === 'completed' ? 'default' : job.status === 'running' ? 'secondary' : job.status === 'failed' ? 'destructive' : 'outline'}>
                       {job.status}
                     </Badge>
                   </TableCell>
@@ -257,15 +254,12 @@ export default function Admin() {
                   <TableCell>
                     {new Date(job.created_at).toLocaleDateString('fr-FR')}
                   </TableCell>
-                </TableRow>
-              ))}
-              {stats.recentJobs.length === 0 && (
-                <TableRow>
+                </TableRow>)}
+              {stats.recentJobs.length === 0 && <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground">
                     Aucun job trouvé
                   </TableCell>
-                </TableRow>
-              )}
+                </TableRow>}
             </TableBody>
           </Table>
         </CardContent>
@@ -289,56 +283,29 @@ export default function Admin() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {stats.recentUsers.map((user) => (
-                <TableRow key={user.user_id}>
+              {stats.recentUsers.map(user => <TableRow key={user.user_id}>
                   <TableCell className="font-medium">
                     {user.display_name || 'Utilisateur sans nom'}
                   </TableCell>
                   <TableCell>
                     {new Date(user.created_at).toLocaleDateString('fr-FR', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
                   </TableCell>
-                </TableRow>
-              ))}
-              {stats.recentUsers.length === 0 && (
-                <TableRow>
+                </TableRow>)}
+              {stats.recentUsers.length === 0 && <TableRow>
                   <TableCell colSpan={2} className="text-center text-muted-foreground">
                     Aucun utilisateur trouvé
                   </TableCell>
-                </TableRow>
-              )}
+                </TableRow>}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Actions Rapides
-          </CardTitle>
-          <CardDescription>Accès direct aux outils d'administration</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-3">
-          <Button variant="outline" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Voir les tendances
-          </Button>
-          <Button variant="outline" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            Gérer le catalogue
-          </Button>
-          <Button variant="outline" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            Plans d'abonnement
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+      
+    </div>;
 }
