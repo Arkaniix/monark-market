@@ -6,79 +6,30 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { 
-  GraduationCap, 
-  Award,
-  Clock,
-  BookOpen,
-  CheckCircle2,
-  Circle,
-  Download,
-  ExternalLink,
-  Hand,
-  ShieldCheck,
-  Lock,
-  AlertCircle,
-  TrendingUp,
-  Calculator,
-  Settings,
-  Shield,
-  ChevronDown,
-  ArrowRight,
-  MessageCircle,
-  Users,
-  Trophy,
-  FileText,
-  Video,
-  HelpCircle
-} from "lucide-react";
-import {
-  mockUserProgress,
-  mockTrainingModules,
-  mockBadges,
-  mockGuides,
-  mockFAQ,
-  bestPractices,
-  forbiddenPractices
-} from "@/lib/trainingMockData";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { GraduationCap, Award, Clock, BookOpen, CheckCircle2, Circle, Download, ExternalLink, Hand, ShieldCheck, Lock, AlertCircle, TrendingUp, Calculator, Settings, Shield, ChevronDown, ArrowRight, MessageCircle, Users, Trophy, FileText, Video, HelpCircle } from "lucide-react";
+import { mockUserProgress, mockTrainingModules, mockBadges, mockGuides, mockFAQ, bestPractices, forbiddenPractices } from "@/lib/trainingMockData";
 import { toast } from "sonner";
-
 export default function Training() {
   const [openFAQ, setOpenFAQ] = useState<string[]>([]);
   const [quizScore, setQuizScore] = useState<number | null>(null);
-
-  const progressPercentage = (mockUserProgress.modules_completed.length / mockUserProgress.total_modules) * 100;
-
+  const progressPercentage = mockUserProgress.modules_completed.length / mockUserProgress.total_modules * 100;
   const handleStartModule = (moduleId: number) => {
     toast.success(`Module ${moduleId} démarré !`);
   };
-
   const handleCompleteModule = (moduleId: number) => {
     toast.success(`Module ${moduleId} terminé ! +1 crédit`);
   };
-
   const handleStartQuiz = () => {
     // Simulate quiz completion
     const score = 8;
     setQuizScore(score);
     toast.success(`Quiz terminé ! Score: ${score}/10 - +1 crédit`);
   };
-
   const handleDownloadCertificate = () => {
     toast.info("Fonctionnalité à venir : Export du certificat PDF");
   };
-
   const getIconForGuide = (iconName: string) => {
     const icons: Record<string, any> = {
       "book-open": BookOpen,
@@ -89,17 +40,17 @@ export default function Training() {
     };
     return icons[iconName] || BookOpen;
   };
-
-  return (
-    <div className="min-h-screen py-8">
+  return <div className="min-h-screen py-8">
       <div className="container max-w-7xl space-y-12">
         
         {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight flex items-center justify-center gap-3">
             <GraduationCap className="h-12 w-12 text-primary" />
             Formation – Deviens un expert du marché hardware
@@ -129,12 +80,15 @@ export default function Training() {
         </motion.div>
 
         {/* Progress & Badges */}
-        <motion.section 
-          id="progression"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+        <motion.section id="progression" initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.1
+      }}>
           <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -196,71 +150,49 @@ export default function Training() {
                   Badges débloqués
                 </h3>
                 <div className="flex flex-wrap gap-3">
-                  {mockBadges.map((badge) => (
-                    <div
-                      key={badge.id}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
-                        badge.earned
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-muted/50 opacity-60"
-                      }`}
-                    >
+                  {mockBadges.map(badge => <div key={badge.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${badge.earned ? "border-primary bg-primary/10" : "border-border bg-muted/50 opacity-60"}`}>
                       <span className="text-2xl">{badge.name.split(" ")[0]}</span>
                       <div>
                         <p className="text-sm font-medium">{badge.name.split(" ").slice(1).join(" ")}</p>
                         <p className="text-xs text-muted-foreground">{badge.description}</p>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full" onClick={handleDownloadCertificate}>
-                <Download className="mr-2 h-4 w-4" />
-                Exporter mon certificat PDF
-              </Button>
+              
             </CardContent>
           </Card>
         </motion.section>
 
         {/* Training Modules */}
-        <motion.section 
-          id="modules"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+        <motion.section id="modules" initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.2
+      }}>
           <div className="mb-6">
             <h2 className="text-3xl font-bold mb-2">Modules de Formation</h2>
             <p className="text-muted-foreground">Parcours progressif pour maîtriser la plateforme</p>
           </div>
 
           <Accordion type="multiple" className="space-y-4">
-            {mockTrainingModules.map((module, index) => (
-              <AccordionItem 
-                key={module.id} 
-                value={`module-${module.id}`}
-                className="border rounded-lg overflow-hidden"
-              >
+            {mockTrainingModules.map((module, index) => <AccordionItem key={module.id} value={`module-${module.id}`} className="border rounded-lg overflow-hidden">
                 <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-accent/50">
                   <div className="flex items-center gap-4 text-left w-full">
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
-                      module.completed ? "bg-green-500" : "bg-primary"
-                    }`}>
-                      {module.completed ? (
-                        <CheckCircle2 className="h-6 w-6 text-white" />
-                      ) : (
-                        <span className="text-xl font-bold text-white">{index + 1}</span>
-                      )}
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${module.completed ? "bg-green-500" : "bg-primary"}`}>
+                      {module.completed ? <CheckCircle2 className="h-6 w-6 text-white" /> : <span className="text-xl font-bold text-white">{index + 1}</span>}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-lg">{module.title}</h3>
-                        {module.completed && (
-                          <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-500/20">
+                        {module.completed && <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-500/20">
                             Terminé
-                          </Badge>
-                        )}
+                          </Badge>}
                       </div>
                       <p className="text-sm text-muted-foreground">{module.objective}</p>
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
@@ -272,12 +204,10 @@ export default function Training() {
                           <HelpCircle className="h-3 w-3" />
                           {module.quizQuestions} questions
                         </span>
-                        {module.creditReward > 0 && (
-                          <span className="flex items-center gap-1 text-primary">
+                        {module.creditReward > 0 && <span className="flex items-center gap-1 text-primary">
                             <Award className="h-3 w-3" />
                             +{module.creditReward} crédit
-                          </span>
-                        )}
+                          </span>}
                       </div>
                     </div>
                   </div>
@@ -299,12 +229,10 @@ export default function Training() {
                         Contenu du module
                       </h4>
                       <ul className="space-y-2">
-                        {module.content.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm">
+                        {module.content.map((item, i) => <li key={i} className="flex items-start gap-2 text-sm">
                             <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                             <span>{item}</span>
-                          </li>
-                        ))}
+                          </li>)}
                       </ul>
                     </div>
 
@@ -315,56 +243,50 @@ export default function Training() {
                         Ressources
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        {module.resources.map((resource, i) => (
-                          <Badge key={i} variant="outline" className="gap-1">
+                        {module.resources.map((resource, i) => <Badge key={i} variant="outline" className="gap-1">
                             <ExternalLink className="h-3 w-3" />
                             {resource}
-                          </Badge>
-                        ))}
+                          </Badge>)}
                       </div>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-2 pt-2">
-                      {!module.completed ? (
-                        <Button onClick={() => handleStartModule(module.id)}>
+                      {!module.completed ? <Button onClick={() => handleStartModule(module.id)}>
                           Commencer le module
                           <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <Button variant="outline" onClick={() => handleStartModule(module.id)}>
+                        </Button> : <Button variant="outline" onClick={() => handleStartModule(module.id)}>
                           Revoir le module
-                        </Button>
-                      )}
-                      {module.badge && (
-                        <Badge className="bg-primary/10 text-primary border-primary/20">
+                        </Button>}
+                      {module.badge && <Badge className="bg-primary/10 text-primary border-primary/20">
                           Badge : {module.badge}
-                        </Badge>
-                      )}
+                        </Badge>}
                     </div>
                   </div>
                 </AccordionContent>
-              </AccordionItem>
-            ))}
+              </AccordionItem>)}
           </Accordion>
         </motion.section>
 
         {/* Practical Guides */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+        <motion.section initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.3
+      }}>
           <div className="mb-6">
             <h2 className="text-3xl font-bold mb-2">Guides Pratiques</h2>
             <p className="text-muted-foreground">Références rapides pour utiliser la plateforme</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mockGuides.map((guide) => {
-              const Icon = getIconForGuide(guide.icon);
-              return (
-                <Card key={guide.id} className="hover-scale cursor-pointer">
+            {mockGuides.map(guide => {
+            const Icon = getIconForGuide(guide.icon);
+            return <Card key={guide.id} className="hover-scale cursor-pointer">
                   <CardHeader>
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-primary/10">
@@ -382,9 +304,8 @@ export default function Training() {
                       </Link>
                     </Button>
                   </CardContent>
-                </Card>
-              );
-            })}
+                </Card>;
+          })}
           </div>
 
           <Button variant="outline" className="w-full mt-4">
@@ -394,11 +315,15 @@ export default function Training() {
         </motion.section>
 
         {/* Best Practices & GDPR */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
+        <motion.section initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.4
+      }}>
           <div className="mb-6">
             <h2 className="text-3xl font-bold mb-2">Bonnes Pratiques & RGPD</h2>
             <p className="text-muted-foreground">Respecte ces principes pour contribuer de manière éthique et sécurisée</p>
@@ -415,20 +340,15 @@ export default function Training() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {bestPractices.map((practice, index) => {
-                  const Icon = practice.icon === "hand" ? Hand : 
-                              practice.icon === "shield-check" ? ShieldCheck :
-                              practice.icon === "check-circle" ? CheckCircle2 :
-                              practice.icon === "clock" ? Clock : Lock;
-                  return (
-                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-green-500/5 border border-green-500/20">
+                const Icon = practice.icon === "hand" ? Hand : practice.icon === "shield-check" ? ShieldCheck : practice.icon === "check-circle" ? CheckCircle2 : practice.icon === "clock" ? Clock : Lock;
+                return <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-green-500/5 border border-green-500/20">
                       <Icon className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-medium text-sm">{practice.title}</p>
                         <p className="text-xs text-muted-foreground">{practice.description}</p>
                       </div>
-                    </div>
-                  );
-                })}
+                    </div>;
+              })}
                 <Button variant="link" size="sm" className="p-0 h-auto" asChild>
                   <Link to="/rgpd">Voir la politique RGPD complète →</Link>
                 </Button>
@@ -444,26 +364,28 @@ export default function Training() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {forbiddenPractices.map((practice, index) => (
-                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                {forbiddenPractices.map((practice, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
                     <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-medium text-sm">{practice.title}</p>
                       <p className="text-xs text-muted-foreground">{practice.description}</p>
                     </div>
-                  </div>
-                ))}
+                  </div>)}
               </CardContent>
             </Card>
           </div>
         </motion.section>
 
         {/* Quiz Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
+        <motion.section initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.5
+      }}>
           <Card className="border-2 border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -475,8 +397,7 @@ export default function Training() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {quizScore === null ? (
-                <>
+              {quizScore === null ? <>
                   <p className="text-sm text-muted-foreground">
                     Score requis : 8/10 minimum pour obtenir le badge et +1 crédit bonus
                   </p>
@@ -484,32 +405,27 @@ export default function Training() {
                     Commencer le quiz
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                </>
-              ) : (
-                <Alert className={quizScore >= 8 ? "border-green-500 bg-green-500/5" : "border-orange-500 bg-orange-500/5"}>
+                </> : <Alert className={quizScore >= 8 ? "border-green-500 bg-green-500/5" : "border-orange-500 bg-orange-500/5"}>
                   <CheckCircle2 className="h-4 w-4" />
                   <AlertDescription>
                     <p className="font-semibold mb-1">Score: {quizScore}/10</p>
-                    {quizScore >= 8 ? (
-                      <p className="text-sm">Bravo ! Tu maîtrises les bases. +1 crédit gagné</p>
-                    ) : quizScore >= 5 ? (
-                      <p className="text-sm">Bien, mais révise les bonnes pratiques.</p>
-                    ) : (
-                      <p className="text-sm">Refais la formation avant de contribuer.</p>
-                    )}
+                    {quizScore >= 8 ? <p className="text-sm">Bravo ! Tu maîtrises les bases. +1 crédit gagné</p> : quizScore >= 5 ? <p className="text-sm">Bien, mais révise les bonnes pratiques.</p> : <p className="text-sm">Refais la formation avant de contribuer.</p>}
                   </AlertDescription>
-                </Alert>
-              )}
+                </Alert>}
             </CardContent>
           </Card>
         </motion.section>
 
         {/* FAQ */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
+        <motion.section initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.6
+      }}>
           <div className="mb-6">
             <h2 className="text-3xl font-bold mb-2">FAQ & Support</h2>
             <p className="text-muted-foreground">Questions fréquemment posées</p>
@@ -518,8 +434,7 @@ export default function Training() {
           <Card>
             <CardContent className="p-6">
               <div className="space-y-2">
-                {mockFAQ.map((faq, index) => (
-                  <Collapsible key={index}>
+                {mockFAQ.map((faq, index) => <Collapsible key={index}>
                     <CollapsibleTrigger className="flex items-center justify-between w-full p-4 rounded-lg hover:bg-accent transition-colors text-left">
                       <span className="font-medium">{faq.question}</span>
                       <ChevronDown className="h-4 w-4 transition-transform" />
@@ -527,8 +442,7 @@ export default function Training() {
                     <CollapsibleContent className="px-4 pb-4 text-sm text-muted-foreground">
                       {faq.answer}
                     </CollapsibleContent>
-                  </Collapsible>
-                ))}
+                  </Collapsible>)}
               </div>
 
               <div className="mt-6 pt-6 border-t space-y-3">
@@ -551,12 +465,15 @@ export default function Training() {
         </motion.section>
 
         {/* CTAs */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"
-        >
+        <motion.section initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.7
+      }} className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="hover-scale cursor-pointer">
             <CardHeader>
               <Users className="h-8 w-8 text-primary mb-2" />
@@ -622,6 +539,5 @@ export default function Training() {
           </Card>
         </motion.section>
       </div>
-    </div>
-  );
+    </div>;
 }
