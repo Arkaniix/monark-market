@@ -1,475 +1,626 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { 
   GraduationCap, 
-  Trophy, 
-  Lock, 
-  CheckCircle2, 
-  BookOpen, 
-  Target,
   Award,
-  Cpu,
-  Monitor,
-  HardDrive,
-  Zap,
-  ChevronRight,
-  Star
+  Clock,
+  BookOpen,
+  CheckCircle2,
+  Circle,
+  Download,
+  ExternalLink,
+  Hand,
+  ShieldCheck,
+  Lock,
+  AlertCircle,
+  TrendingUp,
+  Calculator,
+  Settings,
+  Shield,
+  ChevronDown,
+  ArrowRight,
+  MessageCircle,
+  Users,
+  Trophy,
+  FileText,
+  Video,
+  HelpCircle
 } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-
-const modules = [
-  {
-    id: "gpu",
-    title: "Maîtriser les GPU",
-    icon: Monitor,
-    description: "Apprenez à identifier les bonnes affaires sur les cartes graphiques",
-    progress: 75,
-    lessons: 8,
-    completed: 6,
-    xp: 450,
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
-    locked: false,
-  },
-  {
-    id: "cpu",
-    title: "Expertise Processeurs",
-    icon: Cpu,
-    description: "Devenez expert en évaluation des CPU Intel et AMD",
-    progress: 40,
-    lessons: 6,
-    completed: 2,
-    xp: 180,
-    color: "text-green-500",
-    bgColor: "bg-green-500/10",
-    locked: false,
-  },
-  {
-    id: "storage",
-    title: "Stockage & Mémoire",
-    icon: HardDrive,
-    description: "SSD, HDD, RAM : tout savoir sur le stockage",
-    progress: 0,
-    lessons: 5,
-    completed: 0,
-    xp: 0,
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10",
-    locked: true,
-  },
-  {
-    id: "power",
-    title: "Alimentations",
-    icon: Zap,
-    description: "Comprendre les certifications et la qualité des PSU",
-    progress: 0,
-    lessons: 4,
-    completed: 0,
-    xp: 0,
-    color: "text-yellow-500",
-    bgColor: "bg-yellow-500/10",
-    locked: true,
-  },
-];
-
-const lessons = [
-  {
-    moduleId: "gpu",
-    title: "Introduction aux GPU",
-    duration: "10 min",
-    completed: true,
-    xp: 50,
-  },
-  {
-    moduleId: "gpu",
-    title: "Architecture NVIDIA vs AMD",
-    duration: "15 min",
-    completed: true,
-    xp: 75,
-  },
-  {
-    moduleId: "gpu",
-    title: "Comprendre les benchmarks",
-    duration: "12 min",
-    completed: true,
-    xp: 60,
-  },
-  {
-    moduleId: "gpu",
-    title: "Évaluer l'état d'un GPU d'occasion",
-    duration: "20 min",
-    completed: true,
-    xp: 100,
-  },
-  {
-    moduleId: "gpu",
-    title: "Mining et usure : ce qu'il faut savoir",
-    duration: "15 min",
-    completed: true,
-    xp: 75,
-  },
-  {
-    moduleId: "gpu",
-    title: "Calculer la Fair Value d'un GPU",
-    duration: "18 min",
-    completed: true,
-    xp: 90,
-  },
-  {
-    moduleId: "gpu",
-    title: "Négociation et pièges à éviter",
-    duration: "14 min",
-    completed: false,
-    xp: 70,
-  },
-  {
-    moduleId: "gpu",
-    title: "Quiz Final - GPU Expert",
-    duration: "10 min",
-    completed: false,
-    xp: 150,
-    isQuiz: true,
-  },
-];
-
-const badges = [
-  {
-    id: "gpu-novice",
-    title: "Novice GPU",
-    description: "Complétez 3 leçons sur les GPU",
-    icon: Monitor,
-    earned: true,
-    earnedDate: "12 Jan 2025",
-    rarity: "Commun",
-  },
-  {
-    id: "gpu-expert",
-    title: "Expert GPU",
-    description: "Complétez tous les modules GPU",
-    icon: Trophy,
-    earned: false,
-    rarity: "Rare",
-  },
-  {
-    id: "deal-hunter",
-    title: "Chasseur de Deals",
-    description: "Identifiez 50 bonnes affaires",
-    icon: Target,
-    earned: true,
-    earnedDate: "10 Jan 2025",
-    rarity: "Commun",
-  },
-  {
-    id: "perfect-score",
-    title: "Score Parfait",
-    description: "Obtenez 100% à un quiz",
-    icon: Star,
-    earned: false,
-    rarity: "Épique",
-  },
-  {
-    id: "master",
-    title: "Maître HardwareDeals",
-    description: "Complétez tous les modules",
-    icon: Award,
-    earned: false,
-    rarity: "Légendaire",
-  },
-];
-
-const userStats = {
-  totalXP: 630,
-  level: 4,
-  nextLevelXP: 800,
-  coursesCompleted: 8,
-  badgesEarned: 2,
-  streak: 7,
-};
+  mockUserProgress,
+  mockTrainingModules,
+  mockBadges,
+  mockGuides,
+  mockFAQ,
+  bestPractices,
+  forbiddenPractices
+} from "@/lib/trainingMockData";
+import { toast } from "sonner";
 
 export default function Training() {
-  const [selectedModule, setSelectedModule] = useState<string | null>(null);
-  const [quizOpen, setQuizOpen] = useState(false);
+  const [openFAQ, setOpenFAQ] = useState<string[]>([]);
+  const [quizScore, setQuizScore] = useState<number | null>(null);
 
-  const selectedModuleLessons = selectedModule
-    ? lessons.filter((l) => l.moduleId === selectedModule)
-    : [];
+  const progressPercentage = (mockUserProgress.modules_completed.length / mockUserProgress.total_modules) * 100;
 
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case "Commun": return "text-gray-500";
-      case "Rare": return "text-blue-500";
-      case "Épique": return "text-purple-500";
-      case "Légendaire": return "text-yellow-500";
-      default: return "text-gray-500";
-    }
+  const handleStartModule = (moduleId: number) => {
+    toast.success(`Module ${moduleId} démarré !`);
+  };
+
+  const handleCompleteModule = (moduleId: number) => {
+    toast.success(`Module ${moduleId} terminé ! +1 crédit`);
+  };
+
+  const handleStartQuiz = () => {
+    // Simulate quiz completion
+    const score = 8;
+    setQuizScore(score);
+    toast.success(`Quiz terminé ! Score: ${score}/10 - +1 crédit`);
+  };
+
+  const handleDownloadCertificate = () => {
+    toast.info("Fonctionnalité à venir : Export du certificat PDF");
+  };
+
+  const getIconForGuide = (iconName: string) => {
+    const icons: Record<string, any> = {
+      "book-open": BookOpen,
+      "calculator": Calculator,
+      "trending-up": TrendingUp,
+      "settings": Settings,
+      "shield": Shield
+    };
+    return icons[iconName] || BookOpen;
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="min-h-screen py-8">
+      <div className="container max-w-7xl space-y-12">
+        
         {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight flex items-center justify-center gap-3">
-            <GraduationCap className="h-10 w-10 text-primary" />
-            Espace Formation
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-4"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight flex items-center justify-center gap-3">
+            <GraduationCap className="h-12 w-12 text-primary" />
+            Formation – Deviens un expert du marché hardware
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Devenez expert en deals hardware grâce à nos modules interactifs
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Apprends à utiliser les outils, à contribuer efficacement et à interpréter les données comme un pro.
           </p>
-        </div>
+          
+          <Alert className="max-w-3xl mx-auto border-primary/20 bg-primary/5">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Chaque utilisateur formé améliore la qualité du marché. Termine les modules et débloque des avantages communautaires (crédits bonus, badges, rangs Discord, etc.)
+            </AlertDescription>
+          </Alert>
 
-        {/* User Progress Card */}
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
-          <CardContent className="p-6">
-            <div className="grid md:grid-cols-5 gap-6">
-              <div className="md:col-span-2 space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-muted-foreground">Niveau {userStats.level}</span>
-                    <span className="text-sm font-medium">{userStats.totalXP}/{userStats.nextLevelXP} XP</span>
-                  </div>
-                  <Progress value={(userStats.totalXP / userStats.nextLevelXP) * 100} className="h-3" />
+          <div className="flex items-center justify-center gap-4 pt-4">
+            <Button size="lg" asChild>
+              <a href="#modules">
+                Commencer la formation
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </a>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <a href="#progression">Voir ma progression</a>
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Progress & Badges */}
+        <motion.section 
+          id="progression"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-6 w-6 text-primary" />
+                Ma Progression & Badges
+              </CardTitle>
+              <CardDescription>
+                Suis ton parcours d'apprentissage et débloque des récompenses
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Progress Bar */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">Modules terminés</span>
+                  <span className="text-sm text-muted-foreground">
+                    {mockUserProgress.modules_completed.length}/{mockUserProgress.total_modules}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-yellow-500" />
-                  <span className="text-2xl font-bold">{userStats.totalXP} XP</span>
-                </div>
+                <Progress value={progressPercentage} className="h-3" />
               </div>
-              
-              <div className="md:col-span-3 grid grid-cols-3 gap-4">
-                <div className="text-center p-4 rounded-lg bg-card border">
-                  <BookOpen className="h-6 w-6 mx-auto mb-2 text-blue-500" />
-                  <p className="text-2xl font-bold">{userStats.coursesCompleted}</p>
-                  <p className="text-sm text-muted-foreground">Leçons complétées</p>
-                </div>
-                <div className="text-center p-4 rounded-lg bg-card border">
-                  <Award className="h-6 w-6 mx-auto mb-2 text-purple-500" />
-                  <p className="text-2xl font-bold">{userStats.badgesEarned}</p>
-                  <p className="text-sm text-muted-foreground">Badges débloqués</p>
-                </div>
-                <div className="text-center p-4 rounded-lg bg-card border">
-                  <Target className="h-6 w-6 mx-auto mb-2 text-green-500" />
-                  <p className="text-2xl font-bold">{userStats.streak}</p>
-                  <p className="text-sm text-muted-foreground">Jours de suite</p>
-                </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <CheckCircle2 className="h-6 w-6 mx-auto mb-2 text-green-500" />
+                    <p className="text-2xl font-bold">{mockUserProgress.modules_completed.length}/{mockUserProgress.total_modules}</p>
+                    <p className="text-xs text-muted-foreground">Modules terminés</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Clock className="h-6 w-6 mx-auto mb-2 text-blue-500" />
+                    <p className="text-2xl font-bold">{mockUserProgress.hours_spent.toFixed(0)}h</p>
+                    <p className="text-xs text-muted-foreground">Heures d'apprentissage</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Award className="h-6 w-6 mx-auto mb-2 text-purple-500" />
+                    <p className="text-2xl font-bold">{mockUserProgress.badges.length}</p>
+                    <p className="text-xs text-muted-foreground">Badges débloqués</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Users className="h-6 w-6 mx-auto mb-2 text-orange-500" />
+                    <p className="text-2xl font-bold">+{mockUserProgress.credits_earned}</p>
+                    <p className="text-xs text-muted-foreground">Crédits bonus</p>
+                  </CardContent>
+                </Card>
               </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Tabs defaultValue="modules" className="space-y-6">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-            <TabsTrigger value="modules">Modules</TabsTrigger>
-            <TabsTrigger value="badges">Badges</TabsTrigger>
-          </TabsList>
-
-          {/* Modules Tab */}
-          <TabsContent value="modules" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {modules.map((module) => {
-                const Icon = module.icon;
-                return (
-                  <Card 
-                    key={module.id} 
-                    className={`hover-scale cursor-pointer transition-all ${
-                      module.locked ? "opacity-60" : ""
-                    }`}
-                    onClick={() => !module.locked && setSelectedModule(module.id)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className={`p-3 rounded-lg ${module.bgColor}`}>
-                          <Icon className={`h-8 w-8 ${module.color}`} />
-                        </div>
-                        {module.locked ? (
-                          <Badge variant="outline" className="gap-1">
-                            <Lock className="h-3 w-3" />
-                            Verrouillé
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">{module.completed}/{module.lessons} leçons</Badge>
-                        )}
-                      </div>
-                      <CardTitle className="mt-4">{module.title}</CardTitle>
-                      <CardDescription>{module.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+              {/* Badges */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Badges débloqués
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {mockBadges.map((badge) => (
+                    <div
+                      key={badge.id}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                        badge.earned
+                          ? "border-primary bg-primary/10"
+                          : "border-border bg-muted/50 opacity-60"
+                      }`}
+                    >
+                      <span className="text-2xl">{badge.name.split(" ")[0]}</span>
                       <div>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span className="text-muted-foreground">Progression</span>
-                          <span className="font-medium">{module.progress}%</span>
-                        </div>
-                        <Progress value={module.progress} className="h-2" />
+                        <p className="text-sm font-medium">{badge.name.split(" ").slice(1).join(" ")}</p>
+                        <p className="text-xs text-muted-foreground">{badge.description}</p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 text-yellow-500" />
-                          <span className="text-sm font-medium">{module.xp} XP</span>
-                        </div>
-                        {!module.locked && (
-                          <Button variant="ghost" size="sm" className="gap-1">
-                            Continuer
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-            {/* Lesson Details Dialog */}
-            {selectedModule && (
-              <Dialog open={!!selectedModule} onOpenChange={() => setSelectedModule(null)}>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      {modules.find(m => m.id === selectedModule)?.icon && (
-                        <div className={`p-2 rounded-lg ${modules.find(m => m.id === selectedModule)?.bgColor}`}>
-                          {(() => {
-                            const Icon = modules.find(m => m.id === selectedModule)?.icon!;
-                            return <Icon className={`h-5 w-5 ${modules.find(m => m.id === selectedModule)?.color}`} />;
-                          })()}
-                        </div>
+              <Button variant="outline" className="w-full" onClick={handleDownloadCertificate}>
+                <Download className="mr-2 h-4 w-4" />
+                Exporter mon certificat PDF
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.section>
+
+        {/* Training Modules */}
+        <motion.section 
+          id="modules"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold mb-2">Modules de Formation</h2>
+            <p className="text-muted-foreground">Parcours progressif pour maîtriser la plateforme</p>
+          </div>
+
+          <Accordion type="multiple" className="space-y-4">
+            {mockTrainingModules.map((module, index) => (
+              <AccordionItem 
+                key={module.id} 
+                value={`module-${module.id}`}
+                className="border rounded-lg overflow-hidden"
+              >
+                <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-accent/50">
+                  <div className="flex items-center gap-4 text-left w-full">
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
+                      module.completed ? "bg-green-500" : "bg-primary"
+                    }`}>
+                      {module.completed ? (
+                        <CheckCircle2 className="h-6 w-6 text-white" />
+                      ) : (
+                        <span className="text-xl font-bold text-white">{index + 1}</span>
                       )}
-                      {modules.find(m => m.id === selectedModule)?.title}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {modules.find(m => m.id === selectedModule)?.description}
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="space-y-3 mt-4">
-                    {selectedModuleLessons.map((lesson, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${
-                          lesson.completed 
-                            ? "bg-green-500/5 border-green-500/20" 
-                            : "bg-card hover:bg-accent/50"
-                        }`}
-                      >
-                        <div className="flex-shrink-0">
-                          {lesson.completed ? (
-                            <CheckCircle2 className="h-6 w-6 text-green-500" />
-                          ) : (
-                            <div className="h-6 w-6 rounded-full border-2 border-muted flex items-center justify-center">
-                              <span className="text-xs font-medium">{idx + 1}</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex-1 space-y-1">
-                          <p className="font-medium">{lesson.title}</p>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            <span>{lesson.duration}</span>
-                            <span className="flex items-center gap-1">
-                              <Star className="h-3 w-3 text-yellow-500" />
-                              {lesson.xp} XP
-                            </span>
-                            {lesson.isQuiz && (
-                              <Badge variant="outline" className="text-xs">Quiz</Badge>
-                            )}
-                          </div>
-                        </div>
-
-                        {!lesson.completed && (
-                          <Button 
-                            size="sm"
-                            onClick={() => lesson.isQuiz && setQuizOpen(true)}
-                          >
-                            {lesson.isQuiz ? "Commencer le quiz" : "Commencer"}
-                          </Button>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-lg">{module.title}</h3>
+                        {module.completed && (
+                          <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-500/20">
+                            Terminé
+                          </Badge>
                         )}
                       </div>
-                    ))}
+                      <p className="text-sm text-muted-foreground">{module.objective}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {module.duration}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <HelpCircle className="h-3 w-3" />
+                          {module.quizQuestions} questions
+                        </span>
+                        {module.creditReward > 0 && (
+                          <span className="flex items-center gap-1 text-primary">
+                            <Award className="h-3 w-3" />
+                            +{module.creditReward} crédit
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </DialogContent>
-              </Dialog>
-            )}
-          </TabsContent>
-
-          {/* Badges Tab */}
-          <TabsContent value="badges">
-            <div className="grid md:grid-cols-3 gap-6">
-              {badges.map((badge) => {
-                const Icon = badge.icon;
-                return (
-                  <Card 
-                    key={badge.id} 
-                    className={`text-center ${
-                      badge.earned ? "border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5" : "opacity-60"
-                    }`}
-                  >
-                    <CardHeader>
-                      <div className="mx-auto mb-4">
-                        <div className={`w-20 h-20 rounded-full flex items-center justify-center ${
-                          badge.earned 
-                            ? "bg-gradient-to-br from-primary to-accent" 
-                            : "bg-muted"
-                        }`}>
-                          <Icon className={`h-10 w-10 ${badge.earned ? "text-white" : "text-muted-foreground"}`} />
-                        </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4 bg-accent/20">
+                  <div className="space-y-4">
+                    {/* Video Placeholder */}
+                    <div className="aspect-video bg-muted rounded-lg flex items-center justify-center border">
+                      <div className="text-center">
+                        <Video className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Vidéo de présentation</p>
                       </div>
-                      <CardTitle className="text-lg">{badge.title}</CardTitle>
-                      <CardDescription>{badge.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Badge 
-                        variant={badge.earned ? "default" : "outline"}
-                        className={badge.earned ? getRarityColor(badge.rarity) : ""}
-                      >
-                        {badge.rarity}
-                      </Badge>
-                      {badge.earned && badge.earnedDate && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Obtenu le {badge.earnedDate}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </TabsContent>
-        </Tabs>
+                    </div>
 
-        {/* Quiz Dialog */}
-        <Dialog open={quizOpen} onOpenChange={setQuizOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Quiz - GPU Expert</DialogTitle>
-              <DialogDescription>
-                Testez vos connaissances pour débloquer le badge Expert GPU
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <p className="text-sm text-muted-foreground">
-                Le quiz contient 10 questions sur les GPU. Vous devez obtenir au moins 80% pour valider le module.
-              </p>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setQuizOpen(false)}>
-                Plus tard
+                    {/* Content */}
+                    <div>
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        Contenu du module
+                      </h4>
+                      <ul className="space-y-2">
+                        {module.content.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm">
+                            <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Resources */}
+                    <div>
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Ressources
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {module.resources.map((resource, i) => (
+                          <Badge key={i} variant="outline" className="gap-1">
+                            <ExternalLink className="h-3 w-3" />
+                            {resource}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 pt-2">
+                      {!module.completed ? (
+                        <Button onClick={() => handleStartModule(module.id)}>
+                          Commencer le module
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button variant="outline" onClick={() => handleStartModule(module.id)}>
+                          Revoir le module
+                        </Button>
+                      )}
+                      {module.badge && (
+                        <Badge className="bg-primary/10 text-primary border-primary/20">
+                          Badge : {module.badge}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </motion.section>
+
+        {/* Practical Guides */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold mb-2">Guides Pratiques</h2>
+            <p className="text-muted-foreground">Références rapides pour utiliser la plateforme</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mockGuides.map((guide) => {
+              const Icon = getIconForGuide(guide.icon);
+              return (
+                <Card key={guide.id} className="hover-scale cursor-pointer">
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <CardTitle className="text-base">{guide.title}</CardTitle>
+                    </div>
+                    <CardDescription>{guide.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button variant="ghost" size="sm" className="w-full" asChild>
+                      <Link to={guide.url}>
+                        Consulter
+                        <ExternalLink className="ml-2 h-3 w-3" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <Button variant="outline" className="w-full mt-4">
+            <Download className="mr-2 h-4 w-4" />
+            Télécharger tous les guides en PDF
+          </Button>
+        </motion.section>
+
+        {/* Best Practices & GDPR */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold mb-2">Bonnes Pratiques & RGPD</h2>
+            <p className="text-muted-foreground">Respecte ces principes pour contribuer de manière éthique et sécurisée</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Good Practices */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-600">
+                  <CheckCircle2 className="h-5 w-5" />
+                  À Faire
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {bestPractices.map((practice, index) => {
+                  const Icon = practice.icon === "hand" ? Hand : 
+                              practice.icon === "shield-check" ? ShieldCheck :
+                              practice.icon === "check-circle" ? CheckCircle2 :
+                              practice.icon === "clock" ? Clock : Lock;
+                  return (
+                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-green-500/5 border border-green-500/20">
+                      <Icon className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-sm">{practice.title}</p>
+                        <p className="text-xs text-muted-foreground">{practice.description}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+                <Button variant="link" size="sm" className="p-0 h-auto" asChild>
+                  <Link to="/rgpd">Voir la politique RGPD complète →</Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Forbidden Practices */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertCircle className="h-5 w-5" />
+                  À Ne Jamais Faire
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {forbiddenPractices.map((practice, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                    <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-sm">{practice.title}</p>
+                      <p className="text-xs text-muted-foreground">{practice.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        </motion.section>
+
+        {/* Quiz Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="border-2 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HelpCircle className="h-6 w-6 text-primary" />
+                Quiz Final – Vérification des Acquis
+              </CardTitle>
+              <CardDescription>
+                Teste tes connaissances avec 10 questions couvrant les 4 modules
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {quizScore === null ? (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Score requis : 8/10 minimum pour obtenir le badge et +1 crédit bonus
+                  </p>
+                  <Button onClick={handleStartQuiz} size="lg">
+                    Commencer le quiz
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <Alert className={quizScore >= 8 ? "border-green-500 bg-green-500/5" : "border-orange-500 bg-orange-500/5"}>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertDescription>
+                    <p className="font-semibold mb-1">Score: {quizScore}/10</p>
+                    {quizScore >= 8 ? (
+                      <p className="text-sm">Bravo ! Tu maîtrises les bases. +1 crédit gagné</p>
+                    ) : quizScore >= 5 ? (
+                      <p className="text-sm">Bien, mais révise les bonnes pratiques.</p>
+                    ) : (
+                      <p className="text-sm">Refais la formation avant de contribuer.</p>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </motion.section>
+
+        {/* FAQ */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold mb-2">FAQ & Support</h2>
+            <p className="text-muted-foreground">Questions fréquemment posées</p>
+          </div>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-2">
+                {mockFAQ.map((faq, index) => (
+                  <Collapsible key={index}>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full p-4 rounded-lg hover:bg-accent transition-colors text-left">
+                      <span className="font-medium">{faq.question}</span>
+                      <ChevronDown className="h-4 w-4 transition-transform" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="px-4 pb-4 text-sm text-muted-foreground">
+                      {faq.answer}
+                    </CollapsibleContent>
+                  </Collapsible>
+                ))}
+              </div>
+
+              <div className="mt-6 pt-6 border-t space-y-3">
+                <p className="text-sm font-medium">Besoin d'aide supplémentaire ?</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <a href="https://discord.gg/hardwaredeals" target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Discord #aide-formation
+                    </a>
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Poser une question
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.section>
+
+        {/* CTAs */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"
+        >
+          <Card className="hover-scale cursor-pointer">
+            <CardHeader>
+              <Users className="h-8 w-8 text-primary mb-2" />
+              <CardTitle className="text-lg">Rejoindre la Communauté</CardTitle>
+              <CardDescription>Contribue au scrap communautaire</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="ghost" size="sm" className="w-full" asChild>
+                <Link to="/community">
+                  Accéder
+                  <ArrowRight className="ml-2 h-3 w-3" />
+                </Link>
               </Button>
-              <Button onClick={() => setQuizOpen(false)}>
-                Commencer le quiz
+            </CardContent>
+          </Card>
+
+          <Card className="hover-scale cursor-pointer">
+            <CardHeader>
+              <TrendingUp className="h-8 w-8 text-primary mb-2" />
+              <CardTitle className="text-lg">Explorer les Tendances</CardTitle>
+              <CardDescription>Analyse du marché hardware</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="ghost" size="sm" className="w-full" asChild>
+                <Link to="/trends">
+                  Accéder
+                  <ArrowRight className="ml-2 h-3 w-3" />
+                </Link>
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-scale cursor-pointer">
+            <CardHeader>
+              <BookOpen className="h-8 w-8 text-primary mb-2" />
+              <CardTitle className="text-lg">Essayer un Scrap</CardTitle>
+              <CardDescription>Découvre le catalogue de modèles</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="ghost" size="sm" className="w-full" asChild>
+                <Link to="/catalog">
+                  Accéder
+                  <ArrowRight className="ml-2 h-3 w-3" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-scale cursor-pointer">
+            <CardHeader>
+              <Calculator className="h-8 w-8 text-primary mb-2" />
+              <CardTitle className="text-lg">Tester l'Estimator</CardTitle>
+              <CardDescription>Estime la valeur de ton matos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="ghost" size="sm" className="w-full" asChild>
+                <Link to="/estimator">
+                  Accéder
+                  <ArrowRight className="ml-2 h-3 w-3" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.section>
       </div>
     </div>
   );
