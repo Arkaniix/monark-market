@@ -224,19 +224,85 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Zap className="h-7 w-7 text-primary-foreground" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 lg:p-8">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+        {/* Left Panel - Marketing Content (hidden on mobile) */}
+        <div className="hidden lg:flex flex-col gap-8 p-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+                <Zap className="h-9 w-9 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  HardwareMarket
+                </h1>
+                <p className="text-muted-foreground">Votre marketplace hardware intelligent</p>
+              </div>
             </div>
           </div>
-          <CardTitle className="text-2xl">HardwareMarket</CardTitle>
-          <CardDescription>
-            Connectez-vous pour accéder aux données premium
-          </CardDescription>
-        </CardHeader>
+
+          <div className="space-y-6">
+            <div className="flex gap-4 items-start group hover:translate-x-2 transition-transform">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                <TrendingUp className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Analyse de tendances</h3>
+                <p className="text-muted-foreground text-sm">
+                  Accédez aux données de prix en temps réel et aux tendances du marché hardware
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 items-start group hover:translate-x-2 transition-transform">
+              <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
+                <Star className="h-6 w-6 text-accent" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Deals exclusifs</h3>
+                <p className="text-muted-foreground text-sm">
+                  Découvrez les meilleures offres avant tout le monde avec notre système d'alerte
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 items-start group hover:translate-x-2 transition-transform">
+              <div className="h-12 w-12 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0 group-hover:bg-warning/20 transition-colors">
+                <Crown className="h-6 w-6 text-warning" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Communauté active</h3>
+                <p className="text-muted-foreground text-sm">
+                  Rejoignez des milliers de passionnés et partagez vos trouvailles
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-auto pt-8 border-t border-border/50">
+            <p className="text-sm text-muted-foreground">
+              Déjà <span className="font-semibold text-primary">10,000+</span> utilisateurs nous font confiance
+            </p>
+          </div>
+        </div>
+
+        {/* Right Panel - Auth Card */}
+        <Card className="w-full shadow-2xl">
+          <CardHeader className="text-center space-y-2">
+            <div className="flex justify-center mb-2 lg:hidden">
+              <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <Zap className="h-7 w-7 text-primary-foreground" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl lg:text-3xl">
+              <span className="lg:hidden">HardwareMarket</span>
+              <span className="hidden lg:inline">Commencez maintenant</span>
+            </CardTitle>
+            <CardDescription className="text-base">
+              Connectez-vous pour accéder aux données premium
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin">
             <TabsList className="grid w-full grid-cols-2">
@@ -482,7 +548,8 @@ export default function Auth() {
             </TabsContent>
           </Tabs>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
