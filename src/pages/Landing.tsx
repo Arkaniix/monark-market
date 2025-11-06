@@ -3,175 +3,111 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Search,
-  Target,
-  BarChart3,
-  Users,
-  Zap,
-  GraduationCap,
-  TrendingUp,
-  Check,
-  Clock,
-  Shield,
-  Rocket,
-  DollarSign,
-  Bell,
-  Award,
-} from "lucide-react";
+import { Search, Target, BarChart3, Users, Zap, GraduationCap, TrendingUp, Check, Clock, Shield, Rocket, DollarSign, Bell, Award } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
 const containerVariants = {
-  hidden: { opacity: 0 },
+  hidden: {
+    opacity: 0
+  },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-    },
-  },
+      staggerChildren: 0.1
+    }
+  }
 };
-
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+  hidden: {
+    opacity: 0,
+    y: 20
+  },
+  visible: {
+    opacity: 1,
+    y: 0
+  }
 };
-
-const features = [
-  "Scanner automatique d'annonces",
-  "Analyses de tendances en temps réel",
-  "Estimateur de prix intelligent",
-  "Alertes personnalisées",
-  "Accès à la communauté Discord",
-];
-
-const trainingModules = [
-  "Comment identifier les bonnes affaires",
-  "Stratégies d'achat-revente efficaces",
-  "Optimisation des marges bénéficiaires",
-  "Gestion des risques et pièges à éviter",
-];
-
-const benefits = [
-  {
-    icon: DollarSign,
-    title: "Maximisez vos profits",
-    description: "Identifiez les opportunités sous-évaluées et vendez au meilleur moment grâce à nos analyses de marché en temps réel.",
-  },
-  {
-    icon: Clock,
-    title: "Gagnez du temps",
-    description: "Notre scanner automatique fait le travail à votre place. Plus besoin de parcourir des centaines d'annonces manuellement.",
-  },
-  {
-    icon: Shield,
-    title: "Réduisez les risques",
-    description: "Évitez les mauvais achats grâce à notre système de scoring et nos alertes sur les prix anormaux.",
-  },
-  {
-    icon: Award,
-    title: "Devenez expert",
-    description: "Apprenez les techniques des professionnels avec notre formation complète et notre communauté active.",
-  },
-];
-
-const howItWorks = [
-  {
-    step: "1",
-    title: "Suivez la formation",
-    description: "Accédez à notre formation complète pour maîtriser les fondamentaux de l'achat-revente et comprendre comment utiliser l'outil efficacement.",
-  },
-  {
-    step: "2",
-    title: "Scannez le marché",
-    description: "Lancez un scan automatique sur les plateformes comme LeBonCoin. L'outil trouve toutes les annonces pertinentes en quelques secondes.",
-  },
-  {
-    step: "3",
-    title: "Analysez les opportunités",
-    description: "Notre IA évalue chaque annonce et vous présente les meilleures affaires avec un score de rentabilité.",
-  },
-  {
-    step: "4",
-    title: "Achetez au bon prix",
-    description: "Contactez le vendeur avec confiance grâce à notre estimateur de prix et nos données de marché.",
-  },
-  {
-    step: "5",
-    title: "Revendez avec profit",
-    description: "Utilisez nos analyses de tendances pour choisir le moment optimal de revente et maximiser vos marges.",
-  },
-];
-
-const testimonials = [
-  {
-    name: "Thomas D.",
-    role: "Revendeur GPU",
-    content: "J'ai doublé mes profits en 2 mois. L'outil de scanning me fait gagner 4h par jour et je ne rate plus aucune bonne affaire.",
-    profit: "+142%",
-  },
-  {
-    name: "Sarah M.",
-    role: "Débutante",
-    content: "La formation m'a permis de passer de 0 à mes premières 5 transactions rentables en 3 semaines. Tout est expliqué pas à pas.",
-    profit: "+850€",
-  },
-  {
-    name: "Kevin L.",
-    role: "Pro de l'achat-revente",
-    content: "Après 2 ans à faire ça à l'ancienne, cet outil a transformé mon business. Les alertes en temps réel sont juste incroyables.",
-    profit: "+3200€/mois",
-  },
-];
-
+const features = ["Scanner automatique d'annonces", "Analyses de tendances en temps réel", "Estimateur de prix intelligent", "Alertes personnalisées", "Accès à la communauté Discord"];
+const trainingModules = ["Comment identifier les bonnes affaires", "Stratégies d'achat-revente efficaces", "Optimisation des marges bénéficiaires", "Gestion des risques et pièges à éviter"];
+const benefits = [{
+  icon: DollarSign,
+  title: "Maximisez vos profits",
+  description: "Identifiez les opportunités sous-évaluées et vendez au meilleur moment grâce à nos analyses de marché en temps réel."
+}, {
+  icon: Clock,
+  title: "Gagnez du temps",
+  description: "Notre scanner automatique fait le travail à votre place. Plus besoin de parcourir des centaines d'annonces manuellement."
+}, {
+  icon: Shield,
+  title: "Réduisez les risques",
+  description: "Évitez les mauvais achats grâce à notre système de scoring et nos alertes sur les prix anormaux."
+}, {
+  icon: Award,
+  title: "Devenez expert",
+  description: "Apprenez les techniques des professionnels avec notre formation complète et notre communauté active."
+}];
+const howItWorks = [{
+  step: "1",
+  title: "Suivez la formation",
+  description: "Accédez à notre formation complète pour maîtriser les fondamentaux de l'achat-revente et comprendre comment utiliser l'outil efficacement."
+}, {
+  step: "2",
+  title: "Scannez le marché",
+  description: "Lancez un scan automatique sur les plateformes comme LeBonCoin. L'outil trouve toutes les annonces pertinentes en quelques secondes."
+}, {
+  step: "3",
+  title: "Analysez les opportunités",
+  description: "Notre IA évalue chaque annonce et vous présente les meilleures affaires avec un score de rentabilité."
+}, {
+  step: "4",
+  title: "Achetez au bon prix",
+  description: "Contactez le vendeur avec confiance grâce à notre estimateur de prix et nos données de marché."
+}, {
+  step: "5",
+  title: "Revendez avec profit",
+  description: "Utilisez nos analyses de tendances pour choisir le moment optimal de revente et maximiser vos marges."
+}];
+const testimonials = [{
+  name: "Thomas D.",
+  role: "Revendeur GPU",
+  content: "J'ai doublé mes profits en 2 mois. L'outil de scanning me fait gagner 4h par jour et je ne rate plus aucune bonne affaire.",
+  profit: "+142%"
+}, {
+  name: "Sarah M.",
+  role: "Débutante",
+  content: "La formation m'a permis de passer de 0 à mes premières 5 transactions rentables en 3 semaines. Tout est expliqué pas à pas.",
+  profit: "+850€"
+}, {
+  name: "Kevin L.",
+  role: "Pro de l'achat-revente",
+  content: "Après 2 ans à faire ça à l'ancienne, cet outil a transformé mon business. Les alertes en temps réel sont juste incroyables.",
+  profit: "+3200€/mois"
+}];
 export default function Landing() {
   const [plans, setPlans] = useState<any[]>([]);
   const [mostPopularPlanId, setMostPopularPlanId] = useState<string | null>(null);
 
   // Fonctionnalités par plan
   const planFeaturesMap: Record<string, string[]> = {
-    'Basic': [
-      'Accès au catalogue complet',
-      'Estimations de prix',
-      'Alertes de nouvelles annonces',
-      'Support par email'
-    ],
-    'Pro': [
-      'Tout du plan Basic',
-      'Comparateur de modèles avancé',
-      'Statistiques de marché détaillées',
-      'Alertes personnalisées prioritaires',
-      'Support prioritaire',
-      'Historique des tendances'
-    ],
-    'Elite': [
-      'Tout du plan Pro',
-      'Analyses prédictives IA',
-      'Conseils d\'investissement',
-      'Exports de données personnalisés',
-      'Support dédié 24/7',
-      'Rapports personnalisés mensuels'
-    ]
+    'Basic': ['Accès au catalogue complet', 'Estimations de prix', 'Alertes de nouvelles annonces', 'Support par email'],
+    'Pro': ['Tout du plan Basic', 'Comparateur de modèles avancé', 'Statistiques de marché détaillées', 'Alertes personnalisées prioritaires', 'Support prioritaire', 'Historique des tendances'],
+    'Elite': ['Tout du plan Pro', 'Analyses prédictives IA', 'Conseils d\'investissement', 'Exports de données personnalisés', 'Support dédié 24/7', 'Rapports personnalisés mensuels']
   };
-
   useEffect(() => {
     const fetchPlans = async () => {
       // Récupérer les plans
-      const { data: plansData } = await supabase
-        .from("subscription_plans")
-        .select("*")
-        .eq("is_active", true)
-        .order("price", { ascending: true });
-      
+      const {
+        data: plansData
+      } = await supabase.from("subscription_plans").select("*").eq("is_active", true).order("price", {
+        ascending: true
+      });
       if (plansData) {
         setPlans(plansData);
 
         // Compter les utilisateurs actifs pour chaque plan
-        const { data: subscriptionsData } = await supabase
-          .from("user_subscriptions")
-          .select("plan_id")
-          .eq("status", "active");
-
+        const {
+          data: subscriptionsData
+        } = await supabase.from("user_subscriptions").select("plan_id").eq("status", "active");
         if (subscriptionsData) {
           // Compter les abonnés par plan
           const planCounts = subscriptionsData.reduce((acc: Record<string, number>, sub) => {
@@ -182,32 +118,31 @@ export default function Landing() {
           // Trouver le plan avec le plus d'abonnés
           let maxCount = 0;
           let popularPlanId = null;
-          
           for (const [planId, count] of Object.entries(planCounts)) {
             if (count > maxCount) {
               maxCount = count;
               popularPlanId = planId;
             }
           }
-
           setMostPopularPlanId(popularPlanId);
         }
       }
     };
-
     fetchPlans();
   }, []);
-  return (
-    <div className="min-h-screen">
+  return <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-background via-primary/5 to-accent/5 py-20 md:py-32">
         <div className="container relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-4xl mx-auto"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 30
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          duration: 0.6
+        }} className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
               Devenez expert en achat-revente de hardware
             </h1>
@@ -239,13 +174,9 @@ export default function Landing() {
       {/* Stats teaser - chiffres génériques pour l'engagement */}
       <section className="py-12 border-b">
         <div className="container">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6"
-          >
+          <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
+          once: true
+        }} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader className="pb-3">
@@ -323,13 +254,9 @@ export default function Landing() {
             </p>
           </div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8"
-          >
+          <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
+          once: true
+        }} className="grid md:grid-cols-3 gap-8">
             <motion.div variants={itemVariants} className="text-center">
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Search className="h-8 w-8 text-primary" />
@@ -368,14 +295,12 @@ export default function Landing() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3">
+                  {features.map((feature, i) => <li key={i} className="flex items-start gap-3">
                       <div className="h-6 w-6 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Check className="h-4 w-4 text-success" />
                       </div>
                       <span>{feature}</span>
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
               </CardContent>
             </Card>
@@ -398,15 +323,10 @@ export default function Landing() {
             </p>
           </div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid md:grid-cols-2 gap-8"
-          >
-            {benefits.map((benefit, i) => (
-              <motion.div key={i} variants={itemVariants}>
+          <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
+          once: true
+        }} className="grid md:grid-cols-2 gap-8">
+            {benefits.map((benefit, i) => <motion.div key={i} variants={itemVariants}>
                 <Card className="h-full">
                   <CardHeader>
                     <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -418,8 +338,7 @@ export default function Landing() {
                     <p className="text-muted-foreground">{benefit.description}</p>
                   </CardContent>
                 </Card>
-              </motion.div>
-            ))}
+              </motion.div>)}
           </motion.div>
         </div>
       </section>
@@ -438,15 +357,17 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {howItWorks.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="relative"
-              >
+            {howItWorks.map((item, i) => <motion.div key={i} initial={{
+            opacity: 0,
+            y: 20
+          }} whileInView={{
+            opacity: 1,
+            y: 0
+          }} viewport={{
+            once: true
+          }} transition={{
+            delay: i * 0.1
+          }} className="relative">
                 <div className="text-center">
                   <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-white">
                     {item.step}
@@ -454,11 +375,8 @@ export default function Landing() {
                   <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
                   <p className="text-muted-foreground">{item.description}</p>
                 </div>
-                {i < howItWorks.length - 1 && (
-                  <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-primary/50 to-accent/50" />
-                )}
-              </motion.div>
-            ))}
+                {i < howItWorks.length - 1 && <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-primary/50 to-accent/50" />}
+              </motion.div>)}
           </div>
         </div>
       </section>
@@ -478,15 +396,10 @@ export default function Landing() {
             </p>
           </div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8"
-          >
-            {testimonials.map((testimonial, i) => (
-              <motion.div key={i} variants={itemVariants}>
+          <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
+          once: true
+        }} className="grid md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, i) => <motion.div key={i} variants={itemVariants}>
                 <Card className="h-full">
                   <CardHeader>
                     <div className="flex items-start justify-between mb-4">
@@ -503,8 +416,7 @@ export default function Landing() {
                     <p className="text-muted-foreground italic">"{testimonial.content}"</p>
                   </CardContent>
                 </Card>
-              </motion.div>
-            ))}
+              </motion.div>)}
           </motion.div>
         </div>
       </section>
@@ -524,35 +436,26 @@ export default function Landing() {
             </p>
           </div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
-          >
+          <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
+          once: true
+        }} className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {plans.map((plan, i) => {
-              const isPopular = plan.id === mostPopularPlanId;
-              const planFeatures = planFeaturesMap[plan.name] || [];
-              
-              // Définir les icônes pour chaque plan
-              const planIcons: Record<string, any> = {
-                'Basic': Zap,
-                'Pro': Award,
-                'Elite': Rocket,
-              };
-              
-              const PlanIcon = planIcons[plan.name] || Zap;
-              
-              return (
-                <motion.div key={plan.id} variants={itemVariants} className="relative">
-                  {isPopular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+            const isPopular = plan.id === mostPopularPlanId;
+            const planFeatures = planFeaturesMap[plan.name] || [];
+
+            // Définir les icônes pour chaque plan
+            const planIcons: Record<string, any> = {
+              'Basic': Zap,
+              'Pro': Award,
+              'Elite': Rocket
+            };
+            const PlanIcon = planIcons[plan.name] || Zap;
+            return <motion.div key={plan.id} variants={itemVariants} className="relative">
+                  {isPopular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                       <Badge className="bg-primary text-primary-foreground px-4 py-1">
                         Populaire
                       </Badge>
-                    </div>
-                  )}
+                    </div>}
                   <Card className={`h-full flex flex-col ${isPopular ? 'border-primary border-2' : 'border-border'}`}>
                     <CardHeader className="space-y-4">
                       <div className="flex items-start gap-3">
@@ -577,41 +480,28 @@ export default function Landing() {
                     
                     <CardContent className="flex-1 flex flex-col space-y-6">
                       <div className="flex-1">
-                        {planFeatures.length > 0 ? (
-                          <ul className="space-y-3">
-                            {planFeatures.map((feature: string, idx: number) => (
-                              <li key={idx} className="flex items-start gap-3">
+                        {planFeatures.length > 0 ? <ul className="space-y-3">
+                            {planFeatures.map((feature: string, idx: number) => <li key={idx} className="flex items-start gap-3">
                                 <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                                 <span className="text-sm leading-relaxed">{feature}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">Fonctionnalités à venir</p>
-                        )}
+                              </li>)}
+                          </ul> : <p className="text-sm text-muted-foreground">Fonctionnalités à venir</p>}
                       </div>
                       
                       <Link to="/auth" className="block w-full mt-auto">
-                        <Button 
-                          className="w-full" 
-                          variant="outline"
-                          size="lg"
-                        >
+                        <Button className="w-full" variant="outline" size="lg">
                           Choisir ce plan
                         </Button>
                       </Link>
                     </CardContent>
                   </Card>
-                </motion.div>
-              );
-            })}
+                </motion.div>;
+          })}
           </motion.div>
 
-          {plans.length === 0 && (
-            <div className="text-center text-muted-foreground">
+          {plans.length === 0 && <div className="text-center text-muted-foreground">
               Chargement des plans...
-            </div>
-          )}
+            </div>}
         </div>
       </section>
 
@@ -630,25 +520,14 @@ export default function Landing() {
                 Ne vous contentez pas d'un outil, devenez un expert grâce à notre formation pas-à-pas
               </p>
               <ul className="space-y-3 mb-8">
-                {trainingModules.map((module, i) => (
-                  <li key={i} className="flex items-start gap-3">
+                {trainingModules.map((module, i) => <li key={i} className="flex items-start gap-3">
                     <div className="h-6 w-6 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Check className="h-4 w-4 text-warning" />
                     </div>
                     <span>{module}</span>
-                  </li>
-                ))}
+                  </li>)}
               </ul>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/auth?tab=signup">
-                  <Button size="lg">
-                    S'inscrire
-                  </Button>
-                </Link>
-                <Button size="lg" variant="outline" asChild>
-                  <a href="#pricing">Voir les tarifs</a>
-                </Button>
-              </div>
+              
             </div>
 
             <Card>
@@ -701,6 +580,5 @@ export default function Landing() {
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 }
