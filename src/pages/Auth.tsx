@@ -27,6 +27,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState("signin");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -225,7 +226,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 lg:p-8">
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+      <div className={`w-full grid gap-8 items-center ${activeTab === 'signup' ? 'max-w-7xl lg:grid-cols-[1fr_2fr]' : 'max-w-6xl lg:grid-cols-2'}`}>
         {/* Left Panel - Marketing Content (hidden on mobile) */}
         <div className="hidden lg:flex flex-col gap-8 p-8">
           <div className="space-y-4">
@@ -304,7 +305,7 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin">
+          <Tabs defaultValue="signin" onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Connexion</TabsTrigger>
               <TabsTrigger value="signup">Inscription</TabsTrigger>
