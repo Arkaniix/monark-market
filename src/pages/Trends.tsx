@@ -1,11 +1,32 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   LineChart,
   Line,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -13,385 +34,798 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { TrendingUp, TrendingDown, Activity } from "lucide-react";
-import { mockModels } from "@/lib/mockData";
+import {
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  RefreshCw,
+  MapPin,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  marketSummary,
+  marketTrends,
+  volumeTrends,
+  topIncreases,
+  topDrops,
+  mostActive,
+  rareModels,
+  regionStats,
+  categoryDetails,
+  categoryVariations,
+} from "@/lib/trendsMockData";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export default function Trends() {
-  const gpuModels = mockModels.filter((m) => m.category === "GPU");
-  const cpuModels = mockModels.filter((m) => m.category === "CPU");
-  const ramModels = mockModels.filter((m) => m.category === "RAM");
+  const [period, setPeriod] = useState<"7" | "30" | "90" | "180">("30");
+  const [category, setCategory] = useState<string>("all");
+  const [indicator, setIndicator] = useState<"price" | "volume" | "rarity" | "variation">("price");
+  const [showMovingAverage, setShowMovingAverage] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
-  const marketIndexData = [
-    { date: "15/12", gpu: 100, cpu: 100, ram: 100 },
-    { date: "22/12", gpu: 98, cpu: 101, ram: 97 },
-    { date: "29/12", gpu: 95, cpu: 99, ram: 95 },
-    { date: "05/01", gpu: 93, cpu: 98, ram: 93 },
-    { date: "12/01", gpu: 91, cpu: 99, ram: 91 },
-  ];
+  const filteredTrends = marketTrends.slice(-parseInt(period));
+  const filteredVolumes = volumeTrends.slice(-parseInt(period));
 
-  const volumeData = mockModels.slice(0, 5).map((model) => ({
-    name: model.name.split(" ").slice(0, 2).join(" "),
-    volume: model.volume,
-  }));
+  const formatPrice = (value: number) => `${value}€`;
+  const formatPercent = (value: number) => `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
+
+  const getTrendIcon = (value: number) => {
+    if (value > 1) return <TrendingUp className="h-4 w-4 text-success" />;
+    if (value < -1) return <TrendingDown className="h-4 w-4 text-destructive" />;
+    return <Activity className="h-4 w-4 text-muted-foreground" />;
+  };
+
+  const getTrendBadge = (value: number) => {
+    if (value > 1)
+      return (
+        <Badge variant="default" className="gap-1 bg-success/10 text-success border-success/20">
+          <TrendingUp className="h-3 w-3" />
+          {formatPercent(value)}
+        </Badge>
+      );
+    if (value < -1)
+      return (
+        <Badge variant="destructive" className="gap-1">
+          <TrendingDown className="h-3 w-3" />
+          {formatPercent(value)}
+        </Badge>
+      );
+    return (
+      <Badge variant="secondary" className="gap-1">
+        <Activity className="h-3 w-3" />
+        {formatPercent(value)}
+      </Badge>
+    );
+  };
 
   return (
     <div className="min-h-screen py-8">
-      <div className="container">
+      <div className="container max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Tendances du Marché</h1>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold mb-2">📊 Tendances du marché du hardware d'occasion</h1>
           <p className="text-muted-foreground">
-            Analyses et évolutions des prix du matériel informatique d'occasion
+            Analyse en temps réel des prix, volumes et raretés, calculée à partir des données
+            communautaires.
           </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Mise à jour :{" "}
+            {formatDistanceToNow(new Date(marketSummary.last_update), {
+              addSuffix: true,
+              locale: fr,
+            })}
+          </p>
+        </motion.div>
+
+        {/* KPI Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="grid md:grid-cols-5 gap-4 mb-8"
+        >
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-normal text-muted-foreground">
+                Prix médian global (30j)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-3xl font-bold">{marketSummary.median_price}€</div>
+                {getTrendIcon(marketSummary.var_30d)}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-normal text-muted-foreground">
+                Variation moyenne (30j)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-3xl font-bold">{formatPercent(marketSummary.var_30d)}</div>
+                {getTrendBadge(marketSummary.var_30d)}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-normal text-muted-foreground">
+                Volume total d'annonces
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">
+                {marketSummary.volume_total.toLocaleString("fr-FR")}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">annonces actives</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-normal text-muted-foreground">
+                Nouveaux modèles détectés
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{marketSummary.new_models}</div>
+              <p className="text-xs text-muted-foreground mt-1">ce mois-ci</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-normal text-muted-foreground">
+                Ratio offre / demande
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{marketSummary.offer_demand_ratio}</div>
+              <p className="text-xs text-muted-foreground mt-1">estimé</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Filters Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-8"
+        >
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex items-center gap-2">
+                  <Label>Période</Label>
+                  <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7">7 jours</SelectItem>
+                      <SelectItem value="30">30 jours</SelectItem>
+                      <SelectItem value="90">90 jours</SelectItem>
+                      <SelectItem value="180">180 jours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Label>Catégorie</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes</SelectItem>
+                      <SelectItem value="gpu">GPU</SelectItem>
+                      <SelectItem value="cpu">CPU</SelectItem>
+                      <SelectItem value="ram">RAM</SelectItem>
+                      <SelectItem value="ssd">SSD</SelectItem>
+                      <SelectItem value="cm">Carte mère</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Label>Indicateur</Label>
+                  <Select value={indicator} onValueChange={(v) => setIndicator(v as any)}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="price">Prix médian</SelectItem>
+                      <SelectItem value="volume">Volume</SelectItem>
+                      <SelectItem value="variation">Variation %</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="moving-avg"
+                    checked={showMovingAverage}
+                    onCheckedChange={setShowMovingAverage}
+                  />
+                  <Label htmlFor="moving-avg" className="text-sm">
+                    Moyenne mobile 7j
+                  </Label>
+                </div>
+
+                <Button variant="outline" size="sm" className="ml-auto gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Actualiser
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Main Charts */}
+        <div className="grid lg:grid-cols-2 gap-6 mb-8">
+          {/* Price Evolution */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Évolution du prix médian</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={filteredTrends}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(date) => new Date(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                      className="text-xs"
+                    />
+                    <YAxis className="text-xs" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                      formatter={(value: number) => `${value}€`}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="global"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      name="Global"
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="gpu"
+                      stroke="hsl(var(--chart-1))"
+                      strokeWidth={2}
+                      name="GPU"
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="cpu"
+                      stroke="hsl(var(--chart-2))"
+                      strokeWidth={2}
+                      name="CPU"
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="ram"
+                      stroke="hsl(var(--chart-3))"
+                      strokeWidth={2}
+                      name="RAM"
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Volume Evolution */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Volume total d'annonces</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={filteredVolumes}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(date) => new Date(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                      className="text-xs"
+                    />
+                    <YAxis className="text-xs" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      stroke="hsl(var(--primary))"
+                      fill="hsl(var(--primary))"
+                      fillOpacity={0.2}
+                      name="Volume total"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
-        {/* Market Indices */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {/* Category Variations Bar Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="mb-8"
+        >
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-normal text-muted-foreground">
-                Indice GPU (30j)
-              </CardTitle>
+            <CardHeader>
+              <CardTitle>Variation moyenne par catégorie (30j)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold">91</div>
-                <Badge variant="destructive" className="gap-1">
-                  <TrendingDown className="h-3 w-3" />
-                  -9%
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Tendance baissière continue
-              </p>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={categoryVariations} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis type="number" className="text-xs" />
+                  <YAxis dataKey="category" type="category" className="text-xs" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)",
+                    }}
+                    formatter={(value: number) => formatPercent(value)}
+                  />
+                  <Bar
+                    dataKey="variation"
+                    fill="hsl(var(--primary))"
+                    radius={[0, 4, 4, 0]}
+                    label={{ position: "right", formatter: formatPercent }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
+        </motion.div>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-normal text-muted-foreground">
-                Indice CPU (30j)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold">99</div>
-                <Badge variant="secondary" className="gap-1">
-                  <Activity className="h-3 w-3" />
-                  -1%
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Marché stable
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-normal text-muted-foreground">
-                Indice RAM (30j)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold">91</div>
-                <Badge variant="destructive" className="gap-1">
-                  <TrendingDown className="h-3 w-3" />
-                  -9%
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Forte baisse des prix
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Market Index Chart */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Évolution des Indices de Marché</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={marketIndexData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" className="text-xs" />
-                <YAxis className="text-xs" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "var(--radius)",
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="gpu"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  name="GPU"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="cpu"
-                  stroke="hsl(var(--accent))"
-                  strokeWidth={2}
-                  name="CPU"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="ram"
-                  stroke="hsl(var(--warning))"
-                  strokeWidth={2}
-                  name="RAM"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Volume Chart */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Volume d'Annonces par Modèle (7 derniers jours)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={volumeData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="name" className="text-xs" />
-                <YAxis className="text-xs" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "var(--radius)",
-                  }}
-                />
-                <Bar dataKey="volume" fill="hsl(var(--primary))" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Category Tabs */}
-        <Tabs defaultValue="gpu" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
-            <TabsTrigger value="gpu">GPU</TabsTrigger>
-            <TabsTrigger value="cpu">CPU</TabsTrigger>
-            <TabsTrigger value="ram">RAM</TabsTrigger>
+        {/* Tables Section */}
+        <Tabs defaultValue="increases" className="mb-8">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="increases">Top hausses</TabsTrigger>
+            <TabsTrigger value="drops">Top baisses</TabsTrigger>
+            <TabsTrigger value="active">Plus actifs</TabsTrigger>
+            <TabsTrigger value="rare">Modèles rares</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="gpu">
-            <div className="grid md:grid-cols-2 gap-6">
-              {gpuModels.map((model) => (
-                <Card key={model.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{model.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{model.brand}</p>
-                      </div>
-                      <Badge variant="outline">{model.rarity}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Prix médian</span>
-                        <span className="text-2xl font-bold">{model.medianPrice}€</span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">7 jours</span>
-                          <div className={`flex items-center gap-1 ${model.priceChange7d < 0 ? "text-success" : "text-destructive"}`}>
-                            {model.priceChange7d < 0 ? (
-                              <TrendingDown className="h-4 w-4" />
-                            ) : (
-                              <TrendingUp className="h-4 w-4" />
-                            )}
-                            <span className="font-medium">{model.priceChange7d.toFixed(1)}%</span>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">30 jours</span>
-                          <div className={`flex items-center gap-1 ${model.priceChange30d < 0 ? "text-success" : "text-destructive"}`}>
-                            {model.priceChange30d < 0 ? (
-                              <TrendingDown className="h-4 w-4" />
-                            ) : (
-                              <TrendingUp className="h-4 w-4" />
-                            )}
-                            <span className="font-medium">{model.priceChange30d.toFixed(1)}%</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="pt-3 border-t">
-                        <ResponsiveContainer width="100%" height={80}>
-                          <LineChart data={model.priceHistory}>
-                            <Line
-                              type="monotone"
-                              dataKey="price"
-                              stroke="hsl(var(--primary))"
-                              strokeWidth={2}
-                              dot={false}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      <div className="text-xs text-muted-foreground">
-                        Volume: {model.volume} annonces • MAJ: {new Date(model.lastUpdate).toLocaleDateString("fr-FR")}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          <TabsContent value="increases">
+            <Card>
+              <CardHeader>
+                <CardTitle>Top hausses (30 derniers jours)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Modèle</TableHead>
+                      <TableHead>Catégorie</TableHead>
+                      <TableHead className="text-right">Variation</TableHead>
+                      <TableHead className="text-right">Prix médian</TableHead>
+                      <TableHead className="text-right">Volume</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {topIncreases.map((item, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-medium">{item.model}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.category}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className="text-success font-medium">
+                            {formatPercent(item.var_30d_pct)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">{item.median}€</TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {item.volume}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          <TabsContent value="cpu">
-            <div className="grid md:grid-cols-2 gap-6">
-              {cpuModels.map((model) => (
-                <Card key={model.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{model.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{model.brand}</p>
-                      </div>
-                      <Badge variant="outline">{model.rarity}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Prix médian</span>
-                        <span className="text-2xl font-bold">{model.medianPrice}€</span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">7 jours</span>
-                          <div className={`flex items-center gap-1 ${model.priceChange7d < 0 ? "text-success" : "text-destructive"}`}>
-                            {model.priceChange7d < 0 ? (
-                              <TrendingDown className="h-4 w-4" />
-                            ) : (
-                              <TrendingUp className="h-4 w-4" />
-                            )}
-                            <span className="font-medium">{model.priceChange7d.toFixed(1)}%</span>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">30 jours</span>
-                          <div className={`flex items-center gap-1 ${model.priceChange30d < 0 ? "text-success" : "text-destructive"}`}>
-                            {model.priceChange30d < 0 ? (
-                              <TrendingDown className="h-4 w-4" />
-                            ) : (
-                              <TrendingUp className="h-4 w-4" />
-                            )}
-                            <span className="font-medium">{model.priceChange30d.toFixed(1)}%</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="pt-3 border-t">
-                        <ResponsiveContainer width="100%" height={80}>
-                          <LineChart data={model.priceHistory}>
-                            <Line
-                              type="monotone"
-                              dataKey="price"
-                              stroke="hsl(var(--accent))"
-                              strokeWidth={2}
-                              dot={false}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      <div className="text-xs text-muted-foreground">
-                        Volume: {model.volume} annonces • MAJ: {new Date(model.lastUpdate).toLocaleDateString("fr-FR")}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          <TabsContent value="drops">
+            <Card>
+              <CardHeader>
+                <CardTitle>Top baisses (30 derniers jours)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Modèle</TableHead>
+                      <TableHead>Catégorie</TableHead>
+                      <TableHead className="text-right">Variation</TableHead>
+                      <TableHead className="text-right">Prix médian</TableHead>
+                      <TableHead className="text-right">Volume</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {topDrops.map((item, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-medium">{item.model}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.category}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className="text-destructive font-medium">
+                            {formatPercent(item.var_30d_pct)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">{item.median}€</TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {item.volume}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          <TabsContent value="ram">
-            <div className="grid md:grid-cols-2 gap-6">
-              {ramModels.map((model) => (
-                <Card key={model.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{model.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{model.brand}</p>
-                      </div>
-                      <Badge variant="outline">{model.rarity}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Prix médian</span>
-                        <span className="text-2xl font-bold">{model.medianPrice}€</span>
-                      </div>
+          <TabsContent value="active">
+            <Card>
+              <CardHeader>
+                <CardTitle>Modèles les plus actifs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Modèle</TableHead>
+                      <TableHead>Catégorie</TableHead>
+                      <TableHead className="text-right">Volume</TableHead>
+                      <TableHead className="text-right">Prix médian</TableHead>
+                      <TableHead className="text-right">Variation 7j</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {mostActive.map((item, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-medium">{item.model}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.category}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-bold">{item.volume}</TableCell>
+                        <TableCell className="text-right">{item.median}€</TableCell>
+                        <TableCell className="text-right">
+                          {getTrendBadge(item.var_30d_pct)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">7 jours</span>
-                          <div className={`flex items-center gap-1 ${model.priceChange7d < 0 ? "text-success" : "text-destructive"}`}>
-                            {model.priceChange7d < 0 ? (
-                              <TrendingDown className="h-4 w-4" />
-                            ) : (
-                              <TrendingUp className="h-4 w-4" />
-                            )}
-                            <span className="font-medium">{model.priceChange7d.toFixed(1)}%</span>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">30 jours</span>
-                          <div className={`flex items-center gap-1 ${model.priceChange30d < 0 ? "text-success" : "text-destructive"}`}>
-                            {model.priceChange30d < 0 ? (
-                              <TrendingDown className="h-4 w-4" />
-                            ) : (
-                              <TrendingUp className="h-4 w-4" />
-                            )}
-                            <span className="font-medium">{model.priceChange30d.toFixed(1)}%</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="pt-3 border-t">
-                        <ResponsiveContainer width="100%" height={80}>
-                          <LineChart data={model.priceHistory}>
-                            <Line
-                              type="monotone"
-                              dataKey="price"
-                              stroke="hsl(var(--warning))"
-                              strokeWidth={2}
-                              dot={false}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      <div className="text-xs text-muted-foreground">
-                        Volume: {model.volume} annonces • MAJ: {new Date(model.lastUpdate).toLocaleDateString("fr-FR")}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          <TabsContent value="rare">
+            <Card>
+              <CardHeader>
+                <CardTitle>Modèles rares</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Modèle</TableHead>
+                      <TableHead>Catégorie</TableHead>
+                      <TableHead className="text-right">Volume (7j)</TableHead>
+                      <TableHead className="text-right">Prix médian</TableHead>
+                      <TableHead className="text-right">Tendance</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rareModels.map((item, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-medium">{item.model}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.category}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant="secondary">{item.volume}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">{item.median}€</TableCell>
+                        <TableCell className="text-right">
+                          {item.var_30d_pct > 0 ? (
+                            <Badge variant="default" className="gap-1 bg-success/10 text-success">
+                              📈 en hausse
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="gap-1">
+                              📉 en baisse
+                            </Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Regional Map Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="mb-8"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Prix moyens par région
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {regionStats.map((region, idx) => (
+                  <Card key={idx} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center justify-between">
+                        <span>{region.region}</span>
+                        {getTrendBadge(region.var_30d_pct)}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Prix médian</span>
+                          <span className="text-lg font-bold">{region.median_price}€</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Volume</span>
+                          <span className="text-sm">{region.volume.toLocaleString("fr-FR")}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Category Details Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
+          className="mb-8"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Tendances détaillées par catégorie</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {categoryDetails.map((cat, idx) => (
+                <Card key={idx}>
+                  <CardHeader
+                    className="cursor-pointer"
+                    onClick={() =>
+                      setExpandedCategory(expandedCategory === cat.category ? null : cat.category)
+                    }
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <CardTitle className="text-lg">{cat.category}</CardTitle>
+                        {getTrendBadge(cat.var_30d_pct)}
+                        <span className="text-sm text-muted-foreground">
+                          Prix médian: {cat.median_price}€
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          Volume: {cat.volume.toLocaleString("fr-FR")}
+                        </span>
+                      </div>
+                      {expandedCategory === cat.category ? (
+                        <ChevronUp className="h-5 w-5" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5" />
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">{cat.summary}</p>
+                  </CardHeader>
+                  {expandedCategory === cat.category && (
+                    <CardContent>
+                      <div className="grid lg:grid-cols-2 gap-6 mb-6">
+                        <div>
+                          <h4 className="text-sm font-medium mb-3">Évolution des prix (30j)</h4>
+                          <ResponsiveContainer width="100%" height={200}>
+                            <LineChart data={cat.price_history}>
+                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                              <XAxis
+                                dataKey="date"
+                                tickFormatter={(date) => new Date(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                                className="text-xs"
+                              />
+                              <YAxis className="text-xs" />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "hsl(var(--card))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "var(--radius)",
+                                }}
+                                formatter={(value: number) => `${value}€`}
+                              />
+                              <Line
+                                type="monotone"
+                                dataKey="price"
+                                stroke="hsl(var(--primary))"
+                                strokeWidth={2}
+                                dot={false}
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium mb-3">Volume d'annonces (30j)</h4>
+                          <ResponsiveContainer width="100%" height={200}>
+                            <AreaChart data={cat.volume_history}>
+                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                              <XAxis
+                                dataKey="date"
+                                tickFormatter={(date) => new Date(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                                className="text-xs"
+                              />
+                              <YAxis className="text-xs" />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "hsl(var(--card))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "var(--radius)",
+                                }}
+                              />
+                              <Area
+                                type="monotone"
+                                dataKey="volume"
+                                stroke="hsl(var(--chart-2))"
+                                fill="hsl(var(--chart-2))"
+                                fillOpacity={0.2}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium mb-3">Top modèles</h4>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Modèle</TableHead>
+                              <TableHead className="text-right">Prix médian</TableHead>
+                              <TableHead className="text-right">Variation 30j</TableHead>
+                              <TableHead className="text-right">Volume</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {cat.top_models.map((model, midx) => (
+                              <TableRow key={midx}>
+                                <TableCell className="font-medium">{model.model}</TableCell>
+                                <TableCell className="text-right">{model.median}€</TableCell>
+                                <TableCell className="text-right">
+                                  {getTrendBadge(model.var_30d_pct)}
+                                </TableCell>
+                                <TableCell className="text-right text-muted-foreground">
+                                  {model.volume}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Methodology Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
+          className="mb-8"
+        >
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle>Sources de données & méthodologie</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <p>
+                • Les données proviennent des scraps manuels effectués via l'extension navigateur
+                des utilisateurs.
+              </p>
+              <p>
+                • Les prix médians sont recalculés chaque jour à partir des annonces actives (hors
+                valeurs extrêmes).
+              </p>
+              <p>
+                • Les volumes et raretés sont mesurés selon le nombre d'annonces disponibles par
+                modèle.
+              </p>
+              <p>
+                • Des API externes (Google Trends, eBay Market Data, Hardware.info) pourront être
+                intégrées à terme pour affiner les corrélations.
+              </p>
+              <p>
+                • Toutes les données sont anonymisées et agrégées conformément au RGPD.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* CTA Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.9 }}
+          className="flex flex-wrap gap-4 justify-center"
+        >
+          <Button asChild size="lg">
+            <Link to="/catalog">Explorer le catalogue complet</Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link to="/deals">Voir les deals en direct</Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link to="/community">Contribuer aux données</Link>
+          </Button>
+        </motion.div>
       </div>
     </div>
   );
