@@ -9,15 +9,11 @@ export interface UserProgress {
 export interface TrainingModule {
   id: number;
   title: string;
-  objective: string;
+  description: string;
   duration: string;
   completed: boolean;
-  videoUrl?: string;
-  content: string[];
-  resources: string[];
-  quizQuestions: number;
-  creditReward: number;
-  badge?: string;
+  lessons: string[];
+  icon: string;
 }
 
 export interface Badge {
@@ -46,179 +42,153 @@ export interface Guide {
 export const mockUserProgress: UserProgress = {
   modules_completed: [1, 2],
   total_modules: 6,
-  credits_earned: 3,
-  badges: ["Apprenti Scraper", "Maître Scraper"],
-  hours_spent: 2.5
+  credits_earned: 2,
+  badges: ["Observateur du marché", "Scraper intelligent"],
+  hours_spent: 1.5
 };
 
 export const mockTrainingModules: TrainingModule[] = [
   {
     id: 1,
-    title: "Comprendre la plateforme",
-    objective: "Maîtriser l'écosystème et les principes du site",
-    duration: "12 min",
-    completed: true,
-    content: [
-      "Présentation du site et de ses objectifs",
-      "Explication du scraping collaboratif et éthique",
-      "Architecture des données et API",
-      "Principes RGPD et confidentialité",
-      "Système de crédits et quotas",
-      "Navigation dans l'interface"
+    title: "Comprendre le marché et les opportunités",
+    description: "Apprends à 'lire' le marché avant d'agir : cycles de prix, rareté, saisonnalité et indices de tension.",
+    duration: "8 min",
+    lessons: [
+      "Comment fonctionne le marché du hardware d'occasion",
+      "Différence entre prix moyen et prix médian",
+      "Indices de tension : volume, rareté, vitesse de vente",
+      "Repérer les hausses et chutes avant les autres",
+      "Étude de cas : baisse des RTX 3070 après sortie des 4070",
+      "Lecture pratique d'une fiche modèle (prix, score, tendance)",
+      "Savoir quand acheter et quand attendre"
     ],
-    resources: ["PDF Architecture simplifiée", "Page Tendances", "Politique RGPD"],
-    quizQuestions: 5,
-    creditReward: 0,
-    badge: "Apprenti Scraper"
+    icon: "📊",
+    completed: true
   },
   {
     id: 2,
-    title: "Maîtriser le scraping",
-    objective: "Utiliser l'extension et contribuer à la communauté",
-    duration: "20 min",
-    completed: true,
-    content: [
-      "Installation et configuration de l'extension",
-      "Sélectionner un modèle et lancer un scrap",
-      "Différence entre scrap faible et fort",
-      "Gérer les captchas et délais anti-blocage",
-      "Participer au scrap communautaire",
-      "Système de récompenses et shards",
-      "Conditions d'éligibilité et cooldowns",
-      "Comprendre les limites et quotas"
+    title: "Chercher, évaluer et scraper intelligemment",
+    description: "Récolte des données utiles et fiables sans te faire bloquer : filtres, types de scraps, bonnes pratiques.",
+    duration: "10 min",
+    lessons: [
+      "Utiliser la page Catalogue et les filtres (prix, état, région)",
+      "Reconnaître une bonne affaire vs un piège",
+      "Scrap faible : vue générale rapide",
+      "Scrap fort : recherche filtrée précise",
+      "Scrap communautaire : contribution récompensée",
+      "Bonnes pratiques : rythme, gestion des crédits",
+      "Impact collectif de chaque scrap"
     ],
-    resources: ["Guide extension complet", "Tutoriel vidéo", "Charte communautaire"],
-    quizQuestions: 8,
-    creditReward: 1,
-    badge: "Maître Scraper"
+    icon: "🔍",
+    completed: true
   },
   {
     id: 3,
-    title: "Analyser le marché hardware",
-    objective: "Interpréter les données et exploiter les outils d'analyse",
-    duration: "18 min",
-    completed: false,
-    content: [
-      "Différence prix médian vs prix moyen",
-      "Variations temporelles et saisonnalité",
-      "Corrélations entre volume et prix",
-      "Indices de rareté et fair value",
-      "Utiliser l'Estimator pour évaluer un composant",
-      "Lire les graphiques de tendances",
-      "Exploiter les fiches modèles",
-      "Exercice : analyser une RTX 3070"
+    title: "Analyser une annonce et calculer la rentabilité",
+    description: "Distingue une opportunité réelle d'un simple bon prix grâce à l'analyse détaillée et l'Estimator.",
+    duration: "12 min",
+    lessons: [
+      "Lire une annonce comme un pro (cohérence, mots-clés suspects)",
+      "Utiliser l'Estimator pour simuler achat et revente",
+      "Comprendre la marge nette après frais",
+      "Identifier le niveau de risque (volume, stabilité)",
+      "Éviter les faux deals et anomalies techniques",
+      "Étude de cas : 2 annonces RTX 4060 comparées"
     ],
-    resources: ["Guide analyse de marché", "Guide Estimator", "Glossaire statistique"],
-    quizQuestions: 7,
-    creditReward: 1,
-    badge: "Analyste Expert"
+    icon: "💰",
+    completed: false
   },
   {
     id: 4,
-    title: "Acheter au bon moment",
-    objective: "Identifier les opportunités et optimiser le timing d'achat",
-    duration: "15 min",
-    completed: false,
-    content: [
-      "Comprendre les cycles de marché hardware",
-      "Saisonnalité : Black Friday, soldes, rentrée",
-      "Impact des sorties de nouvelles générations",
-      "Détecter les bonnes affaires automatiquement",
-      "Utiliser les alertes et la watchlist",
-      "Analyser le score marché d'une annonce",
-      "Timing d'achat selon le composant",
-      "Exercice : planifier un achat GPU"
+    title: "Acheter malin et négocier comme un pro",
+    description: "Optimise le moment, le lieu et la méthode d'achat. Négocie efficacement et évite les arnaques.",
+    duration: "10 min",
+    lessons: [
+      "Quand acheter : périodes calmes, sortie de nouvelles gammes",
+      "Zones géographiques où les prix sont plus bas",
+      "Comment contacter un vendeur efficacement",
+      "Stratégies de négociation : offre crédible, créer la confiance",
+      "Gérer un refus intelligemment",
+      "Signes d'arnaques à éviter"
     ],
-    resources: ["Calendrier saisonnier", "Guide des alertes", "Historique sorties GPU/CPU"],
-    quizQuestions: 6,
-    creditReward: 1,
-    badge: "Acheteur Stratégique"
+    icon: "💬",
+    completed: false
   },
   {
     id: 5,
-    title: "Estimer et revendre",
-    objective: "Calculer sa marge et optimiser le prix de revente",
-    duration: "16 min",
-    completed: false,
-    content: [
-      "Utiliser l'Estimator pour fixer un prix de vente",
-      "Calculer sa marge nette (achat, frais, revente)",
-      "Comprendre les frais de plateforme et livraison",
-      "Estimer la décote selon l'état du composant",
-      "Optimiser le prix pour vendre rapidement",
-      "Créer une annonce attractive",
-      "Photographier et décrire efficacement",
-      "Exercice : estimer la marge sur un PC complet"
+    title: "Bien revendre et maximiser ses profits",
+    description: "Présente une annonce qui inspire confiance et se vend vite : photos, prix, description, réactivité.",
+    duration: "10 min",
+    lessons: [
+      "Optimiser ses photos : nettes, fond neutre, lumière naturelle",
+      "Titre clair sans surenchère",
+      "Description précise et rassurante avec mots-clés",
+      "Fixer le bon prix (5-10% au-dessus pour négociation)",
+      "Réagir vite : répondre dans l'heure",
+      "Gérer son compte vendeur : profil cohérent, constance"
     ],
-    resources: ["Guide Estimator avancé", "Template d'annonce", "Calculateur de marge"],
-    quizQuestions: 7,
-    creditReward: 2,
-    badge: "Vendeur Pro"
+    icon: "📸",
+    completed: false
   },
   {
     id: 6,
-    title: "Sécuriser ses transactions",
-    objective: "Négocier, payer et livrer en toute sécurité",
-    duration: "14 min",
-    completed: false,
-    content: [
-      "Techniques de négociation efficaces",
-      "Vérifier la fiabilité d'un vendeur",
-      "Méthodes de paiement sécurisées",
-      "Remise en main propre : bonnes pratiques",
-      "Livraison : assurance et protection",
-      "Reconnaître et éviter les arnaques",
-      "Que faire en cas de litige",
-      "Exercice : analyser des situations à risque"
+    title: "Devenir rentable sur la durée",
+    description: "Transforme l'achat-revente en routine maîtrisée avec une méthode cohérente et des performances suivies.",
+    duration: "8 min",
+    lessons: [
+      "Routine type : analyse / achat / revente",
+      "1 scrap communautaire par jour pour garder ses crédits",
+      "Veille hebdo sur la page Tendances",
+      "Suivre ses performances : marges, volume, rotation",
+      "Mentalité du vendeur pro : cohérence > volume",
+      "Bonus communautaire : badges, crédits, classement"
     ],
-    resources: ["Guide sécurité transactions", "Liste des arnaques courantes", "FAQ litiges"],
-    quizQuestions: 8,
-    creditReward: 1,
-    badge: "Trader Sécurisé"
+    icon: "💡",
+    completed: false
   }
 ];
 
 export const mockBadges: Badge[] = [
   {
-    id: "apprenti",
-    name: "🧩 Apprenti Scraper",
-    description: "Terminé le module 1",
-    icon: "puzzle",
+    id: "observateur",
+    name: "📊 Observateur du marché",
+    description: "Module 1 complété",
+    icon: "trending-up",
     earned: true
   },
   {
-    id: "maitre_scraper",
-    name: "🦾 Maître Scraper",
-    description: "Terminé le module 2",
-    icon: "zap",
+    id: "scraper",
+    name: "🔍 Scraper intelligent",
+    description: "Module 2 complété",
+    icon: "search",
     earned: true
   },
   {
     id: "analyste",
-    name: "🧠 Analyste Expert",
-    description: "Terminé le module 3",
-    icon: "brain",
+    name: "💰 Analyste rentable",
+    description: "Module 3 complété",
+    icon: "calculator",
     earned: false
   },
   {
-    id: "acheteur",
-    name: "🎯 Acheteur Stratégique",
-    description: "Terminé le module 4",
-    icon: "target",
+    id: "negociateur",
+    name: "💬 Négociateur pro",
+    description: "Module 4 complété",
+    icon: "message-circle",
     earned: false
   },
   {
     id: "vendeur",
-    name: "💰 Vendeur Pro",
-    description: "Terminé le module 5",
-    icon: "dollar-sign",
+    name: "📸 Vendeur d'élite",
+    description: "Module 5 complété",
+    icon: "camera",
     earned: false
   },
   {
-    id: "trader",
-    name: "🔒 Trader Sécurisé",
-    description: "Terminé le module 6",
-    icon: "shield",
+    id: "maitre",
+    name: "🏆 Maître de l'achat-revente",
+    description: "Tous les modules complétés",
+    icon: "trophy",
     earned: false
   }
 ];
@@ -233,28 +203,28 @@ export const mockQuizResult: QuizResult = {
 
 export const mockFAQ = [
   {
-    question: "Pourquoi le bouton scrap ne marche pas ?",
-    answer: "Le bouton scrap communautaire n'est actif que lorsque le backend a un besoin urgent de données ET que vous n'avez pas atteint votre limite quotidienne. Vérifiez également que le cooldown entre deux scraps est respecté."
+    question: "Quelle est la différence entre scrap faible et scrap fort ?",
+    answer: "Le scrap faible offre une vue générale rapide d'un composant (moins de crédits). Le scrap fort permet une recherche filtrée et précise (plus coûteux en crédits mais plus pertinent pour cibler des opportunités)."
   },
   {
-    question: "Combien de crédits je gagne ?",
-    answer: "Vous gagnez +1 crédit par module complété (sauf le module 1), et +2 crédits pour le module 5. Le quiz final offre +1 crédit si vous obtenez 8/10 ou plus. Les contributions communautaires offrent également des crédits bonus."
+    question: "Comment utiliser l'Estimator pour calculer ma rentabilité ?",
+    answer: "L'Estimator simule le prix d'achat idéal et la revente potentielle d'un composant. Il calcule ta marge nette après frais et déplacement, et t'indique le niveau de risque basé sur le volume et la stabilité du marché."
   },
   {
-    question: "Où trouver l'extension ?",
-    answer: "L'extension navigateur sera disponible prochainement sur le Chrome Web Store et Firefox Add-ons. En attendant, suivez le module 2 pour comprendre son fonctionnement."
+    question: "Quand est-ce le meilleur moment pour acheter ?",
+    answer: "Les périodes calmes (hors fêtes/rentrée) et les sorties de nouvelles gammes sont idéales. Les prix baissent généralement quand de nouveaux modèles arrivent et que les vendeurs veulent écouler l'ancien stock."
   },
   {
-    question: "Comment estimer la marge sur un achat-revente ?",
-    answer: "Le module 5 couvre en détail l'estimation de marge. Utilisez l'Estimator pour obtenir un prix de revente réaliste, soustrayez le prix d'achat, les frais de plateforme (~5-10%), et les frais de livraison éventuels. Prévoyez une décote selon l'état du composant."
+    question: "Comment repérer une arnaque sur une annonce ?",
+    answer: "Méfie-toi des vendeurs agressifs, prix incohérents (trop bas), photos floues/copiées, descriptions vagues avec mots suspects ('bug léger', 'marche parfois'), et demandes de paiement non sécurisé."
   },
   {
-    question: "Quel est le meilleur moment pour acheter ?",
-    answer: "Le module 4 explique le timing d'achat. En général : Black Friday/Cyber Monday, sorties de nouvelles générations (décote de l'ancienne), et période post-rentrée. Utilisez les alertes pour être notifié des bonnes affaires."
+    question: "Comment optimiser mes annonces de revente ?",
+    answer: "Utilise des photos nettes avec fond neutre et lumière naturelle, un titre clair sans surenchère, une description précise avec mots-clés, et fixe ton prix 5-10% au-dessus de ta cible pour avoir une marge de négociation."
   },
   {
-    question: "Comment éviter les arnaques ?",
-    answer: "Le module 6 couvre la sécurité des transactions. Privilégiez le paiement sécurisé, vérifiez la réputation du vendeur, préférez la remise en main propre pour les gros montants, et méfiez-vous des prix trop bas. Ne payez jamais par virement avant d'avoir vu le produit."
+    question: "Qu'est-ce que le scrap communautaire et pourquoi contribuer ?",
+    answer: "Le scrap communautaire enrichit les données pour tous les utilisateurs. En contribuant, tu gagnes des crédits, des badges, et tu améliores la qualité des analyses de marché pour l'ensemble de la communauté."
   }
 ];
 

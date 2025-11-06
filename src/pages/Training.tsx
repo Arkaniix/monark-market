@@ -155,9 +155,15 @@ export default function Training() {
       }} transition={{
         delay: 0.2
       }}>
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold mb-2">Modules de Formation</h2>
-            <p className="text-muted-foreground">Parcours progressif pour maîtriser la plateforme</p>
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold mb-3">Maîtriser l'achat-revente hardware</h2>
+            <p className="text-lg text-muted-foreground mb-2">
+              🎯 Apprendre à comprendre le marché, repérer les bonnes affaires, acheter malin, revendre efficacement, et utiliser la plateforme comme un levier de rentabilité.
+            </p>
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <span>⏱️ Durée estimée : 45–60 min</span>
+              <span>📚 Format : modules fluides, exemples concrets, graphiques simples</span>
+            </div>
           </div>
 
           <Accordion type="multiple" className="space-y-4">
@@ -174,20 +180,16 @@ export default function Training() {
                             Terminé
                           </Badge>}
                       </div>
-                      <p className="text-sm text-muted-foreground">{module.objective}</p>
+                      <p className="text-sm text-muted-foreground">{module.description}</p>
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {module.duration}
                         </span>
                         <span className="flex items-center gap-1">
-                          <HelpCircle className="h-3 w-3" />
-                          {module.quizQuestions} questions
+                          <BookOpen className="h-3 w-3" />
+                          {module.lessons.length} leçons
                         </span>
-                        {module.creditReward > 0 && <span className="flex items-center gap-1 text-primary">
-                            <Award className="h-3 w-3" />
-                            +{module.creditReward} crédit
-                          </span>}
                       </div>
                     </div>
                   </div>
@@ -206,28 +208,14 @@ export default function Training() {
                     <div>
                       <h4 className="font-semibold mb-2 flex items-center gap-2">
                         <BookOpen className="h-4 w-4" />
-                        Contenu du module
+                        Leçons du module
                       </h4>
                       <ul className="space-y-2">
-                        {module.content.map((item, i) => <li key={i} className="flex items-start gap-2 text-sm">
+                        {module.lessons.map((item, i) => <li key={i} className="flex items-start gap-2 text-sm">
                             <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                             <span>{item}</span>
                           </li>)}
                       </ul>
-                    </div>
-
-                    {/* Resources */}
-                    <div>
-                      <h4 className="font-semibold mb-2 flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Ressources
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {module.resources.map((resource, i) => <Badge key={i} variant="outline" className="gap-1">
-                            <ExternalLink className="h-3 w-3" />
-                            {resource}
-                          </Badge>)}
-                      </div>
                     </div>
 
                     {/* Action Buttons */}
@@ -238,9 +226,6 @@ export default function Training() {
                         </Button> : <Button variant="outline" onClick={() => handleStartModule(module.id)}>
                           Revoir le module
                         </Button>}
-                      {module.badge && <Badge className="bg-primary/10 text-primary border-primary/20">
-                          Badge : {module.badge}
-                        </Badge>}
                     </div>
                   </div>
                 </AccordionContent>
@@ -248,6 +233,41 @@ export default function Training() {
           </Accordion>
         </motion.section>
 
+        {/* Conclusion */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mb-12"
+        >
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                🏁 La méthode des 3 piliers
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg font-semibold mb-4">Observer → Analyser → Agir</p>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-semibold">Observer :</span>
+                  <span>comprendre les cycles et les tendances</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-semibold">Analyser :</span>
+                  <span>évaluer chaque annonce avec des données et du recul</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-semibold">Agir :</span>
+                  <span>acheter bas, revendre proprement, rester cohérent</span>
+                </li>
+              </ul>
+              <p className="text-center italic text-muted-foreground">
+                "Le vendeur rentable n'a pas de chance, il a une méthode."
+              </p>
+            </CardContent>
+          </Card>
+        </motion.section>
 
         {/* Best Practices & GDPR */}
         <motion.section initial={{
