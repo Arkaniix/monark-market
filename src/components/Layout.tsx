@@ -14,7 +14,7 @@ import { User as SupabaseUser } from "@supabase/supabase-js";
 
 const navigation = [
   { name: "Accueil", href: "/", icon: Home },
-  { name: "Deals", href: "/deals", icon: Zap },
+  { name: "Marché", href: "/deals", icon: Zap },
   { name: "Tendances", href: "/trends", icon: TrendingUp },
   { name: "Catalogue", href: "/catalog", icon: Search },
   { name: "Estimator", href: "/estimator", icon: Calculator },
