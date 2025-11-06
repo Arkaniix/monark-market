@@ -354,98 +354,127 @@ export default function Auth() {
               </form>
             </TabsContent>
 
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Nom d'affichage</Label>
-                  <Input
-                    id="signup-name"
-                    type="text"
-                    placeholder="Votre nom"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="votre@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Mot de passe</Label>
-                  <div className="relative">
-                    <Input
-                      id="signup-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
+            <TabsContent value="signup" className="mt-6">
+              <form onSubmit={handleSignUp} className="space-y-6">
+                {/* Personal Information Section */}
+                <div className="space-y-4 p-4 rounded-lg bg-gradient-to-br from-muted/30 to-muted/10 border border-border/50">
+                  <h3 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                    <div className="h-1 w-1 rounded-full bg-primary"></div>
+                    Informations personnelles
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name" className="text-sm font-medium">Nom d'affichage</Label>
+                      <Input
+                        id="signup-name"
+                        type="text"
+                        placeholder="Votre nom"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        className="bg-background/50 border-border/70 focus:border-primary transition-colors"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="votre@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="bg-background/50 border-border/70 focus:border-primary transition-colors"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-discord" className="flex items-center gap-2 text-sm font-medium">
+                        <MessageCircle className="w-3.5 h-3.5 text-primary" />
+                        Discord <span className="text-muted-foreground font-normal">(optionnel)</span>
+                      </Label>
+                      <Input
+                        id="signup-discord"
+                        type="text"
+                        placeholder="votre_pseudo#1234"
+                        value={discordId}
+                        onChange={(e) => setDiscordId(e.target.value)}
+                        className="bg-background/50 border-border/70 focus:border-primary transition-colors"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-confirm-password">Confirmer le mot de passe</Label>
-                  <div className="relative">
-                    <Input
-                      id="signup-confirm-password"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-discord" className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4" />
-                    Discord (optionnel)
-                  </Label>
-                  <Input
-                    id="signup-discord"
-                    type="text"
-                    placeholder="votre_pseudo#1234"
-                    value={discordId}
-                    onChange={(e) => setDiscordId(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Pour vous contacter et vous fournir un support personnalisé
-                  </p>
                 </div>
 
-                <div className="space-y-4">
-                  <Label className="text-base">Choisissez votre plan d'abonnement</Label>
+                {/* Security Section */}
+                <div className="space-y-4 p-4 rounded-lg bg-gradient-to-br from-muted/30 to-muted/10 border border-border/50">
+                  <h3 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                    <div className="h-1 w-1 rounded-full bg-primary"></div>
+                    Sécurité
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password" className="text-sm font-medium">Mot de passe</Label>
+                      <div className="relative">
+                        <Input
+                          id="signup-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          className="pr-10 bg-background/50 border-border/70 focus:border-primary transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-confirm-password" className="text-sm font-medium">Confirmer le mot de passe</Label>
+                      <div className="relative">
+                        <Input
+                          id="signup-confirm-password"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          className="pr-10 bg-background/50 border-border/70 focus:border-primary transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Subscription Plan Section */}
+                <div className="space-y-4 p-4 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20">
+                  <h3 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                    <div className="h-1 w-1 rounded-full bg-primary"></div>
+                    Choisissez votre plan
+                  </h3>
+                  
                   <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="gap-3">
                     {plans.map((plan, index) => {
                       const isPopular = plan.id === mostPopularPlanId;
@@ -457,7 +486,7 @@ export default function Auth() {
                           {isPopular && (
                             <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
                               <span className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
-                                Populaire
+                                ⭐ Populaire
                               </span>
                             </div>
                           )}
@@ -469,35 +498,42 @@ export default function Auth() {
                           <Label
                             htmlFor={plan.id}
                             className={`
-                              flex cursor-pointer rounded-xl border-2 border-muted bg-gradient-to-br from-card to-card/50 p-5 
-                              transition-all duration-200 
-                              hover:border-primary/50 hover:shadow-lg hover:scale-[1.02]
-                              peer-data-[state=checked]:border-primary peer-data-[state=checked]:shadow-xl peer-data-[state=checked]:scale-[1.02]
-                              ${isPopular ? 'border-primary/30' : ''}
-                              ${isPremium ? 'bg-gradient-to-br from-accent/10 to-card' : ''}
+                              flex cursor-pointer rounded-xl border-2 bg-card p-4 
+                              transition-all duration-300 
+                              hover:border-primary/50 hover:shadow-md hover:scale-[1.01]
+                              peer-data-[state=checked]:border-primary peer-data-[state=checked]:shadow-lg peer-data-[state=checked]:bg-primary/5
+                              ${isPopular ? 'border-primary/30' : 'border-muted'}
+                              ${isPremium ? 'bg-gradient-to-br from-accent/10 to-card border-accent/30' : ''}
                             `}
                           >
                             <div className="flex-1">
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                                    isPremium ? 'bg-gradient-to-br from-accent to-accent/80' : 'bg-primary/10'
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2.5">
+                                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center shadow-sm ${
+                                    isPremium 
+                                      ? 'bg-gradient-to-br from-accent to-accent/80' 
+                                      : 'bg-gradient-to-br from-primary/20 to-primary/10'
                                   }`}>
-                                    <PlanIcon className={`h-4 w-4 ${isPremium ? 'text-accent-foreground' : 'text-primary'}`} />
+                                    <PlanIcon className={`h-5 w-5 ${
+                                      isPremium ? 'text-accent-foreground' : 'text-primary'
+                                    }`} />
                                   </div>
-                                  <span className="font-bold text-lg">{plan.name}</span>
+                                  <div>
+                                    <span className="font-bold text-base">{plan.name}</span>
+                                  </div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="font-bold text-2xl text-primary">{plan.price}€</div>
-                                  <div className="text-xs text-muted-foreground">/mois</div>
+                                  <div className="font-bold text-xl text-primary">{plan.price}€</div>
+                                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">par mois</div>
                                 </div>
                               </div>
-                              <p className="text-sm text-muted-foreground mb-3">{plan.description}</p>
+                              
+                              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{plan.description}</p>
                               
                               {plan.features && (
-                                <div className="mt-3 pt-3 border-t border-border/50">
-                                  <ul className="space-y-2">
-                                    {Object.entries(plan.features).slice(0, 3).map(([key, value]: [string, any], index) => {
+                                <div className="mt-3 pt-3 border-t border-border/40">
+                                  <ul className="space-y-1.5">
+                                    {Object.entries(plan.features).slice(0, 3).map(([key, value]: [string, any], featureIndex) => {
                                       const formatFeature = (k: string, v: any) => {
                                         if (typeof v === 'boolean') {
                                           return k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -509,13 +545,12 @@ export default function Auth() {
                                       return (
                                         <li 
                                           key={key} 
-                                          className="flex items-start gap-2.5 text-xs animate-fade-in"
-                                          style={{ animationDelay: `${index * 50}ms` }}
+                                          className="flex items-center gap-2 text-xs"
                                         >
-                                          <div className="mt-0.5 h-4 w-4 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                            <Check className="h-2.5 w-2.5 text-primary" />
+                                          <div className="h-3.5 w-3.5 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                                            <Check className="h-2 w-2 text-primary" />
                                           </div>
-                                          <span className="text-foreground/80 leading-relaxed">
+                                          <span className="text-foreground/75">
                                             {formatFeature(key, value)}
                                           </span>
                                         </li>
@@ -525,11 +560,13 @@ export default function Auth() {
                                 </div>
                               )}
                             </div>
-                            <div className="ml-4 flex items-center">
-                              <div className={`h-6 w-6 rounded-full border-2 border-primary flex items-center justify-center transition-all ${
-                                selectedPlan === plan.id ? 'bg-primary' : ''
+                            <div className="ml-3 flex items-start pt-1">
+                              <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                selectedPlan === plan.id 
+                                  ? 'border-primary bg-primary' 
+                                  : 'border-muted-foreground/30'
                               }`}>
-                                <Check className={`h-3.5 w-3.5 text-primary-foreground transition-opacity ${
+                                <Check className={`h-3 w-3 text-primary-foreground transition-opacity ${
                                   selectedPlan === plan.id ? 'opacity-100' : 'opacity-0'
                                 }`} />
                               </div>
@@ -541,8 +578,19 @@ export default function Auth() {
                   </RadioGroup>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Inscription..." : "S'inscrire"}
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 text-base font-semibold shadow-md hover:shadow-lg transition-all" 
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      Inscription en cours...
+                    </span>
+                  ) : (
+                    "Créer mon compte"
+                  )}
                 </Button>
               </form>
             </TabsContent>
