@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { GraduationCap, Award, Clock, BookOpen, CheckCircle2, Circle, Download, ExternalLink, Hand, ShieldCheck, Lock, AlertCircle, TrendingUp, Calculator, Settings, Shield, ChevronDown, ArrowRight, MessageCircle, Users, Trophy, FileText, Video, HelpCircle } from "lucide-react";
-import { mockUserProgress, mockTrainingModules, mockBadges, mockGuides, mockFAQ, bestPractices, forbiddenPractices } from "@/lib/trainingMockData";
+import { mockUserProgress, mockTrainingModules, mockBadges, mockFAQ, bestPractices, forbiddenPractices } from "@/lib/trainingMockData";
 import { toast } from "sonner";
 export default function Training() {
   const [openFAQ, setOpenFAQ] = useState<string[]>([]);
@@ -29,16 +29,6 @@ export default function Training() {
   };
   const handleDownloadCertificate = () => {
     toast.info("Fonctionnalité à venir : Export du certificat PDF");
-  };
-  const getIconForGuide = (iconName: string) => {
-    const icons: Record<string, any> = {
-      "book-open": BookOpen,
-      "calculator": Calculator,
-      "trending-up": TrendingUp,
-      "settings": Settings,
-      "shield": Shield
-    };
-    return icons[iconName] || BookOpen;
   };
   return <div className="min-h-screen py-8">
       <div className="container max-w-7xl space-y-12">
@@ -258,51 +248,6 @@ export default function Training() {
           </Accordion>
         </motion.section>
 
-        {/* Practical Guides */}
-        <motion.section initial={{
-        opacity: 0,
-        y: 20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        delay: 0.3
-      }}>
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold mb-2">Guides Pratiques</h2>
-            <p className="text-muted-foreground">Références rapides pour utiliser la plateforme</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mockGuides.map(guide => {
-            const Icon = getIconForGuide(guide.icon);
-            return <Card key={guide.id} className="hover-scale cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <Icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <CardTitle className="text-base">{guide.title}</CardTitle>
-                    </div>
-                    <CardDescription>{guide.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button variant="ghost" size="sm" className="w-full" asChild>
-                      <Link to={guide.url}>
-                        Consulter
-                        <ExternalLink className="ml-2 h-3 w-3" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>;
-          })}
-          </div>
-
-          <Button variant="outline" className="w-full mt-4">
-            <Download className="mr-2 h-4 w-4" />
-            Télécharger tous les guides en PDF
-          </Button>
-        </motion.section>
 
         {/* Best Practices & GDPR */}
         <motion.section initial={{
