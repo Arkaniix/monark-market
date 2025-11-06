@@ -10,7 +10,7 @@ export interface ModelKPI {
 }
 
 export interface ModelInfo {
-  model_id: number;
+  id: number;
   name: string;
   category: string;
   brand: string;
@@ -81,7 +81,7 @@ export interface ModelInsights {
 }
 
 export interface RelatedModel {
-  model_id: number;
+  id: number;
   name: string;
   brand: string;
   category: string;
@@ -142,7 +142,7 @@ function generateVolumeHistory(days: number, avgVolume: number): VolumePoint[] {
 
 // Mock model info (RTX 4060)
 export const mockModelInfo: ModelInfo = {
-  model_id: 101,
+  id: 101,
   name: "GeForce RTX 4060",
   category: "GPU",
   brand: "NVIDIA",
@@ -285,7 +285,7 @@ export const mockInsights: ModelInsights = {
 // Mock related models
 export const mockRelatedModels: RelatedModel[] = [
   {
-    model_id: 102,
+    id: 102,
     name: "GeForce RTX 4060 Ti",
     brand: "NVIDIA",
     category: "GPU",
@@ -294,7 +294,7 @@ export const mockRelatedModels: RelatedModel[] = [
     volume: 285,
   },
   {
-    model_id: 103,
+    id: 103,
     name: "Radeon RX 7600",
     brand: "AMD",
     category: "GPU",
@@ -303,7 +303,7 @@ export const mockRelatedModels: RelatedModel[] = [
     volume: 198,
   },
   {
-    model_id: 104,
+    id: 104,
     name: "GeForce RTX 3060",
     brand: "NVIDIA",
     category: "GPU",
@@ -312,7 +312,7 @@ export const mockRelatedModels: RelatedModel[] = [
     volume: 520,
   },
   {
-    model_id: 105,
+    id: 105,
     name: "GeForce RTX 4050",
     brand: "NVIDIA",
     category: "GPU",
