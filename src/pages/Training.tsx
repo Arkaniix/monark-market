@@ -74,7 +74,7 @@ export default function Training() {
               </a>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <a href="#progression">Voir ma progression</a>
+              
             </Button>
           </div>
         </motion.div>
