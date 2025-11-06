@@ -209,7 +209,7 @@ export default function Deals() {
         <Separator className="my-8" />
 
         {/* 2. FILTRES RAPIDES ET TRI */}
-        <Card className="mb-8 sticky top-20 z-40 shadow-lg">
+        <Card className="mb-8 sticky top-[4.5rem] z-40 shadow-xl bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
           <CardHeader>
             <CardTitle className="text-lg flex items-center justify-between">
               <span>Filtres & Tri</span>
