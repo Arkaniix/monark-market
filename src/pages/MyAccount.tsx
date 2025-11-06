@@ -647,15 +647,17 @@ export default function MyAccount() {
                   <Zap className="h-4 w-4" />
                   Lancer un scrap
                 </Button>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2" onClick={() => navigate('/trends')}>
                   <TrendingUp className="h-4 w-4" />
                   Voir tendances
                 </Button>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2" onClick={() => {
+                  document.querySelector('[data-scrap-history]')?.scrollIntoView({ behavior: 'smooth' });
+                }}>
                   <Clock className="h-4 w-4" />
                   Historique
                 </Button>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2" onClick={() => navigate('/community')}>
                   <User className="h-4 w-4" />
                   Contribuer
                 </Button>
@@ -664,7 +666,7 @@ export default function MyAccount() {
           </Card>
 
           {/* Scrap History */}
-          <Card>
+          <Card data-scrap-history>
             <CardHeader>
               <CardTitle>Historique des scraps</CardTitle>
             </CardHeader>
