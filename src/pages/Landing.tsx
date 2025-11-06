@@ -215,7 +215,7 @@ export default function Landing() {
               Scannez le marché, analysez les opportunités et maximisez vos profits grâce à notre plateforme et formation complète
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth">
+              <Link to="/auth?tab=signup">
                 <Button size="lg" className="gap-2">
                   <Zap className="h-5 w-5" />
                   S'inscrire
@@ -638,7 +638,7 @@ export default function Landing() {
                 ))}
               </ul>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/auth">
+                <Link to="/auth?tab=signup">
                   <Button size="lg">
                     S'inscrire
                   </Button>
@@ -690,7 +690,7 @@ export default function Landing() {
             <p className="text-lg text-muted-foreground mb-8">
               Partagez vos trouvailles, apprenez des meilleurs et progressez ensemble dans une communauté soudée
             </p>
-            <Link to="/auth">
+            <Link to="/auth?tab=signup">
               <Button size="lg" className="gap-2">
                 <Rocket className="h-5 w-5" />
                 S'inscrire maintenant

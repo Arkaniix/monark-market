@@ -33,6 +33,15 @@ export default function Auth() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check URL params for tab selection
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab === 'signup') {
+      setActiveTab('signup');
+    }
+  }, []);
+
+  useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -306,7 +315,7 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin" onValueChange={setActiveTab}>
+          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Connexion</TabsTrigger>
               <TabsTrigger value="signup">Inscription</TabsTrigger>

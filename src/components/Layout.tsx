@@ -195,7 +195,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     Se connecter
                   </Button>
                 </Link>
-                <Link to="/auth">
+                <Link to="/auth?tab=signup">
                   <Button size="sm">S'inscrire</Button>
                 </Link>
               </>
