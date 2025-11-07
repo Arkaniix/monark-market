@@ -67,7 +67,19 @@ export default function AdminMetrics() {
           <CardContent>
             <Table>
               <TableBody>
-                {topGainers.map((metric) => (
+                {topGainers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={2} className="h-32 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <TrendingUp className="h-8 w-8 text-muted-foreground" />
+                        <p className="text-muted-foreground">
+                          Pas encore de données. Les métriques seront disponibles après plusieurs jours de scraping.
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  topGainers.map((metric: any) => (
                   <TableRow key={metric.id}>
                     <TableCell className="font-medium">
                       {metric.hardware_models?.brand} {metric.hardware_models?.name}
@@ -76,7 +88,8 @@ export default function AdminMetrics() {
                       +{metric.var_7d_pct?.toFixed(1)}%
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -90,7 +103,19 @@ export default function AdminMetrics() {
           <CardContent>
             <Table>
               <TableBody>
-                {topLosers.map((metric) => (
+                {topLosers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={2} className="h-32 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <TrendingUp className="h-8 w-8 text-muted-foreground" />
+                        <p className="text-muted-foreground">
+                          Pas encore de données. Les métriques seront disponibles après plusieurs jours de scraping.
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  topLosers.map((metric: any) => (
                   <TableRow key={metric.id}>
                     <TableCell className="font-medium">
                       {metric.hardware_models?.brand} {metric.hardware_models?.name}
@@ -99,7 +124,8 @@ export default function AdminMetrics() {
                       {metric.var_7d_pct?.toFixed(1)}%
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+                )}
               </TableBody>
             </Table>
           </CardContent>

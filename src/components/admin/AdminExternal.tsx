@@ -69,7 +69,19 @@ export default function AdminExternal() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sources.map((source) => (
+              {sources.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-32 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Key className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        Aucune source externe configurée. Contactez un administrateur système.
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                sources.map((source) => (
                 <TableRow key={source.id}>
                   <TableCell className="font-medium">{source.name}</TableCell>
                   <TableCell className="font-mono text-xs">{source.base_url || 'N/A'}</TableCell>
@@ -95,7 +107,8 @@ export default function AdminExternal() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -117,7 +130,19 @@ export default function AdminExternal() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {runs.map((run) => {
+              {runs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-32 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Play className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        Aucun historique de fetch disponible.
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                runs.map((run) => {
                 const duration = run.ended_at 
                   ? Math.round((new Date(run.ended_at).getTime() - new Date(run.started_at).getTime()) / 1000)
                   : null;
@@ -143,7 +168,8 @@ export default function AdminExternal() {
                     </TableCell>
                   </TableRow>
                 );
-              })}
+              })
+              )}
             </TableBody>
           </Table>
         </CardContent>

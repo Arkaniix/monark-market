@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { Search, ExternalLink, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Search, ExternalLink, Eye, EyeOff, RefreshCw, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminAds() {
@@ -153,7 +153,21 @@ export default function AdminAds() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAds.map((ad) => (
+              {filteredAds.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-32 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <FileText className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        {searchTerm || statusFilter !== "all" || platformFilter !== "all"
+                          ? "Aucune annonce ne correspond aux filtres"
+                          : "Aucune annonce disponible. Lancez un job de scraping pour commencer."}
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredAds.map((ad) => (
                 <TableRow key={ad.id}>
                   <TableCell className="font-mono text-xs">{ad.platform_ad_id}</TableCell>
                   <TableCell className="max-w-xs truncate">{ad.title}</TableCell>
@@ -189,7 +203,8 @@ export default function AdminAds() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

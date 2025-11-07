@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { Search, Plus, Edit } from "lucide-react";
+import { Search, Plus, Edit, Boxes } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminModels() {
@@ -116,7 +116,21 @@ export default function AdminModels() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredModels.map((model) => (
+              {filteredModels.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-32 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Boxes className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        {searchTerm
+                          ? "Aucun modèle ne correspond à la recherche"
+                          : "Aucun modèle disponible. Les modèles seront ajoutés automatiquement lors du scraping."}
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredModels.map((model) => (
                 <TableRow key={model.id}>
                   <TableCell className="font-medium">{model.brand}</TableCell>
                   <TableCell>{model.name}</TableCell>
@@ -138,7 +152,8 @@ export default function AdminModels() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

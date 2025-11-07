@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CreditCard, Coins, Briefcase, Package, Database, Cpu, TrendingUp, Plug, Activity, FileText, Settings, Headphones, Wrench } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, Coins, Briefcase, Package, Database, Cpu, TrendingUp, Plug, Activity, FileText, Settings, Headphones } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AdminSidebarProps {
@@ -21,7 +21,6 @@ const menuItems = [
   { id: "logs", label: "Logs & Audit", icon: FileText },
   { id: "settings", label: "Paramètres", icon: Settings },
   { id: "support", label: "Support", icon: Headphones },
-  { id: "maintenance", label: "Maintenance", icon: Wrench },
 ];
 
 export default function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarProps) {
