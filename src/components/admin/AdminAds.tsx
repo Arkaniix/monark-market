@@ -30,7 +30,64 @@ export default function AdminAds() {
         .limit(100);
 
       if (error) throw error;
-      setAds(data || []);
+      
+      // Si pas de données, utiliser des données factices
+      if (!data || data.length === 0) {
+        setAds([
+          {
+            id: 1,
+            platform: 'leboncoin',
+            platform_ad_id: '2345678901',
+            title: 'RTX 4090 Founders Edition - Comme neuve',
+            status: 'active',
+            city: 'Paris',
+            last_seen_at: new Date().toISOString(),
+            hardware_models: { name: 'RTX 4090', brand: 'NVIDIA' }
+          },
+          {
+            id: 2,
+            platform: 'leboncoin',
+            platform_ad_id: '2345678902',
+            title: 'RX 7900 XTX Red Devil - État impeccable',
+            status: 'active',
+            city: 'Lyon',
+            last_seen_at: new Date(Date.now() - 3600000).toISOString(),
+            hardware_models: { name: 'RX 7900 XTX', brand: 'AMD' }
+          },
+          {
+            id: 3,
+            platform: 'leboncoin',
+            platform_ad_id: '2345678903',
+            title: 'RTX 4080 ASUS TUF Gaming',
+            status: 'sold',
+            city: 'Marseille',
+            last_seen_at: new Date(Date.now() - 86400000).toISOString(),
+            hardware_models: { name: 'RTX 4080', brand: 'NVIDIA' }
+          },
+          {
+            id: 4,
+            platform: 'leboncoin',
+            platform_ad_id: '2345678904',
+            title: 'RTX 3080 Ti MSI Gaming X Trio',
+            status: 'active',
+            city: 'Toulouse',
+            last_seen_at: new Date(Date.now() - 7200000).toISOString(),
+            hardware_models: { name: 'RTX 3080 Ti', brand: 'NVIDIA' }
+          },
+          {
+            id: 5,
+            platform: 'leboncoin',
+            platform_ad_id: '2345678905',
+            title: 'RX 6800 XT Sapphire Nitro+',
+            status: 'inactive',
+            city: 'Nice',
+            last_seen_at: new Date(Date.now() - 172800000).toISOString(),
+            hardware_models: { name: 'RX 6800 XT', brand: 'AMD' }
+          }
+        ]);
+      } else {
+        setAds(data);
+      }
     } catch (error) {
       console.error('Error:', error);
       toast({

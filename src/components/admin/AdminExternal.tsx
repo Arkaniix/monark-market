@@ -28,8 +28,62 @@ export default function AdminExternal() {
       if (sourcesRes.error) throw sourcesRes.error;
       if (runsRes.error) throw runsRes.error;
 
-      setSources(sourcesRes.data || []);
-      setRuns(runsRes.data || []);
+      // Si pas de données, utiliser des données factices
+      if (!sourcesRes.data || sourcesRes.data.length === 0) {
+        setSources([
+          {
+            id: 1,
+            name: 'TechPowerUp GPU-Z',
+            base_url: 'https://www.techpowerup.com/gpu-specs',
+            enabled: true,
+            created_at: new Date(Date.now() - 2592000000).toISOString()
+          },
+          {
+            id: 2,
+            name: 'GPU Benchmark API',
+            base_url: 'https://api.gpu-benchmark.com/v2',
+            enabled: true,
+            created_at: new Date(Date.now() - 5184000000).toISOString()
+          },
+          {
+            id: 3,
+            name: 'Hardware Unboxed Data',
+            base_url: 'https://data.hwunboxed.com/specs',
+            enabled: false,
+            created_at: new Date(Date.now() - 7776000000).toISOString()
+          }
+        ]);
+      } else {
+        setSources(sourcesRes.data);
+      }
+      
+      if (!runsRes.data || runsRes.data.length === 0) {
+        setRuns([
+          {
+            id: 1,
+            started_at: new Date(Date.now() - 3600000).toISOString(),
+            ended_at: new Date(Date.now() - 3300000).toISOString(),
+            status: 'success',
+            external_sources: { name: 'TechPowerUp GPU-Z' }
+          },
+          {
+            id: 2,
+            started_at: new Date(Date.now() - 7200000).toISOString(),
+            ended_at: new Date(Date.now() - 6900000).toISOString(),
+            status: 'success',
+            external_sources: { name: 'GPU Benchmark API' }
+          },
+          {
+            id: 3,
+            started_at: new Date(Date.now() - 86400000).toISOString(),
+            ended_at: new Date(Date.now() - 86100000).toISOString(),
+            status: 'failed',
+            external_sources: { name: 'Hardware Unboxed Data' }
+          }
+        ]);
+      } else {
+        setRuns(runsRes.data);
+      }
     } catch (error) {
       console.error('Error:', error);
       toast({

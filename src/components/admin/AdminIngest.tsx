@@ -27,8 +27,56 @@ export default function AdminIngest() {
       if (batchesRes.error) throw batchesRes.error;
       if (rawRes.error) throw rawRes.error;
 
-      setBatches(batchesRes.data || []);
-      setRawData(rawRes.data || []);
+      // Si pas de données, utiliser des données factices
+      if (!batchesRes.data || batchesRes.data.length === 0) {
+        setBatches([
+          {
+            id: 1,
+            batch_seq: 1,
+            items_count: 48,
+            latency_ms: 245,
+            received_at: new Date().toISOString(),
+            jobs: { keyword: 'RTX 4090', type: 'faible' }
+          },
+          {
+            id: 2,
+            batch_seq: 2,
+            items_count: 52,
+            latency_ms: 198,
+            received_at: new Date(Date.now() - 3600000).toISOString(),
+            jobs: { keyword: 'RX 7900', type: 'fort' }
+          },
+          {
+            id: 3,
+            batch_seq: 1,
+            items_count: 35,
+            latency_ms: 312,
+            received_at: new Date(Date.now() - 7200000).toISOString(),
+            jobs: { keyword: 'RTX 4080', type: 'faible' }
+          }
+        ]);
+      } else {
+        setBatches(batchesRes.data);
+      }
+      
+      if (!rawRes.data || rawRes.data.length === 0) {
+        setRawData([
+          {
+            id: 1,
+            item_seq: 1,
+            payload_json: { title: 'RTX 4090 FE', price: 1599, platform: 'leboncoin' },
+            received_at: new Date().toISOString()
+          },
+          {
+            id: 2,
+            item_seq: 2,
+            payload_json: { title: 'RX 7900 XTX', price: 899, platform: 'leboncoin' },
+            received_at: new Date(Date.now() - 1800000).toISOString()
+          }
+        ]);
+      } else {
+        setRawData(rawRes.data);
+      }
     } catch (error) {
       console.error('Error:', error);
       toast({

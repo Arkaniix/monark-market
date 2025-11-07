@@ -29,8 +29,83 @@ export default function AdminModels() {
       if (modelsRes.error) throw modelsRes.error;
       if (specsRes.error) throw specsRes.error;
 
-      setModels(modelsRes.data || []);
-      setSpecs(specsRes.data || []);
+      // Si pas de données, utiliser des données factices
+      if (!modelsRes.data || modelsRes.data.length === 0) {
+        setModels([
+          {
+            id: 1,
+            brand: 'NVIDIA',
+            name: 'RTX 4090',
+            family: 'Ada Lovelace',
+            hardware_categories: { name: 'GPU' },
+            aliases: ['GeForce RTX 4090', '4090'],
+            updated_at: new Date().toISOString()
+          },
+          {
+            id: 2,
+            brand: 'AMD',
+            name: 'RX 7900 XTX',
+            family: 'RDNA 3',
+            hardware_categories: { name: 'GPU' },
+            aliases: ['Radeon RX 7900 XTX', '7900XTX'],
+            updated_at: new Date(Date.now() - 86400000).toISOString()
+          },
+          {
+            id: 3,
+            brand: 'NVIDIA',
+            name: 'RTX 4080',
+            family: 'Ada Lovelace',
+            hardware_categories: { name: 'GPU' },
+            aliases: ['GeForce RTX 4080', '4080'],
+            updated_at: new Date(Date.now() - 172800000).toISOString()
+          },
+          {
+            id: 4,
+            brand: 'NVIDIA',
+            name: 'RTX 3080 Ti',
+            family: 'Ampere',
+            hardware_categories: { name: 'GPU' },
+            aliases: ['GeForce RTX 3080 Ti', '3080Ti'],
+            updated_at: new Date(Date.now() - 259200000).toISOString()
+          }
+        ]);
+      } else {
+        setModels(modelsRes.data);
+      }
+      
+      if (!specsRes.data || specsRes.data.length === 0) {
+        setSpecs([
+          {
+            id: 1,
+            chip: 'AD102',
+            vram_gb: 24,
+            tdp_w: 450,
+            bus_width_bit: 384,
+            memory_type: 'GDDR6X',
+            hardware_models: { name: 'RTX 4090', brand: 'NVIDIA' }
+          },
+          {
+            id: 2,
+            chip: 'Navi 31',
+            vram_gb: 24,
+            tdp_w: 355,
+            bus_width_bit: 384,
+            memory_type: 'GDDR6',
+            hardware_models: { name: 'RX 7900 XTX', brand: 'AMD' }
+          },
+          {
+            id: 3,
+            chip: 'AD103',
+            vram_gb: 16,
+            tdp_w: 320,
+            bus_width_bit: 256,
+            memory_type: 'GDDR6X',
+            hardware_models: { name: 'RTX 4080', brand: 'NVIDIA' }
+          }
+        ]);
+      } else {
+        setSpecs(specsRes.data);
+      }
     } catch (error) {
       console.error('Error:', error);
       toast({

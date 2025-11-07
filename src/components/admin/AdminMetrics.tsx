@@ -24,7 +24,79 @@ export default function AdminMetrics() {
         .limit(50);
 
       if (error) throw error;
-      setMetrics(data || []);
+      
+      // Si pas de données, utiliser des données factices
+      if (!data || data.length === 0) {
+        setMetrics([
+          {
+            id: 1,
+            date: new Date().toISOString().split('T')[0],
+            price_median: 1499,
+            price_p25: 1399,
+            price_p75: 1599,
+            ads_count: 24,
+            new_ads: 3,
+            disappeared_ads: 1,
+            var_7d_pct: 5.2,
+            var_30d_pct: -2.1,
+            hardware_models: { name: 'RTX 4090', brand: 'NVIDIA' }
+          },
+          {
+            id: 2,
+            date: new Date().toISOString().split('T')[0],
+            price_median: 849,
+            price_p25: 799,
+            price_p75: 899,
+            ads_count: 18,
+            new_ads: 2,
+            disappeared_ads: 0,
+            var_7d_pct: -3.8,
+            var_30d_pct: -8.5,
+            hardware_models: { name: 'RX 7900 XTX', brand: 'AMD' }
+          },
+          {
+            id: 3,
+            date: new Date().toISOString().split('T')[0],
+            price_median: 1099,
+            price_p25: 1049,
+            price_p75: 1149,
+            ads_count: 31,
+            new_ads: 5,
+            disappeared_ads: 2,
+            var_7d_pct: 2.7,
+            var_30d_pct: 1.2,
+            hardware_models: { name: 'RTX 4080', brand: 'NVIDIA' }
+          },
+          {
+            id: 4,
+            date: new Date().toISOString().split('T')[0],
+            price_median: 699,
+            price_p25: 649,
+            price_p75: 749,
+            ads_count: 42,
+            new_ads: 4,
+            disappeared_ads: 3,
+            var_7d_pct: -6.2,
+            var_30d_pct: -12.4,
+            hardware_models: { name: 'RTX 3080 Ti', brand: 'NVIDIA' }
+          },
+          {
+            id: 5,
+            date: new Date().toISOString().split('T')[0],
+            price_median: 599,
+            price_p25: 549,
+            price_p75: 649,
+            ads_count: 28,
+            new_ads: 1,
+            disappeared_ads: 1,
+            var_7d_pct: 8.9,
+            var_30d_pct: 4.3,
+            hardware_models: { name: 'RX 6800 XT', brand: 'AMD' }
+          }
+        ]);
+      } else {
+        setMetrics(data);
+      }
     } catch (error) {
       console.error('Error:', error);
       toast({
