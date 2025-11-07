@@ -334,10 +334,42 @@ export default function Deals() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Prix: {priceRange[0]}€ - {priceRange[1]}€
-              </label>
+            <div className="space-y-3">
+              <Label>Prix</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Minimum</Label>
+                  <Input
+                    type="number"
+                    value={priceRange[0]}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      if (val >= 0 && val <= priceRange[1]) {
+                        setPriceRange([val, priceRange[1]]);
+                      }
+                    }}
+                    min={0}
+                    max={priceRange[1]}
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Maximum</Label>
+                  <Input
+                    type="number"
+                    value={priceRange[1]}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      if (val >= priceRange[0] && val <= 2000) {
+                        setPriceRange([priceRange[0], val]);
+                      }
+                    }}
+                    min={priceRange[0]}
+                    max={2000}
+                    className="w-full"
+                  />
+                </div>
+              </div>
               <Slider
                 value={priceRange}
                 onValueChange={setPriceRange}
