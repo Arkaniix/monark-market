@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   Flame,
@@ -221,95 +222,116 @@ export default function Deals() {
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-4 gap-4 mb-4">
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes catégories</SelectItem>
-                  <SelectItem value="GPU">GPU</SelectItem>
-                  <SelectItem value="CPU">CPU</SelectItem>
-                  <SelectItem value="RAM">RAM</SelectItem>
-                  <SelectItem value="SSD">SSD</SelectItem>
-                  <SelectItem value="Motherboard">Carte mère</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>Catégorie</Label>
+                <Select value={filterCategory} onValueChange={setFilterCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Catégorie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes catégories</SelectItem>
+                    <SelectItem value="GPU">GPU</SelectItem>
+                    <SelectItem value="CPU">CPU</SelectItem>
+                    <SelectItem value="RAM">RAM</SelectItem>
+                    <SelectItem value="SSD">SSD</SelectItem>
+                    <SelectItem value="Motherboard">Carte mère</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select value={filterState} onValueChange={setFilterState}>
-                <SelectTrigger>
-                  <SelectValue placeholder="État" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous états</SelectItem>
-                  <SelectItem value="Neuf">Neuf</SelectItem>
-                  <SelectItem value="Comme neuf">Comme neuf</SelectItem>
-                  <SelectItem value="Bon">Bon</SelectItem>
-                  <SelectItem value="À réparer">À réparer</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>État</Label>
+                <Select value={filterState} onValueChange={setFilterState}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="État" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous états</SelectItem>
+                    <SelectItem value="Neuf">Neuf</SelectItem>
+                    <SelectItem value="Comme neuf">Comme neuf</SelectItem>
+                    <SelectItem value="Bon">Bon</SelectItem>
+                    <SelectItem value="À réparer">À réparer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select value={filterRegion} onValueChange={setFilterRegion}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Région" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes régions</SelectItem>
-                  <SelectItem value="Île-de-France">Île-de-France</SelectItem>
-                  <SelectItem value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</SelectItem>
-                  <SelectItem value="Provence-Alpes-Côte d'Azur">PACA</SelectItem>
-                  <SelectItem value="Occitanie">Occitanie</SelectItem>
-                  <SelectItem value="Nouvelle-Aquitaine">Nouvelle-Aquitaine</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>Région</Label>
+                <Select value={filterRegion} onValueChange={setFilterRegion}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Région" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes régions</SelectItem>
+                    <SelectItem value="Île-de-France">Île-de-France</SelectItem>
+                    <SelectItem value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</SelectItem>
+                    <SelectItem value="Provence-Alpes-Côte d'Azur">PACA</SelectItem>
+                    <SelectItem value="Occitanie">Occitanie</SelectItem>
+                    <SelectItem value="Nouvelle-Aquitaine">Nouvelle-Aquitaine</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select value={filterDelivery} onValueChange={setFilterDelivery}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Livraison" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Peu importe</SelectItem>
-                  <SelectItem value="yes">Oui</SelectItem>
-                  <SelectItem value="no">Non</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>Livraison</Label>
+                <Select value={filterDelivery} onValueChange={setFilterDelivery}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Livraison" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Peu importe</SelectItem>
+                    <SelectItem value="yes">Oui</SelectItem>
+                    <SelectItem value="no">Non</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-4 mb-4">
-              <Select value={filterNewness} onValueChange={setFilterNewness}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Nouveautés" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes</SelectItem>
-                  <SelectItem value="24">&lt;24h</SelectItem>
-                  <SelectItem value="72">&lt;3 jours</SelectItem>
-                  <SelectItem value="168">&lt;7 jours</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>Nouveautés</Label>
+                <Select value={filterNewness} onValueChange={setFilterNewness}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Nouveautés" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes</SelectItem>
+                    <SelectItem value="24">&lt;24h</SelectItem>
+                    <SelectItem value="72">&lt;3 jours</SelectItem>
+                    <SelectItem value="168">&lt;7 jours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select value={filterDiscount} onValueChange={setFilterDiscount}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sous-évaluées" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes</SelectItem>
-                  <SelectItem value="10">&gt;10%</SelectItem>
-                  <SelectItem value="20">&gt;20%</SelectItem>
-                  <SelectItem value="30">&gt;30%</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>Sous-évaluées</Label>
+                <Select value={filterDiscount} onValueChange={setFilterDiscount}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sous-évaluées" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes</SelectItem>
+                    <SelectItem value="10">&gt;10%</SelectItem>
+                    <SelectItem value="20">&gt;20%</SelectItem>
+                    <SelectItem value="30">&gt;30%</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Trier par" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="score">Meilleur deal</SelectItem>
-                  <SelectItem value="price_asc">Prix croissant</SelectItem>
-                  <SelectItem value="price_desc">Prix décroissant</SelectItem>
-                  <SelectItem value="recent">Plus récents</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>Trier par</Label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Trier par" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="score">Meilleur deal</SelectItem>
+                    <SelectItem value="price_asc">Prix croissant</SelectItem>
+                    <SelectItem value="price_desc">Prix décroissant</SelectItem>
+                    <SelectItem value="recent">Plus récents</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">
