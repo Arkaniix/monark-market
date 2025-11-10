@@ -6,8 +6,67 @@ import { Switch } from "@/components/ui/switch";
 import { Database, HardDrive, Trash2, Settings, RefreshCw, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminSystemSettings() {
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchMaintenanceMode();
+  }, []);
+
+  const fetchMaintenanceMode = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('maintenance_mode')
+        .eq('id', 1)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setMaintenanceMode(data.maintenance_mode);
+      }
+    } catch (error) {
+      console.error('Error fetching maintenance mode:', error);
+    }
+  };
+
+  const toggleMaintenanceMode = async (checked: boolean) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .update({ 
+          maintenance_mode: checked,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', 1);
+
+      if (error) throw error;
+
+      setMaintenanceMode(checked);
+      toast({
+        title: checked ? "Mode maintenance activé" : "Mode maintenance désactivé",
+        description: checked 
+          ? "Seuls les administrateurs peuvent accéder au site"
+          : "Le site est maintenant accessible à tous",
+      });
+    } catch (error) {
+      console.error('Error toggling maintenance mode:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier le mode maintenance",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="space-y-6">
       <div>
@@ -37,9 +96,15 @@ export default function AdminSystemSettings() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Mode maintenance</Label>
-              <p className="text-sm text-muted-foreground">Désactiver l'accès au site pour maintenance</p>
+              <p className="text-sm text-muted-foreground">
+                Seuls les administrateurs peuvent accéder au site en mode maintenance
+              </p>
             </div>
-            <Switch />
+            <Switch 
+              checked={maintenanceMode}
+              onCheckedChange={toggleMaintenanceMode}
+              disabled={loading}
+            />
           </div>
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">

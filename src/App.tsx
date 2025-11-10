@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { ThemeProvider } from "next-themes";
+import Maintenance from "./pages/Maintenance";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Landing from "./pages/Landing";
@@ -31,20 +32,99 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminStatus(session.user.id);
+      } else {
+        setIsAdmin(false);
+      }
     });
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminStatus(session.user.id);
+      } else {
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    // Check maintenance mode
+    checkMaintenanceMode();
+
+    // Subscribe to maintenance mode changes
+    const maintenanceChannel = supabase
+      .channel('system_settings_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'system_settings'
+        },
+        () => {
+          checkMaintenanceMode();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      maintenanceChannel.unsubscribe();
+    };
   }, []);
+
+  const checkAdminStatus = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (!error && data) {
+        setIsAdmin(data.role === 'admin');
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkMaintenanceMode = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('maintenance_mode')
+        .eq('id', 1)
+        .single();
+
+      if (!error && data) {
+        setMaintenanceMode(data.maintenance_mode);
+      }
+    } catch (error) {
+      console.error('Error checking maintenance mode:', error);
+    }
+  };
+
+  // Show loading state while checking
+  if (loading) {
+    return null;
+  }
+
+  // If maintenance mode is on and user is not admin, show maintenance page
+  if (maintenanceMode && !isAdmin) {
+    return <Maintenance />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
