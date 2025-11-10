@@ -35,15 +35,18 @@ const App = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      setAdminCheckComplete(false);
       if (session?.user) {
         checkAdminStatus(session.user.id);
       } else {
         setIsAdmin(false);
+        setAdminCheckComplete(true);
       }
     });
 
@@ -54,6 +57,7 @@ const App = () => {
         checkAdminStatus(session.user.id);
       } else {
         setLoading(false);
+        setAdminCheckComplete(true);
       }
     });
 
@@ -92,11 +96,15 @@ const App = () => {
 
       if (!error && data) {
         setIsAdmin(data.role === 'admin');
+      } else {
+        setIsAdmin(false);
       }
     } catch (error) {
       console.error('Error checking admin status:', error);
+      setIsAdmin(false);
     } finally {
       setLoading(false);
+      setAdminCheckComplete(true);
     }
   };
 
@@ -116,8 +124,8 @@ const App = () => {
     }
   };
 
-  // Show loading state while checking
-  if (loading) {
+  // Show loading state while checking admin status
+  if (loading || (user && !adminCheckComplete)) {
     return null;
   }
 
