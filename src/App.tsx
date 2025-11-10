@@ -122,7 +122,9 @@ const App = () => {
   }
 
   // If maintenance mode is on and user is not admin, show maintenance page
-  if (maintenanceMode && !isAdmin) {
+  // Allow access to /auth route even in maintenance mode
+  const isAuthRoute = window.location.pathname === '/auth';
+  if (maintenanceMode && !isAdmin && !isAuthRoute) {
     return <Maintenance />;
   }
 

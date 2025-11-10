@@ -1,7 +1,11 @@
 import { Construction, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function Maintenance() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20 p-4">
       <Card className="w-full max-w-lg">
@@ -21,10 +25,17 @@ export default function Maintenance() {
               </p>
             </div>
 
-            <div className="pt-4 border-t">
+            <div className="pt-4 border-t space-y-4">
               <p className="text-sm text-muted-foreground">
                 Merci de votre patience et de votre compréhension.
               </p>
+              <Button 
+                onClick={() => navigate('/auth')}
+                variant="outline"
+                className="w-full"
+              >
+                Connexion administrateur
+              </Button>
             </div>
           </div>
         </CardContent>
