@@ -131,8 +131,9 @@ const App = () => {
 
   // If maintenance mode is on and user is not admin, show maintenance page
   // Allow access to /auth route even in maintenance mode
+  // Only redirect if admin check is complete to avoid race conditions
   const isAuthRoute = window.location.pathname === '/auth';
-  if (maintenanceMode && !isAdmin && !isAuthRoute) {
+  if (maintenanceMode && !isAdmin && !isAuthRoute && adminCheckComplete) {
     return <Maintenance />;
   }
 
