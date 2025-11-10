@@ -9,24 +9,21 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
 export default function AdminSystemSettings() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     fetchMaintenanceMode();
   }, []);
-
   const fetchMaintenanceMode = async () => {
     try {
-      const { data, error } = await supabase
-        .from('system_settings')
-        .select('maintenance_mode')
-        .eq('id', 1)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('system_settings').select('maintenance_mode').eq('id', 1).single();
       if (error) throw error;
       if (data) {
         setMaintenanceMode(data.maintenance_mode);
@@ -35,51 +32,39 @@ export default function AdminSystemSettings() {
       console.error('Error fetching maintenance mode:', error);
     }
   };
-
   const toggleMaintenanceMode = async (checked: boolean) => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('system_settings')
-        .update({ 
-          maintenance_mode: checked,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', 1);
-
+      const {
+        error
+      } = await supabase.from('system_settings').update({
+        maintenance_mode: checked,
+        updated_at: new Date().toISOString()
+      }).eq('id', 1);
       if (error) throw error;
-
       setMaintenanceMode(checked);
       toast({
         title: checked ? "Mode maintenance activé" : "Mode maintenance désactivé",
-        description: checked 
-          ? "Seuls les administrateurs peuvent accéder au site"
-          : "Le site est maintenant accessible à tous",
+        description: checked ? "Seuls les administrateurs peuvent accéder au site" : "Le site est maintenant accessible à tous"
       });
     } catch (error) {
       console.error('Error toggling maintenance mode:', error);
       toast({
         title: "Erreur",
         description: "Impossible de modifier le mode maintenance",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">Paramètres Système</h2>
         <p className="text-muted-foreground">Configuration globale et maintenance</p>
       </div>
 
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
-          Attention : Les opérations de maintenance peuvent affecter la disponibilité du service
-        </AlertDescription>
-      </Alert>
+      
 
       <Card>
         <CardHeader>
@@ -100,11 +85,7 @@ export default function AdminSystemSettings() {
                 Seuls les administrateurs peuvent accéder au site en mode maintenance
               </p>
             </div>
-            <Switch 
-              checked={maintenanceMode}
-              onCheckedChange={toggleMaintenanceMode}
-              disabled={loading}
-            />
+            <Switch checked={maintenanceMode} onCheckedChange={toggleMaintenanceMode} disabled={loading} />
           </div>
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
@@ -229,6 +210,5 @@ export default function AdminSystemSettings() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
