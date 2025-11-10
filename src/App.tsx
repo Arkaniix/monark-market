@@ -91,11 +91,11 @@ const App = () => {
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .single();
+        .eq('user_id', userId);
 
-      if (!error && data) {
-        setIsAdmin(data.role === 'admin');
+      if (!error && data && data.length > 0) {
+        // Check if user has admin role among their roles
+        setIsAdmin(data.some(row => row.role === 'admin'));
       } else {
         setIsAdmin(false);
       }
