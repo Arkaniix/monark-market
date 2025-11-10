@@ -11,6 +11,8 @@ import { Zap, Check, MessageCircle, Crown, Star, TrendingUp, Eye, EyeOff } from 
 import { z } from "zod";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { motion, AnimatePresence } from "framer-motion";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Construction } from "lucide-react";
 
 const emailSchema = z.string().email("Email invalide");
 const passwordSchema = z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères");
@@ -29,6 +31,7 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -57,6 +60,43 @@ export default function Auth() {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  useEffect(() => {
+    // Check maintenance mode
+    const checkMaintenance = async () => {
+      const { data } = await supabase
+        .from('system_settings')
+        .select('maintenance_mode')
+        .eq('id', 1)
+        .single();
+      
+      if (data) {
+        setMaintenanceMode(data.maintenance_mode);
+      }
+    };
+
+    checkMaintenance();
+
+    // Subscribe to maintenance mode changes
+    const maintenanceChannel = supabase
+      .channel('system_settings_auth')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'system_settings'
+        },
+        () => {
+          checkMaintenance();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      maintenanceChannel.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     // Fetch subscription plans and determine most popular
@@ -106,6 +146,17 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      // Check if maintenance mode is active
+      if (maintenanceMode) {
+        toast({
+          title: "Maintenance en cours",
+          description: "Les inscriptions sont temporairement désactivées pendant la maintenance.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       emailSchema.parse(email);
       passwordSchema.parse(password);
       if (discordId) {
@@ -209,7 +260,7 @@ export default function Auth() {
       emailSchema.parse(email);
       passwordSchema.parse(password);
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -220,6 +271,29 @@ export default function Auth() {
           description: error.message,
           variant: "destructive",
         });
+        setLoading(false);
+        return;
+      }
+
+      // Check if maintenance mode is active and user is not admin
+      if (maintenanceMode && authData.user) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', authData.user.id)
+          .single();
+
+        if (!roleData || roleData.role !== 'admin') {
+          // Sign out non-admin user
+          await supabase.auth.signOut();
+          toast({
+            title: "Maintenance en cours",
+            description: "Le site est actuellement en maintenance. Seuls les administrateurs peuvent se connecter.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -236,7 +310,17 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 lg:p-8">
-      <div className={`w-full grid gap-8 items-start ${activeTab === 'signup' ? 'max-w-[1200px]' : 'max-w-6xl lg:grid-cols-2'}`}>
+      <div className="w-full max-w-7xl space-y-4">
+        {maintenanceMode && (
+          <Alert className="bg-warning/10 border-warning/50">
+            <Construction className="h-5 w-5 text-warning" />
+            <AlertDescription className="text-warning-foreground">
+              <strong>Maintenance en cours.</strong> Le site est actuellement en maintenance. Seuls les administrateurs peuvent se connecter.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        <div className={`w-full grid gap-8 items-start ${activeTab === 'signup' ? 'max-w-[1200px] mx-auto' : 'max-w-6xl mx-auto lg:grid-cols-2'}`}>
         {/* Left Panel - Marketing Content (hidden on mobile) */}
         <div className="hidden lg:flex flex-col gap-8 p-8">
           <div className="space-y-4">
@@ -622,6 +706,7 @@ export default function Auth() {
           </Tabs>
         </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

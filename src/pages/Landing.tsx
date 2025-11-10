@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Target, BarChart3, Users, Zap, GraduationCap, TrendingUp, Check, Clock, Shield, Rocket, DollarSign, Bell, Award } from "lucide-react";
+import { Search, Target, BarChart3, Users, Zap, GraduationCap, TrendingUp, Check, Clock, Shield, Rocket, DollarSign, Bell, Award, Construction } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 const containerVariants = {
   hidden: {
     opacity: 0
@@ -86,6 +87,7 @@ const testimonials = [{
 export default function Landing() {
   const [plans, setPlans] = useState<any[]>([]);
   const [mostPopularPlanId, setMostPopularPlanId] = useState<string | null>(null);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
 
   // Fonctionnalités par plan
   const planFeaturesMap: Record<string, string[]> = {
@@ -129,8 +131,52 @@ export default function Landing() {
       }
     };
     fetchPlans();
+
+    // Check maintenance mode
+    const checkMaintenance = async () => {
+      const { data } = await supabase
+        .from('system_settings')
+        .select('maintenance_mode')
+        .eq('id', 1)
+        .single();
+      
+      if (data) {
+        setMaintenanceMode(data.maintenance_mode);
+      }
+    };
+
+    checkMaintenance();
+
+    // Subscribe to maintenance mode changes
+    const maintenanceChannel = supabase
+      .channel('system_settings_landing')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'system_settings'
+        },
+        () => {
+          checkMaintenance();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      maintenanceChannel.unsubscribe();
+    };
   }, []);
   return <div className="min-h-screen">
+      {maintenanceMode && (
+        <Alert className="bg-warning/10 border-warning/50 rounded-none border-x-0 border-t-0">
+          <Construction className="h-5 w-5 text-warning" />
+          <AlertDescription className="text-warning-foreground">
+            <strong>Maintenance en cours.</strong> Le site est actuellement en maintenance. Les nouvelles inscriptions et connexions sont temporairement désactivées pour les utilisateurs réguliers.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-background via-primary/5 to-accent/5 py-20 md:py-32">
         <div className="container relative z-10">
