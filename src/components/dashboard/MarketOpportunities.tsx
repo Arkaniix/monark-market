@@ -58,6 +58,9 @@ export function MarketOpportunities({
     }
   };
 
+  const lastUpdate = "il y a 3h";
+  const isHotDeal = (deviationPct: number) => Math.abs(deviationPct) > 15;
+
   return (
     <section className="py-8 bg-gradient-to-b from-background to-muted/20">
       <div className="container">
@@ -74,7 +77,10 @@ export function MarketOpportunities({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Flame className="h-5 w-5 text-warning" />
-                    <CardTitle>Meilleures opportunités du moment</CardTitle>
+                    <div>
+                      <CardTitle>Meilleures opportunités du moment</CardTitle>
+                      <p className="text-xs text-muted-foreground mt-1">Données actualisées {lastUpdate}</p>
+                    </div>
                   </div>
                   <Link to="/deals">
                     <Button variant="outline" size="sm">
@@ -93,9 +99,14 @@ export function MarketOpportunities({
                           <div className="space-y-3">
                             {/* En-tête */}
                             <div className="flex items-start justify-between gap-2">
-                              <Badge className={getCategoryColor(deal.category)}>
-                                {deal.category}
-                              </Badge>
+                              <div className="flex items-center gap-2">
+                                <Badge className={getCategoryColor(deal.category)}>
+                                  {deal.category}
+                                </Badge>
+                                {isHotDeal(deal.deviationPct) && (
+                                  <span className="text-warning animate-pulse">⚡</span>
+                                )}
+                              </div>
                               <Badge variant="outline" className="text-xs">
                                 Score: {Math.round((1 + deal.deviationPct / 100) * 100)}
                               </Badge>
@@ -161,14 +172,15 @@ export function MarketOpportunities({
               <CardContent>
                 <div className="space-y-3">
                   {risingTrends.map((trend, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-success/5 border border-success/20">
+                    <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-success/5 border border-success/20 group cursor-pointer hover:bg-success/10 transition-colors">
+                      <div className="h-full w-1 bg-success rounded-full" />
                       <div className="flex-1">
                         <p className="font-medium text-sm">{trend.name}</p>
                         <Badge className={getCategoryColor(trend.category)} variant="outline">
                           {trend.category}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-1 text-success font-bold">
+                      <div className="flex items-center gap-1 text-success font-bold" title={`+${trend.change}% sur les 7 derniers jours`}>
                         <TrendingUp className="h-4 w-4" />
                         +{trend.change}%
                       </div>
@@ -189,14 +201,15 @@ export function MarketOpportunities({
               <CardContent>
                 <div className="space-y-3">
                   {fallingTrends.map((trend, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 group cursor-pointer hover:bg-primary/10 transition-colors">
+                      <div className="h-full w-1 bg-primary rounded-full" />
                       <div className="flex-1">
                         <p className="font-medium text-sm">{trend.name}</p>
                         <Badge className={getCategoryColor(trend.category)} variant="outline">
                           {trend.category}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-1 text-primary font-bold">
+                      <div className="flex items-center gap-1 text-primary font-bold" title={`${trend.change}% sur les 7 derniers jours`}>
                         <TrendingDown className="h-4 w-4" />
                         {trend.change}%
                       </div>

@@ -24,9 +24,25 @@ export function WelcomeHeader({ userName = "Utilisateur", lastScrapDate, planNam
     return d.toLocaleDateString('fr-FR');
   };
 
+  // Statut du scrap (peut être récupéré via API)
+  const scrapStatus = 'available' as 'available' | 'waiting' | 'paused';
+  
+  const getStatusConfig = () => {
+    switch (scrapStatus) {
+      case 'available':
+        return { color: 'bg-success', label: 'Disponible', pulse: true };
+      case 'waiting':
+        return { color: 'bg-warning', label: 'En attente', pulse: false };
+      case 'paused':
+        return { color: 'bg-destructive', label: 'En pause', pulse: false };
+    }
+  };
+
+  const statusConfig = getStatusConfig();
+
   return (
     <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 border-b">
-      <div className="container py-8">
+      <div className="container py-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -35,9 +51,12 @@ export function WelcomeHeader({ userName = "Utilisateur", lastScrapDate, planNam
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             {/* Message de bienvenue */}
             <div className="space-y-3">
-              <h1 className="text-3xl md:text-4xl font-bold">
-                Bienvenue, {userName} 👋
-              </h1>
+              <div className="relative inline-block">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 blur-2xl opacity-50" />
+                <h1 className="text-3xl md:text-4xl font-bold relative">
+                  Bienvenue, {userName} 👋
+                </h1>
+              </div>
               <p className="text-muted-foreground text-lg">
                 Ton dernier scrap remonte à <span className="font-semibold text-foreground">{formatDate(lastScrapDate)}</span>
               </p>
@@ -58,9 +77,14 @@ export function WelcomeHeader({ userName = "Utilisateur", lastScrapDate, planNam
             {/* Actions rapides */}
             <div className="flex flex-wrap gap-3">
               <Link to="/community">
-                <Button size="lg" className="gap-2">
-                  <Search className="h-5 w-5" />
-                  Lancer un scrap
+                <Button size="lg" className="gap-2 relative group">
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <div className={`h-2 w-2 rounded-full ${statusConfig.color} ${statusConfig.pulse ? 'animate-pulse' : ''}`} />
+                    </div>
+                    <Search className="h-5 w-5" />
+                    Lancer un scrap
+                  </div>
                 </Button>
               </Link>
               <Link to="/trends">

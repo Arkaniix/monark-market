@@ -41,6 +41,8 @@ export function RecommendedActions({
   userPercentile = 10
 }: RecommendedActionsProps) {
   const progressPercentage = (trainingProgress.completed / trainingProgress.total) * 100;
+  const communityScrapAvailable = true; // À récupérer via API
+  const userScrapCount = 24; // Stats du mois en cours
 
   return (
     <section className="py-8">
@@ -62,17 +64,29 @@ export function RecommendedActions({
               </CardHeader>
               <CardContent className="space-y-3">
                 {/* Lancer un scrap */}
-                <Link to="/community">
-                  <Button size="lg" className="w-full justify-start gap-3 h-auto py-4">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-background/10">
-                      <Search className="h-5 w-5" />
+                <div className="space-y-2">
+                  <Link to="/community">
+                    <Button 
+                      size="lg" 
+                      className="w-full justify-start gap-3 h-auto py-5 relative overflow-hidden group hover:shadow-lg hover:shadow-primary/20 transition-all"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                      <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-background/10 relative z-10">
+                        <Search className="h-5 w-5" />
+                      </div>
+                      <div className="text-left flex-1 relative z-10">
+                        <div className="font-semibold">Lancer un nouveau scrap</div>
+                        <div className="text-xs opacity-90">Faible · Fort · Communautaire</div>
+                      </div>
+                    </Button>
+                  </Link>
+                  {communityScrapAvailable && (
+                    <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-success/10 border border-success/20">
+                      <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
+                      <span className="text-xs font-medium text-success">1 scrap communautaire disponible aujourd'hui !</span>
                     </div>
-                    <div className="text-left flex-1">
-                      <div className="font-semibold">Lancer un nouveau scrap</div>
-                      <div className="text-xs opacity-90">Faible · Fort · Communautaire</div>
-                    </div>
-                  </Button>
-                </Link>
+                  )}
+                </div>
 
                 {/* Analyser watchlist */}
                 <Card className="bg-muted/50">
@@ -81,13 +95,15 @@ export function RecommendedActions({
                       <Eye className="h-5 w-5 text-accent mt-0.5" />
                       <div className="flex-1">
                         <h4 className="font-medium mb-2">Analyser mes composants</h4>
-                        {watchlistItems.length > 0 ? (
+                {watchlistItems.length > 0 ? (
                           <div className="space-y-2">
                             {watchlistItems.slice(0, 2).map((item, idx) => (
-                              <div key={idx} className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">{item.name}</span>
-                                <Badge variant="outline">{item.category}</Badge>
-                              </div>
+                              <Link key={idx} to={`/catalog?search=${item.name}`}>
+                                <div className="flex items-center justify-between text-sm p-2 rounded hover:bg-muted/50 transition-colors cursor-pointer">
+                                  <span className="text-muted-foreground">{item.name}</span>
+                                  <Badge variant="outline">{item.category}</Badge>
+                                </div>
+                              </Link>
                             ))}
                             <Link to="/catalog">
                               <Button variant="outline" size="sm" className="w-full mt-2">
@@ -160,7 +176,7 @@ export function RecommendedActions({
             <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-background h-full">
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5 text-accent" />
+                  <div className="text-2xl">🎓</div>
                   <CardTitle>Formation & Progression</CardTitle>
                 </div>
               </CardHeader>
@@ -252,7 +268,10 @@ export function RecommendedActions({
               <CardContent className="space-y-4">
                 {/* Rang actuel */}
                 <div className="text-center py-6">
-                  <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-warning/20 to-warning/10 border-2 border-warning/30 mb-3">
+                  <div 
+                    className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-warning/20 to-warning/10 border-2 border-warning/30 mb-3 cursor-pointer hover:scale-105 transition-transform group"
+                    title={`${userScrapCount} scraps ce mois-ci – ${100 - userPercentile}e percentile`}
+                  >
                     <span className="text-3xl font-bold text-warning">#{userRank}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">Ton classement global</p>
@@ -288,12 +307,19 @@ export function RecommendedActions({
                   </div>
                 </div>
 
-                <Link to="/community">
-                  <Button variant="outline" className="w-full gap-2">
-                    Voir le classement complet
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
+                <div className="space-y-2">
+                  <Link to="/community">
+                    <Button variant="outline" className="w-full gap-2">
+                      Voir le classement complet
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link to="/community">
+                    <Button variant="ghost" size="sm" className="w-full gap-2 text-xs">
+                      🔍 Voir détails
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           </motion.div>

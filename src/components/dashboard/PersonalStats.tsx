@@ -11,10 +11,13 @@ import {
   Clock, 
   CheckCircle,
   AlertCircle,
-  DollarSign
+  DollarSign,
+  Download,
+  Filter
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+import { useState } from "react";
 
 interface PersonalStatsProps {
   totalScraps: number;
@@ -56,6 +59,8 @@ export function PersonalStats({
   recentActivity,
   performanceData
 }: PersonalStatsProps) {
+  const [timeFilter, setTimeFilter] = useState<'7j' | '30j' | '90j'>('30j');
+
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "scrap": return <Search className="h-4 w-4 text-primary" />;
@@ -64,6 +69,22 @@ export function PersonalStats({
       default: return <CheckCircle className="h-4 w-4 text-muted-foreground" />;
     }
   };
+
+  const getActivityBgColor = (type: string) => {
+    switch (type) {
+      case "credit": return "bg-success/5 border-success/10";
+      default: return "bg-muted/50";
+    }
+  };
+
+  // Mini sparkline data pour gains estimés
+  const sparklineData = [
+    { value: estimatedGains * 0.7 },
+    { value: estimatedGains * 0.8 },
+    { value: estimatedGains * 0.75 },
+    { value: estimatedGains * 0.9 },
+    { value: estimatedGains }
+  ];
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -95,11 +116,14 @@ export function PersonalStats({
         >
           {/* Statistiques principales */}
           <motion.div variants={itemVariants} className="grid md:grid-cols-4 gap-4">
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background h-full">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-normal text-muted-foreground">
-                  Total Scraps
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Search className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-sm font-normal text-muted-foreground">
+                    Total Scraps
+                  </CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="flex items-end justify-between">
@@ -109,16 +133,18 @@ export function PersonalStats({
                       Faibles · Forts · Communautaires
                     </p>
                   </div>
-                  <Search className="h-8 w-8 text-primary opacity-50" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-success/20 bg-gradient-to-br from-success/5 to-background">
+            <Card className="border-success/20 bg-gradient-to-br from-success/5 to-background h-full">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-normal text-muted-foreground">
-                  Crédits disponibles
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-success" />
+                  <CardTitle className="text-sm font-normal text-muted-foreground">
+                    Crédits disponibles
+                  </CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="flex items-end justify-between">
@@ -130,16 +156,18 @@ export function PersonalStats({
                       </Button>
                     </Link>
                   </div>
-                  <CreditCard className="h-8 w-8 text-success opacity-50" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-background">
+            <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-background h-full">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-normal text-muted-foreground">
-                  Composants suivis
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-accent" />
+                  <CardTitle className="text-sm font-normal text-muted-foreground">
+                    Composants suivis
+                  </CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="flex items-end justify-between">
@@ -149,26 +177,38 @@ export function PersonalStats({
                       Dans la watchlist
                     </p>
                   </div>
-                  <Eye className="h-8 w-8 text-accent opacity-50" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-warning/20 bg-gradient-to-br from-warning/5 to-background">
+            <Card className="border-warning/20 bg-gradient-to-br from-warning/5 to-background h-full">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-normal text-muted-foreground">
-                  Gains estimés
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-warning" />
+                  <CardTitle className="text-sm font-normal text-muted-foreground">
+                    Gains estimés
+                  </CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-end justify-between">
-                  <div>
-                    <div className="text-3xl font-bold text-warning">{estimatedGains} €</div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Basé sur historique
-                    </p>
+                <div className="space-y-3">
+                  <div className="text-3xl font-bold text-warning">{estimatedGains} €</div>
+                  <div className="h-8">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={sparklineData}>
+                        <Line 
+                          type="monotone" 
+                          dataKey="value" 
+                          stroke="hsl(var(--warning))" 
+                          strokeWidth={2}
+                          dot={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
                   </div>
-                  <DollarSign className="h-8 w-8 text-warning opacity-50" />
+                  <p className="text-xs text-muted-foreground">
+                    Basé sur historique
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -185,9 +225,12 @@ export function PersonalStats({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {recentActivity.slice(0, 5).map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3 pb-4 border-b last:border-b-0 last:pb-0">
+                    <div 
+                      key={activity.id} 
+                      className={`flex items-start gap-3 p-3 rounded-lg border ${getActivityBgColor(activity.type)}`}
+                    >
                       <div className="mt-0.5">{getActivityIcon(activity.type)}</div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium leading-tight">{activity.description}</p>
@@ -206,8 +249,42 @@ export function PersonalStats({
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Performance sur 30 jours</CardTitle>
-                  <TrendingUp className="h-5 w-5 text-success" />
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-success" />
+                    <CardTitle>Performance sur {timeFilter === '7j' ? '7' : timeFilter === '30j' ? '30' : '90'} jours</CardTitle>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 p-1 rounded-md bg-muted">
+                      <Button
+                        variant={timeFilter === '7j' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setTimeFilter('7j')}
+                      >
+                        7j
+                      </Button>
+                      <Button
+                        variant={timeFilter === '30j' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setTimeFilter('30j')}
+                      >
+                        30j
+                      </Button>
+                      <Button
+                        variant={timeFilter === '90j' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setTimeFilter('90j')}
+                      >
+                        90j
+                      </Button>
+                    </div>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Download className="h-4 w-4" />
+                      CSV
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
