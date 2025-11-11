@@ -65,7 +65,7 @@ export function RecommendedActions({
               <CardContent className="space-y-3">
                 {/* Lancer un scrap */}
                 <div className="space-y-2">
-                  <Link to="/community">
+                  <Link to="/scrap">
                     <Button 
                       size="lg" 
                       className="w-full justify-start gap-3 h-auto py-5 relative overflow-hidden group hover:shadow-lg hover:shadow-primary/20 transition-all"

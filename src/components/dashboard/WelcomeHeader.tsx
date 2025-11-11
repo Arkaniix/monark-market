@@ -76,7 +76,7 @@ export function WelcomeHeader({ userName = "Utilisateur", lastScrapDate, planNam
 
             {/* Actions rapides */}
             <div className="flex flex-wrap gap-3">
-              <Link to="/community">
+              <Link to="/scrap">
                 <Button size="lg" className="gap-2 relative group">
                   <div className="flex items-center gap-2">
                     <div className="relative">
