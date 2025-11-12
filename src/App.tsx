@@ -20,7 +20,6 @@ import ModelDetail from "./pages/ModelDetail";
 import Estimator from "./pages/Estimator";
 import AdDetail from "./pages/AdDetail";
 import Community from "./pages/Community";
-import Scrap from "./pages/Scrap";
 import Training from "./pages/Training";
 import Admin from "./pages/Admin";
 import MyAccount from "./pages/MyAccount";
@@ -160,7 +159,6 @@ const App = () => {
               <Route path="/estimator" element={<Estimator />} />
               <Route path="/ad/:id" element={<AdDetail />} />
               <Route path="/community" element={<Community />} />
-              <Route path="/scrap" element={<Scrap />} />
               <Route path="/training" element={<Training />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/my-account" element={<MyAccount />} />

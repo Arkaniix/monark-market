@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Award, Search, TrendingUp, ShoppingBag, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import ScrapModal from "@/components/ScrapModal";
 
 interface WelcomeHeaderProps {
   userName?: string;
@@ -12,6 +14,7 @@ interface WelcomeHeaderProps {
 }
 
 export function WelcomeHeader({ userName = "Utilisateur", lastScrapDate, planName, creditsRemaining }: WelcomeHeaderProps) {
+  const [scrapModalOpen, setScrapModalOpen] = useState(false);
   const formatDate = (date?: string) => {
     if (!date) return "jamais";
     const d = new Date(date);
@@ -76,17 +79,19 @@ export function WelcomeHeader({ userName = "Utilisateur", lastScrapDate, planNam
 
             {/* Actions rapides */}
             <div className="flex flex-wrap gap-3">
-              <Link to="/scrap">
-                <Button size="lg" className="gap-2 relative group">
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <div className={`h-2 w-2 rounded-full ${statusConfig.color} ${statusConfig.pulse ? 'animate-pulse' : ''}`} />
-                    </div>
-                    <Search className="h-5 w-5" />
-                    Lancer un scrap
+              <Button 
+                size="lg" 
+                className="gap-2 relative group"
+                onClick={() => setScrapModalOpen(true)}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <div className={`h-2 w-2 rounded-full ${statusConfig.color} ${statusConfig.pulse ? 'animate-pulse' : ''}`} />
                   </div>
-                </Button>
-              </Link>
+                  <Search className="h-5 w-5" />
+                  Lancer un scrap
+                </div>
+              </Button>
               <Link to="/trends">
                 <Button variant="outline" size="lg" className="gap-2">
                   <TrendingUp className="h-5 w-5" />
@@ -109,6 +114,8 @@ export function WelcomeHeader({ userName = "Utilisateur", lastScrapDate, planNam
           </div>
         </motion.div>
       </div>
+      
+      <ScrapModal open={scrapModalOpen} onOpenChange={setScrapModalOpen} />
     </section>
   );
 }

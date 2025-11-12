@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { 
   Search, 
   Eye, 
@@ -15,6 +16,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { motion } from "framer-motion";
+import ScrapModal from "@/components/ScrapModal";
 
 interface RecommendedActionsProps {
   watchlistItems: Array<{ name: string; category: string }>;
@@ -40,6 +42,7 @@ export function RecommendedActions({
   userRank = 245,
   userPercentile = 10
 }: RecommendedActionsProps) {
+  const [scrapModalOpen, setScrapModalOpen] = useState(false);
   const progressPercentage = (trainingProgress.completed / trainingProgress.total) * 100;
   const communityScrapAvailable = true; // À récupérer via API
   const userScrapCount = 24; // Stats du mois en cours
@@ -65,21 +68,20 @@ export function RecommendedActions({
               <CardContent className="space-y-3">
                 {/* Lancer un scrap */}
                 <div className="space-y-2">
-                  <Link to="/scrap">
-                    <Button 
-                      size="lg" 
-                      className="w-full justify-start gap-3 h-auto py-5 relative overflow-hidden group hover:shadow-lg hover:shadow-primary/20 transition-all"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                      <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-background/10 relative z-10">
-                        <Search className="h-5 w-5" />
-                      </div>
-                      <div className="text-left flex-1 relative z-10">
-                        <div className="font-semibold">Lancer un nouveau scrap</div>
-                        <div className="text-xs opacity-90">Faible · Fort · Communautaire</div>
-                      </div>
-                    </Button>
-                  </Link>
+                  <Button 
+                    size="lg" 
+                    className="w-full justify-start gap-3 h-auto py-5 relative overflow-hidden group hover:shadow-lg hover:shadow-primary/20 transition-all"
+                    onClick={() => setScrapModalOpen(true)}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                    <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-background/10 relative z-10">
+                      <Search className="h-5 w-5" />
+                    </div>
+                    <div className="text-left flex-1 relative z-10">
+                      <div className="font-semibold">Lancer un nouveau scrap</div>
+                      <div className="text-xs opacity-90">Faible · Fort · Communautaire</div>
+                    </div>
+                  </Button>
                   {communityScrapAvailable && (
                     <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-success/10 border border-success/20">
                       <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
@@ -325,6 +327,8 @@ export function RecommendedActions({
           </motion.div>
         </div>
       </div>
+      
+      <ScrapModal open={scrapModalOpen} onOpenChange={setScrapModalOpen} />
     </section>
   );
 }
