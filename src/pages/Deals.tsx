@@ -10,70 +10,35 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import {
-  Flame,
-  MapPin,
-  Calendar,
-  TrendingDown,
-  TrendingUp,
-  Package,
-  Truck,
-  ExternalLink,
-  RotateCcw,
-  Info,
-  Sparkles,
-  BarChart3,
-  Heart,
-  DollarSign,
-  Activity,
-  User,
-  Building2,
-  ArrowUp,
-  ArrowDown,
-  Cpu,
-  HardDrive,
-  CircuitBoard,
-  MemoryStick,
-  Download
-} from "lucide-react";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  ResponsiveContainer
-} from "recharts";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Flame, MapPin, Calendar, TrendingDown, TrendingUp, Package, Truck, ExternalLink, RotateCcw, Info, Sparkles, BarChart3, Heart, DollarSign, Activity, User, Building2, ArrowUp, ArrowDown, Cpu, HardDrive, CircuitBoard, MemoryStick, Download } from "lucide-react";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from "recharts";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { marketDeals, marketSummary, topModels, marketTrendData, volumeData } from "@/lib/marketMockData";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
-
 const containerVariants = {
-  hidden: { opacity: 0 },
+  hidden: {
+    opacity: 0
+  },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.03 }
+    transition: {
+      staggerChildren: 0.03
+    }
   }
 };
-
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+  hidden: {
+    opacity: 0,
+    y: 20
+  },
+  visible: {
+    opacity: 1,
+    y: 0
+  }
 };
-
 export default function Deals() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterState, setFilterState] = useState("all");
@@ -88,7 +53,6 @@ export default function Deals() {
   const [chartPeriod, setChartPeriod] = useState("30");
   const [chartMode, setChartMode] = useState<"value" | "percent">("value");
   const [strongScrapOnly, setStrongScrapOnly] = useState(false);
-
   const filteredDeals = useMemo(() => {
     let filtered = [...marketDeals];
 
@@ -116,7 +80,7 @@ export default function Deals() {
     if (filterDiscount !== "all") {
       const discountPct = parseInt(filterDiscount);
       filtered = filtered.filter(d => {
-        const discount = ((d.fair_value - d.price) / d.fair_value) * 100;
+        const discount = (d.fair_value - d.price) / d.fair_value * 100;
         return discount >= discountPct;
       });
     }
@@ -132,16 +96,10 @@ export default function Deals() {
     } else if (sortBy === "recent") {
       filtered.sort((a, b) => new Date(b.publication_date).getTime() - new Date(a.publication_date).getTime());
     }
-
     return filtered;
   }, [filterCategory, filterState, filterRegion, filterDelivery, filterNewness, filterDiscount, priceRange, sortBy]);
-
   const totalPages = Math.ceil(filteredDeals.length / itemsPerPage);
-  const paginatedDeals = filteredDeals.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
+  const paginatedDeals = filteredDeals.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const resetFilters = () => {
     setFilterCategory("all");
     setFilterState("all");
@@ -154,38 +112,47 @@ export default function Deals() {
     setCurrentPage(1);
     setStrongScrapOnly(false);
   };
-
   const getScoreColor = (score: number) => {
     if (score >= 80) return "default";
     if (score >= 60) return "secondary";
     return "outline";
   };
-
   const getScoreLabel = (score: number) => {
     if (score >= 80) return "Excellent";
     if (score >= 60) return "Correct";
     return "Standard";
   };
-
   const getPerformanceBadge = (score: number) => {
-    if (score >= 85) return { label: "Top deal", variant: "default" as const };
-    if (score >= 70) return { label: "Bon plan", variant: "secondary" as const };
-    return { label: "À surveiller", variant: "outline" as const };
+    if (score >= 85) return {
+      label: "Top deal",
+      variant: "default" as const
+    };
+    if (score >= 70) return {
+      label: "Bon plan",
+      variant: "secondary" as const
+    };
+    return {
+      label: "À surveiller",
+      variant: "outline" as const
+    };
   };
-
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "GPU": return Cpu;
-      case "CPU": return Cpu;
-      case "RAM": return MemoryStick;
-      case "SSD": return HardDrive;
-      case "Motherboard": return CircuitBoard;
-      default: return Package;
+      case "GPU":
+        return Cpu;
+      case "CPU":
+        return Cpu;
+      case "RAM":
+        return MemoryStick;
+      case "SSD":
+        return HardDrive;
+      case "Motherboard":
+        return CircuitBoard;
+      default:
+        return Package;
     }
   };
-
-  return (
-    <div className="min-h-screen py-8">
+  return <div className="min-h-screen py-8">
       <div className="container max-w-7xl">
         {/* 1. EN-TÊTE */}
         <div className="mb-8">
@@ -214,11 +181,7 @@ export default function Deals() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center gap-2 cursor-help">
-                          {marketSummary.price_variation < 0 ? (
-                            <TrendingDown className="h-4 w-4 text-success" />
-                          ) : (
-                            <TrendingUp className="h-4 w-4 text-destructive" />
-                          )}
+                          {marketSummary.price_variation < 0 ? <TrendingDown className="h-4 w-4 text-success" /> : <TrendingUp className="h-4 w-4 text-destructive" />}
                           <p className="text-xs text-muted-foreground">Variation</p>
                         </div>
                       </TooltipTrigger>
@@ -254,20 +217,7 @@ export default function Deals() {
             </Card>
           </div>
 
-          <div className="flex items-center gap-3">
-            <p className="text-xs text-muted-foreground">
-              Dernière mise à jour : {formatDistanceToNow(new Date(marketSummary.last_update), { addSuffix: true, locale: fr })}
-            </p>
-            <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-primary"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 20, repeat: Infinity }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">auto-refresh dans 20 min</p>
-          </div>
+          
         </div>
 
         <Separator className="my-8" />
@@ -404,51 +354,26 @@ export default function Deals() {
                   <span className="text-sm font-medium text-primary">{priceRange[1]}€</span>
                 </div>
               </div>
-              <Slider
-                value={priceRange}
-                onValueChange={setPriceRange}
-                min={0}
-                max={2000}
-                step={50}
-                className="w-full"
-              />
+              <Slider value={priceRange} onValueChange={setPriceRange} min={0} max={2000} step={50} className="w-full" />
               <div className="grid grid-cols-2 gap-4 mt-2">
-                <Input
-                  type="number"
-                  value={priceRange[0]}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    if (val >= 0 && val <= priceRange[1]) {
-                      setPriceRange([val, priceRange[1]]);
-                    }
-                  }}
-                  min={0}
-                  max={priceRange[1]}
-                  className="w-full"
-                />
-                <Input
-                  type="number"
-                  value={priceRange[1]}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    if (val >= priceRange[0] && val <= 2000) {
-                      setPriceRange([priceRange[0], val]);
-                    }
-                  }}
-                  min={priceRange[0]}
-                  max={2000}
-                  className="w-full"
-                />
+                <Input type="number" value={priceRange[0]} onChange={e => {
+                const val = Number(e.target.value);
+                if (val >= 0 && val <= priceRange[1]) {
+                  setPriceRange([val, priceRange[1]]);
+                }
+              }} min={0} max={priceRange[1]} className="w-full" />
+                <Input type="number" value={priceRange[1]} onChange={e => {
+                const val = Number(e.target.value);
+                if (val >= priceRange[0] && val <= 2000) {
+                  setPriceRange([priceRange[0], val]);
+                }
+              }} min={priceRange[0]} max={2000} className="w-full" />
               </div>
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t mt-4">
               <div className="flex items-center gap-2">
-                <Switch
-                  id="strong-scrap"
-                  checked={strongScrapOnly}
-                  onCheckedChange={setStrongScrapOnly}
-                />
+                <Switch id="strong-scrap" checked={strongScrapOnly} onCheckedChange={setStrongScrapOnly} />
                 <Label htmlFor="strong-scrap" className="cursor-pointer">Scrap fort uniquement</Label>
               </div>
               <Button variant="outline" size="sm" onClick={resetFilters} className="gap-2">
@@ -468,56 +393,42 @@ export default function Deals() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Label className="text-sm">Par page:</Label>
-                <Select value={itemsPerPage.toString()} onValueChange={(v) => {
-                  setItemsPerPage(Number(v));
-                  setCurrentPage(1);
-                }}>
+                <Select value={itemsPerPage.toString()} onValueChange={v => {
+                setItemsPerPage(Number(v));
+                setCurrentPage(1);
+              }}>
                   <SelectTrigger className="w-20">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {ITEMS_PER_PAGE_OPTIONS.map(option => (
-                      <SelectItem key={option} value={option.toString()}>{option}</SelectItem>
-                    ))}
+                    {ITEMS_PER_PAGE_OPTIONS.map(option => <SelectItem key={option} value={option.toString()}>{option}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             </div>
           </div>
           
-          {filterCategory !== "all" || filterState !== "all" || filterRegion !== "all" ? (
-            <p className="text-sm text-muted-foreground mb-4">
+          {filterCategory !== "all" || filterState !== "all" || filterRegion !== "all" ? <p className="text-sm text-muted-foreground mb-4">
               Filtres actifs: {filterCategory !== "all" && `${filterCategory} • `}
               {filterState !== "all" && `${filterState} • `}
               {filterRegion !== "all" && `${filterRegion} • `}
               Tri: {sortBy === "score" ? "Meilleur deal" : sortBy === "price_asc" ? "Prix croissant" : sortBy === "price_desc" ? "Prix décroissant" : "Plus récents"}
-            </p>
-          ) : null}
+            </p> : null}
 
-          {paginatedDeals.length === 0 ? (
-            <Card className="p-12">
+          {paginatedDeals.length === 0 ? <Card className="p-12">
               <div className="text-center text-muted-foreground">
                 <p className="mb-4">Aucun deal trouvé avec ces critères.</p>
                 <Button variant="outline" onClick={resetFilters}>
                   Réinitialiser les filtres
                 </Button>
               </div>
-            </Card>
-          ) : (
-            <>
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {paginatedDeals.map((deal) => {
-                  const discount = Math.round(((deal.fair_value - deal.price) / deal.fair_value) * 100);
-                  const perfBadge = getPerformanceBadge(deal.score);
-                  const isHighValue = discount >= 15;
-                  
-                  return (
-                    <motion.div key={deal.ad_id} variants={itemVariants}>
+            </Card> : <>
+              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedDeals.map(deal => {
+              const discount = Math.round((deal.fair_value - deal.price) / deal.fair_value * 100);
+              const perfBadge = getPerformanceBadge(deal.score);
+              const isHighValue = discount >= 15;
+              return <motion.div key={deal.ad_id} variants={itemVariants}>
                       <Card className="hover:border-primary transition-all hover:shadow-xl group h-full flex flex-col">
                         <CardHeader>
                           <div className="flex items-start justify-between mb-3">
@@ -539,15 +450,16 @@ export default function Deals() {
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                              {deal.labels.map((label, idx) => (
-                                <Badge key={idx} variant="outline" className="text-xs">
+                              {deal.labels.map((label, idx) => <Badge key={idx} variant="outline" className="text-xs">
                                   {label}
-                                </Badge>
-                              ))}
+                                </Badge>)}
                             </div>
                             <div className="text-right flex-shrink-0">
                               <Badge variant="secondary" className="mb-2 text-xs">
-                                {formatDistanceToNow(new Date(deal.publication_date), { addSuffix: true, locale: fr })}
+                                {formatDistanceToNow(new Date(deal.publication_date), {
+                            addSuffix: true,
+                            locale: fr
+                          })}
                               </Badge>
                               <div className="flex items-center gap-1">
                                 {isHighValue && <span className="text-lg">⚡</span>}
@@ -568,11 +480,7 @@ export default function Deals() {
                               <Badge variant="secondary">{deal.category}</Badge>
                               <Badge variant="outline">{deal.state}</Badge>
                               <Badge variant="outline" className="gap-1">
-                                {deal.seller_type === "particulier" ? (
-                                  <User className="h-3 w-3" />
-                                ) : (
-                                  <Building2 className="h-3 w-3" />
-                                )}
+                                {deal.seller_type === "particulier" ? <User className="h-3 w-3" /> : <Building2 className="h-3 w-3" />}
                                 {deal.seller_type}
                               </Badge>
                             </div>
@@ -582,12 +490,10 @@ export default function Deals() {
                                 <MapPin className="h-4 w-4 flex-shrink-0" />
                                 {deal.city}, {deal.region}
                               </div>
-                              {deal.delivery_possible && (
-                                <div className="flex items-center gap-2 text-success">
+                              {deal.delivery_possible && <div className="flex items-center gap-2 text-success">
                                   <Truck className="h-4 w-4 flex-shrink-0" />
                                   Livraison disponible
-                                </div>
-                              )}
+                                </div>}
                             </div>
 
                             <div className="pt-3 border-t flex items-center justify-between">
@@ -618,53 +524,39 @@ export default function Deals() {
                           </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
-                  );
-                })}
+                    </motion.div>;
+            })}
               </motion.div>
 
               {/* 6. PAGINATION */}
-              {totalPages > 1 && (
-                <div className="mt-8 flex justify-center">
+              {totalPages > 1 && <div className="mt-8 flex justify-center">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
+                        <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
                       </PaginationItem>
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const page = i + 1;
-                        return (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              onClick={() => setCurrentPage(page)}
-                              isActive={currentPage === page}
-                              className="cursor-pointer"
-                            >
+                      {Array.from({
+                  length: Math.min(5, totalPages)
+                }, (_, i) => {
+                  const page = i + 1;
+                  return <PaginationItem key={page}>
+                            <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer">
                               {page}
                             </PaginationLink>
-                          </PaginationItem>
-                        );
-                      })}
+                          </PaginationItem>;
+                })}
                       <PaginationItem>
-                        <PaginationNext
-                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
+                        <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>
-                </div>
-              )}
+                </div>}
 
               <p className="text-center text-sm text-muted-foreground mt-4">
                 Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
                 {Math.min(currentPage * itemsPerPage, filteredDeals.length)} sur {filteredDeals.length}
               </p>
-            </>
-          )}
+            </>}
         </div>
 
         <Separator className="my-12" />
@@ -688,18 +580,10 @@ export default function Deals() {
                 </SelectContent>
               </Select>
               <div className="flex items-center gap-2">
-                <Button
-                  variant={chartMode === "value" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setChartMode("value")}
-                >
+                <Button variant={chartMode === "value" ? "default" : "outline"} size="sm" onClick={() => setChartMode("value")}>
                   Valeur
                 </Button>
-                <Button
-                  variant={chartMode === "percent" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setChartMode("percent")}
-                >
+                <Button variant={chartMode === "percent" ? "default" : "outline"} size="sm" onClick={() => setChartMode("percent")}>
                   %
                 </Button>
               </div>
@@ -721,8 +605,12 @@ export default function Deals() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={marketTrendData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" style={{ fontSize: "12px" }} />
-                    <YAxis style={{ fontSize: "12px" }} />
+                    <XAxis dataKey="date" style={{
+                    fontSize: "12px"
+                  }} />
+                    <YAxis style={{
+                    fontSize: "12px"
+                  }} />
                     <RechartsTooltip />
                     <Legend />
                     <Line type="monotone" dataKey="gpu" stroke="hsl(var(--primary))" name="GPU" strokeWidth={2} />
@@ -747,8 +635,12 @@ export default function Deals() {
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={volumeData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" style={{ fontSize: "12px" }} />
-                    <YAxis style={{ fontSize: "12px" }} />
+                    <XAxis dataKey="date" style={{
+                    fontSize: "12px"
+                  }} />
+                    <YAxis style={{
+                    fontSize: "12px"
+                  }} />
                     <RechartsTooltip />
                     <Bar dataKey="count" fill="hsl(var(--primary))" name="Annonces" />
                   </BarChart>
@@ -777,13 +669,8 @@ export default function Deals() {
                   </thead>
                   <tbody>
                     {topModels.map((model, idx) => {
-                      const CategoryIcon = getCategoryIcon(model.category);
-                      return (
-                        <tr 
-                          key={idx} 
-                          className="border-b hover:bg-muted/50 cursor-pointer transition-colors group"
-                          onClick={() => window.location.href = `/catalog?search=${model.model}`}
-                        >
+                    const CategoryIcon = getCategoryIcon(model.category);
+                    return <tr key={idx} className="border-b hover:bg-muted/50 cursor-pointer transition-colors group" onClick={() => window.location.href = `/catalog?search=${model.model}`}>
                           <td className="p-2">
                             <div className="flex items-center gap-2">
                               <CategoryIcon className="h-4 w-4 text-muted-foreground" />
@@ -796,17 +683,10 @@ export default function Deals() {
                           <td className="p-2 text-right font-bold">{model.current_price}€</td>
                           <td className="p-2 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <div 
-                                className={`h-1 w-12 rounded-full ${model.variation_30d < 0 ? 'bg-success' : 'bg-destructive'}`}
-                                style={{ 
-                                  opacity: Math.abs(model.variation_30d) / 20,
-                                }}
-                              />
-                              {model.variation_30d < 0 ? (
-                                <ArrowDown className="h-3 w-3 text-success" />
-                              ) : (
-                                <ArrowUp className="h-3 w-3 text-destructive" />
-                              )}
+                              <div className={`h-1 w-12 rounded-full ${model.variation_30d < 0 ? 'bg-success' : 'bg-destructive'}`} style={{
+                            opacity: Math.abs(model.variation_30d) / 20
+                          }} />
+                              {model.variation_30d < 0 ? <ArrowDown className="h-3 w-3 text-success" /> : <ArrowUp className="h-3 w-3 text-destructive" />}
                               <span className={model.variation_30d < 0 ? "text-success" : "text-destructive"}>
                                 {model.variation_30d > 0 ? "+" : ""}{model.variation_30d.toFixed(1)}%
                               </span>
@@ -828,9 +708,8 @@ export default function Deals() {
                             </TooltipProvider>
                           </td>
                           <td className="p-2 text-right text-muted-foreground">{model.ads_count}</td>
-                        </tr>
-                      );
-                    })}
+                        </tr>;
+                  })}
                   </tbody>
                 </table>
               </div>
@@ -877,19 +756,20 @@ export default function Deals() {
 
       {/* 7. CTA COMMUNAUTÉ */}
       <Link to="/scrap">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 1 }}
-        >
-          <Button
-            size="lg"
-            className="fixed bottom-8 right-8 shadow-2xl gap-2 z-50 hover:scale-110 transition-transform"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
+        <motion.div initial={{
+        scale: 0
+      }} animate={{
+        scale: 1
+      }} transition={{
+        delay: 1
+      }}>
+          <Button size="lg" className="fixed bottom-8 right-8 shadow-2xl gap-2 z-50 hover:scale-110 transition-transform">
+            <motion.div animate={{
+            scale: [1, 1.2, 1]
+          }} transition={{
+            duration: 2,
+            repeat: Infinity
+          }}>
               🟢
             </motion.div>
             <Heart className="h-5 w-5" />
@@ -897,6 +777,5 @@ export default function Deals() {
           </Button>
         </motion.div>
       </Link>
-    </div>
-  );
+    </div>;
 }
