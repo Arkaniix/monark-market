@@ -87,6 +87,7 @@ export default function Catalog() {
     parseFloat(searchParams.get("rarity_max") || "1")
   ]);
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "relevance");
+  const [showPCs, setShowPCs] = useState(searchParams.get("showPCs") === "true");
 
   // Mettre à jour URL quand les filtres changent
   useEffect(() => {
@@ -104,6 +105,7 @@ export default function Catalog() {
     if (rarityRange[0] > 0) params.rarity_min = rarityRange[0].toString();
     if (rarityRange[1] < 1) params.rarity_max = rarityRange[1].toString();
     if (sortBy !== "relevance") params.sort = sortBy;
+    if (showPCs) params.showPCs = "true";
     
     setSearchParams(params);
   }, [
@@ -116,6 +118,7 @@ export default function Catalog() {
     volumeRange,
     rarityRange,
     sortBy,
+    showPCs,
     setSearchParams
   ]);
 
@@ -132,6 +135,11 @@ export default function Catalog() {
           m.family.toLowerCase().includes(query) ||
           m.aliases.some((a) => a.toLowerCase().includes(query))
       );
+    }
+
+    // Filtrer les PC si non activé
+    if (!showPCs) {
+      filtered = filtered.filter((m) => m.category !== "PC");
     }
 
     // Filtres par facettes
@@ -186,7 +194,8 @@ export default function Catalog() {
     variationRange,
     volumeRange,
     rarityRange,
-    sortBy
+    sortBy,
+    showPCs
   ]);
 
   const totalPages = Math.ceil(filteredModels.length / ITEMS_PER_PAGE);
@@ -205,6 +214,7 @@ export default function Catalog() {
     setVolumeRange([0, 500]);
     setRarityRange([0, 1]);
     setSortBy("relevance");
+    setShowPCs(false);
     setCurrentPage(1);
   };
 
@@ -260,7 +270,7 @@ export default function Catalog() {
       <div>
         <h3 className="font-semibold mb-3">Catégorie</h3>
         <div className="space-y-2">
-          {facetOptions.categories.map((cat) => (
+          {facetOptions.categories.filter(cat => cat !== "PC").map((cat) => (
             <label key={cat} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -277,6 +287,23 @@ export default function Catalog() {
               <span className="text-sm">{cat}</span>
             </label>
           ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">PC Complets</h3>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showPCs}
+              onChange={(e) => setShowPCs(e.target.checked)}
+              className="rounded"
+            />
+            <span className="text-sm">Afficher</span>
+          </label>
         </div>
       </div>
 
@@ -678,7 +705,7 @@ export default function Catalog() {
 
                           <div className="flex gap-2 mt-4">
                             <Button variant="default" size="sm" className="flex-1" asChild>
-                              <Link to={`/model/${model.id}`}>
+                              <Link to={model.category === "PC" ? `/pc/${model.id}` : `/model/${model.id}`}>
                                 <Eye className="h-4 w-4 mr-1" />
                                 Fiche
                               </Link>
