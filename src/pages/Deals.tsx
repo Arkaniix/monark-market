@@ -764,14 +764,7 @@ export default function Deals() {
         delay: 1
       }}>
           <Button size="lg" className="fixed bottom-8 right-8 shadow-2xl gap-2 z-50 hover:scale-110 transition-transform">
-            <motion.div animate={{
-            scale: [1, 1.2, 1]
-          }} transition={{
-            duration: 2,
-            repeat: Infinity
-          }}>
-              🟢
-            </motion.div>
+            
             <Heart className="h-5 w-5" />
             Scrap communautaire disponible
           </Button>
