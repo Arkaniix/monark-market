@@ -17,6 +17,7 @@ import Deals from "./pages/Deals";
 import Trends from "./pages/Trends";
 import Catalog from "./pages/Catalog";
 import ModelDetail from "./pages/ModelDetail";
+import PCDetail from "./pages/PCDetail";
 import Estimator from "./pages/Estimator";
 import AdDetail from "./pages/AdDetail";
 import Community from "./pages/Community";
@@ -156,6 +157,7 @@ const App = () => {
               <Route path="/trends" element={<Trends />} />
               <Route path="/catalog" element={<Catalog />} />
               <Route path="/model/:id" element={<ModelDetail />} />
+              <Route path="/pc/:id" element={<PCDetail />} />
               <Route path="/estimator" element={<Estimator />} />
               <Route path="/ad/:id" element={<AdDetail />} />
               <Route path="/community" element={<Community />} />

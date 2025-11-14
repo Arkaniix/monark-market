@@ -3,7 +3,7 @@ import { subDays, format } from "date-fns";
 
 export interface ModelCard {
   id: number;
-  category: "GPU" | "CPU" | "RAM" | "SSD" | "Motherboard" | "PSU" | "Case" | "Cooling";
+  category: "GPU" | "CPU" | "RAM" | "SSD" | "Motherboard" | "PSU" | "Case" | "Cooling" | "PC";
   brand: string;
   family: string;
   name: string;
@@ -26,6 +26,18 @@ export interface ModelCard {
     speed_mhz?: number;
     socket?: string;
   };
+  pcComponents?: {
+    cpu: string;
+    gpu?: string;
+    ram: string;
+    storage: string;
+    motherboard?: string;
+    psu?: string;
+    case?: string;
+    age_years?: number;
+    condition?: "Excellent" | "Bon" | "Correct" | "Usé";
+    warranty_months?: number;
+  };
 }
 
 const brands = {
@@ -36,7 +48,8 @@ const brands = {
   Motherboard: ["ASUS", "MSI", "Gigabyte", "ASRock"],
   PSU: ["Corsair", "Seasonic", "EVGA", "be quiet!"],
   Case: ["NZXT", "Corsair", "Fractal Design", "Lian Li"],
-  Cooling: ["Noctua", "be quiet!", "Arctic", "Corsair"]
+  Cooling: ["Noctua", "be quiet!", "Arctic", "Corsair"],
+  PC: ["Custom Build", "Dell", "HP", "Lenovo", "ASUS", "MSI", "Acer"]
 };
 
 const families = {
@@ -47,7 +60,8 @@ const families = {
   Motherboard: ["Z790", "B760", "X670E", "B650", "Z690"],
   PSU: ["Modular", "Semi-modular", "Non-modular"],
   Case: ["ATX", "mATX", "ITX"],
-  Cooling: ["AIO", "Air", "Tower"]
+  Cooling: ["AIO", "Air", "Tower"],
+  PC: ["Gaming", "Workstation", "Office", "Streaming", "Compact"]
 };
 
 const gpuModels = [
@@ -293,6 +307,163 @@ function generateModels(): ModelCard[] {
     });
   }
 
+  // PC Complets (25 configurations)
+  const pcConfigs = [
+    {
+      name: "Gaming RTX 4070",
+      family: "Gaming",
+      cpu: "Intel i5-13600K",
+      gpu: "RTX 4070",
+      ram: "32 GB DDR5",
+      storage: "1 TB NVMe + 2 TB HDD",
+      age: 1,
+      condition: "Excellent" as const,
+      priceRange: [1200, 1500]
+    },
+    {
+      name: "Gaming RTX 4060",
+      family: "Gaming",
+      cpu: "AMD Ryzen 5 7600X",
+      gpu: "RTX 4060",
+      ram: "16 GB DDR5",
+      storage: "500 GB NVMe",
+      age: 1.5,
+      condition: "Bon" as const,
+      priceRange: [800, 1000]
+    },
+    {
+      name: "Workstation Ryzen 9",
+      family: "Workstation",
+      cpu: "AMD Ryzen 9 7950X",
+      gpu: "RTX 4080",
+      ram: "64 GB DDR5",
+      storage: "2 TB NVMe + 4 TB HDD",
+      age: 0.5,
+      condition: "Excellent" as const,
+      priceRange: [2500, 3000]
+    },
+    {
+      name: "Gaming RTX 3080",
+      family: "Gaming",
+      cpu: "Intel i7-12700K",
+      gpu: "RTX 3080",
+      ram: "32 GB DDR4",
+      storage: "1 TB NVMe",
+      age: 2,
+      condition: "Bon" as const,
+      priceRange: [1000, 1300]
+    },
+    {
+      name: "Office Ryzen 5",
+      family: "Office",
+      cpu: "AMD Ryzen 5 5600X",
+      ram: "16 GB DDR4",
+      storage: "500 GB SSD",
+      age: 2.5,
+      condition: "Correct" as const,
+      priceRange: [400, 600]
+    },
+    {
+      name: "Gaming RX 7900 XT",
+      family: "Gaming",
+      cpu: "AMD Ryzen 7 7800X3D",
+      gpu: "RX 7900 XT",
+      ram: "32 GB DDR5",
+      storage: "2 TB NVMe",
+      age: 0.8,
+      condition: "Excellent" as const,
+      priceRange: [1800, 2200]
+    },
+    {
+      name: "Streaming i7",
+      family: "Streaming",
+      cpu: "Intel i7-14700K",
+      gpu: "RTX 4070 Ti",
+      ram: "32 GB DDR5",
+      storage: "1 TB NVMe + 2 TB HDD",
+      age: 0.5,
+      condition: "Excellent" as const,
+      priceRange: [1600, 1900]
+    },
+    {
+      name: "Compact Gaming",
+      family: "Compact",
+      cpu: "Intel i5-13400F",
+      gpu: "RTX 4060 Ti",
+      ram: "16 GB DDR5",
+      storage: "1 TB NVMe",
+      age: 1,
+      condition: "Bon" as const,
+      priceRange: [900, 1100]
+    },
+    {
+      name: "Budget Gaming",
+      family: "Gaming",
+      cpu: "AMD Ryzen 5 5600",
+      gpu: "RTX 3060",
+      ram: "16 GB DDR4",
+      storage: "500 GB NVMe",
+      age: 3,
+      condition: "Correct" as const,
+      priceRange: [500, 700]
+    },
+    {
+      name: "Workstation i9",
+      family: "Workstation",
+      cpu: "Intel i9-14900K",
+      gpu: "RTX 4090",
+      ram: "128 GB DDR5",
+      storage: "4 TB NVMe",
+      age: 0.3,
+      condition: "Excellent" as const,
+      priceRange: [3500, 4500]
+    }
+  ];
+
+  pcConfigs.forEach((config) => {
+    const brand = brands.PC[Math.floor(Math.random() * brands.PC.length)];
+    const basePrice = config.priceRange[0] + Math.random() * (config.priceRange[1] - config.priceRange[0]);
+    // Plus vieux = plus de dépréciation
+    const ageDepreciation = config.age * 5;
+    const variance = -10 - ageDepreciation + Math.random() * 15;
+    const volume = Math.floor(15 + Math.random() * 80);
+    const rarity = 0.3 + Math.random() * 0.4; // PC plus rares
+    const daysAgo = Math.floor(Math.random() * 10);
+
+    models.push({
+      id: id++,
+      category: "PC",
+      brand,
+      family: config.family,
+      name: config.name,
+      aliases: [config.name, `PC ${config.family}`],
+      stats: {
+        price_median_30d: Math.round(basePrice),
+        var_30d_pct: parseFloat(variance.toFixed(1)),
+        ads_volume: volume,
+        rarity_index: parseFloat(rarity.toFixed(2)),
+        last_scan_at: format(subDays(new Date(), daysAgo), "yyyy-MM-dd'T'HH:mm:ss'Z'")
+      },
+      sparkline_30d: generateSparkline(basePrice, variance),
+      region_snapshot: {
+        "IDF": { median: Math.round(basePrice * 1.06), volume: Math.floor(volume * 0.35) },
+        "ARA": { median: Math.round(basePrice * 0.97), volume: Math.floor(volume * 0.25) }
+      },
+      pcComponents: {
+        cpu: config.cpu,
+        gpu: config.gpu,
+        ram: config.ram,
+        storage: config.storage,
+        motherboard: config.gpu ? "Compatible ATX" : undefined,
+        psu: config.gpu ? "650W Modulaire" : "450W",
+        case: "Tour ATX RGB",
+        age_years: config.age,
+        condition: config.condition,
+        warranty_months: config.age < 1 ? 12 : config.age < 2 ? 6 : 0
+      }
+    });
+  });
+
   return models;
 }
 
@@ -311,7 +482,7 @@ export const catalogSummary = {
 };
 
 export const facetOptions = {
-  categories: ["GPU", "CPU", "RAM", "SSD", "Motherboard"],
+  categories: ["GPU", "CPU", "RAM", "SSD", "Motherboard", "PC"],
   brands: Array.from(new Set(Object.values(brands).flat())),
   families: Object.values(families).flat(),
   regions: ["IDF", "ARA", "PACA", "Occitanie", "Nouvelle-Aquitaine"]
