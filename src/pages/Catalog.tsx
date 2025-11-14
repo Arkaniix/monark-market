@@ -59,7 +59,7 @@ export default function Catalog() {
   const [currentPage, setCurrentPage] = useState(1);
   const [watchlist, setWatchlist] = useState<number[]>([]);
 
-  // Filtres
+  // Filtres appliqués (utilisés pour le filtrage)
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     searchParams.get("category")?.split(",") || []
@@ -88,6 +88,16 @@ export default function Catalog() {
   ]);
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "relevance");
   const [showPCs, setShowPCs] = useState(searchParams.get("showPCs") === "true");
+
+  // Filtres temporaires (en attente d'application)
+  const [pendingCategories, setPendingCategories] = useState<string[]>(selectedCategories);
+  const [pendingBrands, setPendingBrands] = useState<string[]>(selectedBrands);
+  const [pendingFamilies, setPendingFamilies] = useState<string[]>(selectedFamilies);
+  const [pendingPriceRange, setPendingPriceRange] = useState(priceRange);
+  const [pendingVariationRange, setPendingVariationRange] = useState(variationRange);
+  const [pendingVolumeRange, setPendingVolumeRange] = useState(volumeRange);
+  const [pendingRarityRange, setPendingRarityRange] = useState(rarityRange);
+  const [pendingShowPCs, setPendingShowPCs] = useState(showPCs);
 
   // Mettre à jour URL quand les filtres changent
   useEffect(() => {
@@ -204,6 +214,18 @@ export default function Catalog() {
     currentPage * ITEMS_PER_PAGE
   );
 
+  const applyFilters = () => {
+    setSelectedCategories(pendingCategories);
+    setSelectedBrands(pendingBrands);
+    setSelectedFamilies(pendingFamilies);
+    setPriceRange(pendingPriceRange);
+    setVariationRange(pendingVariationRange);
+    setVolumeRange(pendingVolumeRange);
+    setRarityRange(pendingRarityRange);
+    setShowPCs(pendingShowPCs);
+    setCurrentPage(1);
+  };
+
   const resetFilters = () => {
     setSearchQuery("");
     setSelectedCategories([]);
@@ -215,6 +237,14 @@ export default function Catalog() {
     setRarityRange([0, 1]);
     setSortBy("relevance");
     setShowPCs(false);
+    setPendingCategories([]);
+    setPendingBrands([]);
+    setPendingFamilies([]);
+    setPendingPriceRange([0, 2000]);
+    setPendingVariationRange([-50, 50]);
+    setPendingVolumeRange([0, 500]);
+    setPendingRarityRange([0, 1]);
+    setPendingShowPCs(false);
     setCurrentPage(1);
   };
 
@@ -267,6 +297,12 @@ export default function Catalog() {
 
   const FiltersSidebar = () => (
     <div className="space-y-6">
+      <Button variant="default" className="w-full" onClick={applyFilters}>
+        Appliquer les filtres
+      </Button>
+
+      <Separator />
+
       <div>
         <h3 className="font-semibold mb-3">Catégorie</h3>
         <div className="space-y-2">
@@ -274,12 +310,12 @@ export default function Catalog() {
             <label key={cat} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={selectedCategories.includes(cat)}
+                checked={pendingCategories.includes(cat)}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    setSelectedCategories([...selectedCategories, cat]);
+                    setPendingCategories([...pendingCategories, cat]);
                   } else {
-                    setSelectedCategories(selectedCategories.filter((c) => c !== cat));
+                    setPendingCategories(pendingCategories.filter((c) => c !== cat));
                   }
                 }}
                 className="rounded"
@@ -298,8 +334,8 @@ export default function Catalog() {
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={showPCs}
-              onChange={(e) => setShowPCs(e.target.checked)}
+              checked={pendingShowPCs}
+              onChange={(e) => setPendingShowPCs(e.target.checked)}
               className="rounded"
             />
             <span className="text-sm">Afficher</span>
@@ -316,12 +352,12 @@ export default function Catalog() {
             <label key={brand} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={selectedBrands.includes(brand)}
+                checked={pendingBrands.includes(brand)}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    setSelectedBrands([...selectedBrands, brand]);
+                    setPendingBrands([...pendingBrands, brand]);
                   } else {
-                    setSelectedBrands(selectedBrands.filter((b) => b !== brand));
+                    setPendingBrands(pendingBrands.filter((b) => b !== brand));
                   }
                 }}
                 className="rounded"
@@ -338,12 +374,12 @@ export default function Catalog() {
         <h3 className="font-semibold mb-3">Prix médian (€)</h3>
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{priceRange[0]}€</span>
-            <span>{priceRange[1]}€</span>
+            <span>{pendingPriceRange[0]}€</span>
+            <span>{pendingPriceRange[1]}€</span>
           </div>
           <Slider
-            value={priceRange}
-            onValueChange={setPriceRange}
+            value={pendingPriceRange}
+            onValueChange={setPendingPriceRange}
             min={0}
             max={2000}
             step={50}
@@ -357,12 +393,12 @@ export default function Catalog() {
         <h3 className="font-semibold mb-3">Variation 30j (%)</h3>
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{variationRange[0]}%</span>
-            <span>{variationRange[1]}%</span>
+            <span>{pendingVariationRange[0]}%</span>
+            <span>{pendingVariationRange[1]}%</span>
           </div>
           <Slider
-            value={variationRange}
-            onValueChange={setVariationRange}
+            value={pendingVariationRange}
+            onValueChange={setPendingVariationRange}
             min={-50}
             max={50}
             step={5}
@@ -376,12 +412,12 @@ export default function Catalog() {
         <h3 className="font-semibold mb-3">Volume d'annonces</h3>
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{volumeRange[0]}</span>
-            <span>{volumeRange[1]}</span>
+            <span>{pendingVolumeRange[0]}</span>
+            <span>{pendingVolumeRange[1]}</span>
           </div>
           <Slider
-            value={volumeRange}
-            onValueChange={setVolumeRange}
+            value={pendingVolumeRange}
+            onValueChange={setPendingVolumeRange}
             min={0}
             max={500}
             step={10}
@@ -399,8 +435,8 @@ export default function Catalog() {
             <span>Commun</span>
           </div>
           <Slider
-            value={rarityRange}
-            onValueChange={setRarityRange}
+            value={pendingRarityRange}
+            onValueChange={setPendingRarityRange}
             min={0}
             max={1}
             step={0.1}
@@ -408,8 +444,14 @@ export default function Catalog() {
         </div>
       </div>
 
+      <Separator />
+
       <Button variant="outline" className="w-full" onClick={resetFilters}>
         Réinitialiser tous les filtres
+      </Button>
+
+      <Button variant="default" className="w-full" onClick={applyFilters}>
+        Appliquer les filtres
       </Button>
     </div>
   );
@@ -491,8 +533,8 @@ export default function Catalog() {
 
         <div className="flex gap-6">
           {/* 3. FILTRES SIDEBAR (Desktop) */}
-          <aside className="hidden lg:block w-64 flex-shrink-0">
-            <Card className="sticky top-20">
+          <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-20 self-start">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span>Filtres</span>
@@ -501,7 +543,7 @@ export default function Catalog() {
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="max-h-[calc(100vh-12rem)] overflow-y-auto">
                 <FiltersSidebar />
               </CardContent>
             </Card>
