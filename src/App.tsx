@@ -9,25 +9,8 @@ import { User } from "@supabase/supabase-js";
 import { ThemeProvider } from "next-themes";
 import Maintenance from "./pages/Maintenance";
 import Layout from "./components/Layout";
-import Home from "./pages/Home";
-import Landing from "./pages/Landing";
-import Auth from "./pages/Auth";
-import InitTestAccounts from "./pages/InitTestAccounts";
-import Deals from "./pages/Deals";
-import Trends from "./pages/Trends";
-import Catalog from "./pages/Catalog";
-import ModelDetail from "./pages/ModelDetail";
-import PCDetail from "./pages/PCDetail";
-import Estimator from "./pages/Estimator";
-import AdDetail from "./pages/AdDetail";
-import Community from "./pages/Community";
-import Training from "./pages/Training";
-import Admin from "./pages/Admin";
-import MyAccount from "./pages/MyAccount";
-import CGU from "./pages/CGU";
-import RGPD from "./pages/RGPD";
-import LegalNotice from "./pages/LegalNotice";
-import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { routes } from "./routes";
 
 const queryClient = new QueryClient();
 
@@ -145,35 +128,31 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-          <Layout>
-            <Routes>
-              {/* Public landing page for non-authenticated users */}
-            <Route path="/" element={user ? <Home /> : <Landing />} />
-            <Route path="/auth" element={<Auth />} />
-              
-              {/* Authenticated routes */}
-              <Route path="/deals" element={<Deals />} />
-              <Route path="/trends" element={<Trends />} />
-              <Route path="/catalog" element={<Catalog />} />
-              <Route path="/model/:id" element={<ModelDetail />} />
-              <Route path="/pc/:id" element={<PCDetail />} />
-              <Route path="/estimator" element={<Estimator />} />
-              <Route path="/ad/:id" element={<AdDetail />} />
-              <Route path="/community" element={<Community />} />
-              <Route path="/training" element={<Training />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/my-account" element={<MyAccount />} />
-              
-              {/* Legal pages */}
-              <Route path="/cgu" element={<CGU />} />
-              <Route path="/rgpd" element={<RGPD />} />
-              <Route path="/legal-notice" element={<LegalNotice />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
-        </BrowserRouter>
+            <Layout>
+              <Routes>
+                {routes.map((route) => {
+                  const Component = route.component;
+                  return (
+                    <Route
+                      key={route.path}
+                      path={route.path}
+                      element={
+                        <ProtectedRoute
+                          requiresAuth={route.requiresAuth}
+                          requiresAdmin={route.requiresAdmin}
+                          user={user}
+                          isAdmin={isAdmin}
+                          adminCheckComplete={adminCheckComplete}
+                        >
+                          <Component />
+                        </ProtectedRoute>
+                      }
+                    />
+                  );
+                })}
+              </Routes>
+            </Layout>
+          </BrowserRouter>
       </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
