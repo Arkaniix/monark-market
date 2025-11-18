@@ -150,7 +150,6 @@ const App = () => {
               {/* Public landing page for non-authenticated users */}
             <Route path="/" element={user ? <Home /> : <Landing />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/init-test-accounts" element={<InitTestAccounts />} />
               
               {/* Authenticated routes */}
               <Route path="/deals" element={<Deals />} />
