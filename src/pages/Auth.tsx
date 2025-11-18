@@ -16,6 +16,11 @@ import { Construction } from "lucide-react";
 
 const emailSchema = z.string().email("Email invalide");
 const passwordSchema = z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères");
+const displayNameSchema = z.string()
+  .trim()
+  .min(1, "Le nom d'affichage est requis")
+  .max(50, "Le nom d'affichage doit contenir moins de 50 caractères")
+  .regex(/^[a-zA-Z0-9\s\-_]+$/, "Seuls les lettres, chiffres, espaces, tirets et underscores sont autorisés");
 const discordSchema = z.string().max(100, "L'identifiant Discord doit contenir moins de 100 caractères").optional();
 
 export default function Auth() {
@@ -159,6 +164,7 @@ export default function Auth() {
 
       emailSchema.parse(email);
       passwordSchema.parse(password);
+      displayNameSchema.parse(displayName);
       if (discordId) {
         discordSchema.parse(discordId);
       }
