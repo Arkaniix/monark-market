@@ -109,11 +109,13 @@ export default function Estimator() {
           .from("user_subscriptions")
           .select("credits_remaining")
           .eq("user_id", user.id)
-          .eq("status", "active")
-          .single();
+          .eq("status", "active");
 
         if (error) throw error;
-        setUserCredits(data?.credits_remaining ?? 0);
+        
+        // Sum credits from all active subscriptions
+        const totalCredits = data?.reduce((sum, sub) => sum + (sub.credits_remaining ?? 0), 0) ?? 0;
+        setUserCredits(totalCredits);
       } catch (error) {
         console.error("Error loading credits:", error);
         toast({
@@ -241,6 +243,33 @@ export default function Estimator() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Get active subscriptions with available credits
+      const { data: subscriptions, error: subError } = await supabase
+        .from("user_subscriptions")
+        .select("id, credits_remaining")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .gt("credits_remaining", 0)
+        .order("credits_remaining", { ascending: false })
+        .limit(1);
+
+      if (subError) throw subError;
+      if (!subscriptions || subscriptions.length === 0) {
+        throw new Error("No subscription with available credits");
+      }
+
+      const subscription = subscriptions[0];
+      const newCredits = subscription.credits_remaining - 2;
+
+      // Update subscription credits
+      const { error: updateError } = await supabase
+        .from("user_subscriptions")
+        .update({ credits_remaining: newCredits })
+        .eq("id", subscription.id);
+
+      if (updateError) throw updateError;
+
+      // Log credit usage
       const { error: creditError } = await supabase
         .from("credit_logs")
         .insert({
