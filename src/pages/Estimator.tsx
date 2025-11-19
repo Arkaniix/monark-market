@@ -45,8 +45,11 @@ import {
   RefreshCw,
   ExternalLink,
   Minus,
+  ShoppingCart,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   estimatorStats,
   estimatorModels,
@@ -56,8 +59,20 @@ import {
   type EstimationHistoryItem,
 } from "@/lib/estimatorMockData";
 
+type Ad = {
+  id: number;
+  title: string;
+  platform: string;
+  city: string | null;
+  region: string | null;
+  condition: string | null;
+  model_id: number | null;
+};
+
 export default function Estimator() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [inputMode, setInputMode] = useState<"manual" | "ad">("manual");
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   const [state, setState] = useState("");
   const [region, setRegion] = useState("");
@@ -66,6 +81,126 @@ export default function Estimator() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [history, setHistory] = useState<EstimationHistoryItem[]>(mockEstimationHistory);
+  const [userCredits, setUserCredits] = useState<number | null>(null);
+  const [isLoadingCredits, setIsLoadingCredits] = useState(true);
+  
+  // Ad selection
+  const [ads, setAds] = useState<Ad[]>([]);
+  const [selectedAdId, setSelectedAdId] = useState<number | null>(null);
+  const [isLoadingAds, setIsLoadingAds] = useState(false);
+  const [adPrice, setAdPrice] = useState<number | null>(null);
+
+  // Load user credits
+  useEffect(() => {
+    const loadUserCredits = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast({
+            title: "Non authentifié",
+            description: "Vous devez être connecté pour utiliser l'estimateur",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("user_subscriptions")
+          .select("credits_remaining")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .single();
+
+        if (error) throw error;
+        setUserCredits(data?.credits_remaining ?? 0);
+      } catch (error) {
+        console.error("Error loading credits:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger vos crédits",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingCredits(false);
+      }
+    };
+
+    loadUserCredits();
+  }, [navigate, toast]);
+
+  // Load recent ads
+  useEffect(() => {
+    const loadAds = async () => {
+      setIsLoadingAds(true);
+      try {
+        const { data, error } = await supabase
+          .from("ads")
+          .select("id, title, platform, city, region, condition, model_id")
+          .eq("status", "active")
+          .order("first_seen_at", { ascending: false })
+          .limit(50);
+
+        if (error) throw error;
+        setAds(data || []);
+      } catch (error) {
+        console.error("Error loading ads:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les annonces",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingAds(false);
+      }
+    };
+
+    if (inputMode === "ad") {
+      loadAds();
+    }
+  }, [inputMode, toast]);
+
+  // Load ad details when selected
+  useEffect(() => {
+    const loadAdDetails = async () => {
+      if (!selectedAdId) return;
+
+      try {
+        const selectedAd = ads.find(ad => ad.id === selectedAdId);
+        if (!selectedAd) return;
+
+        // Set model and region from ad
+        if (selectedAd.model_id) {
+          setSelectedModelId(selectedAd.model_id);
+        }
+        if (selectedAd.region) {
+          setRegion(selectedAd.region);
+        }
+        if (selectedAd.condition) {
+          setState(selectedAd.condition);
+        }
+
+        // Get latest price
+        const { data: priceData, error } = await supabase
+          .from("ad_prices")
+          .select("price, seen_at")
+          .eq("ad_id", selectedAdId)
+          .order("seen_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (error) throw error;
+        if (priceData) {
+          setAdPrice(priceData.price);
+          setPurchasePrice(priceData.price.toString());
+        }
+      } catch (error) {
+        console.error("Error loading ad details:", error);
+      }
+    };
+
+    loadAdDetails();
+  }, [selectedAdId, ads]);
 
   // Load history from localStorage
   useEffect(() => {
@@ -79,39 +214,93 @@ export default function Estimator() {
     }
   }, []);
 
-  const handleCalculate = () => {
-    if (!selectedModelId || !state || !purchasePrice) return;
+  const handleCalculate = async () => {
+    if (!selectedModelId || !state || !purchasePrice) {
+      toast({
+        title: "Informations manquantes",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check credits
+    if (userCredits === null || userCredits < 2) {
+      toast({
+        title: "Crédits insuffisants",
+        description: "L'estimateur nécessite 2 crédits. Rechargez votre compte.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsCalculating(true);
 
-    // Simulate calculation delay
-    setTimeout(() => {
-      const estimation = generateEstimation(
-        selectedModelId,
-        state,
-        parseFloat(purchasePrice),
-        region || undefined
-      );
-      setResult(estimation);
-      setIsCalculating(false);
+    try {
+      // Deduct credits
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-      // Add to history
-      if (estimation) {
-        const historyItem: EstimationHistoryItem = {
-          id: Date.now().toString(),
-          date: new Date().toISOString().split("T")[0],
-          model: estimation.model,
-          category: estimation.category,
-          median_price: estimation.market.median_price,
-          buy_price: estimation.estimate.buy_price,
-          margin_pct: estimation.estimate.profit_margin_pct,
-          trend: estimation.market.trend,
-        };
-        const newHistory = [historyItem, ...history].slice(0, 10);
-        setHistory(newHistory);
-        localStorage.setItem("estimator_history", JSON.stringify(newHistory));
-      }
-    }, 1500);
+      const { error: creditError } = await supabase
+        .from("credit_logs")
+        .insert({
+          user_id: user.id,
+          delta: -2,
+          reason: "estimator_usage",
+          meta: {
+            model_id: selectedModelId,
+            state,
+            price: parseFloat(purchasePrice),
+          },
+        });
+
+      if (creditError) throw creditError;
+
+      // Update local credits
+      setUserCredits(prev => (prev !== null ? prev - 2 : 0));
+
+      // Simulate calculation delay
+      setTimeout(() => {
+        const estimation = generateEstimation(
+          selectedModelId,
+          state,
+          parseFloat(purchasePrice),
+          region || undefined
+        );
+        setResult(estimation);
+        setIsCalculating(false);
+
+        // Add to history
+        if (estimation) {
+          const historyItem: EstimationHistoryItem = {
+            id: Date.now().toString(),
+            date: new Date().toISOString().split("T")[0],
+            model: estimation.model,
+            category: estimation.category,
+            median_price: estimation.market.median_price,
+            buy_price: estimation.estimate.buy_price,
+            margin_pct: estimation.estimate.profit_margin_pct,
+            trend: estimation.market.trend,
+          };
+          const newHistory = [historyItem, ...history].slice(0, 10);
+          setHistory(newHistory);
+          localStorage.setItem("estimator_history", JSON.stringify(newHistory));
+        }
+
+        toast({
+          title: "Estimation réussie",
+          description: "2 crédits ont été déduits de votre compte",
+        });
+      }, 1500);
+    } catch (error) {
+      console.error("Error during calculation:", error);
+      setIsCalculating(false);
+      toast({
+        title: "Erreur",
+        description: "Impossible de déduire les crédits. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleReset = () => {
@@ -120,6 +309,8 @@ export default function Estimator() {
     setRegion("");
     setPurchasePrice("");
     setResult(null);
+    setSelectedAdId(null);
+    setAdPrice(null);
   };
 
   const selectedModel = estimatorModels.find((m) => m.id === selectedModelId);
@@ -145,6 +336,16 @@ export default function Estimator() {
       ]
     : [];
 
+  if (isLoadingCredits) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-screen">
+          <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen py-8">
       <div className="container max-w-7xl">
@@ -169,6 +370,16 @@ export default function Estimator() {
             Évite de surpayer ou de vendre à perte. Nos estimations se basent sur les
             tendances réelles du marché.
           </p>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <Badge variant="outline">
+              <Sparkles className="h-3 w-3 mr-1" />
+              Crédits disponibles: {userCredits ?? 0}
+            </Badge>
+            <Badge variant="secondary">
+              <DollarSign className="h-3 w-3 mr-1" />
+              Coût: 2 crédits
+            </Badge>
+          </div>
         </motion.div>
 
         {/* Quick indicators */}
@@ -233,11 +444,53 @@ export default function Estimator() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {/* Input Mode Selection */}
+                  <div className="space-y-2">
+                    <Label>Mode de saisie</Label>
+                    <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as "manual" | "ad")}>
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="manual">Saisie manuelle</TabsTrigger>
+                        <TabsTrigger value="ad">
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Depuis une annonce
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+
+                  {inputMode === "ad" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="ad-select">Sélectionner une annonce</Label>
+                      <Select
+                        value={selectedAdId?.toString() || ""}
+                        onValueChange={(value) => setSelectedAdId(parseInt(value))}
+                        disabled={isLoadingAds}
+                      >
+                        <SelectTrigger id="ad-select" className="bg-background">
+                          <SelectValue placeholder={isLoadingAds ? "Chargement..." : "Choisir une annonce"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50 max-h-[300px]">
+                          {ads.map((ad) => (
+                            <SelectItem key={ad.id} value={ad.id.toString()}>
+                              {ad.title} - {ad.platform} - {ad.city || "Localisation inconnue"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {selectedAdId && adPrice && (
+                        <p className="text-sm text-muted-foreground">
+                          Prix de l'annonce: {adPrice.toFixed(2)} €
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <div>
                     <Label htmlFor="model">Modèle *</Label>
                     <Select
                       value={selectedModelId?.toString() || ""}
                       onValueChange={(v) => setSelectedModelId(parseInt(v))}
+                      disabled={inputMode === "ad" && selectedAdId !== null}
                     >
                       <SelectTrigger id="model" className="bg-background mt-2">
                         <SelectValue placeholder="Sélectionner un modèle..." />
@@ -308,7 +561,14 @@ export default function Estimator() {
                   <div className="flex gap-3 pt-4">
                     <Button
                       onClick={handleCalculate}
-                      disabled={!selectedModelId || !state || !purchasePrice || isCalculating}
+                      disabled={
+                        !selectedModelId ||
+                        !state ||
+                        !purchasePrice ||
+                        isCalculating ||
+                        userCredits === null ||
+                        userCredits < 2
+                      }
                       className="flex-1 gap-2"
                     >
                       {isCalculating ? (
@@ -319,7 +579,7 @@ export default function Estimator() {
                       ) : (
                         <>
                           <Calculator className="h-4 w-4" />
-                          Estimer maintenant
+                          Estimer (2 crédits)
                         </>
                       )}
                     </Button>
