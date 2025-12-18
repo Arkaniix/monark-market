@@ -7,6 +7,8 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/context/AuthContext";
 import { ScrapJobProvider } from "@/context/ScrapJobContext";
 import { DataProviderComponent } from "@/providers";
+import { ApiUnavailableBanner } from "@/components/ApiUnavailableBanner";
+import { DevModeBadge } from "@/components/DevModeBadge";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { routes } from "./routes";
@@ -23,6 +25,8 @@ const App = () => {
               <TooltipProvider>
               <Toaster />
               <Sonner />
+              <ApiUnavailableBanner />
+              <DevModeBadge />
               <BrowserRouter>
                 <Layout>
                   <Routes>
