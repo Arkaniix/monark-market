@@ -5,13 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   ArrowLeft,
   Cpu,
   MemoryStick,
   HardDrive,
   Zap,
-  Calendar,
   TrendingDown,
   TrendingUp,
   Package,
@@ -21,20 +21,62 @@ import {
   Eye,
   BarChart3,
   Sparkles,
-  Monitor
+  Monitor,
+  ExternalLink,
+  AlertCircle,
 } from "lucide-react";
-import { catalogModels } from "@/lib/catalogMockData";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  LineChart,
+  Line,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+  CartesianGrid,
+} from "recharts";
+import { useAdDetail } from "@/hooks/useProviderData";
+import { PCDetailSkeleton } from "@/components/pc/PCDetailSkeleton";
+import { toast } from "sonner";
 
 export default function PCDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const pc = catalogModels.find((m) => m.id === parseInt(id || "0"));
 
-  if (!pc || pc.category !== "PC") {
+  // PC ads have IDs starting at 1000
+  const pcId = id ? (parseInt(id) < 1000 ? `${1000 + parseInt(id)}` : id) : undefined;
+  const { data: ad, isLoading, error, refetch } = useAdDetail(pcId);
+
+  // Loading state
+  if (isLoading) {
+    return <PCDetailSkeleton />;
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="container py-8">
+        <Button variant="ghost" onClick={() => navigate("/catalog")} className="mb-6">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour au catalogue
+        </Button>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erreur</AlertTitle>
+          <AlertDescription>
+            Impossible de charger ce PC.
+            <Button variant="link" className="px-2" onClick={() => refetch()}>
+              Réessayer
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // Not found or not a PC
+  if (!ad || ad.item_type !== "pc" || !ad.pc_components) {
     return (
       <div className="container py-8">
         <Card className="p-12">
@@ -51,28 +93,28 @@ export default function PCDetail() {
     );
   }
 
-  const components = pc.pcComponents!;
-  
-  // Calcul du score global du PC
+  const components = ad.pc_components;
+
+  // Calculate PC score
   const calculatePCScore = () => {
     let score = 100;
-    
-    // Dépréciation par l'âge
+
+    // Age depreciation
     if (components.age_years) {
-      score -= components.age_years * 8; // -8 points par an
+      score -= components.age_years * 8;
     }
-    
-    // Bonus/malus selon l'état
+
+    // Condition bonus/malus
     if (components.condition === "Excellent") score += 10;
     else if (components.condition === "Bon") score += 5;
     else if (components.condition === "Correct") score -= 5;
     else if (components.condition === "Usé") score -= 15;
-    
-    // Bonus si garantie
+
+    // Warranty bonus
     if (components.warranty_months && components.warranty_months > 0) {
       score += 5;
     }
-    
+
     return Math.max(0, Math.min(100, score));
   };
 
@@ -94,17 +136,36 @@ export default function PCDetail() {
 
   const getConditionColor = (condition: string) => {
     switch (condition) {
-      case "Excellent": return "default";
-      case "Bon": return "secondary";
-      case "Correct": return "outline";
-      default: return "destructive";
+      case "Excellent":
+        return "default";
+      case "Bon":
+        return "secondary";
+      case "Correct":
+        return "outline";
+      default:
+        return "destructive";
     }
   };
 
-  // Analyse de valeur
-  const expectedValue = pc.stats.price_median_30d;
-  const ageDepreciation = (components.age_years || 0) * 0.15; // 15% par an
+  // Value analysis
+  const expectedValue = ad.fair_value;
+  const ageDepreciation = (components.age_years || 0) * 0.15;
   const adjustedValue = expectedValue * (1 - ageDepreciation);
+
+  // Price history for chart
+  const priceHistoryData = (ad.price_history_30d || []).map((price, i) => ({
+    day: i + 1,
+    price,
+  }));
+
+  const handleCreateAlert = () => {
+    toast.success("Alerte créée avec succès !");
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Lien copié dans le presse-papiers !");
+  };
 
   return (
     <div className="container py-8">
@@ -119,7 +180,7 @@ export default function PCDetail() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        {/* En-tête PC */}
+        {/* PC Header */}
         <Card className="border-2">
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -129,30 +190,32 @@ export default function PCDetail() {
                     <Monitor className="h-3 w-3" />
                     PC Complet
                   </Badge>
-                  <Badge variant="secondary">{pc.family}</Badge>
-                  <Badge variant={getConditionColor(components.condition!)}>
+                  <Badge variant="secondary">{ad.title.split(" ")[0]}</Badge>
+                  <Badge variant={getConditionColor(components.condition || "Bon") as any}>
                     {components.condition}
                   </Badge>
                 </div>
-                <h1 className="text-3xl font-bold mb-2">{pc.name}</h1>
-                <p className="text-lg text-muted-foreground">{pc.brand}</p>
+                <h1 className="text-3xl font-bold mb-2">{ad.title}</h1>
+                <p className="text-lg text-muted-foreground">
+                  {ad.city}, {ad.region}
+                </p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground mb-1">Prix médian observé</p>
-                <p className="text-4xl font-bold">{pc.stats.price_median_30d}€</p>
+                <p className="text-sm text-muted-foreground mb-1">Prix demandé</p>
+                <p className="text-4xl font-bold">{ad.price}€</p>
                 <div
                   className={`flex items-center justify-end gap-1 mt-2 font-medium ${
-                    pc.stats.var_30d_pct < 0 ? "text-success" : "text-destructive"
+                    ad.deviation_pct > 0 ? "text-success" : "text-destructive"
                   }`}
                 >
-                  {pc.stats.var_30d_pct < 0 ? (
+                  {ad.deviation_pct > 0 ? (
                     <TrendingDown className="h-4 w-4" />
                   ) : (
                     <TrendingUp className="h-4 w-4" />
                   )}
                   <span>
-                    {pc.stats.var_30d_pct > 0 ? "+" : ""}
-                    {pc.stats.var_30d_pct.toFixed(1)}% (30j)
+                    {ad.deviation_pct > 0 ? "" : "+"}
+                    {Math.abs(ad.deviation_pct)}% vs valeur estimée
                   </span>
                 </div>
               </div>
@@ -161,9 +224,9 @@ export default function PCDetail() {
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Colonne principale */}
+          {/* Main column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Score global */}
+            {/* Global score */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -194,7 +257,9 @@ export default function PCDetail() {
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Garantie</p>
                       <p className="font-semibold">
-                        {components.warranty_months ? `${components.warranty_months} mois` : "Aucune"}
+                        {components.warranty_months
+                          ? `${components.warranty_months} mois`
+                          : "Aucune"}
                       </p>
                     </div>
                   </div>
@@ -202,7 +267,7 @@ export default function PCDetail() {
               </CardContent>
             </Card>
 
-            {/* Composants */}
+            {/* Components */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -276,7 +341,7 @@ export default function PCDetail() {
               </CardContent>
             </Card>
 
-            {/* Analyse de valeur */}
+            {/* Value analysis */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -288,7 +353,7 @@ export default function PCDetail() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-lg bg-muted/50">
-                      <p className="text-sm text-muted-foreground mb-1">Valeur neuf estimée</p>
+                      <p className="text-sm text-muted-foreground mb-1">Valeur estimée</p>
                       <p className="text-2xl font-bold">{expectedValue}€</p>
                     </div>
                     <div className="p-4 rounded-lg bg-muted/50">
@@ -303,7 +368,8 @@ export default function PCDetail() {
                       <div>
                         <p className="font-semibold mb-1">Dépréciation estimée</p>
                         <p className="text-sm text-muted-foreground">
-                          -{(ageDepreciation * 100).toFixed(0)}% due à l'âge ({components.age_years?.toFixed(1)} ans)
+                          -{(ageDepreciation * 100).toFixed(0)}% due à l'âge (
+                          {components.age_years?.toFixed(1)} ans)
                         </p>
                       </div>
                     </div>
@@ -311,36 +377,40 @@ export default function PCDetail() {
 
                   <Separator />
 
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-3">Évolution du prix médian (30 derniers jours)</p>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <LineChart data={pc.sparkline_30d.map((price, i) => ({ day: i + 1, price }))}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" />
-                        <YAxis stroke="hsl(var(--muted-foreground))" />
-                        <RechartsTooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px"
-                          }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="price"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  {priceHistoryData.length > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Évolution du prix médian (30 derniers jours)
+                      </p>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <LineChart data={priceHistoryData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" />
+                          <YAxis stroke="hsl(var(--muted-foreground))" />
+                          <RechartsTooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px",
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="price"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2}
+                            dot={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Colonne latérale */}
+          {/* Sidebar */}
           <div className="space-y-6">
             {/* Actions */}
             <Card>
@@ -349,58 +419,85 @@ export default function PCDetail() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button className="w-full" asChild>
-                  <Link to={`/deals?model_id=${pc.id}`}>
+                  <a href={ad.url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Voir l'annonce
+                  </a>
+                </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to={`/deals?category=PC`}>
                     <BarChart3 className="h-4 w-4 mr-2" />
-                    Voir les deals
+                    Voir les deals PC
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={handleCreateAlert}>
                   Créer une alerte
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={handleShare}>
                   Partager
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Statistiques du marché */}
+            {/* Component links */}
             <Card>
               <CardHeader>
-                <CardTitle>Statistiques marché</CardTitle>
+                <CardTitle>Composants dans le catalogue</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link to={`/catalog?q=${encodeURIComponent(components.cpu)}`}>
+                    <Cpu className="h-4 w-4 mr-2" />
+                    {components.cpu}
+                  </Link>
+                </Button>
+                {components.gpu && (
+                  <Button variant="ghost" className="w-full justify-start" asChild>
+                    <Link to={`/catalog?q=${encodeURIComponent(components.gpu)}`}>
+                      <Monitor className="h-4 w-4 mr-2" />
+                      {components.gpu}
+                    </Link>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Market stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Informations</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm text-muted-foreground">Volume d'annonces</span>
-                    <span className="font-semibold">{pc.stats.ads_volume}</span>
-                  </div>
-                  <Progress value={(pc.stats.ads_volume / 500) * 100} className="h-2" />
+                  <p className="text-sm text-muted-foreground mb-1">Plateforme</p>
+                  <Badge variant="outline">{ad.platform}</Badge>
                 </div>
 
                 <Separator />
 
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Rareté sur le marché</p>
-                  <Badge variant={pc.stats.rarity_index < 0.5 ? "destructive" : "secondary"}>
-                    {pc.stats.rarity_index < 0.3 ? "Très rare" : pc.stats.rarity_index < 0.5 ? "Rare" : "Courant"}
-                  </Badge>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Dernier scan</p>
+                  <p className="text-sm text-muted-foreground mb-1">Première vue</p>
                   <p className="text-sm font-medium">
-                    {formatDistanceToNow(new Date(pc.stats.last_scan_at), {
+                    {formatDistanceToNow(new Date(ad.first_seen_at), {
                       addSuffix: true,
-                      locale: fr
+                      locale: fr,
+                    })}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Dernière mise à jour</p>
+                  <p className="text-sm font-medium">
+                    {formatDistanceToNow(new Date(ad.last_seen_at), {
+                      addSuffix: true,
+                      locale: fr,
                     })}
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Recommandations */}
+            {/* Recommendations */}
             <Card className="border-primary/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -424,7 +521,9 @@ export default function PCDetail() {
                 {components.age_years && components.age_years > 3 && (
                   <div className="flex gap-2">
                     <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <p className="text-sm">Configuration ancienne, envisager une mise à jour future</p>
+                    <p className="text-sm">
+                      Configuration ancienne, envisager une mise à jour future
+                    </p>
                   </div>
                 )}
 

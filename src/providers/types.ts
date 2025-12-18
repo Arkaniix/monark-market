@@ -240,6 +240,19 @@ export interface AdPricePoint {
   price: number;
 }
 
+export interface PCComponents {
+  cpu: string;
+  gpu?: string;
+  ram: string;
+  storage: string;
+  motherboard?: string;
+  psu?: string;
+  case?: string;
+  age_years?: number;
+  condition?: 'Excellent' | 'Bon' | 'Correct' | 'Usé';
+  warranty_months?: number;
+}
+
 export interface AdDetail {
   id: number;
   title: string;
@@ -270,6 +283,10 @@ export interface AdDetail {
   components: AdComponent[];
   images: string[];
   is_in_watchlist: boolean;
+  // PC-specific fields
+  item_type?: 'component' | 'pc';
+  pc_components?: PCComponents;
+  price_history_30d?: number[];
 }
 
 export interface AdPriceHistory {

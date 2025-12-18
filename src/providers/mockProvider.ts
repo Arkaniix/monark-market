@@ -123,6 +123,30 @@ const initialCredits: UserCredits = {
   credits_reset_date: new Date(Date.now() + 7 * 86400000).toISOString(),
 };
 
+// ============= Mock PC data =============
+const mockPCs = [
+  { name: 'Gaming RTX 4070', family: 'Gaming', cpu: 'Intel i5-13600K', gpu: 'RTX 4070', ram: '32 GB DDR5', storage: '1 TB NVMe + 2 TB HDD', motherboard: 'ASUS Z790', psu: '750W Corsair', case: 'NZXT H510', age_years: 1, condition: 'Excellent', warranty_months: 12, price: 1350, fairValue: 1500, score: 85, city: 'Paris', region: 'Île-de-France' },
+  { name: 'Gaming RTX 4060', family: 'Gaming', cpu: 'AMD Ryzen 5 7600X', gpu: 'RTX 4060', ram: '16 GB DDR5', storage: '500 GB NVMe', motherboard: 'MSI B650', psu: '650W', case: 'Fractal Pop', age_years: 1.5, condition: 'Bon', warranty_months: 6, price: 850, fairValue: 950, score: 78, city: 'Lyon', region: 'Auvergne-Rhône-Alpes' },
+  { name: 'Workstation Ryzen 9', family: 'Workstation', cpu: 'AMD Ryzen 9 7950X', gpu: 'RTX 4080', ram: '64 GB DDR5', storage: '2 TB NVMe + 4 TB HDD', motherboard: 'ASUS X670E', psu: '1000W Seasonic', case: 'Lian Li O11', age_years: 0.5, condition: 'Excellent', warranty_months: 18, price: 2700, fairValue: 3000, score: 90, city: 'Toulouse', region: 'Occitanie' },
+  { name: 'Gaming RTX 3080', family: 'Gaming', cpu: 'Intel i7-12700K', gpu: 'RTX 3080', ram: '32 GB DDR4', storage: '1 TB NVMe', motherboard: 'Gigabyte Z690', psu: '850W', case: 'Corsair 4000D', age_years: 2, condition: 'Bon', warranty_months: 0, price: 1100, fairValue: 1300, score: 72, city: 'Marseille', region: 'Provence-Alpes-Côte d\'Azur' },
+  { name: 'Office Ryzen 5', family: 'Office', cpu: 'AMD Ryzen 5 5600X', gpu: undefined, ram: '16 GB DDR4', storage: '500 GB SSD', motherboard: 'MSI B550', psu: '450W', case: 'Mini Tower', age_years: 2.5, condition: 'Correct', warranty_months: 0, price: 450, fairValue: 550, score: 65, city: 'Bordeaux', region: 'Nouvelle-Aquitaine' },
+  { name: 'Gaming RX 7900 XT', family: 'Gaming', cpu: 'AMD Ryzen 7 7800X3D', gpu: 'RX 7900 XT', ram: '32 GB DDR5', storage: '2 TB NVMe', motherboard: 'ASRock X670E', psu: '850W', case: 'Lian Li Lancool', age_years: 0.8, condition: 'Excellent', warranty_months: 12, price: 1950, fairValue: 2200, score: 88, city: 'Nantes', region: 'Pays de la Loire' },
+  { name: 'Streaming i7', family: 'Streaming', cpu: 'Intel i7-14700K', gpu: 'RTX 4070 Ti', ram: '32 GB DDR5', storage: '1 TB NVMe + 2 TB HDD', motherboard: 'ASUS Z790', psu: '850W', case: 'NZXT H7', age_years: 0.5, condition: 'Excellent', warranty_months: 24, price: 1750, fairValue: 1900, score: 92, city: 'Lille', region: 'Hauts-de-France' },
+  { name: 'Compact Gaming', family: 'Compact', cpu: 'Intel i5-13400F', gpu: 'RTX 4060 Ti', ram: '16 GB DDR5', storage: '1 TB NVMe', motherboard: 'MSI B760I ITX', psu: '650W SFX', case: 'NR200', age_years: 1, condition: 'Bon', warranty_months: 6, price: 950, fairValue: 1050, score: 80, city: 'Strasbourg', region: 'Grand Est' },
+  { name: 'Budget Gaming', family: 'Gaming', cpu: 'AMD Ryzen 5 5600', gpu: 'RTX 3060', ram: '16 GB DDR4', storage: '500 GB NVMe', motherboard: 'Gigabyte B550', psu: '550W', case: 'Zalman S4', age_years: 3, condition: 'Correct', warranty_months: 0, price: 580, fairValue: 700, score: 60, city: 'Rennes', region: 'Bretagne' },
+  { name: 'Workstation i9', family: 'Workstation', cpu: 'Intel i9-14900K', gpu: 'RTX 4090', ram: '128 GB DDR5', storage: '4 TB NVMe', motherboard: 'ASUS ProArt Z790', psu: '1200W', case: 'be quiet! Dark Base', age_years: 0.3, condition: 'Excellent', warranty_months: 24, price: 4000, fairValue: 4500, score: 95, city: 'Nice', region: 'Provence-Alpes-Côte d\'Azur' },
+];
+
+function generatePriceHistory(basePrice: number, days: number): number[] {
+  const history: number[] = [];
+  let price = basePrice * 1.1;
+  for (let i = 0; i < days; i++) {
+    history.push(Math.round(price));
+    price = price * (1 + (Math.random() - 0.55) * 0.03);
+  }
+  return history;
+}
+
 // ============= Helper functions =============
 function delay(ms: number = 200): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -521,13 +545,67 @@ export const mockProvider: DataProvider = {
   // Ad Detail
   async getAdDetail(adId) {
     await delay();
-    const idx = parseInt(adId) - 1;
-    const ad = mockAds[idx % mockAds.length];
+    const id = parseInt(adId);
     const watchlist = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
-    const isInWatchlist = watchlist.some(w => w.target_type === 'ad' && w.target_id === parseInt(adId));
+    const isInWatchlist = watchlist.some(w => w.target_type === 'ad' && w.target_id === id);
+
+    // Check if this is a PC ad (IDs 1000+ are PCs)
+    if (id >= 1000) {
+      const pcIndex = (id - 1000) % mockPCs.length;
+      const pc = mockPCs[pcIndex];
+      return {
+        id,
+        title: pc.name,
+        description: `PC complet ${pc.family} - Configuration ${pc.condition}. ${pc.cpu}, ${pc.gpu || 'Graphiques intégrés'}, ${pc.ram}, ${pc.storage}.`,
+        price: pc.price,
+        fair_value: pc.fairValue,
+        deviation_pct: Math.round((1 - pc.price / pc.fairValue) * 100),
+        score: pc.score,
+        condition: pc.condition,
+        city: pc.city,
+        region: pc.region,
+        postal_code: '75015',
+        platform: 'leboncoin',
+        url: '#',
+        published_at: new Date(Date.now() - Math.random() * 30 * 86400000).toISOString(),
+        first_seen_at: new Date(Date.now() - Math.random() * 60 * 86400000).toISOString(),
+        last_seen_at: new Date().toISOString(),
+        status: 'active',
+        seller_type: 'Particulier',
+        delivery_possible: true,
+        secured_payment: true,
+        model: null,
+        components: [
+          { type: 'CPU', model: pc.cpu, brand: pc.cpu.includes('Intel') ? 'Intel' : 'AMD' },
+          ...(pc.gpu ? [{ type: 'GPU', model: pc.gpu, brand: pc.gpu.includes('RTX') || pc.gpu.includes('GTX') ? 'NVIDIA' : 'AMD' }] : []),
+          { type: 'RAM', model: pc.ram, brand: 'Generic' },
+          { type: 'Storage', model: pc.storage, brand: 'Generic' },
+        ],
+        images: [],
+        is_in_watchlist: isInWatchlist,
+        item_type: 'pc' as const,
+        pc_components: {
+          cpu: pc.cpu,
+          gpu: pc.gpu,
+          ram: pc.ram,
+          storage: pc.storage,
+          motherboard: pc.motherboard,
+          psu: pc.psu,
+          case: pc.case,
+          age_years: pc.age_years,
+          condition: pc.condition as 'Excellent' | 'Bon' | 'Correct' | 'Usé',
+          warranty_months: pc.warranty_months,
+        },
+        price_history_30d: generatePriceHistory(pc.price, 30),
+      };
+    }
+
+    // Regular component ad
+    const idx = (id - 1) % mockAds.length;
+    const ad = mockAds[idx];
 
     return {
-      id: parseInt(adId),
+      id,
       title: ad.title,
       description: 'Description détaillée de l\'annonce...',
       price: ad.price,
@@ -551,6 +629,7 @@ export const mockProvider: DataProvider = {
       components: [],
       images: [],
       is_in_watchlist: isInWatchlist,
+      item_type: 'component' as const,
     };
   },
   async getAdPriceHistory(adId) {
