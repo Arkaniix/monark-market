@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { ApiException } from "@/lib/api";
+import { isMockMode } from "@/lib/mockAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Crown, Star, TrendingUp, Eye, EyeOff } from "lucide-react";
+import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, FlaskConical } from "lucide-react";
 import { z } from "zod";
 import { motion } from "framer-motion";
 
@@ -20,6 +21,9 @@ const displayNameSchema = z.string()
   .max(50, "Le nom d'affichage doit contenir moins de 50 caractères")
   .regex(/^[a-zA-Z0-9\s\-_]+$/, "Seuls les lettres, chiffres, espaces, tirets et underscores sont autorisés");
 const discordSchema = z.string().max(100, "L'identifiant Discord doit contenir moins de 100 caractères").optional();
+
+// Check if we're in mock/dev mode
+const IS_MOCK_MODE = isMockMode();
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -48,6 +52,34 @@ export default function Auth() {
       navigate("/");
     }
   }, [user, isLoading, navigate]);
+
+  // Quick mock login handlers
+  const handleMockLogin = async (role: 'admin' | 'user') => {
+    const credentials = role === 'admin' 
+      ? { email: 'admin@test.com', password: 'admin' }
+      : { email: 'user@test.com', password: 'user' };
+    
+    setEmail(credentials.email);
+    setPassword(credentials.password);
+    setLoading(true);
+    
+    try {
+      await login(credentials.email, credentials.password);
+      toast({
+        title: "Connecté",
+        description: `Connecté en tant que ${role}`,
+      });
+      navigate("/");
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Échec de la connexion mock",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -292,6 +324,40 @@ export default function Auth() {
                     <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? "Connexion..." : "Se connecter"}
                     </Button>
+                    
+                    {/* Mock login buttons - only visible in mock/dev mode */}
+                    {IS_MOCK_MODE && (
+                      <div className="pt-4 border-t border-border/50 space-y-2">
+                        <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
+                          <FlaskConical className="h-3 w-3" />
+                          Mode développement
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleMockLogin('admin')}
+                            disabled={loading}
+                            className="text-xs"
+                          >
+                            <Crown className="h-3 w-3 mr-1" />
+                            Admin
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleMockLogin('user')}
+                            disabled={loading}
+                            className="text-xs"
+                          >
+                            <Star className="h-3 w-3 mr-1" />
+                            User
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </form>
                 </motion.div>
               </TabsContent>
