@@ -9,6 +9,7 @@ import ModelDetail from "./pages/ModelDetail";
 import PCDetail from "./pages/PCDetail";
 import Estimator from "./pages/Estimator";
 import AdDetail from "./pages/AdDetail";
+import JobDetail from "./pages/JobDetail";
 import Community from "./pages/Community";
 import Training from "./pages/Training";
 import Admin from "./pages/Admin";
@@ -109,6 +110,11 @@ export const routes: RouteConfig[] = [
   {
     path: "/ads/:id",
     component: AdDetail,
+    requiresAuth: true,
+  },
+  {
+    path: "/jobs/:id",
+    component: JobDetail,
     requiresAuth: true,
   },
   {
