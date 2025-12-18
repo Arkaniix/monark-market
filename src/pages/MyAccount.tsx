@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,152 +10,85 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
-import { User, CreditCard, Eye, Bell, TrendingDown, TrendingUp, Trash2, Settings, Zap, AlertCircle, Plus, Crown, Building2, Calendar, Check, Activity, AlertTriangle, Clock, CheckCircle2, X } from "lucide-react";
+import { User, CreditCard, Eye, Bell, TrendingDown, TrendingUp, Trash2, Settings, Zap, AlertCircle, Plus, Crown, Building2, Calendar, Check, Activity, AlertTriangle, Clock, CheckCircle2, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion } from "framer-motion";
 import type { Database } from "@/integrations/supabase/types";
-import { mockModels } from "@/lib/mockData";
 import ScrapModal from "@/components/ScrapModal";
+import { useWatchlist, useRemoveFromWatchlist, useAddToWatchlist } from "@/hooks/useWatchlist";
+import { useAlerts, useCreateAlert, useUpdateAlert, useDeleteAlert } from "@/hooks/useAlerts";
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from "@/hooks/useNotifications";
+import { useModelsAutocomplete } from "@/hooks/useEstimator";
+import { Link } from "react-router-dom";
+
 type SubscriptionPlan = Database["public"]["Tables"]["subscription_plans"]["Row"];
 type UserSubscription = Database["public"]["Tables"]["user_subscriptions"]["Row"] & {
   subscription_plans: SubscriptionPlan;
 };
-type Notification = Database["public"]["Tables"]["notifications"]["Row"];
-interface WatchlistItem {
-  modelId: string;
-  addedAt: string;
-  alertThreshold: number;
-  alertType: "below" | "above" | "both";
-  lastNotification?: string;
-}
+
 const containerVariants = {
-  hidden: {
-    opacity: 0
-  },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05
-    }
-  }
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
 };
+
 const itemVariants = {
-  hidden: {
-    opacity: 0,
-    y: 20
-  },
-  visible: {
-    opacity: 1,
-    y: 0
-  }
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
 };
+
 export default function MyAccount() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  const defaultTab = searchParams.get('tab') || 'dashboard';
 
   // Subscription states
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null);
   const [subscriptionHistory, setSubscriptionHistory] = useState<UserSubscription[]>([]);
 
-  // Notifications states
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-
   // Dashboard states
   const [showScrapModal, setShowScrapModal] = useState(false);
-  const userCredits = 150;
+  const userCredits = currentSubscription?.credits_remaining ?? 0;
   const maxCredits = 200;
-  const creditPercentage = userCredits / maxCredits * 100;
-  const scrapHistory = [{
-    id: "1",
-    type: "Manual",
-    model: "RTX 4060 Ti",
-    date: "2025-01-14",
-    duration: "2m 34s",
-    results: 89,
-    creditChange: -5
-  }, {
-    id: "2",
-    type: "Auto",
-    model: "Ryzen 7 7800X3D",
-    date: "2025-01-13",
-    duration: "3m 12s",
-    results: 124,
-    creditChange: -8
-  }];
+  const creditPercentage = Math.min((userCredits / maxCredits) * 100, 100);
 
-  // Watchlist states
-  const [selectedModelForScan, setSelectedModelForScan] = useState<string>("");
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editingItem, setEditingItem] = useState<WatchlistItem | null>(null);
-  const [selectedModelToAdd, setSelectedModelToAdd] = useState("");
-  const [alertThreshold, setAlertThreshold] = useState("10");
-  const [alertType, setAlertType] = useState<"below" | "above" | "both">("below");
-  const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([{
-    modelId: "1",
-    addedAt: "2025-01-10",
-    alertThreshold: 10,
-    alertType: "below",
-    lastNotification: "2025-01-14"
-  }, {
-    modelId: "3",
-    addedAt: "2025-01-08",
-    alertThreshold: 5,
-    alertType: "both"
-  }]);
-  const alerts = [{
-    id: "1",
-    modelId: "1",
-    type: "price_drop",
-    message: "RTX 4060 Ti a baissé de 12% cette semaine !",
-    date: "2025-01-14",
-    isNew: true
-  }];
+  // Watchlist & Alerts hooks
+  const { data: watchlistData, isLoading: loadingWatchlist } = useWatchlist();
+  const removeFromWatchlist = useRemoveFromWatchlist();
+  const addToWatchlist = useAddToWatchlist();
+  const { data: alertsData, isLoading: loadingAlerts } = useAlerts();
+  const createAlert = useCreateAlert();
+  const updateAlert = useUpdateAlert();
+  const deleteAlert = useDeleteAlert();
+
+  // Notifications hooks
+  const { data: notificationsData, isLoading: loadingNotifications } = useNotifications();
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
+  const deleteNotification = useDeleteNotification();
+
+  // Models autocomplete for adding to watchlist
+  const [modelSearch, setModelSearch] = useState("");
+  const { data: modelsData } = useModelsAutocomplete(modelSearch);
+
+  // Dialog states
+  const [showAddWatchlistDialog, setShowAddWatchlistDialog] = useState(false);
+  const [showAddAlertDialog, setShowAddAlertDialog] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
+  const [alertType, setAlertType] = useState<'deal_detected' | 'price_below' | 'price_above'>('price_below');
+  const [priceThreshold, setPriceThreshold] = useState("");
+
   useEffect(() => {
     checkAuth();
   }, []);
-  useEffect(() => {
-    if (user) {
-      // Setup realtime subscription for notifications
-      const channel = supabase.channel('notifications').on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`
-      }, payload => {
-        if (payload.eventType === 'INSERT') {
-          setNotifications(prev => [payload.new as Notification, ...prev]);
-          if (!(payload.new as Notification).is_read) {
-            setUnreadCount(prev => prev + 1);
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          setNotifications(prev => prev.map(n => n.id === payload.new.id ? payload.new as Notification : n));
-          loadNotifications(user.id);
-        } else if (payload.eventType === 'DELETE') {
-          setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
-          loadNotifications(user.id);
-        }
-      }).subscribe();
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [user]);
+
   const checkAuth = async () => {
-    const {
-      data: {
-        user
-      }
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       navigate("/auth");
       return;
@@ -163,123 +96,77 @@ export default function MyAccount() {
     setUser(user);
     loadData(user.id);
   };
+
   const loadData = async (userId: string) => {
     try {
-      // Load subscription plans
-      const {
-        data: plansData,
-        error: plansError
-      } = await supabase.from("subscription_plans").select("*").eq("is_active", true).order("price", {
-        ascending: true
-      });
-      if (plansError) throw plansError;
+      const { data: plansData } = await supabase
+        .from("subscription_plans")
+        .select("*")
+        .eq("is_active", true)
+        .order("price", { ascending: true });
       setPlans(plansData || []);
 
-      // Load current subscription
-      const {
-        data: currentSub,
-        error: currentError
-      } = await supabase.from("user_subscriptions").select(`
-          *,
-          subscription_plans (*)
-        `).eq("user_id", userId).eq("status", "active").order("started_at", {
-        ascending: false
-      }).limit(1).maybeSingle();
-      if (currentError) throw currentError;
+      const { data: currentSub } = await supabase
+        .from("user_subscriptions")
+        .select(`*, subscription_plans (*)`)
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
       setCurrentSubscription(currentSub);
 
-      // Load subscription history
-      const {
-        data: historyData,
-        error: historyError
-      } = await supabase.from("user_subscriptions").select(`
-          *,
-          subscription_plans (*)
-        `).eq("user_id", userId).order("started_at", {
-        ascending: false
-      });
-      if (historyError) throw historyError;
+      const { data: historyData } = await supabase
+        .from("user_subscriptions")
+        .select(`*, subscription_plans (*)`)
+        .eq("user_id", userId)
+        .order("started_at", { ascending: false });
       setSubscriptionHistory(historyData || []);
-
-      // Load notifications
-      await loadNotifications(userId);
     } catch (error) {
       console.error("Error loading data:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les données",
-        variant: "destructive"
-      });
+      toast({ title: "Erreur", description: "Impossible de charger les données", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
-  const loadNotifications = async (userId: string) => {
-    try {
-      const {
-        data,
-        error
-      } = await supabase.from("notifications").select("*").eq("user_id", userId).order("created_at", {
-        ascending: false
-      }).limit(50);
-      if (error) throw error;
-      setNotifications(data || []);
-      const unread = data?.filter(n => !n.is_read).length || 0;
-      setUnreadCount(unread);
-    } catch (error) {
-      console.error("Error loading notifications:", error);
-    }
-  };
+
   const handleSubscribe = async (planId: string) => {
     if (!user) return;
     try {
-      const {
-        error
-      } = await supabase.from("user_subscriptions").insert({
+      const { error } = await supabase.from("user_subscriptions").insert({
         user_id: user.id,
         plan_id: planId,
         status: "active",
         started_at: new Date().toISOString()
       });
       if (error) throw error;
-      toast({
-        title: "Succès",
-        description: "Abonnement activé avec succès"
-      });
+      toast({ title: "Succès", description: "Abonnement activé avec succès" });
       loadData(user.id);
     } catch (error) {
       console.error("Error subscribing:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de s'abonner",
-        variant: "destructive"
-      });
+      toast({ title: "Erreur", description: "Impossible de s'abonner", variant: "destructive" });
     }
   };
+
   const getPlanIcon = (planName: string) => {
     switch (planName.toLowerCase()) {
-      case "basic":
-        return <Zap className="h-6 w-6" />;
-      case "pro":
-        return <Crown className="h-6 w-6" />;
-      case "elite":
-        return <Building2 className="h-6 w-6" />;
-      default:
-        return <CreditCard className="h-6 w-6" />;
+      case "basic": return <Zap className="h-6 w-6" />;
+      case "pro": return <Crown className="h-6 w-6" />;
+      case "elite": return <Building2 className="h-6 w-6" />;
+      default: return <CreditCard className="h-6 w-6" />;
     }
   };
+
   const renderFeatures = (features: any) => {
     if (!features) return null;
-
-    // Handle array of features (mockData format)
     if (Array.isArray(features)) {
-      return features.map((feature, index) => <div key={index} className="flex items-center gap-3">
+      return features.map((feature, index) => (
+        <div key={index} className="flex items-center gap-3">
           <Check className="h-4 w-4 text-primary flex-shrink-0" />
           <span className="text-sm">{feature}</span>
-        </div>);
+        </div>
+      ));
     }
-
-    // Handle object of features from database (convert to readable format)
     if (typeof features === 'object') {
       const featureLabels: Record<string, string> = {
         credits_mensuels: "Crédits mensuels",
@@ -299,24 +186,23 @@ export default function MyAccount() {
         rapports_mensuels: "Rapports mensuels"
       };
       return Object.entries(features as Record<string, any>).map(([key, value]) => {
-        // Skip if value is false or empty
         if (value === false || value === "" || value === null) return null;
         const label = featureLabels[key] || key;
-
-        // For credits, show the number
         if (key === "credits" && typeof value === "number") {
-          return <div key={key} className="flex items-center gap-3">
+          return (
+            <div key={key} className="flex items-center gap-3">
               <Check className="h-4 w-4 text-primary flex-shrink-0" />
               <span className="text-sm">{value} crédits/mois</span>
-            </div>;
+            </div>
+          );
         }
-
-        // For boolean true or "Inclus" value, just show the label
         if (value === true || value === "Inclus") {
-          return <div key={key} className="flex items-center gap-3">
+          return (
+            <div key={key} className="flex items-center gap-3">
               <Check className="h-4 w-4 text-primary flex-shrink-0" />
               <span className="text-sm">{label}</span>
-            </div>;
+            </div>
+          );
         }
         return null;
       }).filter(Boolean);
@@ -325,135 +211,108 @@ export default function MyAccount() {
   };
 
   // Watchlist handlers
-  const handleRemoveItem = (modelId: string) => {
-    setWatchlistItems(watchlistItems.filter(item => item.modelId !== modelId));
+  const handleRemoveFromWatchlist = (id: number) => {
+    removeFromWatchlist.mutate(id, {
+      onSuccess: () => toast({ title: "Supprimé", description: "Élément retiré de la watchlist" }),
+      onError: () => toast({ title: "Erreur", description: "Impossible de supprimer", variant: "destructive" })
+    });
   };
-  const handleEditItem = (item: WatchlistItem) => {
-    setEditingItem(item);
-    setAlertThreshold(item.alertThreshold.toString());
-    setAlertType(item.alertType);
-    setShowEditDialog(true);
-  };
-  const handleSaveEdit = () => {
-    if (editingItem) {
-      setWatchlistItems(watchlistItems.map(item => item.modelId === editingItem.modelId ? {
-        ...item,
-        alertThreshold: parseFloat(alertThreshold),
-        alertType
-      } : item));
-      setShowEditDialog(false);
-      setEditingItem(null);
-    }
-  };
+
   const handleAddToWatchlist = () => {
-    if (selectedModelToAdd && !watchlistItems.find(i => i.modelId === selectedModelToAdd)) {
-      setWatchlistItems([...watchlistItems, {
-        modelId: selectedModelToAdd,
-        addedAt: new Date().toISOString().split("T")[0],
-        alertThreshold: parseFloat(alertThreshold),
-        alertType
-      }]);
-      setShowAddDialog(false);
-      setSelectedModelToAdd("");
-      setAlertThreshold("10");
-      setAlertType("below");
-    }
+    if (!selectedModelId) return;
+    addToWatchlist.mutate({ target_type: 'model', target_id: selectedModelId }, {
+      onSuccess: () => {
+        toast({ title: "Ajouté", description: "Modèle ajouté à la watchlist" });
+        setShowAddWatchlistDialog(false);
+        setSelectedModelId(null);
+        setModelSearch("");
+      },
+      onError: () => toast({ title: "Erreur", description: "Impossible d'ajouter", variant: "destructive" })
+    });
   };
-  const handleLaunchScan = (modelId: string) => {
-    setSelectedModelForScan(modelId);
-    setShowScrapModal(true);
+
+  // Alert handlers
+  const handleCreateAlert = () => {
+    if (!selectedModelId) return;
+    createAlert.mutate({
+      target_type: 'model',
+      target_id: selectedModelId,
+      alert_type: alertType,
+      price_threshold: priceThreshold ? parseFloat(priceThreshold) : undefined
+    }, {
+      onSuccess: () => {
+        toast({ title: "Alerte créée", description: "Vous serez notifié" });
+        setShowAddAlertDialog(false);
+        setSelectedModelId(null);
+        setPriceThreshold("");
+      },
+      onError: () => toast({ title: "Erreur", description: "Impossible de créer l'alerte", variant: "destructive" })
+    });
   };
-  const availableModels = mockModels.filter(model => !watchlistItems.find(item => item.modelId === model.id));
+
+  const handleDeleteAlert = (id: number) => {
+    deleteAlert.mutate(id, {
+      onSuccess: () => toast({ title: "Supprimée", description: "Alerte supprimée" }),
+      onError: () => toast({ title: "Erreur", description: "Impossible de supprimer", variant: "destructive" })
+    });
+  };
+
+  const handleToggleAlert = (id: number, isActive: boolean) => {
+    updateAlert.mutate({ id, data: { is_active: !isActive } }, {
+      onSuccess: () => toast({ title: "Mis à jour", description: `Alerte ${!isActive ? 'activée' : 'désactivée'}` })
+    });
+  };
 
   // Notification handlers
-  const markAsRead = async (notificationId: string) => {
-    try {
-      const {
-        error
-      } = await supabase.from("notifications").update({
-        is_read: true
-      }).eq("id", notificationId);
-      if (error) throw error;
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de marquer la notification comme lue",
-        variant: "destructive"
-      });
-    }
+  const handleMarkAsRead = (id: string) => {
+    markRead.mutate(id);
   };
-  const markAllAsRead = async () => {
-    if (!user) return;
-    try {
-      const {
-        error
-      } = await supabase.from("notifications").update({
-        is_read: true
-      }).eq("user_id", user.id).eq("is_read", false);
-      if (error) throw error;
-      toast({
-        title: "Succès",
-        description: "Toutes les notifications ont été marquées comme lues"
-      });
-    } catch (error) {
-      console.error("Error marking all as read:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de marquer les notifications comme lues",
-        variant: "destructive"
-      });
-    }
+
+  const handleMarkAllAsRead = () => {
+    markAllRead.mutate(undefined, {
+      onSuccess: () => toast({ title: "Succès", description: "Toutes les notifications ont été marquées comme lues" })
+    });
   };
-  const deleteNotification = async (notificationId: string) => {
-    try {
-      const {
-        error
-      } = await supabase.from("notifications").delete().eq("id", notificationId);
-      if (error) throw error;
-      toast({
-        title: "Succès",
-        description: "Notification supprimée"
-      });
-    } catch (error) {
-      console.error("Error deleting notification:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer la notification",
-        variant: "destructive"
-      });
-    }
+
+  const handleDeleteNotification = (id: string) => {
+    deleteNotification.mutate(id, {
+      onSuccess: () => toast({ title: "Supprimée", description: "Notification supprimée" })
+    });
   };
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "price_drop":
-        return <TrendingDown className="h-5 w-5 text-success" />;
-      case "price_increase":
-        return <TrendingUp className="h-5 w-5 text-destructive" />;
-      case "alert":
-        return <AlertCircle className="h-5 w-5 text-warning" />;
-      case "success":
-        return <CheckCircle2 className="h-5 w-5 text-success" />;
-      default:
-        return <Bell className="h-5 w-5 text-primary" />;
+      case "price_drop": return <TrendingDown className="h-5 w-5 text-success" />;
+      case "price_increase": return <TrendingUp className="h-5 w-5 text-destructive" />;
+      case "alert": return <AlertCircle className="h-5 w-5 text-warning" />;
+      case "success": return <CheckCircle2 className="h-5 w-5 text-success" />;
+      default: return <Bell className="h-5 w-5 text-primary" />;
     }
   };
+
   if (loading) {
-    return <div className="container mx-auto py-8">
+    return (
+      <div className="container mx-auto py-8">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="container mx-auto py-8">
+
+  const watchlistItems = watchlistData?.items ?? [];
+  const alerts = alertsData?.items ?? [];
+  const notifications = notificationsData?.items ?? [];
+  const unreadCount = notificationsData?.unread_count ?? 0;
+
+  return (
+    <div className="container mx-auto py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Mon Compte</h1>
-        <p className="text-muted-foreground">
-          Gérez votre abonnement, vos crédits et votre watchlist
-        </p>
+        <p className="text-muted-foreground">Gérez votre abonnement, vos crédits et votre watchlist</p>
       </div>
 
-      <Tabs defaultValue="dashboard" className="space-y-6">
+      <Tabs defaultValue={defaultTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="dashboard" className="gap-2">
             <Activity className="h-4 w-4" />
@@ -470,16 +329,17 @@ export default function MyAccount() {
           <TabsTrigger value="notifications" className="gap-2 relative">
             <Bell className="h-4 w-4" />
             Notifications
-            {unreadCount > 0 && <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
                 {unreadCount}
-              </Badge>}
+              </Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
         {/* Dashboard Tab */}
         <TabsContent value="dashboard" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Credits Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -493,77 +353,46 @@ export default function MyAccount() {
                   <span className="text-muted-foreground">/ {maxCredits}</span>
                 </div>
                 <Progress value={creditPercentage} className="h-2" />
-                <p className="text-sm text-muted-foreground">
-                  Renouvellement dans 12 jours
-                </p>
-                <Button className="w-full">Obtenir plus de crédits</Button>
+                {currentSubscription?.credits_reset_date && (
+                  <p className="text-sm text-muted-foreground">
+                    Renouvellement le {format(new Date(currentSubscription.credits_reset_date), "dd MMMM yyyy", { locale: fr })}
+                  </p>
+                )}
+                <Button className="w-full" onClick={() => setShowScrapModal(true)}>Lancer un scrap</Button>
               </CardContent>
             </Card>
 
-            {/* Activity Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5 text-primary" />
-                  Activité ce mois
+                  Activité
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Scraps effectués</span>
-                    <span className="font-bold">23</span>
+                    <span className="text-muted-foreground">Watchlist</span>
+                    <span className="font-bold">{watchlistItems.length} éléments</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Crédits gagnés</span>
-                    <span className="font-bold text-success">+45</span>
+                    <span className="text-muted-foreground">Alertes actives</span>
+                    <span className="font-bold">{alerts.filter(a => a.is_active).length}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Alertes reçues</span>
-                    <span className="font-bold">8</span>
+                    <span className="text-muted-foreground">Notifications non lues</span>
+                    <span className="font-bold">{unreadCount}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-
-          {/* Quick Actions */}
-          
-
-          {/* Scrap History */}
-          <Card data-scrap-history>
-            <CardHeader>
-              <CardTitle>Historique des scraps</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {scrapHistory.map(scrap => <div key={scrap.id} className="flex items-center justify-between p-4 rounded-lg border">
-                    <div className="flex items-center gap-4">
-                      <Badge variant={scrap.type === "Auto" ? "secondary" : "outline"}>
-                        {scrap.type}
-                      </Badge>
-                      <div>
-                        <p className="font-medium">{scrap.model}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {scrap.date} • {scrap.duration}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">{scrap.results} résultats</p>
-                      <p className="text-sm font-medium text-destructive">
-                        {scrap.creditChange} crédits
-                      </p>
-                    </div>
-                  </div>)}
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* Subscription Tab */}
         <TabsContent value="subscription" className="space-y-8">
-          {currentSubscription && <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-accent/5">
+          {currentSubscription && (
+            <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-accent/5">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -583,14 +412,10 @@ export default function MyAccount() {
               <CardContent className="space-y-6">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>
-                    Début: {format(new Date(currentSubscription.started_at), "dd MMMM yyyy", {
-                  locale: fr
-                })}
-                  </span>
+                  <span>Début: {format(new Date(currentSubscription.started_at), "dd MMMM yyyy", { locale: fr })}</span>
                 </div>
-
-                {currentSubscription.credits_remaining !== null && currentSubscription.credits_remaining !== undefined && <div className="space-y-3 p-4 rounded-lg bg-background/50 border">
+                {currentSubscription.credits_remaining !== null && (
+                  <div className="space-y-3 p-4 rounded-lg bg-background/50 border">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Zap className="h-5 w-5 text-primary" />
@@ -598,29 +423,31 @@ export default function MyAccount() {
                       </div>
                       <span className="text-2xl font-bold">{currentSubscription.credits_remaining}</span>
                     </div>
-                    {currentSubscription.credits_reset_date && <p className="text-xs text-muted-foreground">
-                        Renouvellement le {format(new Date(currentSubscription.credits_reset_date), "dd MMMM yyyy", {
-                  locale: fr
-                })}
-                      </p>}
-                  </div>}
-
-                <div className="space-y-3">
-                  {renderFeatures(currentSubscription.subscription_plans.features)}
-                </div>
+                    {currentSubscription.credits_reset_date && (
+                      <p className="text-xs text-muted-foreground">
+                        Renouvellement le {format(new Date(currentSubscription.credits_reset_date), "dd MMMM yyyy", { locale: fr })}
+                      </p>
+                    )}
+                  </div>
+                )}
+                <div className="space-y-3">{renderFeatures(currentSubscription.subscription_plans.features)}</div>
               </CardContent>
-            </Card>}
+            </Card>
+          )}
 
           <div>
             <h2 className="text-2xl font-bold mb-6">Plans disponibles</h2>
             <div className="grid gap-6 md:grid-cols-3">
               {plans.map(plan => {
-              const isCurrentPlan = currentSubscription?.plan_id === plan.id;
-              const isPro = plan.name.toLowerCase() === "pro";
-              return <Card key={plan.id} className={`relative transition-all hover:shadow-lg ${isCurrentPlan ? "border-primary shadow-md" : ""} ${isPro ? "border-primary/50" : ""}`}>
-                    {isPro && <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                const isCurrentPlan = currentSubscription?.plan_id === plan.id;
+                const isPro = plan.name.toLowerCase() === "pro";
+                return (
+                  <Card key={plan.id} className={`relative transition-all hover:shadow-lg ${isCurrentPlan ? "border-primary shadow-md" : ""} ${isPro ? "border-primary/50" : ""}`}>
+                    {isPro && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                         <Badge className="bg-primary">Populaire</Badge>
-                      </div>}
+                      </div>
+                    )}
                     <CardHeader className="space-y-4 pb-4">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${plan.name.toLowerCase() === "basic" ? "bg-muted" : plan.name.toLowerCase() === "pro" ? "bg-primary/10" : "bg-accent/10"}`}>
@@ -636,49 +463,21 @@ export default function MyAccount() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-3 pb-6">
-                      {renderFeatures(plan.features)}
-                    </CardContent>
+                    <CardContent className="space-y-3 pb-6">{renderFeatures(plan.features)}</CardContent>
                     <CardFooter>
-                      {isCurrentPlan ? <Button disabled className="w-full" variant="secondary">
-                          Plan actuel
-                        </Button> : <Button onClick={() => handleSubscribe(plan.id)} className="w-full" variant={isPro ? "default" : "outline"}>
+                      {isCurrentPlan ? (
+                        <Button disabled className="w-full" variant="secondary">Plan actuel</Button>
+                      ) : (
+                        <Button onClick={() => handleSubscribe(plan.id)} className="w-full" variant={isPro ? "default" : "outline"}>
                           Choisir ce plan
-                        </Button>}
+                        </Button>
+                      )}
                     </CardFooter>
-                  </Card>;
-            })}
+                  </Card>
+                );
+              })}
             </div>
           </div>
-
-          {subscriptionHistory.length > 0 && <div>
-              <h2 className="text-2xl font-bold mb-4">Historique des abonnements</h2>
-              <Card>
-                <CardContent className="p-0">
-                  <div className="divide-y">
-                    {subscriptionHistory.map(sub => <div key={sub.id} className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          {getPlanIcon(sub.subscription_plans.name)}
-                          <div>
-                            <p className="font-medium">{sub.subscription_plans.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(sub.started_at), "dd MMMM yyyy", {
-                          locale: fr
-                        })}
-                              {sub.expires_at && ` - ${format(new Date(sub.expires_at), "dd MMMM yyyy", {
-                          locale: fr
-                        })}`}
-                            </p>
-                          </div>
-                        </div>
-                        <Badge variant={sub.status === "active" ? "default" : "secondary"}>
-                          {sub.status === "active" ? "Actif" : "Expiré"}
-                        </Badge>
-                      </div>)}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>}
         </TabsContent>
 
         {/* Watchlist Tab */}
@@ -686,310 +485,315 @@ export default function MyAccount() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-muted-foreground">
-                Suivez {watchlistItems.length} modèle{watchlistItems.length > 1 ? "s" : ""} et
-                recevez des alertes personnalisées
+                Suivez {watchlistItems.length} élément{watchlistItems.length > 1 ? "s" : ""} et configurez vos alertes
               </p>
             </div>
-            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Ajouter un modèle
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Ajouter à la watchlist</DialogTitle>
-                  <DialogDescription>
-                    Sélectionnez un modèle et configurez vos alertes de prix
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="model-select">Modèle</Label>
-                    <Select value={selectedModelToAdd} onValueChange={setSelectedModelToAdd}>
-                      <SelectTrigger id="model-select" className="bg-background mt-2">
-                        <SelectValue placeholder="Choisir un modèle..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50 max-h-[300px]">
-                        {availableModels.map(model => <SelectItem key={model.id} value={model.id}>
-                            {model.name} - {model.medianPrice}€
-                          </SelectItem>)}
-                      </SelectContent>
-                    </Select>
+            <div className="flex gap-2">
+              <Dialog open={showAddWatchlistDialog} onOpenChange={setShowAddWatchlistDialog}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2"><Plus className="h-4 w-4" />Ajouter à la watchlist</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Ajouter à la watchlist</DialogTitle>
+                    <DialogDescription>Recherchez un modèle à suivre</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Rechercher un modèle</Label>
+                      <Input
+                        placeholder="RTX 4060, Ryzen 7..."
+                        value={modelSearch}
+                        onChange={(e) => setModelSearch(e.target.value)}
+                        className="mt-2"
+                      />
+                    </div>
+                    {modelsData && modelsData.length > 0 && (
+                      <div className="max-h-48 overflow-y-auto space-y-1 border rounded-lg p-2">
+                        {modelsData.map((model) => (
+                          <div
+                            key={model.id}
+                            className={`p-2 rounded cursor-pointer hover:bg-muted ${selectedModelId === model.id ? 'bg-primary/10 border border-primary/30' : ''}`}
+                            onClick={() => setSelectedModelId(model.id)}
+                          >
+                            <p className="font-medium">{model.name}</p>
+                            <p className="text-xs text-muted-foreground">{model.brand} • {model.category}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex gap-3 pt-4">
+                      <Button onClick={handleAddToWatchlist} disabled={!selectedModelId || addToWatchlist.isPending} className="flex-1">
+                        {addToWatchlist.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        Ajouter
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowAddWatchlistDialog(false)}>Annuler</Button>
+                    </div>
                   </div>
+                </DialogContent>
+              </Dialog>
 
-                  <div>
-                    <Label htmlFor="threshold">Seuil d'alerte (%)</Label>
-                    <Input id="threshold" type="number" value={alertThreshold} onChange={e => setAlertThreshold(e.target.value)} placeholder="10" className="mt-2" />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Vous serez alerté si le prix varie de plus de ce pourcentage
-                    </p>
+              <Dialog open={showAddAlertDialog} onOpenChange={setShowAddAlertDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2"><Bell className="h-4 w-4" />Créer une alerte</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Créer une alerte</DialogTitle>
+                    <DialogDescription>Soyez notifié quand les conditions sont remplies</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Rechercher un modèle</Label>
+                      <Input
+                        placeholder="RTX 4060, Ryzen 7..."
+                        value={modelSearch}
+                        onChange={(e) => setModelSearch(e.target.value)}
+                        className="mt-2"
+                      />
+                    </div>
+                    {modelsData && modelsData.length > 0 && (
+                      <div className="max-h-32 overflow-y-auto space-y-1 border rounded-lg p-2">
+                        {modelsData.map((model) => (
+                          <div
+                            key={model.id}
+                            className={`p-2 rounded cursor-pointer hover:bg-muted ${selectedModelId === model.id ? 'bg-primary/10 border border-primary/30' : ''}`}
+                            onClick={() => setSelectedModelId(model.id)}
+                          >
+                            <p className="font-medium text-sm">{model.name}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div>
+                      <Label>Type d'alerte</Label>
+                      <Select value={alertType} onValueChange={(v) => setAlertType(v as any)}>
+                        <SelectTrigger className="mt-2">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="deal_detected">Bonne affaire détectée</SelectItem>
+                          <SelectItem value="price_below">Prix inférieur à</SelectItem>
+                          <SelectItem value="price_above">Prix supérieur à</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {(alertType === 'price_below' || alertType === 'price_above') && (
+                      <div>
+                        <Label>Seuil de prix (€)</Label>
+                        <Input
+                          type="number"
+                          placeholder="200"
+                          value={priceThreshold}
+                          onChange={(e) => setPriceThreshold(e.target.value)}
+                          className="mt-2"
+                        />
+                      </div>
+                    )}
+                    <div className="flex gap-3 pt-4">
+                      <Button onClick={handleCreateAlert} disabled={!selectedModelId || createAlert.isPending} className="flex-1">
+                        {createAlert.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        Créer l'alerte
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowAddAlertDialog(false)}>Annuler</Button>
+                    </div>
                   </div>
-
-                  <div>
-                    <Label htmlFor="alert-type">Type d'alerte</Label>
-                    <Select value={alertType} onValueChange={v => setAlertType(v as any)}>
-                      <SelectTrigger id="alert-type" className="bg-background mt-2">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        <SelectItem value="below">Baisse de prix uniquement</SelectItem>
-                        <SelectItem value="above">Hausse de prix uniquement</SelectItem>
-                        <SelectItem value="both">Baisse et hausse</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
-                    <Button onClick={handleAddToWatchlist} disabled={!selectedModelToAdd} className="flex-1">
-                      Ajouter
-                    </Button>
-                    <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-                      Annuler
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
 
-          {alerts.length > 0 && <Card className="border-primary/20 bg-primary/5">
+          {/* Active Alerts */}
+          {alerts.length > 0 && (
+            <Card className="border-warning/20 bg-warning/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-primary" />
-                  Alertes récentes ({alerts.filter(a => a.isNew).length} nouvelles)
+                  <Bell className="h-5 w-5 text-warning" />
+                  Alertes configurées ({alerts.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {alerts.map(alert => {
-                const model = mockModels.find(m => m.id === alert.modelId);
-                return <motion.div key={alert.id} initial={{
-                  opacity: 0,
-                  x: -20
-                }} animate={{
-                  opacity: 1,
-                  x: 0
-                }} className={`flex items-start gap-3 p-3 rounded-lg border ${alert.isNew ? "bg-background border-primary/30" : "bg-muted/50"}`}>
-                        <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${alert.type === "price_drop" ? "bg-success/10" : "bg-primary/10"}`}>
-                          {alert.type === "price_drop" ? <TrendingDown className="h-5 w-5 text-success" /> : <AlertCircle className="h-5 w-5 text-primary" />}
+                  {alerts.map((alert) => (
+                    <motion.div
+                      key={alert.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${alert.is_active ? 'bg-background' : 'bg-muted/50 opacity-60'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${alert.is_active ? 'bg-warning/10' : 'bg-muted'}`}>
+                          <Bell className={`h-5 w-5 ${alert.is_active ? 'text-warning' : 'text-muted-foreground'}`} />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{model?.name}</span>
-                            {alert.isNew && <Badge variant="default" className="text-xs">
-                                Nouveau
-                              </Badge>}
-                          </div>
-                          <p className="text-sm text-muted-foreground">{alert.message}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(alert.date).toLocaleDateString("fr-FR")}
+                        <div>
+                          <p className="font-medium">{alert.target_name || `#${alert.target_id}`}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {alert.alert_type === 'price_below' && alert.price_threshold
+                              ? `Prix < ${alert.price_threshold}€`
+                              : alert.alert_type === 'price_above' && alert.price_threshold
+                              ? `Prix > ${alert.price_threshold}€`
+                              : 'Deal détecté'}
                           </p>
                         </div>
-                        <Button size="sm" variant="outline" onClick={() => handleLaunchScan(alert.modelId)}>
-                          Scanner
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant={alert.is_active ? "outline" : "default"}
+                          onClick={() => handleToggleAlert(alert.id, alert.is_active)}
+                          disabled={updateAlert.isPending}
+                        >
+                          {alert.is_active ? 'Désactiver' : 'Activer'}
                         </Button>
-                      </motion.div>;
-              })}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleDeleteAlert(alert.id)}
+                          disabled={deleteAlert.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </CardContent>
-            </Card>}
+            </Card>
+          )}
 
-          <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid lg:grid-cols-2 gap-6">
-            {watchlistItems.map(item => {
-            const model = mockModels.find(m => m.id === item.modelId);
-            if (!model) return null;
-            return <motion.div key={item.modelId} variants={itemVariants}>
+          {/* Watchlist Items */}
+          {loadingWatchlist ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : watchlistItems.length > 0 ? (
+            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid lg:grid-cols-2 gap-4">
+              {watchlistItems.map((item) => (
+                <motion.div key={item.id} variants={itemVariants}>
                   <Card className="hover:border-primary/50 transition-colors">
-                    <CardHeader>
+                    <CardContent className="p-4">
                       <div className="flex items-start justify-between">
-                        <div className="flex-1">
+                        <Link to={item.target_type === 'model' ? `/models/${item.target_id}` : `/ads/${item.target_id}`} className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline">{model.category}</Badge>
-                            <Badge variant={item.alertType === "below" ? "default" : item.alertType === "above" ? "destructive" : "secondary"} className="gap-1">
-                              <Bell className="h-3 w-3" />
-                              {item.alertType === "below" ? "Baisse" : item.alertType === "above" ? "Hausse" : "Les deux"}
-                            </Badge>
+                            <Badge variant="outline">{item.category || item.target_type}</Badge>
+                            {item.brand && <Badge variant="secondary">{item.brand}</Badge>}
                           </div>
-                          <CardTitle className="text-lg mb-1">{model.name}</CardTitle>
-                          <p className="text-sm text-muted-foreground">{model.brand}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold">{model.medianPrice}€</div>
-                          <div className={`text-sm font-medium flex items-center gap-1 justify-end ${model.priceChange7d < 0 ? "text-success" : "text-destructive"}`}>
-                            {model.priceChange7d < 0 ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
-                            {model.priceChange7d.toFixed(1)}%
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <div className="text-xs text-muted-foreground mb-2">
-                            Évolution du prix (30j)
-                          </div>
-                          <ResponsiveContainer width="100%" height={100}>
-                            <LineChart data={model.priceHistory}>
-                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
-                              <XAxis dataKey="date" className="text-xs" hide />
-                              <YAxis className="text-xs" hide />
-                              <Tooltip contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "var(--radius)"
-                          }} formatter={(value: number) => [`${value}€`, "Prix"]} />
-                              <Line type="monotone" dataKey="price" stroke={model.priceChange30d < 0 ? "hsl(var(--success))" : "hsl(var(--destructive))"} strokeWidth={2} dot={false} />
-                            </LineChart>
-                          </ResponsiveContainer>
-                        </div>
-
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center justify-between text-sm mb-2">
-                            <span className="text-muted-foreground">Seuil d'alerte</span>
-                            <span className="font-semibold">±{item.alertThreshold}%</span>
-                          </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Suivi depuis</span>
-                            <span className="font-semibold">
-                              {new Date(item.addedAt).toLocaleDateString("fr-FR")}
-                            </span>
-                          </div>
-                          {item.lastNotification && <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t">
-                              <span className="text-muted-foreground">Dernière alerte</span>
-                              <span className="font-semibold text-primary">
-                                {new Date(item.lastNotification).toLocaleDateString("fr-FR")}
-                              </span>
-                            </div>}
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => handleLaunchScan(item.modelId)}>
-                            <Zap className="h-4 w-4" />
-                            Scanner
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleEditItem(item)}>
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleRemoveItem(item.modelId)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                          <h3 className="font-semibold mb-1">{item.name || `#${item.target_id}`}</h3>
+                          {item.current_price && (
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl font-bold">{item.current_price}€</span>
+                              {item.price_change_7d !== undefined && (
+                                <span className={`text-sm font-medium flex items-center gap-1 ${item.price_change_7d < 0 ? 'text-success' : 'text-destructive'}`}>
+                                  {item.price_change_7d < 0 ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
+                                  {item.price_change_7d.toFixed(1)}%
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </Link>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleRemoveFromWatchlist(item.id)}
+                          disabled={removeFromWatchlist.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>;
-          })}
-          </motion.div>
-
-          {/* Edit Dialog */}
-          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Modifier les paramètres d'alerte</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="edit-threshold">Seuil d'alerte (%)</Label>
-                  <Input id="edit-threshold" type="number" value={alertThreshold} onChange={e => setAlertThreshold(e.target.value)} className="mt-2" />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit-alert-type">Type d'alerte</Label>
-                  <Select value={alertType} onValueChange={v => setAlertType(v as any)}>
-                    <SelectTrigger id="edit-alert-type" className="bg-background mt-2">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      <SelectItem value="below">Baisse de prix uniquement</SelectItem>
-                      <SelectItem value="above">Hausse de prix uniquement</SelectItem>
-                      <SelectItem value="both">Baisse et hausse</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button onClick={handleSaveEdit} className="flex-1">
-                    Enregistrer
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                    Annuler
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Eye className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Watchlist vide</h3>
+                <p className="text-muted-foreground text-center mb-4">
+                  Ajoutez des modèles pour suivre leurs prix
+                </p>
+                <Button onClick={() => setShowAddWatchlistDialog(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter un modèle
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">Notifications</h2>
-              <p className="text-muted-foreground">
-                {unreadCount > 0 ? `${unreadCount} notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}` : 'Aucune notification non lue'}
-              </p>
-            </div>
-            {unreadCount > 0 && <Button variant="outline" onClick={markAllAsRead}>
-                <CheckCircle2 className="h-4 w-4 mr-2" />
+            <p className="text-muted-foreground">
+              {unreadCount > 0 ? `${unreadCount} notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}` : 'Toutes les notifications sont lues'}
+            </p>
+            {unreadCount > 0 && (
+              <Button variant="outline" size="sm" onClick={handleMarkAllAsRead} disabled={markAllRead.isPending}>
+                {markAllRead.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Tout marquer comme lu
-              </Button>}
+              </Button>
+            )}
           </div>
 
-          {notifications.length === 0 ? <Card>
+          {loadingNotifications ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : notifications.length > 0 ? (
+            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-3">
+              {notifications.map((notif) => (
+                <motion.div
+                  key={notif.id}
+                  variants={itemVariants}
+                  className={`flex items-start gap-4 p-4 rounded-lg border ${!notif.is_read ? 'bg-primary/5 border-primary/20' : 'bg-muted/30'}`}
+                >
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${!notif.is_read ? 'bg-primary/10' : 'bg-muted'}`}>
+                    {getNotificationIcon(notif.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium">{notif.title}</h4>
+                      {!notif.is_read && <Badge variant="default" className="text-xs">Nouveau</Badge>}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{notif.message}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: fr })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!notif.is_read && (
+                      <Button size="icon" variant="ghost" onClick={() => handleMarkAsRead(notif.id)} disabled={markRead.isPending}>
+                        <CheckCircle2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {notif.link && (
+                      <Link to={notif.link}>
+                        <Button size="sm" variant="outline">Voir</Button>
+                      </Link>
+                    )}
+                    <Button size="icon" variant="ghost" onClick={() => handleDeleteNotification(notif.id)} disabled={deleteNotification.isPending}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <Card className="border-dashed">
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Bell className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Aucune notification</h3>
                 <p className="text-muted-foreground text-center">
-                  Aucune notification pour le moment
+                  Vos notifications apparaîtront ici
                 </p>
               </CardContent>
-            </Card> : <div className="space-y-3">
-              {notifications.map(notification => <Card key={notification.id} className={`transition-colors ${!notification.is_read ? 'border-primary/50 bg-primary/5' : ''}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${!notification.is_read ? 'bg-primary/10' : 'bg-muted'}`}>
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <h3 className={`font-semibold ${!notification.is_read ? 'text-primary' : ''}`}>
-                            {notification.title}
-                          </h3>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            {!notification.is_read && <Button size="sm" variant="ghost" onClick={() => markAsRead(notification.id)}>
-                                <Check className="h-4 w-4" />
-                              </Button>}
-                            <Button size="sm" variant="ghost" onClick={() => deleteNotification(notification.id)}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {notification.message}
-                        </p>
-                        
-                        <div className="flex items-center gap-4">
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(notification.created_at), "dd MMM yyyy 'à' HH:mm", {
-                        locale: fr
-                      })}
-                          </span>
-                          
-                          {notification.link && <Button size="sm" variant="link" className="h-auto p-0 text-xs" onClick={() => window.location.href = notification.link!}>
-                              Voir détails →
-                            </Button>}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>)}
-            </div>}
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
-      <ScrapModal open={showScrapModal} onOpenChange={setShowScrapModal} preselectedModel={selectedModelForScan} />
-    </div>;
+      <ScrapModal open={showScrapModal} onOpenChange={setShowScrapModal} />
+    </div>
+  );
 }

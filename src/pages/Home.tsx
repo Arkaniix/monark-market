@@ -4,6 +4,7 @@ import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
 import { PersonalStats } from "@/components/dashboard/PersonalStats";
 import { MarketOpportunities } from "@/components/dashboard/MarketOpportunities";
 import { RecommendedActions } from "@/components/dashboard/RecommendedActions";
+import { NotificationsWidget } from "@/components/dashboard/NotificationsWidget";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw } from "lucide-react";
@@ -99,6 +100,9 @@ export default function Home() {
         planName={userStats.planName}
         creditsRemaining={userStats.creditsRemaining}
       />
+
+      {/* Widget notifications, alertes, watchlist */}
+      <NotificationsWidget />
 
       {/* Vue globale personnelle */}
       <PersonalStats
