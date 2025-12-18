@@ -1,0 +1,653 @@
+// DataProvider types
+import type { DashboardOverview, Deal, PaginatedResponse } from "@/types/api";
+
+// ============= Common Types =============
+export interface ProviderResult<T> {
+  data: T | null;
+  error: string | null;
+  isLoading?: boolean;
+}
+
+// ============= Dashboard =============
+export type { DashboardOverview };
+
+// ============= Watchlist =============
+export interface WatchlistEntry {
+  id: number;
+  target_type: 'ad' | 'model';
+  target_id: number;
+  created_at: string;
+  name?: string;
+  brand?: string;
+  category?: string;
+  current_price?: number;
+  price_change_7d?: number;
+  fair_value?: number;
+}
+
+export interface WatchlistResponse {
+  items: WatchlistEntry[];
+  total: number;
+}
+
+// ============= Alerts =============
+export interface Alert {
+  id: number;
+  target_type: 'ad' | 'model';
+  target_id: number;
+  alert_type: 'price_drop' | 'price_threshold' | 'availability';
+  threshold_value?: number;
+  is_active: boolean;
+  created_at: string;
+  last_triggered_at?: string;
+  name?: string;
+}
+
+export interface AlertsResponse {
+  items: Alert[];
+  total: number;
+}
+
+export interface CreateAlertPayload {
+  target_type: 'ad' | 'model';
+  target_id: number;
+  alert_type: 'price_drop' | 'price_threshold' | 'availability';
+  threshold_value?: number;
+}
+
+export interface UpdateAlertPayload {
+  is_active?: boolean;
+  threshold_value?: number;
+}
+
+// ============= Notifications =============
+export interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  link?: string;
+}
+
+export interface NotificationsResponse {
+  items: Notification[];
+  total: number;
+  unread_count: number;
+}
+
+// ============= Deals =============
+export interface DealItem {
+  id: number;
+  title: string;
+  price: number;
+  fair_value: number;
+  deviation_pct: number;
+  city: string;
+  region: string;
+  condition: string;
+  category: string;
+  model_name: string;
+  platform: string;
+  url: string;
+  published_at: string;
+  score: number;
+}
+
+export interface DealsResponse {
+  items: DealItem[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface DealsFilters {
+  category?: string;
+  condition?: string;
+  region?: string;
+  price_min?: number;
+  price_max?: number;
+  deviation_min?: number;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+export interface MarketSummary {
+  total_ads: number;
+  total_opportunities: number;
+  median_price: number;
+  total_volume_24h: number;
+}
+
+// ============= Catalog =============
+export interface Category {
+  id: number;
+  name: string;
+  count: number;
+}
+
+export interface CatalogModel {
+  id: number;
+  name: string;
+  brand: string;
+  family: string | null;
+  category: string;
+  median_price: number;
+  var_7d_pct: number;
+  var_30d_pct: number;
+  volume: number;
+  liquidity: 'high' | 'medium' | 'low';
+  ads_count: number;
+}
+
+export interface CatalogResponse {
+  items: CatalogModel[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface CatalogFilters {
+  category?: string;
+  brand?: string;
+  family?: string;
+  search?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+export interface CatalogSummary {
+  total_models: number;
+  total_brands: number;
+  categories_count: number;
+  last_update: string;
+}
+
+// ============= Model Detail =============
+export interface ModelSpecs {
+  vram_gb?: number;
+  memory_type?: string;
+  tdp_w?: number;
+  release_date?: string;
+  chip?: string;
+  bus_width_bit?: number;
+}
+
+export interface ModelDetail {
+  id: number;
+  name: string;
+  brand: string;
+  family: string | null;
+  category: string;
+  aliases: string[];
+  specs: ModelSpecs;
+  market: {
+    median_price: number;
+    price_p25: number;
+    price_p75: number;
+    var_7d_pct: number;
+    var_30d_pct: number;
+    var_90d_pct: number;
+    volume: number;
+    ads_count: number;
+    median_days_to_sell: number;
+  };
+  is_in_watchlist: boolean;
+}
+
+export interface PriceHistoryPoint {
+  date: string;
+  price_median: number;
+  price_p25: number;
+  price_p75: number;
+  volume: number;
+}
+
+export interface ModelAd {
+  id: number;
+  title: string;
+  price: number;
+  condition: string;
+  city: string;
+  platform: string;
+  url: string;
+  published_at: string;
+  score: number;
+  deviation_pct: number;
+}
+
+export interface ModelAdsResponse {
+  items: ModelAd[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+// ============= Ad Detail =============
+export interface AdComponent {
+  type: string;
+  model: string;
+  brand: string;
+}
+
+export interface AdPricePoint {
+  date: string;
+  price: number;
+}
+
+export interface AdDetail {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  fair_value: number;
+  deviation_pct: number;
+  score: number;
+  condition: string;
+  city: string;
+  region: string;
+  postal_code: string;
+  platform: string;
+  url: string;
+  published_at: string;
+  first_seen_at: string;
+  last_seen_at: string;
+  status: string;
+  seller_type: string;
+  delivery_possible: boolean;
+  secured_payment: boolean;
+  model: {
+    id: number;
+    name: string;
+    brand: string;
+    category: string;
+  } | null;
+  components: AdComponent[];
+  images: string[];
+  is_in_watchlist: boolean;
+}
+
+export interface AdPriceHistory {
+  points: AdPricePoint[];
+}
+
+// ============= Estimator =============
+export interface ModelAutocomplete {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  full_name: string;
+}
+
+export interface EstimationRequest {
+  model_id: number;
+  state: string;
+  purchase_price: number;
+  region?: string;
+}
+
+export interface MarketSnapshot {
+  median_price: number;
+  var_30d_pct: number;
+  volume: number;
+  rarity_index: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+export interface EstimationResult {
+  model_id: number;
+  model_name: string;
+  category: string;
+  state: string;
+  region?: string;
+  market: MarketSnapshot;
+  estimate: {
+    buy_price: number;
+    sell_price_30d: number;
+    sell_price_90d: number;
+    profit_margin_pct: number;
+    resell_probability: number;
+    risk_level: 'low' | 'medium' | 'high';
+    advice: string;
+    badge: 'good' | 'caution' | 'risk';
+  };
+  trend_90d: number[];
+  volume_30d: number[];
+}
+
+export interface EstimationHistoryItem {
+  id: string;
+  date: string;
+  model: string;
+  category: string;
+  median_price: number;
+  buy_price: number;
+  margin_pct: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+export interface EstimationHistoryResponse {
+  items: EstimationHistoryItem[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface EstimatorStats {
+  last_recalc: string;
+  total_estimations: number;
+}
+
+// ============= Community =============
+export interface CommunityTask {
+  id: string;
+  model: string;
+  type: 'list_only' | 'open_on_new';
+  region: string | null;
+  pages_hint: string;
+  priority: 'high' | 'medium' | 'low';
+  context: string;
+  estimated_time_min: number;
+  credit_reward: number;
+}
+
+export interface AvailableTasksResponse {
+  active: boolean;
+  summary: {
+    pending_missions: number;
+    estimated_pages: number;
+    coverage_7d_pct: number;
+    credits_distributed_30d: number;
+  };
+  tasks: CommunityTask[];
+}
+
+export interface MyTask {
+  id: string;
+  date: string;
+  model: string;
+  type: 'list_only' | 'open_on_new';
+  pages_scanned: number;
+  ads_new: number;
+  ads_changed: number;
+  status: 'done' | 'expired' | 'failed' | 'in_progress';
+  credits_earned: number;
+  duration_seconds: number;
+}
+
+export interface MyTasksResponse {
+  items: MyTask[];
+  total: number;
+}
+
+export interface ClaimTaskRequest {
+  task_id: string;
+}
+
+export interface ClaimTaskResponse {
+  shard_id: string;
+  model: string;
+  type: 'list_only' | 'open_on_new';
+  region: string | null;
+  pages_from: number;
+  pages_to: number;
+  date_window: string;
+  recommended_delays: {
+    min_delay_page_ms: number;
+    max_delay_page_ms: number;
+  };
+  expires_at: string;
+  estimated_time_min: number;
+  credit_reward: number;
+}
+
+export interface CommunityStats {
+  total_contributors: number;
+  total_missions_30d: number;
+  total_pages_30d: number;
+  total_credits_30d: number;
+  your_rank: number;
+  your_percentile: number;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  user: string;
+  missions: number;
+  pages: number;
+  credits: number;
+  quality: number;
+  badge?: string;
+}
+
+export interface LeaderboardResponse {
+  items: LeaderboardEntry[];
+  period: '30d' | 'all';
+}
+
+// ============= Trends =============
+export interface TrendsMarketSummary {
+  median_price: number;
+  var_30d: number;
+  volume_total: number;
+  new_models: number;
+  offer_demand_ratio: number;
+  last_update: string;
+}
+
+export interface MarketTrendPoint {
+  date: string;
+  gpu: number;
+  cpu: number;
+  ram: number;
+  ssd: number;
+  cm: number;
+  global: number;
+}
+
+export interface VolumeTrendPoint {
+  date: string;
+  total: number;
+  gpu: number;
+  cpu: number;
+  ram: number;
+  ssd: number;
+  cm: number;
+}
+
+export interface TopModel {
+  model: string;
+  category: string;
+  var_30d_pct: number;
+  median: number;
+  volume: number;
+  brand: string;
+}
+
+export interface RegionStat {
+  region: string;
+  code: string;
+  median_price: number;
+  volume: number;
+  var_30d_pct: number;
+}
+
+export interface CategoryDetail {
+  category: string;
+  summary: string;
+  var_30d_pct: number;
+  median_price: number;
+  volume: number;
+  trend: 'up' | 'down' | 'stable';
+  top_models: TopModel[];
+  price_history: Array<{ date: string; price: number }>;
+  volume_history: Array<{ date: string; volume: number }>;
+}
+
+export interface TrendsData {
+  summary: TrendsMarketSummary;
+  marketTrends: MarketTrendPoint[];
+  volumeTrends: VolumeTrendPoint[];
+  topIncreases: TopModel[];
+  topDrops: TopModel[];
+  mostActive: TopModel[];
+  rareModels: TopModel[];
+  regionStats: RegionStat[];
+  categoryDetails: CategoryDetail[];
+  categoryVariations: Array<{ category: string; variation: number }>;
+}
+
+// ============= Training =============
+export interface UserProgress {
+  modules_completed: number[];
+  total_modules: number;
+  credits_earned: number;
+  hours_spent: number;
+}
+
+export interface TrainingModule {
+  id: number;
+  title: string;
+  description: string;
+  duration: string;
+  completed: boolean;
+  lessons: string[];
+  icon: string;
+}
+
+export interface TrainingFAQ {
+  question: string;
+  answer: string;
+}
+
+export interface TrainingData {
+  progress: UserProgress;
+  modules: TrainingModule[];
+  faq: TrainingFAQ[];
+}
+
+// ============= Jobs =============
+export interface ScrapStartRequest {
+  platform: string;
+  type: string;
+  keyword: string;
+  filters?: {
+    price_min?: number;
+    price_max?: number;
+    region?: string;
+    pages_target?: number;
+  };
+}
+
+export interface ScrapStartResponse {
+  job_id: number;
+  upload_token: string;
+  status: string;
+}
+
+export interface JobStatus {
+  id: number;
+  status: 'pending' | 'running' | 'done' | 'failed' | 'cancelled';
+  keyword: string;
+  platform: string;
+  type: string;
+  pages_target: number;
+  pages_scanned: number;
+  ads_found: number;
+  error_message?: string;
+  started_at?: string;
+  ended_at?: string;
+  created_at: string;
+}
+
+export interface UserJobsResponse {
+  items: JobStatus[];
+  total: number;
+}
+
+// ============= User =============
+export interface UserCredits {
+  credits_remaining: number;
+  plan_name: string;
+  credits_reset_date?: string;
+}
+
+// ============= DataProvider Interface =============
+export interface DataProvider {
+  // Dashboard
+  getDashboard(): Promise<DashboardOverview>;
+  
+  // Watchlist
+  getWatchlist(): Promise<WatchlistResponse>;
+  addToWatchlist(data: { target_type: 'ad' | 'model'; target_id: number }): Promise<void>;
+  removeFromWatchlist(id: number): Promise<void>;
+  
+  // Alerts
+  getAlerts(): Promise<AlertsResponse>;
+  createAlert(data: CreateAlertPayload): Promise<Alert>;
+  updateAlert(id: number, data: UpdateAlertPayload): Promise<Alert>;
+  deleteAlert(id: number): Promise<void>;
+  
+  // Notifications
+  getNotifications(limit?: number): Promise<NotificationsResponse>;
+  markNotificationRead(id: string): Promise<void>;
+  markAllNotificationsRead(): Promise<void>;
+  deleteNotification(id: string): Promise<void>;
+  
+  // Deals
+  getDeals(filters: DealsFilters): Promise<DealsResponse>;
+  getMarketSummary(): Promise<MarketSummary>;
+  
+  // Catalog
+  getCategories(): Promise<Category[]>;
+  getBrands(category?: string): Promise<string[]>;
+  getFamilies(brand?: string): Promise<string[]>;
+  getCatalogModels(filters: CatalogFilters): Promise<CatalogResponse>;
+  getCatalogSummary(): Promise<CatalogSummary>;
+  
+  // Model Detail
+  getModelDetail(modelId: string): Promise<ModelDetail>;
+  getModelPriceHistory(modelId: string, period?: '7' | '30' | '90'): Promise<PriceHistoryPoint[]>;
+  getModelAds(modelId: string, page?: number, limit?: number): Promise<ModelAdsResponse>;
+  toggleModelWatchlist(modelId: number, add: boolean): Promise<void>;
+  createPriceAlert(modelId: number, threshold: number): Promise<void>;
+  
+  // Ad Detail
+  getAdDetail(adId: string): Promise<AdDetail>;
+  getAdPriceHistory(adId: string): Promise<AdPriceHistory>;
+  
+  // Estimator
+  getModelsAutocomplete(search: string): Promise<ModelAutocomplete[]>;
+  runEstimation(data: EstimationRequest): Promise<EstimationResult>;
+  getEstimationHistory(page?: number, limit?: number): Promise<EstimationHistoryResponse>;
+  getEstimatorStats(): Promise<EstimatorStats>;
+  
+  // Community
+  getAvailableTasks(): Promise<AvailableTasksResponse>;
+  getMyTasks(): Promise<MyTasksResponse>;
+  claimTask(data: ClaimTaskRequest): Promise<ClaimTaskResponse>;
+  getCommunityStats(): Promise<CommunityStats>;
+  getLeaderboard(period: '30d' | 'all'): Promise<LeaderboardResponse>;
+  
+  // Trends
+  getTrends(period?: '7' | '30' | '90' | '180'): Promise<TrendsData>;
+  
+  // Training
+  getTrainingData(): Promise<TrainingData>;
+  completeModule(moduleId: number): Promise<void>;
+  
+  // Jobs
+  startScrap(data: ScrapStartRequest): Promise<ScrapStartResponse>;
+  getJobStatus(jobId: number): Promise<JobStatus>;
+  cancelJob(jobId: number): Promise<void>;
+  getUserJobs(limit?: number): Promise<UserJobsResponse>;
+  
+  // User
+  getUserCredits(): Promise<UserCredits>;
+}
