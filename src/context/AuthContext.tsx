@@ -1,5 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { apiFetch, getAccessToken, setTokens, clearTokens } from "@/lib/api";
+import { 
+  isMockMode, 
+  mockLogin, 
+  mockRegister, 
+  mockGetCurrentUser, 
+  setMockCurrentUser 
+} from "@/lib/mockAuth";
 
 export interface User {
   id: string;
@@ -51,6 +58,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const refreshMe = useCallback(async () => {
+    // Mock mode: check localStorage for mock user
+    if (isMockMode()) {
+      const mockUser = await mockGetCurrentUser();
+      if (mockUser) {
+        setUser(mockUser);
+        setIsAdmin(mockUser.is_admin || mockUser.role === "admin");
+      } else {
+        setUser(null);
+        setIsAdmin(false);
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    // API mode: use real token
     const token = getAccessToken();
     if (!token) {
       setUser(null);
@@ -78,6 +100,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshMe]);
 
   const login = async (email: string, password: string) => {
+    // Mock mode
+    if (isMockMode()) {
+      const response = await mockLogin(email, password);
+      setTokens({
+        access: response.access_token,
+        refresh: response.refresh_token,
+      });
+      setMockCurrentUser(response.user);
+      setUser(response.user);
+      setIsAdmin(response.user.is_admin || response.user.role === "admin");
+      return;
+    }
+
+    // API mode
     const response = await apiFetch<LoginResponse>("/v1/auth/login", {
       method: "POST",
       body: { email, password },
@@ -94,6 +130,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (data: RegisterData) => {
+    // Mock mode
+    if (isMockMode()) {
+      const response = await mockRegister(data);
+      setTokens({
+        access: response.access_token,
+        refresh: response.refresh_token,
+      });
+      setMockCurrentUser(response.user);
+      setUser(response.user);
+      setIsAdmin(response.user.is_admin || response.user.role === "admin");
+      return;
+    }
+
+    // API mode
     const response = await apiFetch<RegisterResponse>("/v1/auth/register", {
       method: "POST",
       body: data,
@@ -111,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     clearTokens();
+    setMockCurrentUser(null);
     setUser(null);
     setIsAdmin(false);
   };
