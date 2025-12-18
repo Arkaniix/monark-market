@@ -1,121 +1,26 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
-import { Search } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, ChevronLeft, ChevronRight, Loader2, FileText, Eye } from "lucide-react";
+import { useAdminLogs, SystemLog } from "@/hooks/useAdmin";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export default function AdminLogs() {
-  const [systemLogs, setSystemLogs] = useState<any[]>([]);
-  const [actionLogs, setActionLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
-  const { toast } = useToast();
+  const [selectedLog, setSelectedLog] = useState<SystemLog | null>(null);
+  const limit = 50;
 
-  useEffect(() => {
-    fetchLogs();
-  }, []);
-
-  const fetchLogs = async () => {
-    try {
-      // Données factices pour les logs système
-      const mockSystemLogs = [
-        {
-          id: 1,
-          level: 'info',
-          message: 'Démarrage du service de scraping',
-          created_at: '2024-01-15T08:00:00',
-          context: { service: 'scraper', version: '2.1.0' }
-        },
-        {
-          id: 2,
-          level: 'warn',
-          message: 'Latence élevée détectée sur l\'API LeBonCoin',
-          created_at: '2024-01-15T14:23:00',
-          context: { latency_ms: 2500, threshold: 2000 }
-        },
-        {
-          id: 3,
-          level: 'error',
-          message: 'Échec de connexion à la base de données',
-          created_at: '2024-01-15T14:25:00',
-          context: { error: 'Connection timeout', retry_count: 3 }
-        },
-        {
-          id: 4,
-          level: 'info',
-          message: 'Recalcul des deal scores terminé',
-          created_at: '2024-01-15T03:15:00',
-          context: { ads_processed: 1247, duration_seconds: 45 }
-        }
-      ];
-
-      // Données factices pour les logs d'actions utilisateur
-      const mockActionLogs = [
-        {
-          id: 1,
-          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
-          action: 'job_created',
-          target_type: 'job',
-          target_id: '1',
-          created_at: '2024-01-15T14:30:00',
-          ip_address: '192.168.1.10',
-          profiles: { display_name: 'Etienne' }
-        },
-        {
-          id: 2,
-          user_id: 'da1fbc02-5140-4321-b36d-38d3c5ac8a4c',
-          action: 'subscription_upgraded',
-          target_type: 'subscription',
-          target_id: '2',
-          created_at: '2024-01-15T10:15:00',
-          ip_address: '192.168.1.25',
-          profiles: { display_name: 'Emre' }
-        },
-        {
-          id: 3,
-          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
-          action: 'profile_updated',
-          target_type: 'profile',
-          target_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
-          created_at: '2024-01-14T16:45:00',
-          ip_address: '192.168.1.10',
-          profiles: { display_name: 'Etienne' }
-        },
-        {
-          id: 4,
-          user_id: 'user-3',
-          action: 'ad_viewed',
-          target_type: 'ad',
-          target_id: '567',
-          created_at: '2024-01-14T12:30:00',
-          ip_address: '192.168.1.42',
-          profiles: { display_name: 'Jean Dupont' }
-        }
-      ];
-
-      setSystemLogs(mockSystemLogs);
-      setActionLogs(mockActionLogs);
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les logs",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredSystemLogs = systemLogs.filter(log => {
-    const matchesSearch = log.message?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLevel = levelFilter === "all" || log.level === levelFilter;
-    return matchesSearch && matchesLevel;
+  const { data, isLoading, isError } = useAdminLogs(page, limit, {
+    level: levelFilter,
+    search: searchTerm || undefined,
   });
 
   const getLevelColor = (level: string) => {
@@ -127,20 +32,42 @@ export default function AdminLogs() {
     }
   };
 
-  if (loading) {
-    return <div>Chargement...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
+
+  if (isError) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-destructive">Erreur lors du chargement des logs</p>
+          <p className="text-sm text-muted-foreground mt-2">L'endpoint /v1/admin/logs n'est peut-être pas disponible</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const logs = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">Logs & Audit</h2>
-        <p className="text-muted-foreground">Historique système et actions utilisateurs</p>
+        <p className="text-muted-foreground">Historique système (lecture seule)</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Logs système ({filteredSystemLogs.length})</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Logs système ({total})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-4">
@@ -149,11 +76,14 @@ export default function AdminLogs() {
               <Input
                 placeholder="Rechercher dans les logs..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
                 className="pl-10"
               />
             </div>
-            <Select value={levelFilter} onValueChange={setLevelFilter}>
+            <Select value={levelFilter} onValueChange={(v) => { setLevelFilter(v); setPage(1); }}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
@@ -169,65 +99,113 @@ export default function AdminLogs() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Niveau</TableHead>
+                <TableHead className="w-[100px]">Niveau</TableHead>
                 <TableHead>Message</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="w-[180px]">Date</TableHead>
+                <TableHead className="w-[80px]">Détails</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSystemLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>
-                    <Badge variant={getLevelColor(log.level)}>
-                      {log.level}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-lg truncate">{log.message}</TableCell>
-                  <TableCell className="text-xs">
-                    {new Date(log.created_at).toLocaleString('fr-FR')}
+              {logs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    Aucun log trouvé
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                logs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell>
+                      <Badge variant={getLevelColor(log.level)}>
+                        {log.level}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-lg truncate font-mono text-sm">
+                      {log.message}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {format(new Date(log.created_at), "dd MMM yyyy HH:mm:ss", { locale: fr })}
+                    </TableCell>
+                    <TableCell>
+                      {log.context && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setSelectedLog(log)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Page {page} sur {totalPages} ({total} logs)
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Suivant
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Actions utilisateurs</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Utilisateur</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Cible</TableHead>
-                <TableHead>IP</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {actionLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>{log.profiles?.display_name || 'Utilisateur'}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{log.action}</Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {log.target_type}: {log.target_id}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">{log.ip_address}</TableCell>
-                  <TableCell className="text-xs">
-                    {new Date(log.created_at).toLocaleString('fr-FR')}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Log Detail Dialog */}
+      <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Détail du Log</DialogTitle>
+          </DialogHeader>
+          {selectedLog && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge variant={getLevelColor(selectedLog.level)}>{selectedLog.level}</Badge>
+                <span className="text-sm text-muted-foreground">
+                  {format(new Date(selectedLog.created_at), "dd MMM yyyy HH:mm:ss", { locale: fr })}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Message</p>
+                <p className="font-mono text-sm bg-muted p-3 rounded-lg break-all">
+                  {selectedLog.message}
+                </p>
+              </div>
+              {selectedLog.context && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Context</p>
+                  <pre className="font-mono text-xs bg-muted p-3 rounded-lg overflow-auto max-h-[300px]">
+                    {JSON.stringify(selectedLog.context, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

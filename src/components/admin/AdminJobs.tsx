@@ -1,151 +1,31 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
-import { Search, RefreshCw, XCircle, Play } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, ChevronLeft, ChevronRight, Loader2, Eye, Briefcase } from "lucide-react";
+import { useAdminJobs, useAdminJobDetail, AdminJob } from "@/hooks/useAdmin";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export default function AdminJobs() {
-  const [jobs, setJobs] = useState<any[]>([]);
-  const [shards, setShards] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const { toast } = useToast();
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const limit = 20;
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      // Données factices pour les jobs
-      const mockJobs = [
-        {
-          id: 1,
-          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
-          keyword: 'RTX 4090',
-          type: 'fort',
-          status: 'completed',
-          pages_scanned: 50,
-          pages_target: 50,
-          ads_found: 142,
-          created_at: '2024-01-15T14:30:00',
-          profiles: { display_name: 'Etienne' }
-        },
-        {
-          id: 2,
-          user_id: 'da1fbc02-5140-4321-b36d-38d3c5ac8a4c',
-          keyword: 'RTX 3080',
-          type: 'faible',
-          status: 'running',
-          pages_scanned: 15,
-          pages_target: 30,
-          ads_found: 38,
-          created_at: '2024-01-15T16:00:00',
-          profiles: { display_name: 'Emre' }
-        },
-        {
-          id: 3,
-          user_id: 'user-3',
-          keyword: 'GTX 1080 Ti',
-          type: 'communautaire',
-          status: 'completed',
-          pages_scanned: 30,
-          pages_target: 30,
-          ads_found: 95,
-          created_at: '2024-01-14T10:20:00',
-          profiles: { display_name: 'Jean Dupont' }
-        },
-        {
-          id: 4,
-          user_id: 'b9d133e5-3bab-4140-ad4d-98115e932ab0',
-          keyword: 'AMD RX 7900 XTX',
-          type: 'faible',
-          status: 'failed',
-          pages_scanned: 5,
-          pages_target: 20,
-          ads_found: 2,
-          created_at: '2024-01-14T08:45:00',
-          profiles: { display_name: 'Etienne' }
-        },
-        {
-          id: 5,
-          user_id: 'da1fbc02-5140-4321-b36d-38d3c5ac8a4c',
-          keyword: 'RTX 4070 Ti',
-          type: 'fort',
-          status: 'pending',
-          pages_scanned: 0,
-          pages_target: 40,
-          ads_found: 0,
-          created_at: '2024-01-15T17:00:00',
-          profiles: { display_name: 'Emre' }
-        }
-      ];
-
-      // Données factices pour les shards
-      const mockShards = [
-        {
-          id: 1,
-          job_id: 3,
-          shard_kind: 'page_range',
-          shard_from: 1,
-          shard_to: 5,
-          region_code: null,
-          price_min: null,
-          price_max: null,
-          jobs: { keyword: 'GTX 1080 Ti', type: 'communautaire' }
-        },
-        {
-          id: 2,
-          job_id: 3,
-          shard_kind: 'page_range',
-          shard_from: 6,
-          shard_to: 10,
-          region_code: null,
-          price_min: null,
-          price_max: null,
-          jobs: { keyword: 'GTX 1080 Ti', type: 'communautaire' }
-        },
-        {
-          id: 3,
-          job_id: 3,
-          shard_kind: 'region',
-          shard_from: null,
-          shard_to: null,
-          region_code: 'ile-de-france',
-          price_min: 200,
-          price_max: 500,
-          jobs: { keyword: 'GTX 1080 Ti', type: 'communautaire' }
-        }
-      ];
-
-      setJobs(mockJobs);
-      setShards(mockShards);
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les jobs",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.keyword?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         job.profiles?.display_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || job.status === statusFilter;
-    const matchesType = typeFilter === "all" || job.type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+  const { data, isLoading, isError } = useAdminJobs(page, limit, {
+    status: statusFilter,
+    type: typeFilter,
+    search: searchTerm || undefined,
   });
+
+  const { data: jobDetail, isLoading: loadingDetail } = useAdminJobDetail(selectedJobId);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -153,6 +33,7 @@ export default function AdminJobs() {
       case 'running': return 'secondary';
       case 'failed': return 'destructive';
       case 'pending': return 'outline';
+      case 'cancelled': return 'outline';
       default: return 'outline';
     }
   };
@@ -166,20 +47,41 @@ export default function AdminJobs() {
     }
   };
 
-  if (loading) {
-    return <div>Chargement...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
+
+  if (isError) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-destructive">Erreur lors du chargement des jobs</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const jobs = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">Scraps & Jobs</h2>
-        <p className="text-muted-foreground">Gestion des jobs de scraping et shards communautaires</p>
+        <p className="text-muted-foreground">Gestion des jobs de scraping (lecture seule)</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Jobs ({filteredJobs.length})</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Briefcase className="h-5 w-5" />
+            Jobs ({total})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-4">
@@ -188,11 +90,14 @@ export default function AdminJobs() {
               <Input
                 placeholder="Rechercher par mot-clé ou utilisateur..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
                 className="pl-10"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
@@ -202,9 +107,10 @@ export default function AdminJobs() {
                 <SelectItem value="running">En cours</SelectItem>
                 <SelectItem value="completed">Terminé</SelectItem>
                 <SelectItem value="failed">Échoué</SelectItem>
+                <SelectItem value="cancelled">Annulé</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(1); }}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
@@ -220,6 +126,7 @@ export default function AdminJobs() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID</TableHead>
                 <TableHead>Utilisateur</TableHead>
                 <TableHead>Mot-clé</TableHead>
                 <TableHead>Type</TableHead>
@@ -227,64 +134,153 @@ export default function AdminJobs() {
                 <TableHead>Pages</TableHead>
                 <TableHead>Annonces</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredJobs.map((job) => (
-                <TableRow key={job.id}>
-                  <TableCell>{job.profiles?.display_name || 'Utilisateur'}</TableCell>
-                  <TableCell className="font-medium">{job.keyword}</TableCell>
-                  <TableCell>
-                    <Badge variant={getTypeColor(job.type)}>{job.type}</Badge>
+              {jobs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    Aucun job trouvé
                   </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusColor(job.status)}>{job.status}</Badge>
-                  </TableCell>
-                  <TableCell>{job.pages_scanned}/{job.pages_target || '-'}</TableCell>
-                  <TableCell>{job.ads_found}</TableCell>
-                  <TableCell>{new Date(job.created_at).toLocaleDateString('fr-FR')}</TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                jobs.map((job) => (
+                  <TableRow key={job.id}>
+                    <TableCell className="font-mono text-xs">#{job.id}</TableCell>
+                    <TableCell>{job.user_name || 'Utilisateur'}</TableCell>
+                    <TableCell className="font-medium max-w-[150px] truncate">{job.keyword}</TableCell>
+                    <TableCell>
+                      <Badge variant={getTypeColor(job.type)}>{job.type}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusColor(job.status)}>{job.status}</Badge>
+                    </TableCell>
+                    <TableCell>{job.pages_scanned}/{job.pages_target || '-'}</TableCell>
+                    <TableCell>{job.ads_found}</TableCell>
+                    <TableCell className="text-sm">
+                      {format(new Date(job.created_at), "dd/MM HH:mm", { locale: fr })}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setSelectedJobId(job.id)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Page {page} sur {totalPages} ({total} jobs)
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Suivant
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Shards Communautaires ({shards.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Job</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Plage</TableHead>
-                <TableHead>Région</TableHead>
-                <TableHead>Prix Min</TableHead>
-                <TableHead>Prix Max</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {shards.map((shard) => (
-                <TableRow key={shard.id}>
-                  <TableCell>{shard.jobs?.keyword}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{shard.shard_kind}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {shard.shard_from} - {shard.shard_to}
-                  </TableCell>
-                  <TableCell>{shard.region_code || 'N/A'}</TableCell>
-                  <TableCell>{shard.price_min || '-'}€</TableCell>
-                  <TableCell>{shard.price_max || '-'}€</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Job Detail Dialog */}
+      <Dialog open={!!selectedJobId} onOpenChange={(open) => !open && setSelectedJobId(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Détail du Job #{selectedJobId}</DialogTitle>
+          </DialogHeader>
+          {loadingDetail ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : jobDetail ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Utilisateur</p>
+                  <p className="font-medium">{jobDetail.user_name || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Plateforme</p>
+                  <p className="font-medium">{jobDetail.platform}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Mot-clé</p>
+                  <p className="font-medium">{jobDetail.keyword}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Type</p>
+                  <Badge variant={getTypeColor(jobDetail.type)}>{jobDetail.type}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Statut</p>
+                  <Badge variant={getStatusColor(jobDetail.status)}>{jobDetail.status}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Pages</p>
+                  <p className="font-medium">{jobDetail.pages_scanned} / {jobDetail.pages_target || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Annonces trouvées</p>
+                  <p className="font-medium">{jobDetail.ads_found}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Créé le</p>
+                  <p className="font-medium text-sm">
+                    {format(new Date(jobDetail.created_at), "dd MMM yyyy HH:mm", { locale: fr })}
+                  </p>
+                </div>
+                {jobDetail.started_at && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Démarré le</p>
+                    <p className="font-medium text-sm">
+                      {format(new Date(jobDetail.started_at), "dd MMM yyyy HH:mm", { locale: fr })}
+                    </p>
+                  </div>
+                )}
+                {jobDetail.ended_at && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Terminé le</p>
+                    <p className="font-medium text-sm">
+                      {format(new Date(jobDetail.ended_at), "dd MMM yyyy HH:mm", { locale: fr })}
+                    </p>
+                  </div>
+                )}
+              </div>
+              {jobDetail.error_message && (
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <p className="text-sm text-destructive font-medium">Erreur:</p>
+                  <p className="text-sm text-destructive">{jobDetail.error_message}</p>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
