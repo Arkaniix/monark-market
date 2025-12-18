@@ -87,6 +87,11 @@ export const routes: RouteConfig[] = [
     requiresAuth: true,
   },
   {
+    path: "/models/:id",
+    component: ModelDetail,
+    requiresAuth: true,
+  },
+  {
     path: "/pc/:id",
     component: PCDetail,
     requiresAuth: true,
@@ -98,6 +103,11 @@ export const routes: RouteConfig[] = [
   },
   {
     path: "/ad/:id",
+    component: AdDetail,
+    requiresAuth: true,
+  },
+  {
+    path: "/ads/:id",
     component: AdDetail,
     requiresAuth: true,
   },
