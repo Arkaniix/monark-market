@@ -113,11 +113,20 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
+    // Dev-only: log provider mode
+    if (import.meta.env.DEV) {
+      console.log(`[Auth] Login attempt | Provider: ${isMockMode ? 'mock' : 'api'} | Email: ${email}`);
+    }
+
     try {
       emailSchema.parse(email);
       passwordSchema.parse(password);
 
       await login(email, password);
+      
+      if (import.meta.env.DEV) {
+        console.log(`[Auth] Login success | Provider: ${isMockMode ? 'mock' : 'api'}`);
+      }
       
       toast({
         title: "Connecté",
@@ -126,6 +135,17 @@ export default function Auth() {
       
       navigate("/");
     } catch (error) {
+      // Dev-only: detailed error logging
+      if (import.meta.env.DEV) {
+        if (error instanceof ApiException) {
+          console.error(`[Auth] Login error | Provider: api | Status: ${error.status} | Endpoint: /v1/auth/login | Message: ${error.message}`);
+        } else if (error instanceof Error) {
+          console.error(`[Auth] Login error | Provider: ${isMockMode ? 'mock' : 'api'} | Message: ${error.message}`);
+        } else {
+          console.error(`[Auth] Login error | Provider: ${isMockMode ? 'mock' : 'api'} | Unknown error:`, error);
+        }
+      }
+
       if (error instanceof z.ZodError) {
         toast({
           title: "Erreur de validation",
