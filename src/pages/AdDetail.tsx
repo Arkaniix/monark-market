@@ -1,106 +1,203 @@
 import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceLine,
-  ReferenceDot,
 } from "recharts";
 import {
   ArrowLeft,
   MapPin,
   Calendar,
-  Package,
   Truck,
-  User,
-  Eye,
-  Share2,
   ExternalLink,
   TrendingDown,
   TrendingUp,
   CheckCircle2,
   AlertCircle,
   Flame,
-  Star,
+  Heart,
   Bell,
-  Flag,
-  Calculator,
-  ShieldAlert,
-  CreditCard,
-  MapPinned,
+  Share2,
   Info,
+  Clock,
+  Cpu,
+  Monitor,
+  Package,
 } from "lucide-react";
-import { toast } from "sonner";
-import {
-  mockAdDetail,
-  mockPriceHistory,
-  mockSimilarAds,
-  mockMarketComparison,
-  mockModelPriceSeries,
-  getStatusBadge,
-  getStateLabel,
-  getScoreColor,
-  getPriceDifference,
-  generateAnalysis,
-} from "@/lib/adDetailMockData";
+import { useAdDetail, useAdPriceHistory, useAddAdToWatchlist, useCreateAdAlert } from "@/hooks/useAdDetail";
+import { AdDetailSkeleton } from "@/components/ad/AdDetailSkeleton";
+import { toast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export default function AdDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const [inWatchlist, setInWatchlist] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [showAlertDialog, setShowAlertDialog] = useState(false);
+  const [alertType, setAlertType] = useState<'deal_detected' | 'price_below'>('price_below');
+  const [priceThreshold, setPriceThreshold] = useState("");
 
-  // Use mock data (in real app, fetch by id)
-  const ad = mockAdDetail;
-  const statusBadge = getStatusBadge(ad.status);
-  const priceDiff = getPriceDifference(ad.price, ad.price_median_model);
-  const analysis = generateAnalysis(ad);
+  // API queries
+  const { data: ad, isLoading: adLoading, error: adError } = useAdDetail(id);
+  const { data: priceHistory, isLoading: historyLoading } = useAdPriceHistory(id);
+  const addToWatchlist = useAddAdToWatchlist();
+  const createAlert = useCreateAdAlert();
 
-  const handleToggleWatchlist = () => {
-    setInWatchlist(!inWatchlist);
-    toast.success(inWatchlist ? "Retiré de la watchlist" : "Ajouté à la watchlist");
+  const handleToggleWatchlist = async () => {
+    if (!ad) return;
+    try {
+      await addToWatchlist.mutateAsync(ad.id);
+      setIsInWatchlist(true);
+      toast({
+        title: "Ajouté à la watchlist",
+        description: "L'annonce a été ajoutée à votre watchlist.",
+      });
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter à la watchlist.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleCreateAlert = () => {
-    toast.success("Alerte créée pour ce modèle");
-  };
-
-  const handleEstimate = () => {
-    navigate(`/estimator?model=${ad.model_id}`);
-  };
-
-  const handleReport = () => {
-    toast.info("Signalement envoyé à l'équipe modération");
+  const handleCreateAlert = async () => {
+    if (!ad) return;
+    try {
+      await createAlert.mutateAsync({
+        target_type: 'ad',
+        target_id: ad.id,
+        alert_type: alertType,
+        price_threshold: priceThreshold ? Number(priceThreshold) : undefined,
+      });
+      setShowAlertDialog(false);
+      toast({
+        title: "Alerte créée",
+        description: alertType === 'price_below' 
+          ? `Vous serez notifié si le prix passe sous ${priceThreshold}€.`
+          : "Vous serez notifié si un deal est détecté.",
+      });
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer l'alerte.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    toast.success("Lien copié dans le presse-papier");
+    toast({
+      title: "Lien copié",
+      description: "Le lien a été copié dans le presse-papier.",
+    });
   };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return { label: 'Active', variant: 'default' as const };
+      case 'sold':
+        return { label: 'Vendue', variant: 'secondary' as const };
+      case 'expired':
+        return { label: 'Expirée', variant: 'outline' as const };
+      default:
+        return { label: status, variant: 'outline' as const };
+    }
+  };
+
+  const getConditionLabel = (condition: string | null) => {
+    if (!condition) return 'Non spécifié';
+    const labels: Record<string, string> = {
+      'neuf': 'Neuf',
+      'comme_neuf': 'Comme neuf',
+      'bon': 'Bon état',
+      'correct': 'État correct',
+      'à_réparer': 'À réparer',
+    };
+    return labels[condition] || condition;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  if (adLoading) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container max-w-7xl">
+          <Button variant="ghost" className="mb-6 gap-2" asChild>
+            <Link to="/deals">
+              <ArrowLeft className="h-4 w-4" />
+              Retour aux deals
+            </Link>
+          </Button>
+          <AdDetailSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (adError || !ad) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container max-w-7xl">
+          <Button variant="ghost" className="mb-6 gap-2" asChild>
+            <Link to="/deals">
+              <ArrowLeft className="h-4 w-4" />
+              Retour aux deals
+            </Link>
+          </Button>
+          <Card className="p-12">
+            <div className="text-center text-muted-foreground">
+              <p className="mb-4">Annonce non trouvée.</p>
+              <Button variant="outline" asChild>
+                <Link to="/deals">Retour aux deals</Link>
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const statusBadge = getStatusBadge(ad.status);
+  const priceDiff = ad.fair_value && ad.deviation_pct 
+    ? { percent: ad.deviation_pct, isGoodDeal: ad.deviation_pct < 0 }
+    : null;
 
   return (
     <div className="min-h-screen py-8">
       <div className="container max-w-7xl">
         {/* Back Button */}
-        <Link to="/deals">
-          <Button variant="ghost" className="mb-6 gap-2">
+        <Button variant="ghost" className="mb-6 gap-2" asChild>
+          <Link to="/deals">
             <ArrowLeft className="h-4 w-4" />
             Retour aux deals
-          </Button>
-        </Link>
+          </Link>
+        </Button>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -112,169 +209,237 @@ export default function AdDetail() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-2 mb-3">
-                        <Badge variant="outline">{ad.category}</Badge>
-                        <Badge variant={statusBadge.variant} className={statusBadge.color}>
-                          {statusBadge.label}
-                        </Badge>
-                        <Badge variant={ad.score_market >= 80 ? "default" : "secondary"}>
-                          {ad.score_market >= 85 && <Flame className="h-3 w-3 mr-1" />}
-                          Score: {ad.score_market}/100
-                        </Badge>
-                        <Badge variant="secondary">{getStateLabel(ad.state)}</Badge>
+                        {ad.category && <Badge variant="outline">{ad.category}</Badge>}
+                        <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                        {ad.score && (
+                          <Badge variant={ad.score >= 80 ? "default" : "secondary"}>
+                            {ad.score >= 85 && <Flame className="h-3 w-3 mr-1" />}
+                            Score: {ad.score}/100
+                          </Badge>
+                        )}
+                        {ad.item_type !== 'component' && (
+                          <Badge variant="secondary" className="gap-1">
+                            {ad.item_type === 'pc' ? <Monitor className="h-3 w-3" /> : <Package className="h-3 w-3" />}
+                            {ad.item_type === 'pc' ? 'PC complet' : 'Lot'}
+                          </Badge>
+                        )}
                       </div>
-                      <h1 className="text-3xl font-bold mb-2">
-                        {ad.category} d'occasion ({getStateLabel(ad.state)}) – {ad.model_name}
-                      </h1>
+                      <h1 className="text-2xl font-bold mb-2">{ad.title}</h1>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>Référence: #{ad.ad_id}</span>
+                        <span>Plateforme: {ad.platform}</span>
+                        <span>•</span>
+                        <span>Réf: #{ad.platform_ad_id}</span>
+                      </div>
+                      {ad.model_name && (
                         <Link
-                          to={`/model/${ad.model_id}`}
-                          className="text-primary hover:underline flex items-center gap-1"
+                          to={`/models/${ad.model_id}`}
+                          className="text-primary hover:underline flex items-center gap-1 text-sm mt-2"
                         >
-                          Voir fiche modèle
+                          Voir fiche modèle: {ad.model_name}
                           <ExternalLink className="h-3 w-3" />
                         </Link>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Actualisée il y a{" "}
-                        {Math.round(
-                          (Date.now() - new Date(ad.last_seen).getTime()) / (1000 * 60 * 60)
-                        )}{" "}
-                        h
-                      </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <div className="text-4xl font-bold text-primary">{ad.price} €</div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        Médiane marché: {ad.price_median_model} €
-                      </div>
-                      <Badge variant={priceDiff.isGoodDeal ? "default" : "destructive"} className="mt-2">
-                        {priceDiff.label}
-                      </Badge>
+                      {ad.fair_value && (
+                        <div className="text-sm text-muted-foreground mt-1">
+                          Fair Value: {ad.fair_value} €
+                        </div>
+                      )}
+                      {priceDiff && (
+                        <Badge variant={priceDiff.isGoodDeal ? "default" : "destructive"} className="mt-2">
+                          {priceDiff.isGoodDeal ? (
+                            <TrendingDown className="h-3 w-3 mr-1" />
+                          ) : (
+                            <TrendingUp className="h-3 w-3 mr-1" />
+                          )}
+                          {priceDiff.percent > 0 ? '+' : ''}{priceDiff.percent.toFixed(1)}%
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
               </Card>
             </motion.div>
 
-            {/* Price & Analysis */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            {/* Description */}
+            {ad.description && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Description</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{ad.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Price History */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingDown className="h-5 w-5" />
-                    Prix et analyse
+                    Historique des prix
                   </CardTitle>
+                  {priceHistory && (
+                    <CardDescription>
+                      {priceHistory.price_drops_count} baisse{priceHistory.price_drops_count > 1 ? 's' : ''} de prix détectée{priceHistory.price_drops_count > 1 ? 's' : ''}
+                    </CardDescription>
+                  )}
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Price comparison */}
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-1">Prix actuel</div>
-                      <div className="text-2xl font-bold text-primary">{ad.price} €</div>
+                <CardContent>
+                  {historyLoading ? (
+                    <div className="h-[200px] flex items-center justify-center">
+                      <p className="text-muted-foreground">Chargement...</p>
                     </div>
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-1">Prix médian modèle</div>
-                      <div className="text-2xl font-bold">{ad.price_median_model} €</div>
-                    </div>
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <div className="text-sm text-muted-foreground mb-1">Écart</div>
-                      <div className={`text-2xl font-bold ${priceDiff.color}`}>
-                        {priceDiff.diffPercent} %
+                  ) : priceHistory?.items.length ? (
+                    <>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <LineChart data={priceHistory.items}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis
+                            dataKey="seen_at"
+                            tickFormatter={(v) => new Date(v).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                            className="text-xs"
+                          />
+                          <YAxis className="text-xs" />
+                          <Tooltip
+                            labelFormatter={(v) => formatDate(v)}
+                            formatter={(value: number) => [`${value} €`, "Prix"]}
+                          />
+                          <Line
+                            type="stepAfter"
+                            dataKey="price"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2}
+                            dot={(props) => {
+                              const { cx, cy, payload } = props;
+                              if (payload.price_drop) {
+                                return (
+                                  <circle cx={cx} cy={cy} r={6} fill="hsl(var(--success))" stroke="white" strokeWidth={2} />
+                                );
+                              }
+                              return <circle cx={cx} cy={cy} r={4} fill="hsl(var(--primary))" />;
+                            }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                      <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
+                        <span>Prix initial: {priceHistory.initial_price}€</span>
+                        <span>•</span>
+                        <span>Prix actuel: {priceHistory.current_price}€</span>
+                        {priceHistory.initial_price > priceHistory.current_price && (
+                          <>
+                            <span>•</span>
+                            <span className="text-success">
+                              Économie: {priceHistory.initial_price - priceHistory.current_price}€
+                            </span>
+                          </>
+                        )}
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Additional metrics */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Tendance marché (30j)</span>
-                        <span className="font-semibold flex items-center gap-1">
-                          {ad.var_market_30d_pct < 0 ? (
-                            <TrendingDown className="h-4 w-4 text-success" />
-                          ) : (
-                            <TrendingUp className="h-4 w-4 text-destructive" />
-                          )}
-                          {ad.var_market_30d_pct.toFixed(1)} %
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Indice de rareté</span>
-                        <div className="flex items-center gap-2 flex-1 max-w-[200px]">
-                          <Progress value={ad.rarity_index * 100} className="h-2" />
-                          <span className="font-semibold text-xs">{(ad.rarity_index * 100).toFixed(0)}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Note d'attractivité</span>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-primary text-primary" />
-                          <span className="font-semibold">
-                            {(ad.score_market / 20).toFixed(1)}/5
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    </>
+                  ) : (
                     <Alert>
                       <Info className="h-4 w-4" />
-                      <AlertDescription className="text-sm">{analysis}</AlertDescription>
+                      <AlertDescription>
+                        Historique des prix indisponible pour cette annonce.
+                      </AlertDescription>
                     </Alert>
-                  </div>
-
-                  {/* Mini price history chart */}
-                  <div>
-                    <h4 className="text-sm font-semibold mb-3">Historique de prix</h4>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <LineChart data={mockPriceHistory}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                        <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px",
-                          }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="price"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          dot={{ fill: "hsl(var(--primary))", r: 4 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
 
-            {/* Technical Details */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            {/* Components (for PC/lot) */}
+            {(ad.item_type === 'pc' || ad.item_type === 'lot') && ad.components && ad.components.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Cpu className="h-5 w-5" />
+                      Composants {ad.item_type === 'pc' ? 'du PC' : 'du lot'}
+                    </CardTitle>
+                    <CardDescription>
+                      {ad.components.length} composant{ad.components.length > 1 ? 's' : ''} identifié{ad.components.length > 1 ? 's' : ''}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {ad.components.map((comp, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Badge variant="outline">{comp.role}</Badge>
+                            <div>
+                              <p className="font-medium">{comp.model_name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {comp.brand} • {comp.category}
+                              </p>
+                            </div>
+                          </div>
+                          {comp.model_id && (
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={`/models/${comp.model_id}`}>
+                                <ExternalLink className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Details */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
               <Card>
                 <CardHeader>
-                  <CardTitle>Détails techniques</CardTitle>
+                  <CardTitle>Détails de l'annonce</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Catégorie</div>
-                        <div className="font-medium">{ad.category}</div>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Localisation</p>
+                          <p className="font-medium">
+                            {[ad.city, ad.postal_code, ad.region].filter(Boolean).join(', ') || 'Non spécifié'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Modèle</div>
-                        <div className="font-medium">{ad.model_name}</div>
+                      <div className="flex items-center gap-3">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Condition</p>
+                          <p className="font-medium">{getConditionLabel(ad.condition)}</p>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Condition</div>
-                        <div className="font-medium">{getStateLabel(ad.state)}</div>
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Publiée le</p>
+                          <p className="font-medium">
+                            {ad.published_at ? formatDate(ad.published_at) : 'Non spécifié'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-1">Type vendeur</div>
-                        <div className="font-medium capitalize">{ad.seller_type}</div>
+                      <div className="flex items-center gap-3">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Dernière mise à jour</p>
+                          <p className="font-medium">
+                            {formatDistanceToNow(new Date(ad.last_seen_at), { addSuffix: true, locale: fr })}
+                          </p>
+                        </div>
                       </div>
                     </div>
                     <div className="space-y-3">
@@ -284,7 +449,7 @@ export default function AdDetail() {
                         ) : (
                           <AlertCircle className="h-4 w-4 text-muted-foreground" />
                         )}
-                        <span>Livraison possible</span>
+                        <span>Livraison {ad.delivery_possible ? 'disponible' : 'non disponible'}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         {ad.secured_payment ? (
@@ -292,331 +457,151 @@ export default function AdDetail() {
                         ) : (
                           <AlertCircle className="h-4 w-4 text-muted-foreground" />
                         )}
-                        <span>Paiement sécurisé</span>
+                        <span>Paiement sécurisé {ad.secured_payment ? 'disponible' : 'non disponible'}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        {ad.remise_main_propre ? (
-                          <CheckCircle2 className="h-4 w-4 text-success" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span>Remise en main propre</span>
-                      </div>
-                    </div>
-                  </div>
-                  <Separator className="my-4" />
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-2">Description synthétique</div>
-                    <p className="text-sm leading-relaxed">{ad.description_simplified}</p>
-                  </div>
-                  <div className="mt-4">
-                    <Link to={`/model/${ad.model_id}`}>
-                      <Button variant="outline" size="sm" className="gap-2">
-                        Afficher les spécifications du modèle
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Location & Availability */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPinned className="h-5 w-5" />
-                    Localisation et disponibilité
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="text-sm text-muted-foreground">Ville</div>
-                          <div className="font-medium">{ad.city}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="text-sm text-muted-foreground">Code postal</div>
-                          <div className="font-medium">{ad.postal_code}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="text-sm text-muted-foreground">Région</div>
-                          <div className="font-medium">{ad.region}</div>
-                        </div>
-                      </div>
-                      {ad.distance_km && (
-                        <div className="flex items-center gap-2">
-                          <Truck className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <div className="text-sm text-muted-foreground">Distance</div>
-                            <div className="font-medium">à {ad.distance_km} km de ta position</div>
+                      {ad.model_confidence !== null && (
+                        <div className="pt-2">
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Confiance d'identification du modèle
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary transition-all"
+                                style={{ width: `${ad.model_confidence * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium">
+                              {(ad.model_confidence * 100).toFixed(0)}%
+                            </span>
                           </div>
                         </div>
                       )}
                     </div>
-                    <Alert>
-                      <ShieldAlert className="h-4 w-4" />
-                      <AlertDescription className="text-sm space-y-2">
-                        <p>Livraison disponible via LBC ou remise locale.</p>
-                        <p>Paiement sécurisé recommandé.</p>
-                        <p className="font-semibold">Vérifie la réputation du vendeur avant transaction.</p>
-                      </AlertDescription>
-                    </Alert>
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
-
-            {/* History Tracking */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Historique de suivi</CardTitle>
-                  <CardDescription>Évolution du prix et du statut de l'annonce</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {mockPriceHistory.map((entry, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-start justify-between p-3 rounded-lg bg-muted/50 border"
-                      >
-                        <div className="flex items-start gap-3">
-                          <Calendar className="h-4 w-4 text-muted-foreground mt-1" />
-                          <div>
-                            <div className="font-medium text-sm">{entry.date}</div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {entry.modification || "—"}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold">{entry.price} €</div>
-                          <Badge variant="outline" className="text-xs mt-1">
-                            {entry.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Market Comparison Charts */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Comparaison avec le marché</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Histogram */}
-                  <div>
-                    <h4 className="text-sm font-semibold mb-3">
-                      Distribution des prix (annonces actives)
-                    </h4>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={mockMarketComparison}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="bucket" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                        <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px",
-                          }}
-                        />
-                        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                          {mockMarketComparison.map((entry, index) => (
-                            <Bar
-                              key={index}
-                              dataKey="count"
-                              fill={entry.is_current ? "hsl(var(--primary))" : "hsl(var(--muted))"}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  {/* Line comparison */}
-                  <div>
-                    <h4 className="text-sm font-semibold mb-3">Évolution marché vs annonce</h4>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <LineChart data={mockModelPriceSeries}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                        <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px",
-                          }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="median"
-                          stroke="hsl(var(--chart-1))"
-                          strokeWidth={2}
-                          name="Prix médian modèle"
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="ad_price"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          name="Prix annonce"
-                          connectNulls
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Similar Ads */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Annonces similaires</CardTitle>
-                  <CardDescription>Même modèle dans la région</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-3">
-                    {mockSimilarAds.map((similar) => (
-                      <Link key={similar.ad_id} to={`/ad/${similar.ad_id}`}>
-                        <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                          <div className="flex-1">
-                            <div className="font-medium mb-1">{similar.model_name}</div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {similar.city}, {similar.region}
-                              </span>
-                              <Badge variant="outline" className="text-xs">
-                                {getStateLabel(similar.state)}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="text-right ml-4">
-                            <div className="text-xl font-bold">{similar.price} €</div>
-                            <div className={`text-xs font-semibold mt-1 ${getScoreColor(similar.score)}`}>
-                              Score: {similar.score}
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* RGPD Notice */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
-              <Alert>
-                <ShieldAlert className="h-4 w-4" />
-                <AlertDescription className="text-xs leading-relaxed">
-                  Les titres, descriptions et images originales de cette annonce ne sont pas affichés
-                  conformément au RGPD et aux conditions d'utilisation des plateformes sources. Les données
-                  présentées ici sont dérivées, anonymisées et agrégées à des fins d'analyse de marché.
-                  <Link to="/formation#rgpd" className="text-primary hover:underline ml-1">
-                    Lire la charte RGPD
-                  </Link>
-                </AlertDescription>
-              </Alert>
             </motion.div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Actions */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Actions utilisateur</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button className="w-full gap-2" size="lg" asChild>
-                    <a href={ad.url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4" />
-                      Voir sur Leboncoin
-                    </a>
-                  </Button>
-                  <Button
-                    variant={inWatchlist ? "secondary" : "outline"}
-                    className="w-full gap-2"
-                    onClick={handleToggleWatchlist}
-                  >
-                    <Eye className="h-4 w-4" />
-                    {inWatchlist ? "Retirer de la watchlist" : "Ajouter à la watchlist"}
-                  </Button>
-                  <Button variant="outline" className="w-full gap-2" onClick={handleCreateAlert}>
-                    <Bell className="h-4 w-4" />
-                    Créer une alerte
-                  </Button>
-                  <Button variant="outline" className="w-full gap-2" onClick={handleEstimate}>
-                    <Calculator className="h-4 w-4" />
-                    Lancer l'Estimator
-                  </Button>
-                  <Separator />
-                  <Button variant="ghost" size="sm" className="w-full gap-2" onClick={handleShare}>
-                    <Share2 className="h-4 w-4" />
-                    Partager
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full gap-2 text-destructive"
-                    onClick={handleReport}
-                  >
-                    <Flag className="h-4 w-4" />
-                    Signaler un problème
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button className="w-full gap-2" asChild>
+                  <a href={ad.url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4" />
+                    Voir l'annonce originale
+                  </a>
+                </Button>
 
-            {/* Publication info */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Informations</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Publié le</span>
-                    <span className="font-medium">
-                      {new Date(ad.publication_date).toLocaleDateString("fr-FR")}
-                    </span>
+                <Button
+                  variant={isInWatchlist ? "secondary" : "outline"}
+                  className="w-full gap-2"
+                  onClick={handleToggleWatchlist}
+                  disabled={addToWatchlist.isPending}
+                >
+                  <Heart className={`h-4 w-4 ${isInWatchlist ? 'fill-current' : ''}`} />
+                  {isInWatchlist ? 'Dans la watchlist' : 'Ajouter à la watchlist'}
+                </Button>
+
+                <Dialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full gap-2">
+                      <Bell className="h-4 w-4" />
+                      Créer une alerte
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Créer une alerte</DialogTitle>
+                      <DialogDescription>
+                        Soyez notifié des changements sur cette annonce
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Type d'alerte</Label>
+                        <Select value={alertType} onValueChange={(v: 'deal_detected' | 'price_below') => setAlertType(v)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="price_below">Prix en dessous de...</SelectItem>
+                            <SelectItem value="deal_detected">Deal détecté</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {alertType === 'price_below' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="price-threshold">Seuil de prix (€)</Label>
+                          <Input
+                            id="price-threshold"
+                            type="number"
+                            placeholder={String(Math.round(ad.price * 0.9))}
+                            value={priceThreshold}
+                            onChange={(e) => setPriceThreshold(e.target.value)}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowAlertDialog(false)}>
+                        Annuler
+                      </Button>
+                      <Button onClick={handleCreateAlert} disabled={createAlert.isPending}>
+                        Créer l'alerte
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                <Separator />
+
+                <Button variant="ghost" className="w-full gap-2" onClick={handleShare}>
+                  <Share2 className="h-4 w-4" />
+                  Partager
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Quick Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Informations rapides</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Plateforme</span>
+                  <span className="font-medium">{ad.platform}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Statut</span>
+                  <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Type</span>
+                  <span className="font-medium capitalize">{ad.item_type}</span>
+                </div>
+                {ad.category && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Catégorie</span>
+                    <span className="font-medium">{ad.category}</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Dernière vue</span>
-                    <span className="font-medium">
-                      {new Date(ad.last_seen).toLocaleDateString("fr-FR")}
-                    </span>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Statut</span>
-                    <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                )}
+                <Separator />
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Première vue</span>
+                  <span className="font-medium">
+                    {formatDistanceToNow(new Date(ad.first_seen_at), { addSuffix: true, locale: fr })}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
