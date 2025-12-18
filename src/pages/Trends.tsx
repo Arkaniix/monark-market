@@ -42,23 +42,16 @@ import {
   MapPin,
   ChevronDown,
   ChevronUp,
+  AlertCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  marketSummary,
-  marketTrends,
-  volumeTrends,
-  topIncreases,
-  topDrops,
-  mostActive,
-  rareModels,
-  regionStats,
-  categoryDetails,
-  categoryVariations,
-} from "@/lib/trendsMockData";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useTrends } from "@/hooks/useProviderData";
+import { TrendsSkeleton } from "@/components/trends/TrendsSkeleton";
+import { toast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Trends() {
   const [period, setPeriod] = useState<"7" | "30" | "90" | "180">("30");
@@ -67,8 +60,7 @@ export default function Trends() {
   const [showMovingAverage, setShowMovingAverage] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
-  const filteredTrends = marketTrends.slice(-parseInt(period));
-  const filteredVolumes = volumeTrends.slice(-parseInt(period));
+  const { data: trendsData, isLoading, error, refetch, isRefetching } = useTrends(period);
 
   const formatPrice = (value: number) => `${value}€`;
   const formatPercent = (value: number) => `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
@@ -101,6 +93,72 @@ export default function Trends() {
       </Badge>
     );
   };
+
+  const handleRefresh = () => {
+    refetch();
+    toast({
+      title: "Actualisation",
+      description: "Les données sont en cours de mise à jour...",
+    });
+  };
+
+  // Loading state
+  if (isLoading) {
+    return <TrendsSkeleton />;
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container max-w-7xl">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erreur</AlertTitle>
+            <AlertDescription>
+              Impossible de charger les tendances du marché. 
+              <Button variant="link" className="px-2" onClick={() => refetch()}>
+                Réessayer
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (!trendsData) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container max-w-7xl">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Aucune donnée</AlertTitle>
+            <AlertDescription>
+              Aucune donnée de tendances disponible pour le moment.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
+  const {
+    summary: marketSummary,
+    marketTrends,
+    volumeTrends,
+    topIncreases,
+    topDrops,
+    mostActive,
+    rareModels,
+    regionStats,
+    categoryDetails,
+    categoryVariations,
+  } = trendsData;
+
+  const filteredTrends = marketTrends.slice(-parseInt(period));
+  const filteredVolumes = volumeTrends.slice(-parseInt(period));
 
   return (
     <div className="min-h-screen py-8">
@@ -267,8 +325,14 @@ export default function Trends() {
                   </Label>
                 </div>
 
-                <Button variant="outline" size="sm" className="ml-auto gap-2">
-                  <RefreshCw className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="ml-auto gap-2"
+                  onClick={handleRefresh}
+                  disabled={isRefetching}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
                   Actualiser
                 </Button>
               </div>
@@ -439,36 +503,40 @@ export default function Trends() {
                 <CardTitle>Top hausses (30 derniers jours)</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Modèle</TableHead>
-                      <TableHead>Catégorie</TableHead>
-                      <TableHead className="text-right">Variation</TableHead>
-                      <TableHead className="text-right">Prix médian</TableHead>
-                      <TableHead className="text-right">Volume</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {topIncreases.map((item, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-medium">{item.model}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{item.category}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className="text-success font-medium">
-                            {formatPercent(item.var_30d_pct)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">{item.median}€</TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          {item.volume}
-                        </TableCell>
+                {topIncreases.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">Aucune donnée disponible</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Modèle</TableHead>
+                        <TableHead>Catégorie</TableHead>
+                        <TableHead className="text-right">Variation</TableHead>
+                        <TableHead className="text-right">Prix médian</TableHead>
+                        <TableHead className="text-right">Volume</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {topIncreases.map((item, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="font-medium">{item.model}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{item.category}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className="text-success font-medium">
+                              {formatPercent(item.var_30d_pct)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">{item.median}€</TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {item.volume}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -479,36 +547,40 @@ export default function Trends() {
                 <CardTitle>Top baisses (30 derniers jours)</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Modèle</TableHead>
-                      <TableHead>Catégorie</TableHead>
-                      <TableHead className="text-right">Variation</TableHead>
-                      <TableHead className="text-right">Prix médian</TableHead>
-                      <TableHead className="text-right">Volume</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {topDrops.map((item, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-medium">{item.model}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{item.category}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className="text-destructive font-medium">
-                            {formatPercent(item.var_30d_pct)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">{item.median}€</TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          {item.volume}
-                        </TableCell>
+                {topDrops.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">Aucune donnée disponible</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Modèle</TableHead>
+                        <TableHead>Catégorie</TableHead>
+                        <TableHead className="text-right">Variation</TableHead>
+                        <TableHead className="text-right">Prix médian</TableHead>
+                        <TableHead className="text-right">Volume</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {topDrops.map((item, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="font-medium">{item.model}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{item.category}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className="text-destructive font-medium">
+                              {formatPercent(item.var_30d_pct)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">{item.median}€</TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {item.volume}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -519,32 +591,36 @@ export default function Trends() {
                 <CardTitle>Modèles les plus actifs</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Modèle</TableHead>
-                      <TableHead>Catégorie</TableHead>
-                      <TableHead className="text-right">Volume</TableHead>
-                      <TableHead className="text-right">Prix médian</TableHead>
-                      <TableHead className="text-right">Variation 7j</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mostActive.map((item, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-medium">{item.model}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{item.category}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-bold">{item.volume}</TableCell>
-                        <TableCell className="text-right">{item.median}€</TableCell>
-                        <TableCell className="text-right">
-                          {getTrendBadge(item.var_30d_pct)}
-                        </TableCell>
+                {mostActive.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">Aucune donnée disponible</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Modèle</TableHead>
+                        <TableHead>Catégorie</TableHead>
+                        <TableHead className="text-right">Volume</TableHead>
+                        <TableHead className="text-right">Prix médian</TableHead>
+                        <TableHead className="text-right">Variation 7j</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {mostActive.map((item, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="font-medium">{item.model}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{item.category}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-bold">{item.volume}</TableCell>
+                          <TableCell className="text-right">{item.median}€</TableCell>
+                          <TableCell className="text-right">
+                            {getTrendBadge(item.var_30d_pct)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -555,42 +631,46 @@ export default function Trends() {
                 <CardTitle>Modèles rares</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Modèle</TableHead>
-                      <TableHead>Catégorie</TableHead>
-                      <TableHead className="text-right">Volume (7j)</TableHead>
-                      <TableHead className="text-right">Prix médian</TableHead>
-                      <TableHead className="text-right">Tendance</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rareModels.map((item, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-medium">{item.model}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{item.category}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge variant="secondary">{item.volume}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">{item.median}€</TableCell>
-                        <TableCell className="text-right">
-                          {item.var_30d_pct > 0 ? (
-                            <Badge variant="default" className="gap-1 bg-success/10 text-success">
-                              📈 en hausse
-                            </Badge>
-                          ) : (
-                            <Badge variant="destructive" className="gap-1">
-                              📉 en baisse
-                            </Badge>
-                          )}
-                        </TableCell>
+                {rareModels.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">Aucune donnée disponible</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Modèle</TableHead>
+                        <TableHead>Catégorie</TableHead>
+                        <TableHead className="text-right">Volume (7j)</TableHead>
+                        <TableHead className="text-right">Prix médian</TableHead>
+                        <TableHead className="text-right">Tendance</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {rareModels.map((item, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="font-medium">{item.model}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{item.category}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant="secondary">{item.volume}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">{item.median}€</TableCell>
+                          <TableCell className="text-right">
+                            {item.var_30d_pct > 0 ? (
+                              <Badge variant="default" className="gap-1 bg-success/10 text-success">
+                                📈 en hausse
+                              </Badge>
+                            ) : (
+                              <Badge variant="destructive" className="gap-1">
+                                📉 en baisse
+                              </Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -611,30 +691,34 @@ export default function Trends() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {regionStats.map((region, idx) => (
-                  <Card key={idx} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm flex items-center justify-between">
-                        <span>{region.region}</span>
-                        {getTrendBadge(region.var_30d_pct)}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Prix médian</span>
-                          <span className="text-lg font-bold">{region.median_price}€</span>
+              {regionStats.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">Aucune donnée régionale disponible</p>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {regionStats.map((region, idx) => (
+                    <Card key={idx} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center justify-between">
+                          <span>{region.region}</span>
+                          {getTrendBadge(region.var_30d_pct)}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Prix médian</span>
+                            <span className="text-lg font-bold">{region.median_price}€</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Volume</span>
+                            <span className="text-sm">{region.volume.toLocaleString("fr-FR")}</span>
+                          </div>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Volume</span>
-                          <span className="text-sm">{region.volume.toLocaleString("fr-FR")}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -651,125 +735,129 @@ export default function Trends() {
               <CardTitle>Tendances détaillées par catégorie</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {categoryDetails.map((cat, idx) => (
-                <Card key={idx}>
-                  <CardHeader
-                    className="cursor-pointer"
-                    onClick={() =>
-                      setExpandedCategory(expandedCategory === cat.category ? null : cat.category)
-                    }
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <CardTitle className="text-lg">{cat.category}</CardTitle>
-                        {getTrendBadge(cat.var_30d_pct)}
-                        <span className="text-sm text-muted-foreground">
-                          Prix médian: {cat.median_price}€
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          Volume: {cat.volume.toLocaleString("fr-FR")}
-                        </span>
+              {categoryDetails.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">Aucune donnée de catégorie disponible</p>
+              ) : (
+                categoryDetails.map((cat, idx) => (
+                  <Card key={idx}>
+                    <CardHeader
+                      className="cursor-pointer"
+                      onClick={() =>
+                        setExpandedCategory(expandedCategory === cat.category ? null : cat.category)
+                      }
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <CardTitle className="text-lg">{cat.category}</CardTitle>
+                          {getTrendBadge(cat.var_30d_pct)}
+                          <span className="text-sm text-muted-foreground">
+                            Prix médian: {cat.median_price}€
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            Volume: {cat.volume.toLocaleString("fr-FR")}
+                          </span>
+                        </div>
+                        {expandedCategory === cat.category ? (
+                          <ChevronUp className="h-5 w-5" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5" />
+                        )}
                       </div>
-                      {expandedCategory === cat.category ? (
-                        <ChevronUp className="h-5 w-5" />
-                      ) : (
-                        <ChevronDown className="h-5 w-5" />
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">{cat.summary}</p>
-                  </CardHeader>
-                  {expandedCategory === cat.category && (
-                    <CardContent>
-                      <div className="grid lg:grid-cols-2 gap-6 mb-6">
-                        <div>
-                          <h4 className="text-sm font-medium mb-3">Évolution des prix (30j)</h4>
-                          <ResponsiveContainer width="100%" height={200}>
-                            <LineChart data={cat.price_history}>
-                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                              <XAxis
-                                dataKey="date"
-                                tickFormatter={(date) => new Date(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
-                                className="text-xs"
-                              />
-                              <YAxis className="text-xs" />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: "hsl(var(--card))",
-                                  border: "1px solid hsl(var(--border))",
-                                  borderRadius: "var(--radius)",
-                                }}
-                                formatter={(value: number) => `${value}€`}
-                              />
-                              <Line
-                                type="monotone"
-                                dataKey="price"
-                                stroke="hsl(var(--primary))"
-                                strokeWidth={2}
-                                dot={false}
-                              />
-                            </LineChart>
-                          </ResponsiveContainer>
+                      <p className="text-sm text-muted-foreground mt-2">{cat.summary}</p>
+                    </CardHeader>
+                    {expandedCategory === cat.category && (
+                      <CardContent>
+                        <div className="grid lg:grid-cols-2 gap-6 mb-6">
+                          <div>
+                            <h4 className="text-sm font-medium mb-3">Évolution des prix (30j)</h4>
+                            <ResponsiveContainer width="100%" height={200}>
+                              <LineChart data={cat.price_history}>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis
+                                  dataKey="date"
+                                  tickFormatter={(date) => new Date(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                                  className="text-xs"
+                                />
+                                <YAxis className="text-xs" />
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: "hsl(var(--card))",
+                                    border: "1px solid hsl(var(--border))",
+                                    borderRadius: "var(--radius)",
+                                  }}
+                                  formatter={(value: number) => `${value}€`}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="price"
+                                  stroke="hsl(var(--primary))"
+                                  strokeWidth={2}
+                                  dot={false}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium mb-3">Volume d'annonces (30j)</h4>
+                            <ResponsiveContainer width="100%" height={200}>
+                              <AreaChart data={cat.volume_history}>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis
+                                  dataKey="date"
+                                  tickFormatter={(date) => new Date(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                                  className="text-xs"
+                                />
+                                <YAxis className="text-xs" />
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: "hsl(var(--card))",
+                                    border: "1px solid hsl(var(--border))",
+                                    borderRadius: "var(--radius)",
+                                  }}
+                                />
+                                <Area
+                                  type="monotone"
+                                  dataKey="volume"
+                                  stroke="hsl(var(--chart-2))"
+                                  fill="hsl(var(--chart-2))"
+                                  fillOpacity={0.2}
+                                />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
                         </div>
                         <div>
-                          <h4 className="text-sm font-medium mb-3">Volume d'annonces (30j)</h4>
-                          <ResponsiveContainer width="100%" height={200}>
-                            <AreaChart data={cat.volume_history}>
-                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                              <XAxis
-                                dataKey="date"
-                                tickFormatter={(date) => new Date(date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
-                                className="text-xs"
-                              />
-                              <YAxis className="text-xs" />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: "hsl(var(--card))",
-                                  border: "1px solid hsl(var(--border))",
-                                  borderRadius: "var(--radius)",
-                                }}
-                              />
-                              <Area
-                                type="monotone"
-                                dataKey="volume"
-                                stroke="hsl(var(--chart-2))"
-                                fill="hsl(var(--chart-2))"
-                                fillOpacity={0.2}
-                              />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium mb-3">Top modèles</h4>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Modèle</TableHead>
-                              <TableHead className="text-right">Prix médian</TableHead>
-                              <TableHead className="text-right">Variation 30j</TableHead>
-                              <TableHead className="text-right">Volume</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {cat.top_models.map((model, midx) => (
-                              <TableRow key={midx}>
-                                <TableCell className="font-medium">{model.model}</TableCell>
-                                <TableCell className="text-right">{model.median}€</TableCell>
-                                <TableCell className="text-right">
-                                  {getTrendBadge(model.var_30d_pct)}
-                                </TableCell>
-                                <TableCell className="text-right text-muted-foreground">
-                                  {model.volume}
-                                </TableCell>
+                          <h4 className="text-sm font-medium mb-3">Top modèles</h4>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Modèle</TableHead>
+                                <TableHead className="text-right">Prix médian</TableHead>
+                                <TableHead className="text-right">Variation 30j</TableHead>
+                                <TableHead className="text-right">Volume</TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </CardContent>
-                  )}
-                </Card>
-              ))}
+                            </TableHeader>
+                            <TableBody>
+                              {cat.top_models.map((model, midx) => (
+                                <TableRow key={midx}>
+                                  <TableCell className="font-medium">{model.model}</TableCell>
+                                  <TableCell className="text-right">{model.median}€</TableCell>
+                                  <TableCell className="text-right">
+                                    {getTrendBadge(model.var_30d_pct)}
+                                  </TableCell>
+                                  <TableCell className="text-right text-muted-foreground">
+                                    {model.volume}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                ))
+              )}
             </CardContent>
           </Card>
         </motion.div>
