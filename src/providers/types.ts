@@ -549,11 +549,19 @@ export interface ScrapStartResponse {
   job_id: number;
   upload_token: string;
   status: string;
+  params?: {
+    platform: string;
+    keyword: string;
+    type: string;
+    filters: Record<string, unknown>;
+    pages_target: number;
+    search_url?: string;
+  };
 }
 
 export interface JobStatus {
   id: number;
-  status: 'pending' | 'running' | 'done' | 'failed' | 'cancelled';
+  status: 'pending' | 'running' | 'done' | 'completed' | 'failed' | 'cancelled';
   keyword: string;
   platform: string;
   type: string;
