@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,181 +43,69 @@ import {
   Database,
   ChevronDown,
   RefreshCw,
-  ExternalLink,
+  History,
+  Search,
   Minus,
-  ShoppingCart,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  estimatorStats,
-  estimatorModels,
-  generateEstimation,
-  mockEstimationHistory,
-  type ModelEstimation,
-  type EstimationHistoryItem,
-} from "@/lib/estimatorMockData";
-
-type Ad = {
-  id: number;
-  title: string;
-  platform: string;
-  city: string | null;
-  region: string | null;
-  condition: string | null;
-  model_id: number | null;
-};
+  useModelsAutocomplete,
+  useRunEstimation,
+  useEstimationHistory,
+  useEstimatorStats,
+  type EstimationResult,
+  type ModelAutocomplete,
+} from "@/hooks/useEstimator";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function Estimator() {
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const [inputMode, setInputMode] = useState<"manual" | "ad">("manual");
-  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
-  const [state, setState] = useState("");
-  const [region, setRegion] = useState("");
-  const [purchasePrice, setPurchasePrice] = useState("");
-  const [result, setResult] = useState<ModelEstimation | null>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [history, setHistory] = useState<EstimationHistoryItem[]>(mockEstimationHistory);
-  const [userCredits, setUserCredits] = useState<number | null>(null);
-  const [isLoadingCredits, setIsLoadingCredits] = useState(true);
+  const [activeTab, setActiveTab] = useState<"estimator" | "history">("estimator");
   
-  // Ad selection
-  const [ads, setAds] = useState<Ad[]>([]);
-  const [selectedAdId, setSelectedAdId] = useState<number | null>(null);
-  const [isLoadingAds, setIsLoadingAds] = useState(false);
-  const [adPrice, setAdPrice] = useState<number | null>(null);
+  // Form state
+  const [modelSearch, setModelSearch] = useState("");
+  const [selectedModel, setSelectedModel] = useState<ModelAutocomplete | null>(null);
+  const [condition, setCondition] = useState("");
+  const [region, setRegion] = useState("");
+  const [buyPriceInput, setBuyPriceInput] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
+  
+  // Result state
+  const [result, setResult] = useState<EstimationResult | null>(null);
+  
+  // History pagination
+  const [historyPage, setHistoryPage] = useState(1);
 
-  // Load user credits
-  useEffect(() => {
-    const loadUserCredits = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          toast({
-            title: "Non authentifié",
-            description: "Vous devez être connecté pour utiliser l'estimateur",
-            variant: "destructive",
-          });
-          navigate("/auth");
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from("user_subscriptions")
-          .select("credits_remaining")
-          .eq("user_id", user.id)
-          .eq("status", "active");
-
-        if (error) throw error;
-        
-        // Sum credits from all active subscriptions
-        const totalCredits = data?.reduce((sum, sub) => sum + (sub.credits_remaining ?? 0), 0) ?? 0;
-        setUserCredits(totalCredits);
-      } catch (error) {
-        console.error("Error loading credits:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger vos crédits",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingCredits(false);
-      }
-    };
-
-    loadUserCredits();
-  }, [navigate, toast]);
-
-  // Load recent ads
-  useEffect(() => {
-    const loadAds = async () => {
-      setIsLoadingAds(true);
-      try {
-        const { data, error } = await supabase
-          .from("ads")
-          .select("id, title, platform, city, region, condition, model_id")
-          .eq("status", "active")
-          .order("first_seen_at", { ascending: false })
-          .limit(50);
-
-        if (error) throw error;
-        setAds(data || []);
-      } catch (error) {
-        console.error("Error loading ads:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les annonces",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingAds(false);
-      }
-    };
-
-    if (inputMode === "ad") {
-      loadAds();
-    }
-  }, [inputMode, toast]);
-
-  // Load ad details when selected
-  useEffect(() => {
-    const loadAdDetails = async () => {
-      if (!selectedAdId) return;
-
-      try {
-        const selectedAd = ads.find(ad => ad.id === selectedAdId);
-        if (!selectedAd) return;
-
-        // Set model and region from ad
-        if (selectedAd.model_id) {
-          setSelectedModelId(selectedAd.model_id);
-        }
-        if (selectedAd.region) {
-          setRegion(selectedAd.region);
-        }
-        if (selectedAd.condition) {
-          setState(selectedAd.condition);
-        }
-
-        // Get latest price
-        const { data: priceData, error } = await supabase
-          .from("ad_prices")
-          .select("price, seen_at")
-          .eq("ad_id", selectedAdId)
-          .order("seen_at", { ascending: false })
-          .limit(1)
-          .single();
-
-        if (error) throw error;
-        if (priceData) {
-          setAdPrice(priceData.price);
-          setPurchasePrice(priceData.price.toString());
-        }
-      } catch (error) {
-        console.error("Error loading ad details:", error);
-      }
-    };
-
-    loadAdDetails();
-  }, [selectedAdId, ads]);
-
-  // Load history from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("estimator_history");
-    if (saved) {
-      try {
-        setHistory(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to load history", e);
-      }
-    }
-  }, []);
+  // API hooks
+  const { data: models, isLoading: isLoadingModels } = useModelsAutocomplete(modelSearch);
+  const { data: stats } = useEstimatorStats();
+  const { data: historyData, isLoading: isLoadingHistory } = useEstimationHistory(historyPage);
+  const runEstimation = useRunEstimation();
 
   const handleCalculate = async () => {
-    if (!selectedModelId || !state || !purchasePrice) {
+    if (!selectedModel || !condition || !buyPriceInput) {
       toast({
         title: "Informations manquantes",
         description: "Veuillez remplir tous les champs obligatoires",
@@ -226,154 +114,68 @@ export default function Estimator() {
       return;
     }
 
-    // Check credits
-    if (userCredits === null || userCredits < 2) {
-      toast({
-        title: "Crédits insuffisants",
-        description: "L'estimateur nécessite 2 crédits. Rechargez votre compte.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsCalculating(true);
-
     try {
-      // Deduct credits
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      // Get active subscriptions with available credits
-      const { data: subscriptions, error: subError } = await supabase
-        .from("user_subscriptions")
-        .select("id, credits_remaining")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .gt("credits_remaining", 0)
-        .order("credits_remaining", { ascending: false })
-        .limit(1);
-
-      if (subError) throw subError;
-      if (!subscriptions || subscriptions.length === 0) {
-        throw new Error("No subscription with available credits");
-      }
-
-      const subscription = subscriptions[0];
-      const newCredits = subscription.credits_remaining - 2;
-
-      // Update subscription credits
-      const { error: updateError } = await supabase
-        .from("user_subscriptions")
-        .update({ credits_remaining: newCredits })
-        .eq("id", subscription.id);
-
-      if (updateError) throw updateError;
-
-      // Log credit usage
-      const { error: creditError } = await supabase
-        .from("credit_logs")
-        .insert({
-          user_id: user.id,
-          delta: -2,
-          reason: "estimator_usage",
-          meta: {
-            model_id: selectedModelId,
-            state,
-            price: parseFloat(purchasePrice),
-          },
-        });
-
-      if (creditError) throw creditError;
-
-      // Update local credits
-      setUserCredits(prev => (prev !== null ? prev - 2 : 0));
-
-      // Simulate calculation delay
-      setTimeout(() => {
-        const estimation = generateEstimation(
-          selectedModelId,
-          state,
-          parseFloat(purchasePrice),
-          region || undefined
-        );
-        setResult(estimation);
-        setIsCalculating(false);
-
-        // Add to history
-        if (estimation) {
-          const historyItem: EstimationHistoryItem = {
-            id: Date.now().toString(),
-            date: new Date().toISOString().split("T")[0],
-            model: estimation.model,
-            category: estimation.category,
-            median_price: estimation.market.median_price,
-            buy_price: estimation.estimate.buy_price,
-            margin_pct: estimation.estimate.profit_margin_pct,
-            trend: estimation.market.trend,
-          };
-          const newHistory = [historyItem, ...history].slice(0, 10);
-          setHistory(newHistory);
-          localStorage.setItem("estimator_history", JSON.stringify(newHistory));
-        }
-
-        toast({
-          title: "Estimation réussie",
-          description: "2 crédits ont été déduits de votre compte",
-        });
-      }, 1500);
-    } catch (error) {
-      console.error("Error during calculation:", error);
-      setIsCalculating(false);
-      toast({
-        title: "Erreur",
-        description: "Impossible de déduire les crédits. Veuillez réessayer.",
-        variant: "destructive",
+      const estimation = await runEstimation.mutateAsync({
+        model_id: selectedModel.id,
+        condition,
+        buy_price_input: parseFloat(buyPriceInput),
+        region: region || undefined,
+        mode_advanced: showAdvanced,
       });
+      
+      setResult(estimation);
+      toast({
+        title: "Estimation réussie",
+        description: `${estimation.credit_cost} crédits ont été déduits de votre compte`,
+      });
+    } catch (error: any) {
+      const message = error?.message || "Une erreur est survenue";
+      
+      if (message.includes("crédits") || message.includes("credits") || error?.status === 402) {
+        toast({
+          title: "Crédits insuffisants",
+          description: "Vous n'avez pas assez de crédits pour cette estimation. Rechargez votre compte.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: message,
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleReset = () => {
-    setSelectedModelId(null);
-    setState("");
+    setSelectedModel(null);
+    setModelSearch("");
+    setCondition("");
     setRegion("");
-    setPurchasePrice("");
+    setBuyPriceInput("");
     setResult(null);
-    setSelectedAdId(null);
-    setAdPrice(null);
   };
 
-  const selectedModel = estimatorModels.find((m) => m.id === selectedModelId);
-
   // Chart data
-  const priceChartData =
-    result?.trend_90d.map((price, i) => ({
+  const priceChartData = useMemo(() => 
+    result?.trend_90d?.map((price, i) => ({
       day: i + 1,
       prix: price,
-    })) || [];
+    })) || [], [result?.trend_90d]);
 
-  const volumeChartData =
-    result?.volume_30d.map((vol, i) => ({
+  const volumeChartData = useMemo(() =>
+    result?.volume_30d?.map((vol, i) => ({
       day: i + 1,
       volume: vol,
-    })) || [];
+    })) || [], [result?.volume_30d]);
 
-  const comparisonChartData = result
+  const comparisonChartData = useMemo(() => result
     ? [
         { label: "Prix marché", value: result.market.median_price },
-        { label: "Prix conseillé achat", value: result.estimate.buy_price },
-        { label: "Prix revente 30j", value: result.estimate.sell_price_30d },
+        { label: "Prix conseillé achat", value: result.buy_price_recommended },
+        { label: "Prix revente 1m", value: result.sell_price_1m },
       ]
-    : [];
-
-  if (isLoadingCredits) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-screen">
-          <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </div>
-    );
-  }
+    : [], [result]);
 
   return (
     <div className="min-h-screen py-8">
@@ -399,707 +201,659 @@ export default function Estimator() {
             Évite de surpayer ou de vendre à perte. Nos estimations se basent sur les
             tendances réelles du marché.
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Badge variant="outline">
-              <Sparkles className="h-3 w-3 mr-1" />
-              Crédits disponibles: {userCredits ?? 0}
-            </Badge>
-            <Badge variant="secondary">
-              <DollarSign className="h-3 w-3 mr-1" />
-              Coût: 2 crédits
-            </Badge>
-          </div>
         </motion.div>
 
-        {/* Quick indicators */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
-        >
-          <Card className="border-primary/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Clock className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Dernier recalcul</p>
-                  <p className="text-lg font-semibold">{estimatorStats.last_recalc}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Main Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "estimator" | "history")} className="mb-8">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="estimator" className="gap-2">
+              <Calculator className="h-4 w-4" />
+              Estimation
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-2">
+              <History className="h-4 w-4" />
+              Historique
+            </TabsTrigger>
+          </TabsList>
 
-          <Card className="border-accent/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Activity className="h-8 w-8 text-accent" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Estimations totales</p>
-                  <p className="text-lg font-semibold">
-                    {estimatorStats.total_estimations.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-muted">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Database className="h-8 w-8 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Sources de données</p>
-                  <p className="text-sm font-medium">{estimatorStats.data_sources.join(", ")}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <div className="grid lg:grid-cols-2 gap-8 mb-8">
-          {/* Form */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Formulaire d'estimation
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Input Mode Selection */}
-                  <div className="space-y-2">
-                    <Label>Mode de saisie</Label>
-                    <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as "manual" | "ad")}>
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="manual">Saisie manuelle</TabsTrigger>
-                        <TabsTrigger value="ad">
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          Depuis une annonce
-                        </TabsTrigger>
-                      </TabsList>
-                    </Tabs>
+          <TabsContent value="estimator" className="mt-8">
+            {/* Quick indicators */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+            >
+              <Card className="border-primary/20">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-8 w-8 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Dernier recalcul</p>
+                      <p className="text-lg font-semibold">{stats?.last_recalc || "—"}</p>
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  {inputMode === "ad" && (
-                    <div className="space-y-2">
-                      <Label htmlFor="ad-select">Sélectionner une annonce</Label>
-                      <Select
-                        value={selectedAdId?.toString() || ""}
-                        onValueChange={(value) => setSelectedAdId(parseInt(value))}
-                        disabled={isLoadingAds}
-                      >
-                        <SelectTrigger id="ad-select" className="bg-background">
-                          <SelectValue placeholder={isLoadingAds ? "Chargement..." : "Choisir une annonce"} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50 max-h-[300px]">
-                          {ads.map((ad) => (
-                            <SelectItem key={ad.id} value={ad.id.toString()}>
-                              {ad.title} - {ad.platform} - {ad.city || "Localisation inconnue"}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {selectedAdId && adPrice && (
-                        <p className="text-sm text-muted-foreground">
-                          Prix de l'annonce: {adPrice.toFixed(2)} €
+              <Card className="border-accent/20">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <Activity className="h-8 w-8 text-accent" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Estimations totales</p>
+                      <p className="text-lg font-semibold">
+                        {stats?.total_estimations?.toLocaleString() || "—"}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-muted">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <Database className="h-8 w-8 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Sources de données</p>
+                      <p className="text-sm font-medium">{stats?.data_sources?.join(", ") || "—"}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <div className="grid lg:grid-cols-2 gap-8 mb-8">
+              {/* Form */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      Formulaire d'estimation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Model Autocomplete */}
+                      <div className="space-y-2">
+                        <Label>Modèle *</Label>
+                        <Popover open={modelPopoverOpen} onOpenChange={setModelPopoverOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={modelPopoverOpen}
+                              className="w-full justify-between"
+                            >
+                              {selectedModel ? (
+                                <span>{selectedModel.name} ({selectedModel.category})</span>
+                              ) : (
+                                <span className="text-muted-foreground">Rechercher un modèle...</span>
+                              )}
+                              <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0 z-50" align="start">
+                            <Command shouldFilter={false}>
+                              <CommandInput
+                                placeholder="Tapez pour rechercher..."
+                                value={modelSearch}
+                                onValueChange={setModelSearch}
+                              />
+                              <CommandList>
+                                {isLoadingModels && (
+                                  <div className="p-4 text-center">
+                                    <RefreshCw className="h-4 w-4 animate-spin mx-auto" />
+                                  </div>
+                                )}
+                                {!isLoadingModels && modelSearch.length >= 2 && (!models || models.length === 0) && (
+                                  <CommandEmpty>Aucun modèle trouvé</CommandEmpty>
+                                )}
+                                {!isLoadingModels && modelSearch.length < 2 && (
+                                  <div className="p-4 text-sm text-muted-foreground text-center">
+                                    Tapez au moins 2 caractères
+                                  </div>
+                                )}
+                                <CommandGroup>
+                                  {models?.map((model) => (
+                                    <CommandItem
+                                      key={model.id}
+                                      value={model.id.toString()}
+                                      onSelect={() => {
+                                        setSelectedModel(model);
+                                        setModelPopoverOpen(false);
+                                      }}
+                                    >
+                                      <div className="flex flex-col">
+                                        <span className="font-medium">{model.name}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {model.brand} • {model.category}
+                                          {model.family && ` • ${model.family}`}
+                                        </span>
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      {/* Condition */}
+                      <div>
+                        <Label htmlFor="condition">État du composant *</Label>
+                        <Select value={condition} onValueChange={setCondition}>
+                          <SelectTrigger id="condition" className="bg-background mt-2">
+                            <SelectValue placeholder="Sélectionner l'état..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50">
+                            <SelectItem value="neuf">Neuf</SelectItem>
+                            <SelectItem value="comme-neuf">Comme neuf</SelectItem>
+                            <SelectItem value="bon">Bon état</SelectItem>
+                            <SelectItem value="a-reparer">À réparer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Buy Price */}
+                      <div>
+                        <Label htmlFor="price">Prix d'achat envisagé (€) *</Label>
+                        <Input
+                          id="price"
+                          type="number"
+                          placeholder="Ex: 280"
+                          value={buyPriceInput}
+                          onChange={(e) => setBuyPriceInput(e.target.value)}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      {/* Advanced Mode */}
+                      <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="sm" className="w-full">
+                            <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+                            Mode avancé (facultatif)
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-4 pt-4">
+                          <div>
+                            <Label htmlFor="region">Région</Label>
+                            <Select value={region} onValueChange={setRegion}>
+                              <SelectTrigger id="region" className="bg-background mt-2">
+                                <SelectValue placeholder="Sélectionner..." />
+                              </SelectTrigger>
+                              <SelectContent className="bg-popover z-50">
+                                <SelectItem value="IDF">Île-de-France</SelectItem>
+                                <SelectItem value="ARA">Auvergne-Rhône-Alpes</SelectItem>
+                                <SelectItem value="PACA">PACA</SelectItem>
+                                <SelectItem value="Occitanie">Occitanie</SelectItem>
+                                <SelectItem value="Grand Est">Grand Est</SelectItem>
+                                <SelectItem value="Hauts-de-France">Hauts-de-France</SelectItem>
+                                <SelectItem value="Nouvelle-Aquitaine">Nouvelle-Aquitaine</SelectItem>
+                                <SelectItem value="Bretagne">Bretagne</SelectItem>
+                                <SelectItem value="Normandie">Normandie</SelectItem>
+                                <SelectItem value="Pays de la Loire">Pays de la Loire</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+
+                      {/* Actions */}
+                      <div className="flex gap-3 pt-4">
+                        <Button
+                          onClick={handleCalculate}
+                          disabled={!selectedModel || !condition || !buyPriceInput || runEstimation.isPending}
+                          className="flex-1 gap-2"
+                        >
+                          {runEstimation.isPending ? (
+                            <>
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                              Calcul...
+                            </>
+                          ) : (
+                            <>
+                              <Calculator className="h-4 w-4" />
+                              Estimer
+                            </>
+                          )}
+                        </Button>
+                        <Button variant="outline" onClick={handleReset}>
+                          Réinitialiser
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Info Card */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Card className="bg-muted/50 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Info className="h-5 w-5 text-primary" />
+                      Comment fonctionne l'estimateur ?
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4 text-sm">
+                      <div>
+                        <h4 className="font-semibold mb-1 flex items-center gap-2">
+                          <DollarSign className="h-4 w-4 text-primary" />
+                          Prix médian actuel
+                        </h4>
+                        <p className="text-muted-foreground">
+                          Calculé à partir du prix médian des annonces actives (hors outliers),
+                          ajusté selon l'état et la région.
                         </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold mb-1 flex items-center gap-2">
+                          <TrendingDown className="h-4 w-4 text-accent" />
+                          Prix d'achat conseillé
+                        </h4>
+                        <p className="text-muted-foreground">
+                          Prix médian - marge de sécurité (5 à 10% selon rareté et tendance).
+                          Ne payez pas plus pour maximiser votre marge.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold mb-1 flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-green-500" />
+                          Prix de revente estimé
+                        </h4>
+                        <p className="text-muted-foreground">
+                          Basé sur la projection linéaire du prix moyen des 30 à 90 derniers
+                          jours. Tient compte de la tendance actuelle du marché.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold mb-1 flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-orange-500" />
+                          Probabilité de revente rapide
+                        </h4>
+                        <p className="text-muted-foreground">
+                          Calculée via le volume d'annonces et la rareté. Plus le composant est
+                          demandé, plus il se revendra vite.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+
+            {/* Results */}
+            <AnimatePresence mode="wait">
+              {result && (
+                <motion.div
+                  key="results"
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -40 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-8"
+                >
+                  {/* Badge & Summary */}
+                  <Card className="border-2 shadow-xl">
+                    <CardContent className="pt-6">
+                      <div className="text-center mb-6">
+                        {/* Credit Cost Badge */}
+                        <Badge variant="outline" className="mb-4">
+                          <Sparkles className="h-3 w-3 mr-1" />
+                          Coût: {result.credit_cost} crédits
+                        </Badge>
+
+                        <Badge
+                          variant={
+                            result.badge === "good"
+                              ? "default"
+                              : result.badge === "caution"
+                              ? "secondary"
+                              : "destructive"
+                          }
+                          className="text-base px-6 py-2 gap-2 mb-4 ml-2"
+                        >
+                          {result.badge === "good" ? (
+                            <CheckCircle2 className="h-5 w-5" />
+                          ) : (
+                            <AlertTriangle className="h-5 w-5" />
+                          )}
+                          {result.badge === "good"
+                            ? "✅ Bonne opportunité d'achat"
+                            : result.badge === "caution"
+                            ? "⚠️ Marché instable, prudence"
+                            : "📉 Risque élevé"}
+                        </Badge>
+
+                        <h2 className="text-2xl font-bold mb-2">{result.model_name}</h2>
+                        <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+                          <span>
+                            {result.category} • {result.brand}
+                          </span>
+                          <span>•</span>
+                          <span>État: {result.condition}</span>
+                          {result.region && (
+                            <>
+                              <span>•</span>
+                              <span>{result.region}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Key Metrics Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="text-center p-4 bg-muted/30 rounded-lg">
+                          <p className="text-sm text-muted-foreground mb-1">Prix médian actuel</p>
+                          <p className="text-2xl font-bold text-primary">
+                            {result.market.median_price}€
+                          </p>
+                        </div>
+                        <div className="text-center p-4 bg-muted/30 rounded-lg">
+                          <p className="text-sm text-muted-foreground mb-1">Variation 30j</p>
+                          <p
+                            className={`text-2xl font-bold ${
+                              result.market.var_30d_pct >= 0 ? "text-green-500" : "text-destructive"
+                            }`}
+                          >
+                            {result.market.var_30d_pct > 0 ? "+" : ""}
+                            {result.market.var_30d_pct}%
+                          </p>
+                        </div>
+                        <div className="text-center p-4 bg-muted/30 rounded-lg">
+                          <p className="text-sm text-muted-foreground mb-1">Volume annonces</p>
+                          <p className="text-2xl font-bold">{result.market.volume_active}</p>
+                        </div>
+                        <div className="text-center p-4 bg-muted/30 rounded-lg">
+                          <p className="text-sm text-muted-foreground mb-1">Prob. revente</p>
+                          <p className="text-2xl font-bold">
+                            {Math.round(result.resell_probability * 100)}%
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Main Results */}
+                      <div className="grid md:grid-cols-3 gap-6">
+                        <Card className="border-accent/40 bg-gradient-to-br from-accent/10 to-transparent">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-normal text-muted-foreground">
+                              Prix d'achat conseillé
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-4xl font-bold text-accent mb-1">
+                              {result.buy_price_recommended}€
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Ne payez pas plus pour maximiser votre marge
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card className="border-primary/40 bg-gradient-to-br from-primary/10 to-transparent">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-normal text-muted-foreground">
+                              Prix de revente (1 mois)
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-4xl font-bold text-primary mb-1">
+                              {result.sell_price_1m}€
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Prix de vente estimé à 30 jours
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        <Card className={`border-2 ${
+                          result.margin_pct >= 10
+                            ? "border-green-500/40 bg-gradient-to-br from-green-500/10 to-transparent"
+                            : result.margin_pct >= 0
+                            ? "border-orange-500/40 bg-gradient-to-br from-orange-500/10 to-transparent"
+                            : "border-destructive/40 bg-gradient-to-br from-destructive/10 to-transparent"
+                        }`}>
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-normal text-muted-foreground">
+                              Marge estimée
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className={`text-4xl font-bold mb-1 ${
+                              result.margin_pct >= 10
+                                ? "text-green-500"
+                                : result.margin_pct >= 0
+                                ? "text-orange-500"
+                                : "text-destructive"
+                            }`}>
+                              {result.margin_pct > 0 ? "+" : ""}
+                              {result.margin_pct}%
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Sur un achat à {result.buy_price_input}€
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Advice */}
+                      <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                        <h4 className="font-semibold mb-2 flex items-center gap-2">
+                          <Info className="h-4 w-4 text-primary" />
+                          Conseil
+                        </h4>
+                        <p className="text-sm text-muted-foreground">{result.advice}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Charts */}
+                  {(priceChartData.length > 0 || volumeChartData.length > 0) && (
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {priceChartData.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">Évolution des prix (90j)</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ResponsiveContainer width="100%" height={200}>
+                              <AreaChart data={priceChartData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="day" />
+                                <YAxis />
+                                <Tooltip />
+                                <Area
+                                  type="monotone"
+                                  dataKey="prix"
+                                  stroke="hsl(var(--primary))"
+                                  fill="hsl(var(--primary))"
+                                  fillOpacity={0.2}
+                                />
+                                <ReferenceLine
+                                  y={result.buy_price_recommended}
+                                  stroke="hsl(var(--accent))"
+                                  strokeDasharray="5 5"
+                                  label="Achat conseillé"
+                                />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {volumeChartData.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-base">Volume des annonces (30j)</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ResponsiveContainer width="100%" height={200}>
+                              <BarChart data={volumeChartData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="day" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="volume" fill="hsl(var(--accent))" />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </CardContent>
+                        </Card>
                       )}
                     </div>
                   )}
 
-                  <div>
-                    <Label htmlFor="model">Modèle *</Label>
-                    <Select
-                      value={selectedModelId?.toString() || ""}
-                      onValueChange={(v) => setSelectedModelId(parseInt(v))}
-                      disabled={inputMode === "ad" && selectedAdId !== null}
-                    >
-                      <SelectTrigger id="model" className="bg-background mt-2">
-                        <SelectValue placeholder="Sélectionner un modèle..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50 max-h-[300px]">
-                        {estimatorModels.map((model) => (
-                          <SelectItem key={model.id} value={model.id.toString()}>
-                            {model.fullName} ({model.category})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* Comparison Chart */}
+                  {comparisonChartData.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Comparaison des prix</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={200}>
+                          <BarChart data={comparisonChartData} layout="vertical">
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis type="number" />
+                            <YAxis type="category" dataKey="label" width={150} />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="hsl(var(--primary))" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </TabsContent>
 
-                  <div>
-                    <Label htmlFor="state">État du composant *</Label>
-                    <Select value={state} onValueChange={setState}>
-                      <SelectTrigger id="state" className="bg-background mt-2">
-                        <SelectValue placeholder="Sélectionner l'état..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        <SelectItem value="neuf">Neuf</SelectItem>
-                        <SelectItem value="comme-neuf">Comme neuf</SelectItem>
-                        <SelectItem value="bon">Bon état</SelectItem>
-                        <SelectItem value="a-reparer">À réparer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="price">Prix d'achat envisagé (€) *</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      placeholder="Ex: 280"
-                      value={purchasePrice}
-                      onChange={(e) => setPurchasePrice(e.target.value)}
-                      className="mt-2"
-                    />
-                  </div>
-
-                  <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="w-full">
-                        <ChevronDown className="h-4 w-4 mr-2" />
-                        Mode avancé (facultatif)
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-4 pt-4">
-                      <div>
-                        <Label htmlFor="region">Région</Label>
-                        <Select value={region} onValueChange={setRegion}>
-                          <SelectTrigger id="region" className="bg-background mt-2">
-                            <SelectValue placeholder="Sélectionner..." />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover z-50">
-                            <SelectItem value="IDF">Île-de-France</SelectItem>
-                            <SelectItem value="ARA">Auvergne-Rhône-Alpes</SelectItem>
-                            <SelectItem value="PACA">PACA</SelectItem>
-                            <SelectItem value="Occitanie">Occitanie</SelectItem>
-                            <SelectItem value="Grand Est">Grand Est</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-
-                  <div className="flex gap-3 pt-4">
-                    <Button
-                      onClick={handleCalculate}
-                      disabled={
-                        !selectedModelId ||
-                        !state ||
-                        !purchasePrice ||
-                        isCalculating ||
-                        userCredits === null ||
-                        userCredits < 2
-                      }
-                      className="flex-1 gap-2"
-                    >
-                      {isCalculating ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 animate-spin" />
-                          Calcul...
-                        </>
-                      ) : (
-                        <>
-                          <Calculator className="h-4 w-4" />
-                          Estimer (2 crédits)
-                        </>
-                      )}
-                    </Button>
-                    <Button variant="outline" onClick={handleReset}>
-                      Réinitialiser
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Info Card */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="bg-muted/50 shadow-lg">
+          {/* History Tab */}
+          <TabsContent value="history" className="mt-8">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Info className="h-5 w-5 text-primary" />
-                  Comment fonctionne l'estimateur ?
+                <CardTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5" />
+                  Historique des estimations
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4 text-sm">
-                  <div>
-                    <h4 className="font-semibold mb-1 flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      Prix médian actuel
-                    </h4>
-                    <p className="text-muted-foreground">
-                      Calculé à partir du prix médian des annonces actives (hors outliers),
-                      ajusté selon l'état et la région.
-                    </p>
+                {isLoadingHistory ? (
+                  <div className="space-y-4">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-4">
+                        <Skeleton className="h-12 w-12 rounded" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-1/3" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                        <Skeleton className="h-6 w-16" />
+                      </div>
+                    ))}
                   </div>
+                ) : historyData?.items && historyData.items.length > 0 ? (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Modèle</TableHead>
+                          <TableHead>Catégorie</TableHead>
+                          <TableHead>Prix achat</TableHead>
+                          <TableHead>Prix conseillé</TableHead>
+                          <TableHead>Revente 1m</TableHead>
+                          <TableHead>Marge</TableHead>
+                          <TableHead>Tendance</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {historyData.items.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="text-muted-foreground">
+                              {new Date(item.created_at).toLocaleDateString('fr-FR')}
+                            </TableCell>
+                            <TableCell className="font-medium">{item.model_name}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{item.category}</Badge>
+                            </TableCell>
+                            <TableCell>{item.buy_price_input}€</TableCell>
+                            <TableCell className="text-accent">{item.buy_price_recommended}€</TableCell>
+                            <TableCell className="text-primary">{item.sell_price_1m}€</TableCell>
+                            <TableCell>
+                              <span className={
+                                item.margin_pct >= 10
+                                  ? "text-green-500"
+                                  : item.margin_pct >= 0
+                                  ? "text-orange-500"
+                                  : "text-destructive"
+                              }>
+                                {item.margin_pct > 0 ? "+" : ""}{item.margin_pct}%
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              {item.trend === "up" ? (
+                                <TrendingUp className="h-4 w-4 text-green-500" />
+                              ) : item.trend === "down" ? (
+                                <TrendingDown className="h-4 w-4 text-destructive" />
+                              ) : (
+                                <Minus className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
 
-                  <div>
-                    <h4 className="font-semibold mb-1 flex items-center gap-2">
-                      <TrendingDown className="h-4 w-4 text-accent" />
-                      Prix d'achat conseillé
-                    </h4>
-                    <p className="text-muted-foreground">
-                      Prix médian - marge de sécurité (5 à 10% selon rareté et tendance).
-                      Ne payez pas plus pour maximiser votre marge.
-                    </p>
+                    {/* Pagination */}
+                    {historyData.total > historyData.page_size && (
+                      <div className="flex items-center justify-center gap-2 mt-6">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                          disabled={historyPage === 1}
+                        >
+                          Précédent
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          Page {historyData.page} sur {Math.ceil(historyData.total / historyData.page_size)}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setHistoryPage((p) => p + 1)}
+                          disabled={historyPage >= Math.ceil(historyData.total / historyData.page_size)}
+                        >
+                          Suivant
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Aucune estimation dans l'historique</p>
+                    <p className="text-sm">Lancez votre première estimation pour la voir ici</p>
                   </div>
-
-                  <div>
-                    <h4 className="font-semibold mb-1 flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-success" />
-                      Prix de revente estimé
-                    </h4>
-                    <p className="text-muted-foreground">
-                      Basé sur la projection linéaire du prix moyen des 30 à 90 derniers
-                      jours. Tient compte de la tendance actuelle du marché.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold mb-1 flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-warning" />
-                      Probabilité de revente rapide
-                    </h4>
-                    <p className="text-muted-foreground">
-                      Calculée via le volume d'annonces et la rareté. Plus le composant est
-                      demandé, plus il se revendra vite.
-                    </p>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
-          </motion.div>
-        </div>
-
-        {/* Results */}
-        <AnimatePresence mode="wait">
-          {result && (
-            <motion.div
-              key="results"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -40 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-8"
-            >
-              {/* Badge & Summary */}
-              <Card className="border-2 shadow-xl">
-                <CardContent className="pt-6">
-                  <div className="text-center mb-6">
-                    <Badge
-                      variant={
-                        result.estimate.badge === "good"
-                          ? "default"
-                          : result.estimate.badge === "caution"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                      className="text-base px-6 py-2 gap-2 mb-4"
-                    >
-                      {result.estimate.badge === "good" ? (
-                        <CheckCircle2 className="h-5 w-5" />
-                      ) : result.estimate.badge === "caution" ? (
-                        <AlertTriangle className="h-5 w-5" />
-                      ) : (
-                        <AlertTriangle className="h-5 w-5" />
-                      )}
-                      {result.estimate.badge === "good"
-                        ? "✅ Bonne opportunité d'achat"
-                        : result.estimate.badge === "caution"
-                        ? "⚠️ Marché instable, prudence"
-                        : "📉 Risque élevé"}
-                    </Badge>
-
-                    <h2 className="text-2xl font-bold mb-2">{result.model}</h2>
-                    <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-                      <span>
-                        {result.category} • {result.brand}
-                      </span>
-                      <span>•</span>
-                      <span>État: {result.state}</span>
-                      {result.region && (
-                        <>
-                          <span>•</span>
-                          <span>{result.region}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Key Metrics Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="text-center p-4 bg-muted/30 rounded-lg">
-                      <p className="text-sm text-muted-foreground mb-1">Prix médian actuel</p>
-                      <p className="text-2xl font-bold text-primary">
-                        {result.market.median_price}€
-                      </p>
-                    </div>
-                    <div className="text-center p-4 bg-muted/30 rounded-lg">
-                      <p className="text-sm text-muted-foreground mb-1">Variation 30j</p>
-                      <p
-                        className={`text-2xl font-bold ${
-                          result.market.var_30d_pct >= 0 ? "text-success" : "text-destructive"
-                        }`}
-                      >
-                        {result.market.var_30d_pct > 0 ? "+" : ""}
-                        {result.market.var_30d_pct}%
-                      </p>
-                    </div>
-                    <div className="text-center p-4 bg-muted/30 rounded-lg">
-                      <p className="text-sm text-muted-foreground mb-1">Volume annonces</p>
-                      <p className="text-2xl font-bold">{result.market.volume}</p>
-                    </div>
-                    <div className="text-center p-4 bg-muted/30 rounded-lg">
-                      <p className="text-sm text-muted-foreground mb-1">Indice de rareté</p>
-                      <p className="text-2xl font-bold">
-                        {Math.round(result.market.rarity_index * 100) / 100}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Main Results */}
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <Card className="border-accent/40 bg-gradient-to-br from-accent/10 to-transparent">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-normal text-muted-foreground">
-                          Prix d'achat conseillé
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-4xl font-bold text-accent mb-1">
-                          {result.estimate.buy_price}€
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Ne payez pas plus pour maximiser votre marge
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-primary/40 bg-gradient-to-br from-primary/10 to-transparent">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-normal text-muted-foreground">
-                          Prix de revente (1 mois)
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-4xl font-bold text-primary mb-1">
-                          {result.estimate.sell_price_30d}€
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Prix optimal pour vente rapide
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    <Card
-                      className={`border-${
-                        result.estimate.profit_margin_pct >= 0 ? "success" : "destructive"
-                      }/40 bg-gradient-to-br from-${
-                        result.estimate.profit_margin_pct >= 0 ? "success" : "destructive"
-                      }/10 to-transparent`}
-                    >
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-normal text-muted-foreground">
-                          Marge brute potentielle
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div
-                          className={`text-4xl font-bold mb-1 flex items-center gap-2 ${
-                            result.estimate.profit_margin_pct >= 0
-                              ? "text-success"
-                              : "text-destructive"
-                          }`}
-                        >
-                          {result.estimate.profit_margin_pct >= 0 ? (
-                            <TrendingUp className="h-8 w-8" />
-                          ) : (
-                            <TrendingDown className="h-8 w-8" />
-                          )}
-                          {result.estimate.profit_margin_pct > 0 ? "+" : ""}
-                          {result.estimate.profit_margin_pct}%
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Probabilité revente: {Math.round(result.estimate.resell_probability * 100)}%
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Charts */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Évolution du prix médian (90j)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <LineChart data={priceChartData}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis
-                          dataKey="day"
-                          className="text-xs"
-                          label={{ value: "Jours", position: "insideBottom", offset: -5 }}
-                        />
-                        <YAxis className="text-xs" label={{ value: "Prix (€)", angle: -90, position: "insideLeft" }} />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "var(--radius)",
-                          }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="prix"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Volume d'annonces (30j)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <AreaChart data={volumeChartData}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis
-                          dataKey="day"
-                          className="text-xs"
-                          label={{ value: "Jours", position: "insideBottom", offset: -5 }}
-                        />
-                        <YAxis className="text-xs" label={{ value: "Annonces", angle: -90, position: "insideLeft" }} />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "var(--radius)",
-                          }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="volume"
-                          stroke="hsl(var(--accent))"
-                          fill="hsl(var(--accent) / 0.2)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Comparatif prix médian vs estimations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={comparisonChartData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis type="number" className="text-xs" />
-                      <YAxis dataKey="label" type="category" className="text-xs" width={150} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "var(--radius)",
-                        }}
-                        formatter={(value: number) => [`${value}€`, "Prix"]}
-                      />
-                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 8, 8, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              {/* Advice */}
-              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Info className="h-5 w-5 text-primary" />
-                    Recommandation automatique
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed mb-4">
-                    {result.estimate.advice}
-                  </p>
-                  <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
-                    <p>
-                      <strong>Conseil:</strong> Achetez uniquement si le prix est ≤{" "}
-                      {result.estimate.buy_price}€.
-                    </p>
-                    {result.market.trend === "down" && (
-                      <p>
-                        Attendez 2 à 3 semaines si le marché reste en baisse pour obtenir un
-                        meilleur prix.
-                      </p>
-                    )}
-                    <p>
-                      <strong>Revente idéale:</strong> {result.estimate.sell_price_30d}€ sous 30
-                      jours.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* CTAs */}
-              <div className="flex flex-wrap gap-4 justify-center">
-                <Button
-                  size="lg"
-                  onClick={() => navigate(`/deals?model=${selectedModel?.name}`)}
-                  className="gap-2"
-                >
-                  <ExternalLink className="h-5 w-5" />
-                  Voir les meilleures offres pour ce modèle
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => navigate(`/trends?category=${result.category}`)}
-                  className="gap-2"
-                >
-                  <TrendingUp className="h-5 w-5" />
-                  Explorer les tendances similaires
-                </Button>
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  onClick={() => navigate("/community")}
-                  className="gap-2"
-                >
-                  <Database className="h-5 w-5" />
-                  Contribuer à la mise à jour des données
-                </Button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* History */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-12"
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                Historique des estimations
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {history.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Aucune estimation pour le moment. Lancez votre première estimation ci-dessus !
-                </p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b">
-                      <tr className="text-left">
-                        <th className="pb-2 font-semibold">Date</th>
-                        <th className="pb-2 font-semibold">Modèle</th>
-                        <th className="pb-2 font-semibold">Catégorie</th>
-                        <th className="pb-2 font-semibold">Prix médian</th>
-                        <th className="pb-2 font-semibold">Prix conseillé</th>
-                        <th className="pb-2 font-semibold">Marge</th>
-                        <th className="pb-2 font-semibold">Tendance</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {history.map((item) => (
-                        <tr key={item.id} className="border-b last:border-0">
-                          <td className="py-3">{item.date}</td>
-                          <td className="py-3 font-medium">{item.model}</td>
-                          <td className="py-3">
-                            <Badge variant="outline">{item.category}</Badge>
-                          </td>
-                          <td className="py-3">{item.median_price}€</td>
-                          <td className="py-3 font-semibold text-accent">{item.buy_price}€</td>
-                          <td
-                            className={`py-3 font-semibold ${
-                              item.margin_pct >= 0 ? "text-success" : "text-destructive"
-                            }`}
-                          >
-                            {item.margin_pct > 0 ? "+" : ""}
-                            {item.margin_pct}%
-                          </td>
-                          <td className="py-3">
-                            {item.trend === "up" ? (
-                              <TrendingUp className="h-4 w-4 text-success" />
-                            ) : item.trend === "down" ? (
-                              <TrendingDown className="h-4 w-4 text-destructive" />
-                            ) : (
-                              <Minus className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Methodology */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-8"
-        >
-          <Card className="bg-muted/30">
-            <CardHeader>
-              <CardTitle className="text-lg">Sources de données & méthodologie</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>
-                • Les données proviennent des scraps manuels effectués via l'extension navigateur
-                des utilisateurs.
-              </p>
-              <p>
-                • Les prix médians sont recalculés chaque jour à partir des annonces actives (hors
-                valeurs extrêmes).
-              </p>
-              <p>
-                • Les volumes et raretés sont mesurés selon le nombre d'annonces disponibles par
-                modèle.
-              </p>
-              <p>
-                • Des API externes (Google Trends, eBay Market Data, Hardware.info) pourront être
-                intégrées à terme pour affiner les corrélations.
-              </p>
-              <p>• Toutes les données sont anonymisées et agrégées conformément au RGPD.</p>
-            </CardContent>
-          </Card>
-        </motion.div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
