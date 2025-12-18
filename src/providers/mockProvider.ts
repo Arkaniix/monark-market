@@ -847,4 +847,129 @@ export const mockProvider: DataProvider = {
     await delay();
     return getFromStorage(STORAGE_KEYS.CREDITS, initialCredits);
   },
+  async getSubscriptionPlans() {
+    await delay();
+    return [
+      {
+        id: 'basic',
+        name: 'Basic',
+        description: 'Pour débuter dans le hardware',
+        price: 0,
+        currency: 'EUR',
+        duration_months: 1,
+        features: { credits: 30, catalogue_complet: true, alertes_email: true },
+        is_active: true,
+      },
+      {
+        id: 'pro',
+        name: 'Pro',
+        description: 'Pour les acheteurs réguliers',
+        price: 9.99,
+        currency: 'EUR',
+        duration_months: 1,
+        features: { credits: 150, catalogue_complet: true, alertes_email: true, alertes_temps_reel: true, acces_estimator: true, historique_prix: true },
+        is_active: true,
+      },
+      {
+        id: 'elite',
+        name: 'Elite',
+        description: 'Pour les professionnels du resell',
+        price: 24.99,
+        currency: 'EUR',
+        duration_months: 1,
+        features: { credits: 400, catalogue_complet: true, alertes_email: true, alertes_temps_reel: true, acces_estimator: true, historique_prix: true, scrap_personnel: true, support_prioritaire: true },
+        is_active: true,
+      },
+    ];
+  },
+  async getUserSubscription() {
+    await delay();
+    const credits = getFromStorage(STORAGE_KEYS.CREDITS, initialCredits);
+    return {
+      id: 'mock-sub-1',
+      plan_id: 'pro',
+      status: 'active',
+      started_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+      expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+      credits_remaining: credits.credits_remaining,
+      credits_reset_date: credits.credits_reset_date || null,
+      billing_cycle: 'monthly',
+      plan: {
+        id: 'pro',
+        name: 'Pro',
+        description: 'Pour les acheteurs réguliers',
+        price: 9.99,
+        currency: 'EUR',
+        duration_months: 1,
+        features: { credits: 150, catalogue_complet: true, alertes_email: true, alertes_temps_reel: true, acces_estimator: true, historique_prix: true },
+        is_active: true,
+      },
+    };
+  },
+  async getSubscriptionHistory() {
+    await delay();
+    return [
+      {
+        id: 'mock-sub-1',
+        plan_id: 'pro',
+        status: 'active',
+        started_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+        expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+        credits_remaining: 120,
+        credits_reset_date: new Date(Date.now() + 15 * 86400000).toISOString(),
+        billing_cycle: 'monthly',
+        plan: {
+          id: 'pro',
+          name: 'Pro',
+          description: 'Pour les acheteurs réguliers',
+          price: 9.99,
+          currency: 'EUR',
+          duration_months: 1,
+          features: { credits: 150 },
+          is_active: true,
+        },
+      },
+      {
+        id: 'mock-sub-0',
+        plan_id: 'basic',
+        status: 'expired',
+        started_at: new Date(Date.now() - 90 * 86400000).toISOString(),
+        expires_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+        credits_remaining: 0,
+        credits_reset_date: null,
+        billing_cycle: 'monthly',
+        plan: {
+          id: 'basic',
+          name: 'Basic',
+          description: 'Plan gratuit',
+          price: 0,
+          currency: 'EUR',
+          duration_months: 1,
+          features: { credits: 30 },
+          is_active: true,
+        },
+      },
+    ];
+  },
+  async getUserProfile() {
+    await delay();
+    return {
+      id: 'mock-user-1',
+      email: 'test@example.com',
+      display_name: 'Utilisateur Test',
+      avatar_url: null,
+      discord_id: 'TestUser#1234',
+      created_at: new Date(Date.now() - 120 * 86400000).toISOString(),
+    };
+  },
+  async subscribe(planId) {
+    await delay();
+    // In mock mode, just update the credits storage
+    const newCredits = {
+      credits_remaining: planId === 'elite' ? 400 : planId === 'pro' ? 150 : 30,
+      plan_name: planId === 'elite' ? 'Elite' : planId === 'pro' ? 'Pro' : 'Basic',
+      credits_reset_date: new Date(Date.now() + 30 * 86400000).toISOString(),
+    };
+    setToStorage(STORAGE_KEYS.CREDITS, newCredits);
+  },
 };

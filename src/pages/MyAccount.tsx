@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,18 +14,27 @@ import { useToast } from "@/hooks/use-toast";
 import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion } from "framer-motion";
-import type { Database } from "@/integrations/supabase/types";
 import ScrapModal from "@/components/ScrapModal";
-import { useWatchlist, useRemoveFromWatchlist, useAddToWatchlist } from "@/hooks/useWatchlist";
-import { useAlerts, useCreateAlert, useUpdateAlert, useDeleteAlert } from "@/hooks/useAlerts";
-import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from "@/hooks/useNotifications";
-import { useModelsAutocomplete } from "@/hooks/useEstimator";
-import { Link } from "react-router-dom";
-
-type SubscriptionPlan = Database["public"]["Tables"]["subscription_plans"]["Row"];
-type UserSubscription = Database["public"]["Tables"]["user_subscriptions"]["Row"] & {
-  subscription_plans: SubscriptionPlan;
-};
+import { useAuth } from "@/context/AuthContext";
+import {
+  useWatchlist,
+  useRemoveFromWatchlist,
+  useAddToWatchlist,
+  useAlerts,
+  useCreateAlert,
+  useUpdateAlert,
+  useDeleteAlert,
+  useNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+  useDeleteNotification,
+  useModelsAutocomplete,
+  useSubscriptionPlans,
+  useUserSubscription,
+  useSubscriptionHistory,
+  useSubscribe,
+} from "@/hooks/useProviderData";
+import type { SubscriptionPlan } from "@/providers/types";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -39,23 +47,20 @@ const itemVariants = {
 };
 
 export default function MyAccount() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
   const defaultTab = searchParams.get('tab') || 'dashboard';
-
-  // Subscription states
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null);
-  const [subscriptionHistory, setSubscriptionHistory] = useState<UserSubscription[]>([]);
 
   // Dashboard states
   const [showScrapModal, setShowScrapModal] = useState(false);
-  const userCredits = currentSubscription?.credits_remaining ?? 0;
-  const maxCredits = 200;
-  const creditPercentage = Math.min((userCredits / maxCredits) * 100, 100);
+
+  // Provider hooks for subscriptions
+  const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
+  const { data: currentSubscription, isLoading: subscriptionLoading } = useUserSubscription();
+  const { data: subscriptionHistory } = useSubscriptionHistory();
+  const subscribeMutation = useSubscribe();
 
   // Watchlist & Alerts hooks
   const { data: watchlistData, isLoading: loadingWatchlist } = useWatchlist();
@@ -83,69 +88,25 @@ export default function MyAccount() {
   const [alertType, setAlertType] = useState<'deal_detected' | 'price_below' | 'price_above'>('price_below');
   const [priceThreshold, setPriceThreshold] = useState("");
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  // Redirect if not authenticated
+  if (!authLoading && !user) {
+    navigate("/auth");
+    return null;
+  }
 
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    setUser(user);
-    loadData(user.id);
-  };
-
-  const loadData = async (userId: string) => {
-    try {
-      const { data: plansData } = await supabase
-        .from("subscription_plans")
-        .select("*")
-        .eq("is_active", true)
-        .order("price", { ascending: true });
-      setPlans(plansData || []);
-
-      const { data: currentSub } = await supabase
-        .from("user_subscriptions")
-        .select(`*, subscription_plans (*)`)
-        .eq("user_id", userId)
-        .eq("status", "active")
-        .order("started_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      setCurrentSubscription(currentSub);
-
-      const { data: historyData } = await supabase
-        .from("user_subscriptions")
-        .select(`*, subscription_plans (*)`)
-        .eq("user_id", userId)
-        .order("started_at", { ascending: false });
-      setSubscriptionHistory(historyData || []);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      toast({ title: "Erreur", description: "Impossible de charger les données", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const userCredits = currentSubscription?.credits_remaining ?? 0;
+  const maxCredits = 200;
+  const creditPercentage = Math.min((userCredits / maxCredits) * 100, 100);
 
   const handleSubscribe = async (planId: string) => {
-    if (!user) return;
-    try {
-      const { error } = await supabase.from("user_subscriptions").insert({
-        user_id: user.id,
-        plan_id: planId,
-        status: "active",
-        started_at: new Date().toISOString()
-      });
-      if (error) throw error;
-      toast({ title: "Succès", description: "Abonnement activé avec succès" });
-      loadData(user.id);
-    } catch (error) {
-      console.error("Error subscribing:", error);
-      toast({ title: "Erreur", description: "Impossible de s'abonner", variant: "destructive" });
-    }
+    subscribeMutation.mutate(planId, {
+      onSuccess: () => {
+        toast({ title: "Succès", description: "Abonnement activé avec succès" });
+      },
+      onError: () => {
+        toast({ title: "Erreur", description: "Impossible de s'abonner", variant: "destructive" });
+      }
+    });
   };
 
   const getPlanIcon = (planName: string) => {
@@ -157,7 +118,7 @@ export default function MyAccount() {
     }
   };
 
-  const renderFeatures = (features: any) => {
+  const renderFeatures = (features: SubscriptionPlan['features']) => {
     if (!features) return null;
     if (Array.isArray(features)) {
       return features.map((feature, index) => (
@@ -183,9 +144,10 @@ export default function MyAccount() {
         exports_personnalises: "Exports personnalisés",
         support_prioritaire: "Support prioritaire",
         alertes_instantanees: "Alertes instantanées",
-        rapports_mensuels: "Rapports mensuels"
+        rapports_mensuels: "Rapports mensuels",
+        credits: "Crédits",
       };
-      return Object.entries(features as Record<string, any>).map(([key, value]) => {
+      return Object.entries(features as Record<string, unknown>).map(([key, value]) => {
         if (value === false || value === "" || value === null) return null;
         const label = featureLabels[key] || key;
         if (key === "credits" && typeof value === "number") {
@@ -237,8 +199,8 @@ export default function MyAccount() {
     createAlert.mutate({
       target_type: 'model',
       target_id: selectedModelId,
-      alert_type: alertType,
-      price_threshold: priceThreshold ? parseFloat(priceThreshold) : undefined
+      alert_type: alertType === 'deal_detected' ? 'availability' : 'price_threshold',
+      threshold_value: priceThreshold ? parseFloat(priceThreshold) : undefined
     }, {
       onSuccess: () => {
         toast({ title: "Alerte créée", description: "Vous serez notifié" });
@@ -290,7 +252,7 @@ export default function MyAccount() {
     }
   };
 
-  if (loading) {
+  if (authLoading || plansLoading || subscriptionLoading) {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -397,12 +359,12 @@ export default function MyAccount() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-3 rounded-xl bg-primary/10">
-                      {getPlanIcon(currentSubscription.subscription_plans.name)}
+                      {getPlanIcon(currentSubscription.plan.name)}
                     </div>
                     <div>
                       <CardTitle className="text-2xl">Abonnement actuel</CardTitle>
                       <CardDescription className="text-base mt-1">
-                        Vous êtes abonné au plan {currentSubscription.subscription_plans.name}
+                        Vous êtes abonné au plan {currentSubscription.plan.name}
                       </CardDescription>
                     </div>
                   </div>
@@ -430,7 +392,7 @@ export default function MyAccount() {
                     )}
                   </div>
                 )}
-                <div className="space-y-3">{renderFeatures(currentSubscription.subscription_plans.features)}</div>
+                <div className="space-y-3">{renderFeatures(currentSubscription.plan.features)}</div>
               </CardContent>
             </Card>
           )}
@@ -438,7 +400,7 @@ export default function MyAccount() {
           <div>
             <h2 className="text-2xl font-bold mb-6">Plans disponibles</h2>
             <div className="grid gap-6 md:grid-cols-3">
-              {plans.map(plan => {
+              {(plans || []).map(plan => {
                 const isCurrentPlan = currentSubscription?.plan_id === plan.id;
                 const isPro = plan.name.toLowerCase() === "pro";
                 return (
@@ -468,7 +430,13 @@ export default function MyAccount() {
                       {isCurrentPlan ? (
                         <Button disabled className="w-full" variant="secondary">Plan actuel</Button>
                       ) : (
-                        <Button onClick={() => handleSubscribe(plan.id)} className="w-full" variant={isPro ? "default" : "outline"}>
+                        <Button 
+                          onClick={() => handleSubscribe(plan.id)} 
+                          className="w-full" 
+                          variant={isPro ? "default" : "outline"}
+                          disabled={subscribeMutation.isPending}
+                        >
+                          {subscribeMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                           Choisir ce plan
                         </Button>
                       )}
@@ -553,28 +521,29 @@ export default function MyAccount() {
                       />
                     </div>
                     {modelsData && modelsData.length > 0 && (
-                      <div className="max-h-32 overflow-y-auto space-y-1 border rounded-lg p-2">
+                      <div className="max-h-48 overflow-y-auto space-y-1 border rounded-lg p-2">
                         {modelsData.map((model) => (
                           <div
                             key={model.id}
                             className={`p-2 rounded cursor-pointer hover:bg-muted ${selectedModelId === model.id ? 'bg-primary/10 border border-primary/30' : ''}`}
                             onClick={() => setSelectedModelId(model.id)}
                           >
-                            <p className="font-medium text-sm">{model.name}</p>
+                            <p className="font-medium">{model.name}</p>
+                            <p className="text-xs text-muted-foreground">{model.brand} • {model.category}</p>
                           </div>
                         ))}
                       </div>
                     )}
                     <div>
                       <Label>Type d'alerte</Label>
-                      <Select value={alertType} onValueChange={(v) => setAlertType(v as any)}>
+                      <Select value={alertType} onValueChange={(v) => setAlertType(v as typeof alertType)}>
                         <SelectTrigger className="mt-2">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="deal_detected">Bonne affaire détectée</SelectItem>
                           <SelectItem value="price_below">Prix inférieur à</SelectItem>
                           <SelectItem value="price_above">Prix supérieur à</SelectItem>
+                          <SelectItem value="deal_detected">Bonne affaire détectée</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -583,7 +552,7 @@ export default function MyAccount() {
                         <Label>Seuil de prix (€)</Label>
                         <Input
                           type="number"
-                          placeholder="200"
+                          placeholder="350"
                           value={priceThreshold}
                           onChange={(e) => setPriceThreshold(e.target.value)}
                           className="mt-2"
@@ -603,192 +572,172 @@ export default function MyAccount() {
             </div>
           </div>
 
-          {/* Active Alerts */}
-          {alerts.length > 0 && (
-            <Card className="border-warning/20 bg-warning/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-warning" />
-                  Alertes configurées ({alerts.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {alerts.map((alert) => (
-                    <motion.div
-                      key={alert.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${alert.is_active ? 'bg-background' : 'bg-muted/50 opacity-60'}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${alert.is_active ? 'bg-warning/10' : 'bg-muted'}`}>
-                          <Bell className={`h-5 w-5 ${alert.is_active ? 'text-warning' : 'text-muted-foreground'}`} />
-                        </div>
-                        <div>
-                          <p className="font-medium">{alert.target_name || `#${alert.target_id}`}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {alert.alert_type === 'price_below' && alert.price_threshold
-                              ? `Prix < ${alert.price_threshold}€`
-                              : alert.alert_type === 'price_above' && alert.price_threshold
-                              ? `Prix > ${alert.price_threshold}€`
-                              : 'Deal détecté'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant={alert.is_active ? "outline" : "default"}
-                          onClick={() => handleToggleAlert(alert.id, alert.is_active)}
-                          disabled={updateAlert.isPending}
-                        >
-                          {alert.is_active ? 'Désactiver' : 'Activer'}
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleDeleteAlert(alert.id)}
-                          disabled={deleteAlert.isPending}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Watchlist Items */}
           {loadingWatchlist ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : watchlistItems.length > 0 ? (
-            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid lg:grid-cols-2 gap-4">
+          ) : watchlistItems.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Eye className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground text-center">Votre watchlist est vide</p>
+                <Button className="mt-4" onClick={() => setShowAddWatchlistDialog(true)}>
+                  Ajouter un modèle
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid gap-4 md:grid-cols-2">
               {watchlistItems.map((item) => (
                 <motion.div key={item.id} variants={itemVariants}>
-                  <Card className="hover:border-primary/50 transition-colors">
-                    <CardContent className="p-4">
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CardContent className="pt-6">
                       <div className="flex items-start justify-between">
-                        <Link to={item.target_type === 'model' ? `/models/${item.target_id}` : `/ads/${item.target_id}`} className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline">{item.category || item.target_type}</Badge>
-                            {item.brand && <Badge variant="secondary">{item.brand}</Badge>}
+                        <div className="space-y-1">
+                          <Link to={item.target_type === 'model' ? `/model/${item.target_id}` : `/ad/${item.target_id}`} className="hover:underline">
+                            <h3 className="font-semibold">{item.name}</h3>
+                          </Link>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{item.category}</Badge>
+                            {item.brand && <span className="text-sm text-muted-foreground">{item.brand}</span>}
                           </div>
-                          <h3 className="font-semibold mb-1">{item.name || `#${item.target_id}`}</h3>
-                          {item.current_price && (
-                            <div className="flex items-center gap-3">
-                              <span className="text-xl font-bold">{item.current_price}€</span>
-                              {item.price_change_7d !== undefined && (
-                                <span className={`text-sm font-medium flex items-center gap-1 ${item.price_change_7d < 0 ? 'text-success' : 'text-destructive'}`}>
-                                  {item.price_change_7d < 0 ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
-                                  {item.price_change_7d.toFixed(1)}%
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </Link>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleRemoveFromWatchlist(item.id)}
-                          disabled={removeFromWatchlist.isPending}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => handleRemoveFromWatchlist(item.id)}>
+                          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                         </Button>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between">
+                        {item.current_price && (
+                          <span className="text-lg font-bold">{item.current_price}€</span>
+                        )}
+                        {item.price_change_7d !== undefined && (
+                          <Badge variant={item.price_change_7d < 0 ? "default" : "secondary"}>
+                            {item.price_change_7d > 0 ? "+" : ""}{item.price_change_7d}%
+                          </Badge>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
                 </motion.div>
               ))}
             </motion.div>
-          ) : (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Eye className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Watchlist vide</h3>
-                <p className="text-muted-foreground text-center mb-4">
-                  Ajoutez des modèles pour suivre leurs prix
-                </p>
-                <Button onClick={() => setShowAddWatchlistDialog(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Ajouter un modèle
-                </Button>
-              </CardContent>
-            </Card>
           )}
+
+          {/* Alerts Section */}
+          <div className="pt-8">
+            <h2 className="text-xl font-bold mb-4">Mes alertes</h2>
+            {loadingAlerts ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : alerts.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-8">
+                  <Bell className="h-10 w-10 text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">Aucune alerte configurée</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {alerts.map((alert) => (
+                  <Card key={alert.id} className={!alert.is_active ? "opacity-60" : ""}>
+                    <CardContent className="py-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Bell className={`h-5 w-5 ${alert.is_active ? "text-primary" : "text-muted-foreground"}`} />
+                          <div>
+                            <p className="font-medium">{alert.name || 'Alerte'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {alert.alert_type === 'price_threshold' && alert.threshold_value
+                                ? `Prix ${alert.threshold_value}€`
+                                : alert.alert_type === 'price_drop' ? 'Baisse de prix' : 'Disponibilité'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleToggleAlert(alert.id, alert.is_active)}>
+                            {alert.is_active ? "Désactiver" : "Activer"}
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteAlert(alert.id)}>
+                            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6">
           <div className="flex items-center justify-between">
             <p className="text-muted-foreground">
-              {unreadCount > 0 ? `${unreadCount} notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}` : 'Toutes les notifications sont lues'}
+              {unreadCount > 0 ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}` : "Toutes les notifications sont lues"}
             </p>
             {unreadCount > 0 && (
-              <Button variant="outline" size="sm" onClick={handleMarkAllAsRead} disabled={markAllRead.isPending}>
-                {markAllRead.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
                 Tout marquer comme lu
               </Button>
             )}
           </div>
 
           {loadingNotifications ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : notifications.length > 0 ? (
+          ) : notifications.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Bell className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Aucune notification</p>
+              </CardContent>
+            </Card>
+          ) : (
             <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-3">
-              {notifications.map((notif) => (
-                <motion.div
-                  key={notif.id}
-                  variants={itemVariants}
-                  className={`flex items-start gap-4 p-4 rounded-lg border ${!notif.is_read ? 'bg-primary/5 border-primary/20' : 'bg-muted/30'}`}
-                >
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${!notif.is_read ? 'bg-primary/10' : 'bg-muted'}`}>
-                    {getNotificationIcon(notif.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium">{notif.title}</h4>
-                      {!notif.is_read && <Badge variant="default" className="text-xs">Nouveau</Badge>}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{notif.message}</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: fr })}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {!notif.is_read && (
-                      <Button size="icon" variant="ghost" onClick={() => handleMarkAsRead(notif.id)} disabled={markRead.isPending}>
-                        <CheckCircle2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {notif.link && (
-                      <Link to={notif.link}>
-                        <Button size="sm" variant="outline">Voir</Button>
-                      </Link>
-                    )}
-                    <Button size="icon" variant="ghost" onClick={() => handleDeleteNotification(notif.id)} disabled={deleteNotification.isPending}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
+              {notifications.map((notification) => (
+                <motion.div key={notification.id} variants={itemVariants}>
+                  <Card className={`transition-all ${!notification.is_read ? "border-primary/50 bg-primary/5" : ""}`}>
+                    <CardContent className="py-4">
+                      <div className="flex items-start gap-4">
+                        <div className="mt-1">{getNotificationIcon(notification.type)}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-medium">{notification.title}</p>
+                              <p className="text-sm text-muted-foreground">{notification.message}</p>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {!notification.is_read && (
+                                <Button variant="ghost" size="icon" onClick={() => handleMarkAsRead(notification.id)}>
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="icon" onClick={() => handleDeleteNotification(notification.id)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Clock className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: fr })}
+                            </span>
+                            {notification.link && (
+                              <Link to={notification.link} className="text-xs text-primary hover:underline ml-2">
+                                Voir détails
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </motion.div>
               ))}
             </motion.div>
-          ) : (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Aucune notification</h3>
-                <p className="text-muted-foreground text-center">
-                  Vos notifications apparaîtront ici
-                </p>
-              </CardContent>
-            </Card>
           )}
         </TabsContent>
       </Tabs>
