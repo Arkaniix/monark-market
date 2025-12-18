@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/context/AuthContext";
 import { ScrapJobProvider } from "@/context/ScrapJobContext";
+import { DataProviderComponent } from "@/providers";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { routes } from "./routes";
@@ -16,9 +17,10 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <AuthProvider>
-          <ScrapJobProvider>
-            <TooltipProvider>
+        <DataProviderComponent>
+          <AuthProvider>
+            <ScrapJobProvider>
+              <TooltipProvider>
               <Toaster />
               <Sonner />
               <BrowserRouter>
@@ -44,9 +46,10 @@ const App = () => {
                   </Routes>
                 </Layout>
               </BrowserRouter>
-            </TooltipProvider>
-          </ScrapJobProvider>
-        </AuthProvider>
+              </TooltipProvider>
+            </ScrapJobProvider>
+          </AuthProvider>
+        </DataProviderComponent>
       </ThemeProvider>
     </QueryClientProvider>
   );
