@@ -1,4 +1,4 @@
-// API Endpoints - All API routes organized by domain
+// API Endpoints - All API routes aligned with monark_api_v0.18
 
 // ============= Auth =============
 export const AUTH = {
@@ -7,7 +7,6 @@ export const AUTH = {
   REFRESH: '/v1/auth/refresh',
   LOGOUT: '/v1/auth/logout',
   ME: '/v1/users/me',
-  ROLE: '/v1/users/me/role',
 } as const;
 
 // ============= Dashboard =============
@@ -18,11 +17,20 @@ export const DASHBOARD = {
 // ============= Users =============
 export const USERS = {
   ME: '/v1/users/me',
-  CREDITS: '/v1/users/credits',
-  NOTIFICATIONS: '/v1/users/notifications',
-  NOTIFICATION_READ: (id: string) => `/v1/users/notifications/${id}/read`,
-  NOTIFICATION_READ_ALL: '/v1/users/notifications/read-all',
-  NOTIFICATION_DELETE: (id: string) => `/v1/users/notifications/${id}`,
+} as const;
+
+// ============= Credits =============
+export const CREDITS = {
+  BALANCE: '/v1/credits/balance',
+  HISTORY: '/v1/credits/history',
+} as const;
+
+// ============= Billing =============
+export const BILLING = {
+  PLANS: '/v1/billing/plans',
+  SUBSCRIPTIONS: '/v1/billing/subscriptions',
+  HISTORY: '/v1/billing/history',
+  CHECKOUT_SESSION: '/v1/billing/checkout_session',
 } as const;
 
 // ============= Watchlist =============
@@ -53,27 +61,17 @@ export const MARKET = {
   MODEL_HISTORY: (modelId: string) => `/v1/market/models/${modelId}/history`,
 } as const;
 
-// ============= Catalog =============
-export const CATALOG = {
-  BRANDS: '/v1/catalog/brands',
-  FAMILIES: '/v1/catalog/families',
-  SUMMARY: '/v1/catalog/summary',
-} as const;
-
 // ============= Hardware =============
 export const HARDWARE = {
   CATEGORIES: '/v1/hardware/categories',
   MODELS: '/v1/hardware/models',
   MODEL_DETAIL: (id: string) => `/v1/hardware/models/${id}`,
-  MODEL_PRICE_HISTORY: (id: string) => `/v1/hardware/models/${id}/price-history`,
-  MODEL_ADS: (id: string) => `/v1/hardware/models/${id}/ads`,
-  AUTOCOMPLETE: '/v1/hardware/models/autocomplete',
 } as const;
 
 // ============= Ads =============
 export const ADS = {
   DETAIL: (id: string) => `/v1/ads/${id}`,
-  PRICE_HISTORY: (id: string) => `/v1/ads/${id}/price-history`,
+  PRICE_HISTORY: (id: string) => `/v1/ads/${id}/prices`,
 } as const;
 
 // ============= Estimator =============
@@ -85,11 +83,11 @@ export const ESTIMATOR = {
 
 // ============= Community =============
 export const COMMUNITY = {
-  TASKS: '/v1/community/tasks',
-  MY_TASKS: '/v1/community/my-tasks',
-  CLAIM: '/v1/community/claim',
-  STATS: '/v1/community/stats',
   LEADERBOARD: '/v1/community/leaderboard',
+  STATS: '/v1/community/stats',
+  TASKS_AVAILABLE: '/v1/community/tasks/available',
+  TASKS_CLAIM: '/v1/community/tasks/claim',
+  TASKS_MY: '/v1/community/tasks/my',
 } as const;
 
 // ============= Training =============
@@ -100,7 +98,7 @@ export const TRAINING = {
 
 // ============= Jobs / Scrap =============
 export const JOBS = {
-  START: '/v1/scrap/start',
+  CREATE: '/v1/scrap/create_job',
   STATUS: (id: number) => `/v1/jobs/${id}`,
   CANCEL: (id: number) => `/v1/jobs/${id}/cancel`,
   LIST: '/v1/jobs',
@@ -109,9 +107,7 @@ export const JOBS = {
 // ============= Admin =============
 export const ADMIN = {
   USERS: '/v1/admin/users',
-  JOBS: '/v1/admin/jobs',
-  JOB_DETAIL: (id: number) => `/v1/admin/jobs/${id}`,
-  LOGS: '/v1/admin/logs',
+  SYSTEM: '/v1/admin/system',
 } as const;
 
 // ============= Health =============
@@ -124,11 +120,12 @@ export const ENDPOINTS = {
   AUTH,
   DASHBOARD,
   USERS,
+  CREDITS,
+  BILLING,
   WATCHLIST,
   ALERTS,
   DEALS,
   MARKET,
-  CATALOG,
   HARDWARE,
   ADS,
   ESTIMATOR,
