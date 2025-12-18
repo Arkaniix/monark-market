@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Shield } from "lucide-react";
+import { Shield, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRole } from "@/hooks/useAdmin";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminUsers from "@/components/admin/AdminUsers";
@@ -19,50 +19,30 @@ import AdminLogs from "@/components/admin/AdminLogs";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 
 export default function Admin() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("dashboard");
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const { data: roleData, isLoading, isError, error } = useUserRole();
 
   useEffect(() => {
-    checkAdminStatus();
-  }, []);
-
-  const checkAdminStatus = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate("/auth");
-        return;
-      }
-
-      const { data, error } = await supabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'admin'
-      });
-
-      if (error) throw error;
-
-      if (!data) {
+    if (!isLoading && !isError) {
+      if (roleData?.role !== 'admin') {
         toast({
           title: "Accès refusé",
           description: "Vous n'avez pas les permissions nécessaires",
           variant: "destructive"
         });
-        navigate("/");
-        return;
+        navigate("/home");
       }
-
-      setIsAdmin(true);
-    } catch (error) {
-      console.error("Error checking admin status:", error);
-      navigate("/");
-    } finally {
-      setLoading(false);
     }
-  };
+    
+    if (isError) {
+      // If error fetching role, redirect to home
+      console.error("Error checking admin status:", error);
+      navigate("/home");
+    }
+  }, [roleData, isLoading, isError, navigate, toast, error]);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -97,17 +77,17 @@ export default function Admin() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
   }
 
-  if (!isAdmin) {
+  if (roleData?.role !== 'admin') {
     return null;
   }
 

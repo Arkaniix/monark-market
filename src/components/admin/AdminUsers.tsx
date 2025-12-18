@@ -1,140 +1,82 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { Shield, Search, UserCog } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-
-interface User {
-  user_id: string;
-  display_name: string;
-  created_at: string;
-  role?: string;
-  credits?: number;
-}
+import { Shield, Search, ChevronLeft, ChevronRight, Loader2, Users } from "lucide-react";
+import { useAdminUsers } from "@/hooks/useAdmin";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [newRole, setNewRole] = useState("");
-  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const limit = 20;
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  const { data, isLoading, isError } = useAdminUsers(page, limit, searchQuery || undefined);
 
-  const loadUsers = async () => {
-    try {
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, display_name, created_at')
-        .order('created_at', { ascending: false })
-        .limit(50);
+  const handleSearch = () => {
+    setSearchQuery(searchTerm);
+    setPage(1);
+  };
 
-      if (profilesError) throw profilesError;
-
-      // Load roles for each user
-      const usersWithRoles = await Promise.all(
-        (profilesData || []).map(async (profile) => {
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', profile.user_id)
-            .single();
-
-          return {
-            ...profile,
-            role: roleData?.role || 'user'
-          };
-        })
-      );
-
-      setUsers(usersWithRoles);
-    } catch (error) {
-      console.error('Error loading users:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les utilisateurs",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
-  const updateUserRole = async () => {
-    if (!selectedUser || !newRole) return;
-
-    try {
-      // First, delete existing role
-      await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', selectedUser.user_id);
-
-      // Then insert new role
-      const { error } = await supabase
-        .from('user_roles')
-        .insert([{
-          user_id: selectedUser.user_id,
-          role: newRole as 'admin' | 'user'
-        }]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: "Rôle mis à jour avec succès"
-      });
-
-      loadUsers();
-      setSelectedUser(null);
-    } catch (error) {
-      console.error('Error updating role:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le rôle",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const filteredUsers = users.filter(user =>
-    user.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (loading) {
-    return <div>Chargement...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
+
+  if (isError) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-destructive">Erreur lors du chargement des utilisateurs</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const users = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">Gestion des utilisateurs</h2>
-        <p className="text-muted-foreground">Vue et gestion de tous les comptes utilisateurs</p>
+        <p className="text-muted-foreground">Vue de tous les comptes utilisateurs (lecture seule)</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Recherche et filtres</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Utilisateurs ({total})
+            </CardTitle>
+          </div>
           <div className="flex gap-4 mt-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Rechercher par nom..."
+                placeholder="Rechercher par nom ou email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="pl-10"
               />
             </div>
+            <Button onClick={handleSearch}>Rechercher</Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -142,79 +84,82 @@ export default function AdminUsers() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Rôle</TableHead>
+                <TableHead>Plan</TableHead>
                 <TableHead>Crédits</TableHead>
-                <TableHead>Date d'inscription</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Inscription</TableHead>
+                <TableHead>Dernière connexion</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.user_id}>
-                  <TableCell className="font-medium">
-                    {user.display_name || 'Sans nom'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      <Shield className="h-3 w-3 mr-1" />
-                      {user.role || 'user'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{user.credits || 0}</TableCell>
-                  <TableCell>
-                    {new Date(user.created_at).toLocaleDateString('fr-FR')}
-                  </TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setNewRole(user.role || 'user');
-                          }}
-                        >
-                          <UserCog className="h-3 w-3 mr-1" />
-                          Gérer
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Gérer l'utilisateur</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                          <div className="space-y-2">
-                            <Label>Nom d'affichage</Label>
-                            <Input value={selectedUser?.display_name || ''} disabled />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>ID Utilisateur</Label>
-                            <Input value={selectedUser?.user_id || ''} disabled className="font-mono text-xs" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Rôle</Label>
-                            <Select value={newRole} onValueChange={setNewRole}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="user">Utilisateur</SelectItem>
-                                <SelectItem value="admin">Administrateur</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Button onClick={updateUserRole} className="w-full">
-                            Mettre à jour le rôle
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    Aucun utilisateur trouvé
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      {user.display_name || 'Sans nom'}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {user.email}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={user.role === 'admin' ? 'default' : 'outline'}>
+                        <Shield className="h-3 w-3 mr-1" />
+                        {user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{user.plan_name || 'Free'}</Badge>
+                    </TableCell>
+                    <TableCell>{user.credits_remaining}</TableCell>
+                    <TableCell className="text-sm">
+                      {format(new Date(user.created_at), "dd MMM yyyy", { locale: fr })}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {user.last_sign_in_at
+                        ? format(new Date(user.last_sign_in_at), "dd MMM yyyy HH:mm", { locale: fr })
+                        : 'Jamais'}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Page {page} sur {totalPages} ({total} utilisateurs)
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Suivant
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
