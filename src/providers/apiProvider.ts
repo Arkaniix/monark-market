@@ -1,5 +1,5 @@
 // API Provider - wraps real API calls
-import { apiFetch, apiPost, apiPut, apiDelete } from "@/lib/api";
+import { apiFetch, apiPost, apiPut, apiDelete, ENDPOINTS } from "@/lib/api";
 import type {
   DataProvider,
   DashboardOverview,
