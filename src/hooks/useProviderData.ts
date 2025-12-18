@@ -499,3 +499,49 @@ export function useUserCredits() {
     staleTime: 1000 * 60 * 2,
   });
 }
+
+export function useSubscriptionPlans() {
+  const provider = useDataProvider();
+  return useQuery({
+    queryKey: ["subscriptions", "plans"],
+    queryFn: () => provider.getSubscriptionPlans(),
+    staleTime: 1000 * 60 * 30, // 30 minutes
+  });
+}
+
+export function useUserSubscription() {
+  const provider = useDataProvider();
+  return useQuery({
+    queryKey: ["subscriptions", "current"],
+    queryFn: () => provider.getUserSubscription(),
+  });
+}
+
+export function useSubscriptionHistory() {
+  const provider = useDataProvider();
+  return useQuery({
+    queryKey: ["subscriptions", "history"],
+    queryFn: () => provider.getSubscriptionHistory(),
+  });
+}
+
+export function useUserProfile() {
+  const provider = useDataProvider();
+  return useQuery({
+    queryKey: ["user", "profile"],
+    queryFn: () => provider.getUserProfile(),
+  });
+}
+
+export function useSubscribe() {
+  const queryClient = useQueryClient();
+  const provider = useDataProvider();
+  return useMutation({
+    mutationFn: (planId: string) => provider.subscribe(planId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["user", "credits"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}

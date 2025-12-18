@@ -39,6 +39,9 @@ import type {
   JobStatus,
   UserJobsResponse,
   UserCredits,
+  SubscriptionPlan,
+  UserSubscription,
+  UserProfile,
 } from "./types";
 
 function buildQueryString(params: Record<string, any>): string {
@@ -222,5 +225,20 @@ export const apiProvider: DataProvider = {
   // User
   async getUserCredits() {
     return apiFetch<UserCredits>('/v1/users/credits');
+  },
+  async getSubscriptionPlans() {
+    return apiFetch<SubscriptionPlan[]>('/v1/subscriptions/plans');
+  },
+  async getUserSubscription() {
+    return apiFetch<UserSubscription | null>('/v1/subscriptions/current');
+  },
+  async getSubscriptionHistory() {
+    return apiFetch<UserSubscription[]>('/v1/subscriptions/history');
+  },
+  async getUserProfile() {
+    return apiFetch<UserProfile>('/v1/users/me');
+  },
+  async subscribe(planId) {
+    return apiPost('/v1/subscriptions', { plan_id: planId });
   },
 };

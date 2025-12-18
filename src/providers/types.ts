@@ -603,6 +603,38 @@ export interface UserCredits {
   credits_reset_date?: string;
 }
 
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  duration_months: number;
+  features: Record<string, unknown> | string[] | null;
+  is_active: boolean;
+}
+
+export interface UserSubscription {
+  id: string;
+  plan_id: string;
+  status: string;
+  started_at: string;
+  expires_at: string | null;
+  credits_remaining: number | null;
+  credits_reset_date: string | null;
+  billing_cycle: string | null;
+  plan: SubscriptionPlan;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  discord_id: string | null;
+  created_at: string;
+}
+
 // ============= DataProvider Interface =============
 export interface DataProvider {
   // Dashboard
@@ -675,4 +707,9 @@ export interface DataProvider {
   
   // User
   getUserCredits(): Promise<UserCredits>;
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getUserSubscription(): Promise<UserSubscription | null>;
+  getSubscriptionHistory(): Promise<UserSubscription[]>;
+  getUserProfile(): Promise<UserProfile>;
+  subscribe(planId: string): Promise<void>;
 }
