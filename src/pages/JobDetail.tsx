@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useJobStatus, useCancelJob } from '@/hooks/useScrapJob';
 import { useScrapJobContext } from '@/context/ScrapJobContext';
@@ -21,6 +21,9 @@ import {
   Loader2,
   RefreshCw,
   StopCircle,
+  ShoppingCart,
+  TrendingUp,
+  ExternalLink,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -28,6 +31,7 @@ import { fr } from 'date-fns/locale';
 const statusConfig = {
   pending: { label: 'En attente', color: 'bg-muted text-muted-foreground', icon: Clock },
   running: { label: 'En cours', color: 'bg-primary text-primary-foreground', icon: Loader2 },
+  done: { label: 'Terminé', color: 'bg-success text-success-foreground', icon: CheckCircle2 },
   completed: { label: 'Terminé', color: 'bg-success text-success-foreground', icon: CheckCircle2 },
   failed: { label: 'Échoué', color: 'bg-destructive text-destructive-foreground', icon: XCircle },
   cancelled: { label: 'Annulé', color: 'bg-warning text-warning-foreground', icon: StopCircle },
@@ -42,16 +46,19 @@ export default function JobDetail() {
   const { data: job, isLoading, error, refetch } = useJobStatus(jobId, { refetchInterval: 2000 });
   const cancelJob = useCancelJob();
 
+  // Local state for simulation progress
+  const [simulatedProgress, setSimulatedProgress] = useState({ pages: 0, ads: 0 });
+
   // Sync active job with context
   useEffect(() => {
     if (job && activeJob?.job_id !== job.id) {
       setActiveJob({
         job_id: job.id,
-        upload_token: '', // Not available from status endpoint
+        upload_token: '',
         platform: job.platform,
         keyword: job.keyword,
         type: job.type,
-        params: job.filters_json || {},
+        params: {},
       });
     }
   }, [job, activeJob, setActiveJob]);
@@ -61,6 +68,16 @@ export default function JobDetail() {
       await cancelJob.mutateAsync(jobId);
     }
   };
+
+  const handleProgress = useCallback((pages: number, ads: number) => {
+    setSimulatedProgress({ pages, ads });
+  }, []);
+
+  const handleComplete = useCallback((result: { pages: number; ads: number }) => {
+    setSimulatedProgress({ pages: result.pages, ads: result.ads });
+    // Refetch to get final status
+    refetch();
+  }, [refetch]);
 
   if (isLoading) {
     return <JobDetailSkeleton />;
@@ -77,7 +94,7 @@ export default function JobDetail() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erreur</AlertTitle>
           <AlertDescription>
-            Impossible de charger les détails du job. {error?.message}
+            Impossible de charger les détails du job. {error instanceof Error ? error.message : ''}
             <Button variant="link" onClick={() => refetch()} className="px-1">
               Réessayer
             </Button>
@@ -87,12 +104,15 @@ export default function JobDetail() {
     );
   }
 
-  const status = statusConfig[job.status] || statusConfig.pending;
+  const status = statusConfig[job.status as keyof typeof statusConfig] || statusConfig.pending;
   const StatusIcon = status.icon;
+  const pagesScanned = simulatedProgress.pages || job.pages_scanned || 0;
+  const adsFound = simulatedProgress.ads || job.ads_found || 0;
   const progress = job.pages_target 
-    ? Math.min(100, ((job.pages_scanned || 0) / job.pages_target) * 100)
+    ? Math.min(100, (pagesScanned / job.pages_target) * 100)
     : 0;
   const isActive = job.status === 'pending' || job.status === 'running';
+  const isCompleted = job.status === 'done' || job.status === 'completed';
 
   return (
     <div className="container max-w-4xl py-8 space-y-6">
@@ -172,42 +192,71 @@ export default function JobDetail() {
                 <div className="flex items-center justify-center gap-6 text-sm">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span>{job.pages_scanned || 0} pages scannées</span>
+                    <span>{pagesScanned} pages scannées</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Search className="h-4 w-4 text-muted-foreground" />
-                    <span>{job.ads_found || 0} annonces trouvées</span>
+                    <span>{adsFound} annonces trouvées</span>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Completed Stats */}
-            {job.status === 'completed' && (
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                <Card className="bg-muted/50">
-                  <CardContent className="pt-4 text-center">
-                    <p className="text-3xl font-bold text-primary">{job.pages_scanned || 0}</p>
-                    <p className="text-xs text-muted-foreground">Pages scannées</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-muted/50">
-                  <CardContent className="pt-4 text-center">
-                    <p className="text-3xl font-bold text-success">{job.ads_found || 0}</p>
-                    <p className="text-xs text-muted-foreground">Annonces trouvées</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-muted/50">
-                  <CardContent className="pt-4 text-center">
-                    <p className="text-3xl font-bold">
-                      {job.ended_at && job.started_at 
-                        ? Math.round((new Date(job.ended_at).getTime() - new Date(job.started_at).getTime()) / 1000)
-                        : '-'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Secondes</p>
-                  </CardContent>
-                </Card>
-              </div>
+            {/* Completed Stats & Actions */}
+            {isCompleted && (
+              <>
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                  <Card className="bg-muted/50">
+                    <CardContent className="pt-4 text-center">
+                      <p className="text-3xl font-bold text-primary">{pagesScanned}</p>
+                      <p className="text-xs text-muted-foreground">Pages scannées</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-muted/50">
+                    <CardContent className="pt-4 text-center">
+                      <p className="text-3xl font-bold text-success">{adsFound}</p>
+                      <p className="text-xs text-muted-foreground">Annonces trouvées</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-muted/50">
+                    <CardContent className="pt-4 text-center">
+                      <p className="text-3xl font-bold">
+                        {job.ended_at && job.started_at 
+                          ? Math.round((new Date(job.ended_at).getTime() - new Date(job.started_at).getTime()) / 1000)
+                          : '-'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Secondes</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Results Actions */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                  <Button asChild className="flex-1 gap-2">
+                    <Link to={`/deals?keyword=${encodeURIComponent(job.keyword)}`}>
+                      <ShoppingCart className="h-4 w-4" />
+                      Voir les deals trouvés
+                    </Link>
+                  </Button>
+                  <Button variant="outline" asChild className="flex-1 gap-2">
+                    <Link to={`/catalog?search=${encodeURIComponent(job.keyword)}`}>
+                      <TrendingUp className="h-4 w-4" />
+                      Voir dans le catalogue
+                    </Link>
+                  </Button>
+                  {job.platform === 'leboncoin' && (
+                    <Button variant="ghost" size="icon" asChild>
+                      <a 
+                        href={`https://www.leboncoin.fr/recherche?text=${encodeURIComponent(job.keyword)}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </>
             )}
 
             {/* Error Message */}
@@ -251,36 +300,18 @@ export default function JobDetail() {
         </Card>
       </motion.div>
 
-      {/* Extension Bridge */}
-      {isActive && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <ExtensionBridge job={activeJob} />
-        </motion.div>
-      )}
-
-      {/* Filters JSON (if any) */}
-      {job.filters_json && Object.keys(job.filters_json).length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Filtres appliqués</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="text-xs bg-muted/50 p-3 rounded overflow-auto">
-                {JSON.stringify(job.filters_json, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+      {/* Extension Bridge - Always visible */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <ExtensionBridge 
+          job={activeJob} 
+          onProgress={handleProgress}
+          onComplete={handleComplete}
+        />
+      </motion.div>
     </div>
   );
 }

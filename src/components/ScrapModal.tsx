@@ -126,10 +126,10 @@ export default function ScrapModal({ open, onOpenChange, preselectedModel }: Scr
       setActiveJob({
         job_id: response.job_id,
         upload_token: response.upload_token,
-        platform: response.params.platform,
-        keyword: response.params.keyword,
-        type: response.params.type,
-        params: response.params,
+        platform: response.params?.platform || platform,
+        keyword: response.params?.keyword || keyword.trim(),
+        type: response.params?.type || scrapType,
+        params: response.params?.filters || {},
       });
 
       toast({
