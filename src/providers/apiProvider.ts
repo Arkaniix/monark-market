@@ -106,13 +106,17 @@ export const apiProvider: DataProvider = {
     const query = buildQueryString(filters);
     return apiFetch<DealsResponse>(`/v1/deals${query}`);
   },
-  async getMarketSummary() {
-    return apiFetch<MarketSummary>('/v1/market/summary');
+  async getMarketSummary(modelId?: string) {
+    if (modelId) {
+      return apiFetch<MarketSummary>(`/v1/market/models/${modelId}/summary`);
+    }
+    // Fallback for global summary - may need backend endpoint
+    return apiFetch<MarketSummary>('/v1/market/trending');
   },
 
   // Catalog
   async getCategories() {
-    return apiFetch<Category[]>('/v1/catalog/categories');
+    return apiFetch<Category[]>('/v1/hardware/categories');
   },
   async getBrands(category) {
     const query = category ? `?category=${category}` : '';
@@ -124,21 +128,21 @@ export const apiProvider: DataProvider = {
   },
   async getCatalogModels(filters) {
     const query = buildQueryString(filters);
-    return apiFetch<CatalogResponse>(`/v1/catalog/models${query}`);
+    return apiFetch<CatalogResponse>(`/v1/hardware/models${query}`);
   },
   async getCatalogSummary() {
     return apiFetch<CatalogSummary>('/v1/catalog/summary');
   },
 
-  // Model Detail
+  // Model Detail (Hardware)
   async getModelDetail(modelId) {
-    return apiFetch<ModelDetail>(`/v1/models/${modelId}`);
+    return apiFetch<ModelDetail>(`/v1/hardware/models/${modelId}`);
   },
   async getModelPriceHistory(modelId, period = '30') {
-    return apiFetch<PriceHistoryPoint[]>(`/v1/models/${modelId}/price-history?period=${period}`);
+    return apiFetch<PriceHistoryPoint[]>(`/v1/hardware/models/${modelId}/price-history?period=${period}`);
   },
   async getModelAds(modelId, page = 1, limit = 10) {
-    return apiFetch<ModelAdsResponse>(`/v1/models/${modelId}/ads?page=${page}&limit=${limit}`);
+    return apiFetch<ModelAdsResponse>(`/v1/hardware/models/${modelId}/ads?page=${page}&limit=${limit}`);
   },
   async toggleModelWatchlist(modelId, add) {
     if (add) {
@@ -166,7 +170,7 @@ export const apiProvider: DataProvider = {
 
   // Estimator
   async getModelsAutocomplete(search) {
-    return apiFetch<ModelAutocomplete[]>(`/v1/models/autocomplete?q=${encodeURIComponent(search)}`);
+    return apiFetch<ModelAutocomplete[]>(`/v1/hardware/models/autocomplete?q=${encodeURIComponent(search)}`);
   },
   async runEstimation(data) {
     return apiPost<EstimationResult>('/v1/estimator/run', data);
@@ -197,7 +201,7 @@ export const apiProvider: DataProvider = {
 
   // Trends
   async getTrends(period = '30') {
-    return apiFetch<TrendsData>(`/v1/market/trends?period=${period}`);
+    return apiFetch<TrendsData>(`/v1/market/trending?period=${period}`);
   },
 
   // Training

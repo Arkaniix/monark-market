@@ -48,25 +48,26 @@ export const DEALS = {
 
 // ============= Market =============
 export const MARKET = {
-  SUMMARY: '/v1/market/summary',
-  TRENDS: '/v1/market/trends',
+  TRENDING: '/v1/market/trending',
+  MODEL_SUMMARY: (modelId: string) => `/v1/market/models/${modelId}/summary`,
+  MODEL_HISTORY: (modelId: string) => `/v1/market/models/${modelId}/history`,
 } as const;
 
 // ============= Catalog =============
 export const CATALOG = {
-  CATEGORIES: '/v1/catalog/categories',
   BRANDS: '/v1/catalog/brands',
   FAMILIES: '/v1/catalog/families',
-  MODELS: '/v1/catalog/models',
   SUMMARY: '/v1/catalog/summary',
 } as const;
 
-// ============= Models =============
-export const MODELS = {
-  DETAIL: (id: string) => `/v1/models/${id}`,
-  PRICE_HISTORY: (id: string) => `/v1/models/${id}/price-history`,
-  ADS: (id: string) => `/v1/models/${id}/ads`,
-  AUTOCOMPLETE: '/v1/models/autocomplete',
+// ============= Hardware =============
+export const HARDWARE = {
+  CATEGORIES: '/v1/hardware/categories',
+  MODELS: '/v1/hardware/models',
+  MODEL_DETAIL: (id: string) => `/v1/hardware/models/${id}`,
+  MODEL_PRICE_HISTORY: (id: string) => `/v1/hardware/models/${id}/price-history`,
+  MODEL_ADS: (id: string) => `/v1/hardware/models/${id}/ads`,
+  AUTOCOMPLETE: '/v1/hardware/models/autocomplete',
 } as const;
 
 // ============= Ads =============
@@ -115,7 +116,7 @@ export const ADMIN = {
 
 // ============= Health =============
 export const HEALTH = {
-  CHECK: '/health',
+  READY: '/health/ready',
 } as const;
 
 // Export all endpoints grouped
@@ -128,7 +129,7 @@ export const ENDPOINTS = {
   DEALS,
   MARKET,
   CATALOG,
-  MODELS,
+  HARDWARE,
   ADS,
   ESTIMATOR,
   COMMUNITY,
