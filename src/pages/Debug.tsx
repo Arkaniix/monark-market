@@ -41,7 +41,7 @@ export default function Debug() {
     const start = performance.now();
 
     try {
-      const response = await fetch(`${apiUrl}/health`, {
+      const response = await fetch(`${apiUrl}/health/ready`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
