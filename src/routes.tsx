@@ -14,6 +14,7 @@ import Community from "./pages/Community";
 import Training from "./pages/Training";
 import Admin from "./pages/Admin";
 import MyAccount from "./pages/MyAccount";
+import Debug from "./pages/Debug";
 import CGU from "./pages/CGU";
 import RGPD from "./pages/RGPD";
 import LegalNotice from "./pages/LegalNotice";
@@ -139,6 +140,13 @@ export const routes: RouteConfig[] = [
     component: Admin,
     requiresAuth: true,
     requiresAdmin: true,
+  },
+
+  // Debug page (dev or admin only - gère son propre contrôle d'accès)
+  {
+    path: "/debug",
+    component: Debug,
+    requiresAuth: false,
   },
 
   // 404 - doit être en dernier
