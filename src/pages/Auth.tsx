@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Crown, Star, TrendingUp, Eye, EyeOff } from "lucide-react";
+import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon } from "lucide-react";
 import { z } from "zod";
 import { motion } from "framer-motion";
 
@@ -33,7 +33,7 @@ export default function Auth() {
   const [activeTab, setActiveTab] = useState("signin");
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, login, register, isLoading } = useAuth();
+  const { user, login, register, isLoading, isMockMode } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -138,6 +138,12 @@ export default function Auth() {
           description: error.message,
           variant: "destructive",
         });
+      } else if (error instanceof Error) {
+        toast({
+          title: "Erreur",
+          description: error.message,
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Erreur",
@@ -145,6 +151,34 @@ export default function Auth() {
           variant: "destructive",
         });
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Quick mock login handlers
+  const handleMockLogin = async (type: 'admin' | 'user') => {
+    const credentials = type === 'admin' 
+      ? { email: 'admin@test.com', password: 'Admin123!' }
+      : { email: 'user@test.com', password: 'User123!' };
+    
+    setEmail(credentials.email);
+    setPassword(credentials.password);
+    setLoading(true);
+
+    try {
+      await login(credentials.email, credentials.password);
+      toast({
+        title: "Connecté (mock)",
+        description: `Bienvenue ${type === 'admin' ? 'Admin' : 'User'} !`,
+      });
+      navigate("/");
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Erreur de connexion",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -292,6 +326,35 @@ export default function Auth() {
                     <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? "Connexion..." : "Se connecter"}
                     </Button>
+
+                    {/* Mock mode quick login buttons */}
+                    {isMockMode && (
+                      <div className="space-y-2 pt-4 border-t border-border/50">
+                        <p className="text-xs text-muted-foreground text-center">Mode développement</p>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="flex-1 text-xs"
+                            onClick={() => handleMockLogin('admin')}
+                            disabled={loading}
+                          >
+                            <ShieldCheck className="h-3 w-3 mr-1" />
+                            Admin (mock)
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="flex-1 text-xs"
+                            onClick={() => handleMockLogin('user')}
+                            disabled={loading}
+                          >
+                            <UserIcon className="h-3 w-3 mr-1" />
+                            User (mock)
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </form>
                 </motion.div>
               </TabsContent>
