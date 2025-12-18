@@ -1,4 +1,4 @@
-// API Provider - wraps real API calls
+// API Provider - wraps real API calls (aligned with monark_api_v0.18)
 import { apiFetch, apiPost, apiPut, apiDelete, ENDPOINTS } from "@/lib/api";
 import type {
   DataProvider,
@@ -58,101 +58,102 @@ function buildQueryString(params: Record<string, any>): string {
 export const apiProvider: DataProvider = {
   // Dashboard
   async getDashboard() {
-    return apiFetch<DashboardOverview>('/v1/dashboard/overview');
+    return apiFetch<DashboardOverview>(ENDPOINTS.DASHBOARD.OVERVIEW);
   },
 
   // Watchlist
   async getWatchlist() {
-    return apiFetch<WatchlistResponse>('/v1/watchlist');
+    return apiFetch<WatchlistResponse>(ENDPOINTS.WATCHLIST.LIST);
   },
   async addToWatchlist(data) {
-    return apiPost('/v1/watchlist', data);
+    return apiPost(ENDPOINTS.WATCHLIST.ADD, data);
   },
   async removeFromWatchlist(id) {
-    return apiDelete(`/v1/watchlist/${id}`);
+    return apiDelete(ENDPOINTS.WATCHLIST.REMOVE(id));
   },
 
   // Alerts
   async getAlerts() {
-    return apiFetch<AlertsResponse>('/v1/alerts');
+    return apiFetch<AlertsResponse>(ENDPOINTS.ALERTS.LIST);
   },
   async createAlert(data) {
-    return apiPost<Alert>('/v1/alerts', data);
+    return apiPost<Alert>(ENDPOINTS.ALERTS.CREATE, data);
   },
   async updateAlert(id, data) {
-    return apiPut<Alert>(`/v1/alerts/${id}`, data);
+    return apiPut<Alert>(ENDPOINTS.ALERTS.UPDATE(id), data);
   },
   async deleteAlert(id) {
-    return apiDelete(`/v1/alerts/${id}`);
+    return apiDelete(ENDPOINTS.ALERTS.DELETE(id));
   },
 
-  // Notifications
+  // Notifications - NOT IMPLEMENTED in v0.18, return empty
   async getNotifications(limit) {
-    const params = limit ? `?limit=${limit}` : '';
-    return apiFetch<NotificationsResponse>(`/v1/users/notifications${params}`);
+    console.warn('[apiProvider] Notifications not implemented in API v0.18');
+    return { items: [], total: 0, unread_count: 0 };
   },
   async markNotificationRead(id) {
-    return apiPut(`/v1/users/notifications/${id}/read`, {});
+    console.warn('[apiProvider] Notifications not implemented in API v0.18');
   },
   async markAllNotificationsRead() {
-    return apiPut('/v1/users/notifications/read-all', {});
+    console.warn('[apiProvider] Notifications not implemented in API v0.18');
   },
   async deleteNotification(id) {
-    return apiDelete(`/v1/users/notifications/${id}`);
+    console.warn('[apiProvider] Notifications not implemented in API v0.18');
   },
 
   // Deals
   async getDeals(filters) {
     const query = buildQueryString(filters);
-    return apiFetch<DealsResponse>(`/v1/deals${query}`);
+    return apiFetch<DealsResponse>(`${ENDPOINTS.DEALS.LIST}${query}`);
   },
   async getMarketSummary(modelId?: string) {
     if (modelId) {
-      return apiFetch<MarketSummary>(`/v1/market/models/${modelId}/summary`);
+      return apiFetch<MarketSummary>(ENDPOINTS.MARKET.MODEL_SUMMARY(modelId));
     }
-    // Fallback for global summary - may need backend endpoint
-    return apiFetch<MarketSummary>('/v1/market/trending');
+    return apiFetch<MarketSummary>(ENDPOINTS.MARKET.TRENDING);
   },
 
   // Catalog
   async getCategories() {
-    return apiFetch<Category[]>('/v1/hardware/categories');
+    return apiFetch<Category[]>(ENDPOINTS.HARDWARE.CATEGORIES);
   },
   async getBrands(category) {
-    const query = category ? `?category=${category}` : '';
-    return apiFetch<string[]>(`/v1/catalog/brands${query}`);
+    console.warn('[apiProvider] Catalog brands not implemented in API v0.18');
+    return [];
   },
   async getFamilies(brand) {
-    const query = brand ? `?brand=${brand}` : '';
-    return apiFetch<string[]>(`/v1/catalog/families${query}`);
+    console.warn('[apiProvider] Catalog families not implemented in API v0.18');
+    return [];
   },
   async getCatalogModels(filters) {
     const query = buildQueryString(filters);
-    return apiFetch<CatalogResponse>(`/v1/hardware/models${query}`);
+    return apiFetch<CatalogResponse>(`${ENDPOINTS.HARDWARE.MODELS}${query}`);
   },
   async getCatalogSummary() {
-    return apiFetch<CatalogSummary>('/v1/catalog/summary');
+    console.warn('[apiProvider] Catalog summary not implemented in API v0.18');
+    return { total_models: 0, total_brands: 0, categories_count: 0, last_update: new Date().toISOString() };
   },
 
   // Model Detail (Hardware)
   async getModelDetail(modelId) {
-    return apiFetch<ModelDetail>(`/v1/hardware/models/${modelId}`);
+    return apiFetch<ModelDetail>(ENDPOINTS.HARDWARE.MODEL_DETAIL(modelId));
   },
   async getModelPriceHistory(modelId, period = '30') {
-    return apiFetch<PriceHistoryPoint[]>(`/v1/hardware/models/${modelId}/price-history?period=${period}`);
+    return apiFetch<PriceHistoryPoint[]>(`${ENDPOINTS.MARKET.MODEL_HISTORY(modelId)}?period=${period}`);
   },
   async getModelAds(modelId, page = 1, limit = 10) {
-    return apiFetch<ModelAdsResponse>(`/v1/hardware/models/${modelId}/ads?page=${page}&limit=${limit}`);
+    console.warn('[apiProvider] Model ads endpoint not implemented in API v0.18');
+    return { items: [], total: 0, page, page_size: limit };
   },
   async toggleModelWatchlist(modelId, add) {
     if (add) {
-      return apiPost('/v1/watchlist', { target_type: 'model', target_id: modelId });
+      return apiPost(ENDPOINTS.WATCHLIST.ADD, { target_type: 'model', target_id: modelId });
     } else {
-      return apiDelete(`/v1/watchlist/model/${modelId}`);
+      return apiDelete(ENDPOINTS.WATCHLIST.REMOVE_MODEL(modelId));
     }
   },
   async createPriceAlert(modelId, threshold) {
-    return apiPost('/v1/alerts', {
+    return apiPost(ENDPOINTS.ALERTS.CREATE, {
       target_type: 'model',
       target_id: modelId,
       alert_type: 'price_threshold',
@@ -162,87 +163,88 @@ export const apiProvider: DataProvider = {
 
   // Ad Detail
   async getAdDetail(adId) {
-    return apiFetch<AdDetail>(`/v1/ads/${adId}`);
+    return apiFetch<AdDetail>(ENDPOINTS.ADS.DETAIL(adId));
   },
   async getAdPriceHistory(adId) {
-    return apiFetch<AdPriceHistory>(`/v1/ads/${adId}/price-history`);
+    return apiFetch<AdPriceHistory>(ENDPOINTS.ADS.PRICE_HISTORY(adId));
   },
 
   // Estimator
   async getModelsAutocomplete(search) {
-    return apiFetch<ModelAutocomplete[]>(`/v1/hardware/models/autocomplete?q=${encodeURIComponent(search)}`);
+    console.warn('[apiProvider] Models autocomplete not implemented in API v0.18');
+    return [];
   },
   async runEstimation(data) {
-    return apiPost<EstimationResult>('/v1/estimator/run', data);
+    return apiPost<EstimationResult>(ENDPOINTS.ESTIMATOR.RUN, data);
   },
   async getEstimationHistory(page = 1, limit = 10) {
-    return apiFetch<EstimationHistoryResponse>(`/v1/estimator/history?page=${page}&limit=${limit}`);
+    return apiFetch<EstimationHistoryResponse>(`${ENDPOINTS.ESTIMATOR.HISTORY}?page=${page}&limit=${limit}`);
   },
   async getEstimatorStats() {
-    return apiFetch<EstimatorStats>('/v1/estimator/stats');
+    return apiFetch<EstimatorStats>(ENDPOINTS.ESTIMATOR.STATS);
   },
 
-  // Community
+  // Community (v0.18)
   async getAvailableTasks() {
-    return apiFetch<AvailableTasksResponse>('/v1/community/tasks');
+    return apiFetch<AvailableTasksResponse>(ENDPOINTS.COMMUNITY.TASKS_AVAILABLE);
   },
   async getMyTasks() {
-    return apiFetch<MyTasksResponse>('/v1/community/my-tasks');
+    return apiFetch<MyTasksResponse>(ENDPOINTS.COMMUNITY.TASKS_MY);
   },
   async claimTask(data) {
-    return apiPost<ClaimTaskResponse>('/v1/community/claim', data);
+    return apiPost<ClaimTaskResponse>(ENDPOINTS.COMMUNITY.TASKS_CLAIM, data);
   },
   async getCommunityStats() {
-    return apiFetch<CommunityStats>('/v1/community/stats');
+    return apiFetch<CommunityStats>(ENDPOINTS.COMMUNITY.STATS);
   },
   async getLeaderboard(period) {
-    return apiFetch<LeaderboardResponse>(`/v1/community/leaderboard?period=${period}`);
+    return apiFetch<LeaderboardResponse>(`${ENDPOINTS.COMMUNITY.LEADERBOARD}?period=${period}`);
   },
 
   // Trends
   async getTrends(period = '30') {
-    return apiFetch<TrendsData>(`/v1/market/trending?period=${period}`);
+    return apiFetch<TrendsData>(`${ENDPOINTS.MARKET.TRENDING}?period=${period}`);
   },
 
   // Training
   async getTrainingData() {
-    return apiFetch<TrainingData>('/v1/training');
+    return apiFetch<TrainingData>(ENDPOINTS.TRAINING.DATA);
   },
   async completeModule(moduleId) {
-    return apiPost(`/v1/training/modules/${moduleId}/complete`, {});
+    return apiPost(ENDPOINTS.TRAINING.COMPLETE_MODULE(moduleId), {});
   },
 
-  // Jobs
+  // Jobs (v0.18: /v1/scrap/create_job)
   async startScrap(data) {
-    return apiPost<ScrapStartResponse>('/v1/scrap/start', data);
+    return apiPost<ScrapStartResponse>(ENDPOINTS.JOBS.CREATE, data);
   },
   async getJobStatus(jobId) {
-    return apiFetch<JobStatus>(`/v1/jobs/${jobId}`);
+    return apiFetch<JobStatus>(ENDPOINTS.JOBS.STATUS(jobId));
   },
   async cancelJob(jobId) {
-    return apiPost(`/v1/jobs/${jobId}/cancel`, {});
+    return apiPost(ENDPOINTS.JOBS.CANCEL(jobId), {});
   },
   async getUserJobs(limit = 10) {
-    return apiFetch<UserJobsResponse>(`/v1/jobs?limit=${limit}`);
+    return apiFetch<UserJobsResponse>(`${ENDPOINTS.JOBS.LIST}?limit=${limit}`);
   },
 
-  // User
+  // Credits & Billing (v0.18)
   async getUserCredits() {
-    return apiFetch<UserCredits>('/v1/users/credits');
+    return apiFetch<UserCredits>(ENDPOINTS.CREDITS.BALANCE);
   },
   async getSubscriptionPlans() {
-    return apiFetch<SubscriptionPlan[]>('/v1/subscriptions/plans');
+    return apiFetch<SubscriptionPlan[]>(ENDPOINTS.BILLING.PLANS);
   },
   async getUserSubscription() {
-    return apiFetch<UserSubscription | null>('/v1/subscriptions/current');
+    return apiFetch<UserSubscription | null>(ENDPOINTS.BILLING.SUBSCRIPTIONS);
   },
   async getSubscriptionHistory() {
-    return apiFetch<UserSubscription[]>('/v1/subscriptions/history');
+    return apiFetch<UserSubscription[]>(ENDPOINTS.BILLING.HISTORY);
   },
   async getUserProfile() {
-    return apiFetch<UserProfile>('/v1/users/me');
+    return apiFetch<UserProfile>(ENDPOINTS.USERS.ME);
   },
   async subscribe(planId) {
-    return apiPost('/v1/subscriptions', { plan_id: planId });
+    return apiPost(ENDPOINTS.BILLING.CHECKOUT_SESSION, { plan_id: planId });
   },
 };
