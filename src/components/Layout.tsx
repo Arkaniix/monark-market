@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, TrendingUp, Home, Zap, User, Menu, Eye, Calculator, Users, GraduationCap, LogOut, Shield, CreditCard, Scale, MessageCircle } from "lucide-react";
+import { Search, TrendingUp, Home, Zap, User, Menu, Calculator, Users, GraduationCap, LogOut, Shield, Scale, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
@@ -8,10 +8,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
-import { User as SupabaseUser } from "@supabase/supabase-js";
+import { useAuth } from "@/context/AuthContext";
 
 const navigation = [
   { name: "Accueil", href: "/", icon: Home },
@@ -27,62 +25,14 @@ const navigation = [
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { toast } = useToast();
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user, isAdmin, logout } = useAuth();
 
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdminRole(session.user.id);
-      } else {
-        setIsAdmin(false);
-      }
+  const handleSignOut = () => {
+    logout();
+    toast({
+      title: "Déconnecté",
+      description: "Vous avez été déconnecté avec succès",
     });
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdminRole(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkAdminRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase.rpc('has_role', {
-        _user_id: userId,
-        _role: 'admin'
-      });
-      if (!error && data) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-    } catch (error) {
-      console.error("Error checking admin role:", error);
-      setIsAdmin(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de se déconnecter",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Déconnecté",
-        description: "Vous avez été déconnecté avec succès",
-      });
-    }
   };
 
   return (
