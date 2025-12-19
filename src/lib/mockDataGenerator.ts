@@ -280,8 +280,9 @@ export function generateCatalogModels(): GeneratedCatalogModel[] {
 
 // ============= Generate Community Tasks =============
 export interface GeneratedTask {
-  id: string;
+  id: number;
   model: string;
+  platform: string;
   type: 'list_only' | 'open_on_new';
   region: string | null;
   pages_hint: string;
@@ -318,8 +319,9 @@ export function generateCommunityTasks(count: number): GeneratedTask[] {
     const pagesTo = pagesFrom + Math.floor(random() * 15) + 5;
     
     tasks.push({
-      id: `task_${i}`,
+      id: i + 1,
       model: priorityModels[i % priorityModels.length],
+      platform: 'leboncoin',
       type,
       region: regionCodes[i % regionCodes.length],
       pages_hint: `${pagesFrom}–${pagesTo}`,
