@@ -80,6 +80,7 @@ export interface NotificationsResponse {
 // ============= Deals =============
 export interface DealItem {
   id: number;
+  ad_id: number;
   title: string;
   price: number;
   fair_value: number;
@@ -92,7 +93,10 @@ export interface DealItem {
   platform: string;
   url: string;
   published_at: string;
+  publication_date: string;
   score: number;
+  item_type: 'component' | 'pc' | 'lot';
+  delivery_possible: boolean;
 }
 
 export interface DealsResponse {
@@ -100,16 +104,19 @@ export interface DealsResponse {
   total: number;
   page: number;
   page_size: number;
+  total_pages: number;
 }
 
 export interface DealsFilters {
   category?: string;
   condition?: string;
   region?: string;
+  platform?: string;
+  item_type?: string;
   price_min?: number;
   price_max?: number;
   deviation_min?: number;
-  sort_by?: string;
+  sort_by?: 'score' | 'price_asc' | 'price_desc' | 'date' | string;
   sort_order?: 'asc' | 'desc';
   page?: number;
   limit?: number;
@@ -117,8 +124,12 @@ export interface DealsFilters {
 
 export interface MarketSummary {
   total_ads: number;
+  total_active_ads: number;
   total_opportunities: number;
   median_price: number;
+  median_price_7d: number;
+  price_variation: number;
+  new_deals_today: number;
   total_volume_24h: number;
 }
 
@@ -136,11 +147,15 @@ export interface CatalogModel {
   family: string | null;
   category: string;
   median_price: number;
+  fair_value_30d: number | null;
+  price_median_30d: number | null;
   var_7d_pct: number;
-  var_30d_pct: number;
+  var_30d_pct: number | null;
   volume: number;
-  liquidity: 'high' | 'medium' | 'low';
+  liquidity: number;
   ads_count: number;
+  last_scan_at?: string | null;
+  aliases?: string[];
 }
 
 export interface CatalogResponse {
@@ -148,6 +163,7 @@ export interface CatalogResponse {
   total: number;
   page: number;
   page_size: number;
+  total_pages: number;
 }
 
 export interface CatalogFilters {
@@ -155,7 +171,7 @@ export interface CatalogFilters {
   brand?: string;
   family?: string;
   search?: string;
-  sort_by?: string;
+  sort_by?: 'fair_value_30d' | 'var_30d' | 'liquidity' | 'name' | string;
   sort_order?: 'asc' | 'desc';
   page?: number;
   limit?: number;
@@ -166,6 +182,9 @@ export interface CatalogSummary {
   total_brands: number;
   categories_count: number;
   last_update: string;
+  median_price_global: number;
+  avg_variation: number;
+  total_ads: number;
 }
 
 // ============= Model Detail =============
@@ -283,7 +302,6 @@ export interface AdDetail {
   components: AdComponent[];
   images: string[];
   is_in_watchlist: boolean;
-  // PC-specific fields
   item_type?: 'component' | 'pc';
   pc_components?: PCComponents;
   price_history_30d?: number[];
@@ -363,15 +381,22 @@ export interface EstimatorStats {
 
 // ============= Community =============
 export interface CommunityTask {
-  id: string;
+  id: number;
+  model_id: number;
+  model_name: string;
   model: string;
+  platform: string;
   type: 'list_only' | 'open_on_new';
   region: string | null;
   pages_hint: string;
+  pages_from: number;
+  pages_to: number;
   priority: 'high' | 'medium' | 'low';
-  context: string;
+  context: string | null;
   estimated_time_min: number;
   credit_reward: number;
+  reward_credits: number;
+  expires_at: string;
 }
 
 export interface AvailableTasksResponse {
@@ -386,30 +411,48 @@ export interface AvailableTasksResponse {
 }
 
 export interface MyTask {
-  id: string;
+  id: number;
+  task_id: number;
+  job_id: number;
   date: string;
   model: string;
+  model_name: string;
+  platform: string;
   type: 'list_only' | 'open_on_new';
   pages_scanned: number;
   ads_new: number;
+  ads_found: number;
   ads_changed: number;
-  status: 'done' | 'expired' | 'failed' | 'in_progress';
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'expired' | 'done' | 'in_progress';
   credits_earned: number;
   duration_seconds: number;
+  claimed_at: string;
+  completed_at: string | null;
 }
 
 export interface MyTasksResponse {
   items: MyTask[];
+  tasks: MyTask[];
   total: number;
+  user_limits: {
+    max_comm_jobs_per_day: number;
+    used_today: number;
+    cooldown_minutes: number;
+    cooldown_remaining: number;
+  };
 }
 
 export interface ClaimTaskRequest {
-  task_id: string;
+  task_id: number;
 }
 
 export interface ClaimTaskResponse {
+  success: boolean;
   shard_id: string;
+  job_id: number;
+  upload_token: string;
   model: string;
+  task: CommunityTask;
   type: 'list_only' | 'open_on_new';
   region: string | null;
   pages_from: number;
@@ -422,13 +465,27 @@ export interface ClaimTaskResponse {
   expires_at: string;
   estimated_time_min: number;
   credit_reward: number;
+  params: {
+    platform: string;
+    keyword: string;
+    type: string;
+    pages_from: number;
+    pages_to: number;
+    search_url: string;
+  };
 }
 
 export interface CommunityStats {
   total_contributors: number;
   total_missions_30d: number;
+  total_missions_completed: number;
   total_pages_30d: number;
+  total_pages_scanned: number;
   total_credits_30d: number;
+  total_credits_distributed: number;
+  total_ads_found: number;
+  coverage_7d_pct: number;
+  active_contributors_today: number;
   your_rank: number;
   your_percentile: number;
 }
@@ -436,16 +493,20 @@ export interface CommunityStats {
 export interface LeaderboardEntry {
   rank: number;
   user: string;
+  user_display: string;
   missions: number;
   pages: number;
   credits: number;
   quality: number;
-  badge?: string;
+  quality_score: number;
+  badge: 'Top Contributeur' | 'Élite' | 'Régulier' | 'Nouveau' | string | null;
 }
 
 export interface LeaderboardResponse {
   items: LeaderboardEntry[];
+  entries: LeaderboardEntry[];
   period: '30d' | 'all';
+  user_rank?: number;
 }
 
 // ============= Trends =============
