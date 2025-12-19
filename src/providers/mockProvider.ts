@@ -80,6 +80,7 @@ import {
   mockBrandsByCategory,
   mockFamiliesByBrand,
 } from "@/lib/mockDataGenerator";
+import { trackEndpointCall } from "@/lib/debugTracker";
 
 // ============= localStorage helpers =============
 const STORAGE_KEYS = {
@@ -159,6 +160,10 @@ function delay(ms: number = 200): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function track(endpoint: string) {
+  trackEndpointCall(endpoint, 'mock');
+}
+
 let nextId = 100;
 function generateId(): number {
   return nextId++;
@@ -168,6 +173,7 @@ function generateId(): number {
 export const mockProvider: DataProvider = {
   // Dashboard
   async getDashboard() {
+    track('getDashboard');
     await delay();
     const watchlist = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
     const credits = getFromStorage(STORAGE_KEYS.CREDITS, initialCredits);
@@ -340,6 +346,7 @@ export const mockProvider: DataProvider = {
 
   // Deals
   async getDeals(filters) {
+    track('getDeals');
     await delay();
     let items = mockDeals.map(deal => ({
       id: deal.id,
@@ -431,6 +438,7 @@ export const mockProvider: DataProvider = {
     return Object.values(mockFamiliesByBrand).flat().filter((v, i, a) => a.indexOf(v) === i).slice(0, 8);
   },
   async getCatalogModels(filters) {
+    track('getCatalogModels');
     await delay();
     const liquidityMap: Record<string, number> = { high: 0.8, medium: 0.5, low: 0.2 };
     let items: CatalogModel[] = mockCatalogModels.map(m => ({
@@ -765,6 +773,7 @@ export const mockProvider: DataProvider = {
 
   // Community
   async getAvailableTasks(): Promise<AvailableTasksResponse> {
+    track('getAvailableTasks');
     await delay();
     const tasks = mockCommunityTasks.map((t, idx) => ({
       id: t.id,

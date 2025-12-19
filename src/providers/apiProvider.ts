@@ -1,5 +1,6 @@
 // API Provider - wraps real API calls (aligned with monark_api_v0.18)
 import { apiFetch, apiPost, apiPut, apiDelete, ApiFeatureUnavailableError, ENDPOINTS } from "@/lib/api";
+import { trackEndpointCall } from "@/lib/debugTracker";
 import type {
   DataProvider,
   DashboardOverview,
@@ -50,6 +51,10 @@ import type {
   HealthStatus,
 } from "./types";
 
+function track(endpoint: string) {
+  trackEndpointCall(endpoint, 'api');
+}
+
 function buildQueryString(params: Record<string, any>): string {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -64,6 +69,7 @@ function buildQueryString(params: Record<string, any>): string {
 export const apiProvider: DataProvider = {
   // Dashboard
   async getDashboard() {
+    track('getDashboard');
     return apiFetch<DashboardOverview>(ENDPOINTS.DASHBOARD.OVERVIEW);
   },
 
@@ -108,6 +114,7 @@ export const apiProvider: DataProvider = {
 
   // Deals
   async getDeals(filters) {
+    track('getDeals');
     const query = buildQueryString(filters);
     return apiFetch<DealsResponse>(`${ENDPOINTS.DEALS.LIST}${query}`);
   },
@@ -129,6 +136,7 @@ export const apiProvider: DataProvider = {
     throw new ApiFeatureUnavailableError('Catalog Families', 'Le filtre par famille n\'est pas encore disponible via l\'API.');
   },
   async getCatalogModels(filters) {
+    track('getCatalogModels');
     const query = buildQueryString(filters);
     return apiFetch<CatalogResponse>(`${ENDPOINTS.HARDWARE.MODELS}${query}`);
   },

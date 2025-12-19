@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { RefreshCw, CheckCircle2, XCircle, AlertCircle, Server, Database, Key, User, Loader2 } from "lucide-react";
+import { RefreshCw, CheckCircle2, XCircle, AlertCircle, Server, Database, Key, User, Loader2, Activity, Package } from "lucide-react";
+import { getDebugState, subscribeDebugState, resetDebugState } from "@/lib/debugTracker";
+import { mockDeals, mockCatalogModels, mockCommunityTasks } from "@/lib/mockDataGenerator";
 
 const ENV_VARS = {
   VITE_DATA_PROVIDER: import.meta.env.VITE_DATA_PROVIDER || 'mock',
@@ -21,9 +23,23 @@ export default function Debug() {
   const [healthStatus, setHealthStatus] = useState<HealthStatus>('idle');
   const [healthMessage, setHealthMessage] = useState<string>('');
   const [healthLatency, setHealthLatency] = useState<number | null>(null);
+  const [debugState, setDebugState] = useState(getDebugState());
 
   const activeProvider = ENV_VARS.VITE_DATA_PROVIDER;
   const apiUrl = ENV_VARS.VITE_API_URL;
+
+  // Mock data counts
+  const mockCounts = {
+    deals: mockDeals.length,
+    models: mockCatalogModels.length,
+    communityTasks: mockCommunityTasks.length,
+  };
+
+  // Subscribe to debug state changes
+  useEffect(() => {
+    const unsub = subscribeDebugState(() => setDebugState(getDebugState()));
+    return unsub;
+  }, []);
 
   // Check if token exists in localStorage
   const accessToken = localStorage.getItem('access_token');
@@ -280,6 +296,87 @@ export default function Debug() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Mock Data Stats - DEV only */}
+      {ENV_VARS.DEV && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Mock Records Count */}
+          <Card className="border-dashed border-amber-500/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-amber-500" />
+                Mock Data Stats
+              </CardTitle>
+              <CardDescription>Compteurs des données mockées</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <span className="font-medium">Deals</span>
+                <Badge variant={mockCounts.deals > 0 ? "default" : "destructive"} className="font-mono">
+                  {mockCounts.deals}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <span className="font-medium">Catalog Models</span>
+                <Badge variant={mockCounts.models > 0 ? "default" : "destructive"} className="font-mono">
+                  {mockCounts.models}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <span className="font-medium">Community Tasks</span>
+                <Badge variant={mockCounts.communityTasks > 0 ? "default" : "destructive"} className="font-mono">
+                  {mockCounts.communityTasks}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Last Endpoint Called */}
+          <Card className="border-dashed border-amber-500/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-amber-500" />
+                Dernier appel
+              </CardTitle>
+              <CardDescription>Tracking des requêtes provider</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <span className="font-medium">Provider actif</span>
+                <Badge variant={debugState.lastProvider === 'api' ? 'default' : 'secondary'} className="font-mono">
+                  {debugState.lastProvider || activeProvider}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <span className="font-medium">Dernier endpoint</span>
+                <code className="text-xs bg-background px-2 py-1 rounded border max-w-[200px] truncate">
+                  {debugState.lastEndpoint || '(aucun)'}
+                </code>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <span className="font-medium">Total appels</span>
+                <Badge variant="outline" className="font-mono">{debugState.callCount}</Badge>
+              </div>
+              {debugState.lastTimestamp && (
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <span className="font-medium">Timestamp</span>
+                  <code className="text-xs bg-background px-2 py-1 rounded border">
+                    {new Date(debugState.lastTimestamp).toLocaleTimeString()}
+                  </code>
+                </div>
+              )}
+              <Button 
+                onClick={resetDebugState} 
+                variant="outline" 
+                size="sm"
+                className="w-full"
+              >
+                Reset tracker
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Raw ENV dump */}
       <Card>
