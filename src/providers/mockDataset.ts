@@ -520,3 +520,27 @@ export function getMockDataStats() {
     categoriesCount: MOCK_CATEGORIES.length,
   };
 }
+
+// ============= Debug Samples Export =============
+export function getMockDataSamples() {
+  return {
+    deals: MOCK_DEALS.slice(0, 3).map(d => ({
+      id: d.id,
+      title: d.title,
+      price: d.price,
+      platform: d.platform,
+      region: d.region,
+      condition: d.condition,
+      category: d.category,
+      score: d.score,
+    })),
+    models: MOCK_MODELS.slice(0, 3).map(m => ({
+      id: m.id,
+      name: m.name,
+      brand: m.brand,
+      category: m.category,
+      median_price: m.median_price,
+      fair_value_30d: m.fair_value_30d,
+    })),
+  };
+}

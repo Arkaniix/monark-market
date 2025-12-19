@@ -3,9 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { RefreshCw, CheckCircle2, XCircle, AlertCircle, Server, Database, Key, User, Loader2, Activity, Package } from "lucide-react";
+import { RefreshCw, CheckCircle2, XCircle, AlertCircle, Server, Database, Key, User, Loader2, Activity, Package, Code, Eye } from "lucide-react";
 import { getDebugState, subscribeDebugState, resetDebugState } from "@/lib/debugTracker";
-import { getMockDataStats } from "@/providers/mockDataset";
+import { getMockDataStats, getMockDataSamples } from "@/providers/mockDataset";
 
 const ENV_VARS = {
   VITE_DATA_PROVIDER: import.meta.env.VITE_DATA_PROVIDER || 'mock',
@@ -300,83 +300,137 @@ export default function Debug() {
 
       {/* Mock Data Stats - DEV only */}
       {ENV_VARS.DEV && (
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Mock Records Count */}
-          <Card className="border-dashed border-amber-500/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-amber-500" />
-                Mock Data Stats
-              </CardTitle>
-              <CardDescription>Compteurs des données mockées</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <span className="font-medium">Deals</span>
-                <Badge variant={mockCounts.deals > 0 ? "default" : "destructive"} className="font-mono">
-                  {mockCounts.deals}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <span className="font-medium">Catalog Models</span>
-                <Badge variant={mockCounts.models > 0 ? "default" : "destructive"} className="font-mono">
-                  {mockCounts.models}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <span className="font-medium">Community Tasks</span>
-                <Badge variant={mockCounts.communityTasks > 0 ? "default" : "destructive"} className="font-mono">
-                  {mockCounts.communityTasks}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Last Endpoint Called */}
-          <Card className="border-dashed border-amber-500/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-amber-500" />
-                Dernier appel
-              </CardTitle>
-              <CardDescription>Tracking des requêtes provider</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <span className="font-medium">Provider actif</span>
-                <Badge variant={debugState.lastProvider === 'api' ? 'default' : 'secondary'} className="font-mono">
-                  {debugState.lastProvider || activeProvider}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <span className="font-medium">Dernier endpoint</span>
-                <code className="text-xs bg-background px-2 py-1 rounded border max-w-[200px] truncate">
-                  {debugState.lastEndpoint || '(aucun)'}
-                </code>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <span className="font-medium">Total appels</span>
-                <Badge variant="outline" className="font-mono">{debugState.callCount}</Badge>
-              </div>
-              {debugState.lastTimestamp && (
+        <>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Mock Records Count */}
+            <Card className="border-dashed border-amber-500/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-amber-500" />
+                  Mock Data Stats
+                </CardTitle>
+                <CardDescription>Compteurs des données mockées</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <span className="font-medium">Timestamp</span>
-                  <code className="text-xs bg-background px-2 py-1 rounded border">
-                    {new Date(debugState.lastTimestamp).toLocaleTimeString()}
+                  <span className="font-medium">Deals</span>
+                  <Badge variant={mockCounts.deals > 0 ? "default" : "destructive"} className="font-mono">
+                    {mockCounts.deals}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <span className="font-medium">Catalog Models</span>
+                  <Badge variant={mockCounts.models > 0 ? "default" : "destructive"} className="font-mono">
+                    {mockCounts.models}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <span className="font-medium">Community Tasks</span>
+                  <Badge variant={mockCounts.communityTasks > 0 ? "default" : "destructive"} className="font-mono">
+                    {mockCounts.communityTasks}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Last Endpoint Called */}
+            <Card className="border-dashed border-amber-500/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-amber-500" />
+                  Dernier appel
+                </CardTitle>
+                <CardDescription>Tracking des requêtes provider</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <span className="font-medium">Provider actif</span>
+                  <Badge variant={debugState.lastProvider === 'api' ? 'default' : 'secondary'} className="font-mono">
+                    {debugState.lastProvider || activeProvider}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <span className="font-medium">Dernier endpoint</span>
+                  <code className="text-xs bg-background px-2 py-1 rounded border max-w-[200px] truncate">
+                    {debugState.lastEndpoint || '(aucun)'}
                   </code>
                 </div>
-              )}
-              <Button 
-                onClick={resetDebugState} 
-                variant="outline" 
-                size="sm"
-                className="w-full"
-              >
-                Reset tracker
-              </Button>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <span className="font-medium">Résultats retournés</span>
+                  <Badge variant={debugState.lastResultCount !== null && debugState.lastResultCount > 0 ? "default" : "destructive"} className="font-mono">
+                    {debugState.lastResultCount ?? '(aucun)'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <span className="font-medium">Total appels</span>
+                  <Badge variant="outline" className="font-mono">{debugState.callCount}</Badge>
+                </div>
+                {debugState.lastTimestamp && (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <span className="font-medium">Timestamp</span>
+                    <code className="text-xs bg-background px-2 py-1 rounded border">
+                      {new Date(debugState.lastTimestamp).toLocaleTimeString()}
+                    </code>
+                  </div>
+                )}
+                <Button 
+                  onClick={resetDebugState} 
+                  variant="outline" 
+                  size="sm"
+                  className="w-full"
+                >
+                  Reset tracker
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Last Params Sent */}
+          {debugState.lastParams && (
+            <Card className="border-dashed border-orange-500/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Code className="h-5 w-5 text-orange-500" />
+                  Derniers params envoyés au provider
+                </CardTitle>
+                <CardDescription>
+                  Endpoint: <code className="text-xs">{debugState.lastEndpoint}</code> — 
+                  Si c'est vide ou mal formaté, c'est ici que ça casse
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <pre className="p-4 rounded-lg bg-muted text-xs overflow-x-auto max-h-[200px]">
+                  {JSON.stringify(debugState.lastParams, null, 2)}
+                </pre>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Mock Data Samples */}
+          <Card className="border-dashed border-green-500/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5 text-green-500" />
+                Aperçu Mock Data (3 premiers)
+              </CardTitle>
+              <CardDescription>Vérifier que les données existent et sont correctes</CardDescription>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-medium mb-2 text-sm">Deals</h4>
+                <pre className="p-3 rounded-lg bg-muted text-xs overflow-x-auto max-h-[300px]">
+                  {JSON.stringify(getMockDataSamples().deals, null, 2)}
+                </pre>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2 text-sm">Models</h4>
+                <pre className="p-3 rounded-lg bg-muted text-xs overflow-x-auto max-h-[300px]">
+                  {JSON.stringify(getMockDataSamples().models, null, 2)}
+                </pre>
+              </div>
             </CardContent>
           </Card>
-        </div>
+        </>
       )}
 
       {/* Raw ENV dump */}
