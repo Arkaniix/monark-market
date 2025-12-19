@@ -1,7 +1,6 @@
 export interface UserProgress {
   modules_completed: number[];
   total_modules: number;
-  credits_earned: number;
   hours_spent: number;
 }
 
@@ -20,7 +19,6 @@ export interface QuizResult {
   questions_total: number;
   correct: number;
   score_pct: number;
-  credits_awarded: number;
 }
 
 export interface Guide {
@@ -34,7 +32,6 @@ export interface Guide {
 export const mockUserProgress: UserProgress = {
   modules_completed: [1, 2],
   total_modules: 6,
-  credits_earned: 2,
   hours_spent: 1.5
 };
 
@@ -132,7 +129,7 @@ export const mockTrainingModules: TrainingModule[] = [
       "Veille hebdo sur la page Tendances",
       "Suivre ses performances : marges, volume, rotation",
       "Mentalité du vendeur pro : cohérence > volume",
-      "Bonus communautaire : badges, crédits, classement"
+      "Bonus communautaire : classement et crédits via scraps"
     ],
     icon: "💡",
     completed: false
@@ -144,8 +141,7 @@ export const mockTrainingModules: TrainingModule[] = [
 export const mockQuizResult: QuizResult = {
   questions_total: 10,
   correct: 8,
-  score_pct: 80,
-  credits_awarded: 1
+  score_pct: 80
 };
 
 export const mockFAQ = [
@@ -171,7 +167,7 @@ export const mockFAQ = [
   },
   {
     question: "Qu'est-ce que le scrap communautaire et pourquoi contribuer ?",
-    answer: "Le scrap communautaire enrichit les données pour tous les utilisateurs. En contribuant, tu gagnes des crédits, des badges, et tu améliores la qualité des analyses de marché pour l'ensemble de la communauté."
+    answer: "Le scrap communautaire enrichit les données pour tous les utilisateurs. En contribuant, tu gagnes des crédits et tu améliores la qualité des analyses de marché pour l'ensemble de la communauté."
   }
 ];
 

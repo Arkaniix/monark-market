@@ -76,7 +76,7 @@ export default function Training() {
   const handleCompleteModule = (moduleId: number) => {
     completeModuleMutation.mutate(moduleId, {
       onSuccess: () => {
-        toast.success(`Module ${moduleId} terminé ! +1 crédit`);
+        toast.success(`Module ${moduleId} terminé !`);
       },
       onError: () => {
         toast.error("Erreur lors de la validation du module");
@@ -105,8 +105,8 @@ export default function Training() {
           <Alert className="max-w-3xl mx-auto border-primary/20 bg-primary/5">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Chaque utilisateur formé améliore la qualité du marché. Termine les modules et
-              débloque des avantages communautaires (crédits bonus, badges, rangs Discord, etc.)
+              Chaque utilisateur formé améliore la qualité du marché. Termine les modules pour
+              maîtriser la plateforme et contribuer efficacement à la communauté.
             </AlertDescription>
           </Alert>
         </motion.div>
@@ -123,8 +123,9 @@ export default function Training() {
       }}>
           <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">Ma Progression<Trophy className="h-6 w-6 text-primary" />
-                Ma Progression & Badges
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-6 w-6 text-primary" />
+                Ma Progression
               </CardTitle>
               <CardDescription>Suis ton parcours d'apprentissage</CardDescription>
             </CardHeader>

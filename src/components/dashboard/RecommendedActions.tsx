@@ -236,20 +236,12 @@ export function RecommendedActions({
                 {/* Statistiques communautaires */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium">Tes contributions</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Card className="bg-muted/50">
-                      <CardContent className="p-3 text-center">
-                        <div className="text-2xl font-bold text-primary">847</div>
-                        <p className="text-xs text-muted-foreground mt-1">Scraps totaux</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="bg-muted/50">
-                      <CardContent className="p-3 text-center">
-                        <div className="text-2xl font-bold text-accent">23</div>
-                        <p className="text-xs text-muted-foreground mt-1">Crédits gagnés</p>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  <Card className="bg-muted/50">
+                    <CardContent className="p-4 text-center">
+                      <div className="text-3xl font-bold text-primary">847</div>
+                      <p className="text-sm text-muted-foreground mt-1">Scraps communautaires</p>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 <div className="space-y-2">

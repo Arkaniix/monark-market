@@ -786,7 +786,6 @@ export const mockProvider: DataProvider = {
     const progress = getFromStorage(STORAGE_KEYS.TRAINING_PROGRESS, mockUserProgress);
     if (!progress.modules_completed.includes(moduleId)) {
       progress.modules_completed.push(moduleId);
-      progress.credits_earned += 1;
       progress.hours_spent += 0.5;
       setToStorage(STORAGE_KEYS.TRAINING_PROGRESS, progress);
 
