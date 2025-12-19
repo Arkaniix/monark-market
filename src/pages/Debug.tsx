@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { RefreshCw, CheckCircle2, XCircle, AlertCircle, Server, Database, Key, User, Loader2, Activity, Package } from "lucide-react";
 import { getDebugState, subscribeDebugState, resetDebugState } from "@/lib/debugTracker";
-import { mockDeals, mockCatalogModels, mockCommunityTasks } from "@/lib/mockDataGenerator";
+import { getMockDataStats } from "@/providers/mockDataset";
 
 const ENV_VARS = {
   VITE_DATA_PROVIDER: import.meta.env.VITE_DATA_PROVIDER || 'mock',
@@ -28,11 +28,12 @@ export default function Debug() {
   const activeProvider = ENV_VARS.VITE_DATA_PROVIDER;
   const apiUrl = ENV_VARS.VITE_API_URL;
 
-  // Mock data counts
+  // Mock data counts from internal dataset
+  const mockStats = getMockDataStats();
   const mockCounts = {
-    deals: mockDeals.length,
-    models: mockCatalogModels.length,
-    communityTasks: mockCommunityTasks.length,
+    deals: mockStats.dealsCount,
+    models: mockStats.modelsCount,
+    communityTasks: mockStats.communityTasksCount,
   };
 
   // Subscribe to debug state changes
