@@ -88,6 +88,9 @@ import {
   type InternalCommunityTask,
 } from "./mockDataset";
 
+// Centralized filter utilities
+import { isValidFilter, matchesSearch } from "./mockUtils";
+
 // ============= localStorage helpers =============
 const STORAGE_KEYS = {
   WATCHLIST: 'mock_watchlist',
@@ -375,11 +378,7 @@ export const mockProvider: DataProvider = {
       delivery_possible: deal.delivery_possible,
     }));
 
-    // Helper to check if a filter value is meaningful
-    const isValidFilter = (val: string | undefined | null): val is string => 
-      !!val && val !== '' && val.toLowerCase() !== 'all' && val.toLowerCase() !== 'toutes';
-
-    // Apply filters only if they have meaningful values
+    // Apply filters only if they have meaningful values (use centralized isValidFilter)
     if (isValidFilter(filters.category)) {
       items = items.filter(i => i.category === filters.category);
     }
@@ -412,10 +411,10 @@ export const mockProvider: DataProvider = {
     if (searchTerm && searchTerm.trim()) {
       const s = searchTerm.toLowerCase().trim();
       items = items.filter(i => 
-        i.title.toLowerCase().includes(s) ||
-        i.model_name.toLowerCase().includes(s) ||
-        i.city.toLowerCase().includes(s) ||
-        i.category.toLowerCase().includes(s)
+        matchesSearch(i.title, s) ||
+        matchesSearch(i.model_name, s) ||
+        matchesSearch(i.city, s) ||
+        matchesSearch(i.category, s)
       );
     }
 
@@ -519,11 +518,7 @@ export const mockProvider: DataProvider = {
       last_scan_at: m.last_scan_at,
     }));
 
-    // Helper to check if a filter value is meaningful
-    const isValidFilter = (val: string | undefined | null): val is string => 
-      !!val && val !== '' && val.toLowerCase() !== 'all' && val.toLowerCase() !== 'toutes';
-
-    // Apply filters only if they have meaningful values
+    // Apply filters only if they have meaningful values (use centralized isValidFilter)
     if (isValidFilter(filters.category)) {
       items = items.filter(i => i.category === filters.category);
     }
@@ -538,10 +533,10 @@ export const mockProvider: DataProvider = {
     if (filters.search && filters.search.trim()) {
       const s = filters.search.toLowerCase().trim();
       items = items.filter(i => 
-        i.name.toLowerCase().includes(s) || 
-        i.brand.toLowerCase().includes(s) ||
-        (i.family && i.family.toLowerCase().includes(s)) ||
-        i.category.toLowerCase().includes(s)
+        matchesSearch(i.name, s) || 
+        matchesSearch(i.brand, s) ||
+        matchesSearch(i.family, s) ||
+        matchesSearch(i.category, s)
       );
     }
 
