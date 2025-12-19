@@ -72,15 +72,21 @@ import {
   generateEstimation,
   mockEstimationHistory,
 } from "@/lib/estimatorMockData";
-import {
-  mockDeals,
-  mockCatalogModels,
-  mockCommunityTasks,
-  mockCategories,
-  mockBrandsByCategory,
-  mockFamiliesByBrand,
-} from "@/lib/mockDataGenerator";
 import { trackEndpointCall } from "@/lib/debugTracker";
+
+// Internal deterministic mock dataset
+import {
+  MOCK_MODELS,
+  MOCK_DEALS,
+  MOCK_COMMUNITY_TASKS,
+  MOCK_CATEGORIES,
+  MOCK_BRANDS_BY_CATEGORY,
+  MOCK_FAMILIES_BY_BRAND,
+  getMockDataStats,
+  type InternalModel,
+  type InternalDeal,
+  type InternalCommunityTask,
+} from "./mockDataset";
 
 // ============= localStorage helpers =============
 const STORAGE_KEYS = {
@@ -203,7 +209,7 @@ export const mockProvider: DataProvider = {
         scraps: Math.floor(Math.random() * 5) + 1,
         margin: Math.floor(Math.random() * 50) + 20,
       })),
-      top_deals: mockDeals.slice(0, 5).map(deal => ({
+      top_deals: MOCK_DEALS.slice(0, 5).map(deal => ({
         id: deal.id,
         title: deal.title,
         price: deal.price,
@@ -348,7 +354,7 @@ export const mockProvider: DataProvider = {
   async getDeals(filters) {
     track('getDeals');
     await delay();
-    let items = mockDeals.map(deal => ({
+    let items = MOCK_DEALS.map(deal => ({
       id: deal.id,
       ad_id: deal.id,
       title: deal.title,
@@ -402,59 +408,59 @@ export const mockProvider: DataProvider = {
   },
   async getMarketSummary() {
     await delay();
-    const median = Math.round(mockDeals.reduce((sum, d) => sum + d.price, 0) / mockDeals.length);
+    const median = Math.round(MOCK_DEALS.reduce((sum, d) => sum + d.price, 0) / MOCK_DEALS.length);
     return {
-      total_ads: mockDeals.length,
-      total_active_ads: mockDeals.length,
-      total_opportunities: mockDeals.filter(d => d.score >= 75).length,
+      total_ads: MOCK_DEALS.length,
+      total_active_ads: MOCK_DEALS.length,
+      total_opportunities: MOCK_DEALS.filter(d => d.score >= 75).length,
       median_price: median,
       median_price_7d: median,
       price_variation: -3.2,
       new_deals_today: 12,
-      total_volume_24h: mockDeals.length * 23,
+      total_volume_24h: MOCK_DEALS.length * 23,
     };
   },
 
   // Catalog
   async getCategories() {
     await delay();
-    return mockCategories.map(cat => ({
+    return MOCK_CATEGORIES.map(cat => ({
       ...cat,
-      count: mockCatalogModels.filter(m => m.category === cat.name).length * 15,
+      count: MOCK_MODELS.filter(m => m.category === cat.name).length,
     }));
   },
   async getBrands(category) {
     await delay();
-    if (category && mockBrandsByCategory[category]) {
-      return mockBrandsByCategory[category];
+    if (category && MOCK_BRANDS_BY_CATEGORY[category]) {
+      return MOCK_BRANDS_BY_CATEGORY[category];
     }
-    return Object.values(mockBrandsByCategory).flat().filter((v, i, a) => a.indexOf(v) === i);
+    return Object.values(MOCK_BRANDS_BY_CATEGORY).flat().filter((v, i, a) => a.indexOf(v) === i);
   },
   async getFamilies(brand) {
     await delay();
-    if (brand && mockFamiliesByBrand[brand]) {
-      return mockFamiliesByBrand[brand];
+    if (brand && MOCK_FAMILIES_BY_BRAND[brand]) {
+      return MOCK_FAMILIES_BY_BRAND[brand];
     }
-    return Object.values(mockFamiliesByBrand).flat().filter((v, i, a) => a.indexOf(v) === i).slice(0, 8);
+    return Object.values(MOCK_FAMILIES_BY_BRAND).flat().filter((v, i, a) => a.indexOf(v) === i).slice(0, 8);
   },
   async getCatalogModels(filters) {
     track('getCatalogModels');
     await delay();
-    const liquidityMap: Record<string, number> = { high: 0.8, medium: 0.5, low: 0.2 };
-    let items: CatalogModel[] = mockCatalogModels.map(m => ({
+    let items: CatalogModel[] = MOCK_MODELS.map(m => ({
       id: m.id,
       name: m.name,
       brand: m.brand,
       family: m.family,
       category: m.category,
       median_price: m.median_price,
-      fair_value_30d: m.median_price * 1.05,
-      price_median_30d: m.median_price,
+      fair_value_30d: m.fair_value_30d,
+      price_median_30d: m.price_median_30d,
       var_7d_pct: m.var_7d_pct,
       var_30d_pct: m.var_30d_pct,
       volume: m.volume,
-      liquidity: liquidityMap[m.liquidity] || 0.5,
+      liquidity: m.liquidity,
       ads_count: m.ads_count,
+      last_scan_at: m.last_scan_at,
     }));
 
     if (filters.category) items = items.filter(i => i.category === filters.category);
@@ -491,13 +497,13 @@ export const mockProvider: DataProvider = {
   },
   async getCatalogSummary() {
     await delay();
-    const totalAds = mockCatalogModels.reduce((sum, m) => sum + m.ads_count, 0);
-    const medianPrice = Math.round(mockCatalogModels.reduce((sum, m) => sum + m.median_price, 0) / mockCatalogModels.length);
-    const avgVar = mockCatalogModels.reduce((sum, m) => sum + m.var_7d_pct, 0) / mockCatalogModels.length;
+    const totalAds = MOCK_MODELS.reduce((sum, m) => sum + m.ads_count, 0);
+    const medianPrice = Math.round(MOCK_MODELS.reduce((sum, m) => sum + m.median_price, 0) / MOCK_MODELS.length);
+    const avgVar = MOCK_MODELS.reduce((sum, m) => sum + m.var_7d_pct, 0) / MOCK_MODELS.length;
     return {
-      total_models: mockCatalogModels.length,
-      total_brands: Object.keys(mockBrandsByCategory).length,
-      categories_count: mockCategories.length,
+      total_models: MOCK_MODELS.length,
+      total_brands: Object.keys(MOCK_BRANDS_BY_CATEGORY).length,
+      categories_count: MOCK_CATEGORIES.length,
       last_update: new Date().toISOString(),
       median_price_global: medianPrice,
       avg_variation: Math.round(avgVar * 10) / 10,
@@ -775,23 +781,23 @@ export const mockProvider: DataProvider = {
   async getAvailableTasks(): Promise<AvailableTasksResponse> {
     track('getAvailableTasks');
     await delay();
-    const tasks = mockCommunityTasks.map((t, idx) => ({
+    const tasks = MOCK_COMMUNITY_TASKS.map((t) => ({
       id: t.id,
-      model_id: idx + 1,
-      model_name: t.model,
-      model: t.model,
+      model_id: t.model_id,
+      model_name: t.model_name,
+      model: t.model_name,
       platform: t.platform,
       type: t.type,
       region: t.region,
-      pages_hint: t.pages_hint,
-      pages_from: 1,
-      pages_to: parseInt(t.pages_hint.split('–')[1]) || 10,
+      pages_hint: `${t.pages_from}–${t.pages_to}`,
+      pages_from: t.pages_from,
+      pages_to: t.pages_to,
       priority: t.priority,
       context: t.context,
       estimated_time_min: t.estimated_time_min,
-      credit_reward: t.credit_reward,
-      reward_credits: t.credit_reward,
-      expires_at: new Date(Date.now() + 3600000).toISOString(),
+      credit_reward: t.reward_credits,
+      reward_credits: t.reward_credits,
+      expires_at: t.expires_at,
     }));
     return {
       active: true,
@@ -839,29 +845,29 @@ export const mockProvider: DataProvider = {
   },
   async claimTask(data): Promise<ClaimTaskResponse> {
     await delay();
-    const task = mockCommunityTasks[0];
+    const task = MOCK_COMMUNITY_TASKS[0];
     return {
       success: true,
       shard_id: `shard-${data.task_id}`,
       job_id: data.task_id,
       upload_token: 'mock-token-123',
-      model: task?.model || 'RTX 4060 Ti',
+      model: task?.model_name || 'RTX 4060 Ti',
       task: {
         id: data.task_id,
-        model_id: 1,
-        model_name: task?.model || 'RTX 4060 Ti',
-        model: task?.model || 'RTX 4060 Ti',
+        model_id: task?.model_id || 1,
+        model_name: task?.model_name || 'RTX 4060 Ti',
+        model: task?.model_name || 'RTX 4060 Ti',
         platform: task?.platform || 'leboncoin',
         type: task?.type || 'list_only',
         region: task?.region || null,
-        pages_hint: task?.pages_hint || '1–10',
-        pages_from: 1,
-        pages_to: 10,
+        pages_hint: task ? `${task.pages_from}–${task.pages_to}` : '1–10',
+        pages_from: task?.pages_from || 1,
+        pages_to: task?.pages_to || 10,
         priority: task?.priority || 'medium',
         context: task?.context || null,
         estimated_time_min: task?.estimated_time_min || 5,
-        credit_reward: task?.credit_reward || 2,
-        reward_credits: task?.credit_reward || 2,
+        credit_reward: task?.reward_credits || 2,
+        reward_credits: task?.reward_credits || 2,
         expires_at: new Date(Date.now() + 3600000).toISOString(),
       },
       type: task?.type || 'list_only',
@@ -875,10 +881,10 @@ export const mockProvider: DataProvider = {
       },
       expires_at: new Date(Date.now() + 3600000).toISOString(),
       estimated_time_min: task?.estimated_time_min || 5,
-      credit_reward: task?.credit_reward || 2,
+      credit_reward: task?.reward_credits || 2,
       params: {
         platform: task?.platform || 'leboncoin',
-        keyword: task?.model || 'RTX 4060 Ti',
+        keyword: task?.model_name || 'RTX 4060 Ti',
         type: task?.type || 'list_only',
         pages_from: 1,
         pages_to: 10,
