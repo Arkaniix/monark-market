@@ -4,23 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { 
-  Search, 
-  Eye, 
-  Bell, 
-  GraduationCap,
-  Award,
-  Zap,
-  Target,
-  Trophy,
-  ArrowRight
-} from "lucide-react";
+import { Search, Eye, Bell, GraduationCap, Award, Zap, Target, Trophy, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import ScrapModal from "@/components/ScrapModal";
-
 interface RecommendedActionsProps {
-  watchlistItems: Array<{ name: string; category: string }>;
-  alerts: Array<{ message: string; type: string }>;
+  watchlistItems: Array<{
+    name: string;
+    category: string;
+  }>;
+  alerts: Array<{
+    message: string;
+    type: string;
+  }>;
   trainingProgress: {
     completed: number;
     total: number;
@@ -29,26 +24,29 @@ interface RecommendedActionsProps {
   userRank?: number;
   userPercentile?: number;
 }
-
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+  hidden: {
+    opacity: 0,
+    y: 20
+  },
+  visible: {
+    opacity: 1,
+    y: 0
+  }
 };
-
-export function RecommendedActions({ 
-  watchlistItems, 
+export function RecommendedActions({
+  watchlistItems,
   alerts,
   trainingProgress,
   userRank = 245,
   userPercentile = 10
 }: RecommendedActionsProps) {
   const [scrapModalOpen, setScrapModalOpen] = useState(false);
-  const progressPercentage = (trainingProgress.completed / trainingProgress.total) * 100;
+  const progressPercentage = trainingProgress.completed / trainingProgress.total * 100;
   const communityScrapAvailable = true; // À récupérer via API
   const userScrapCount = 24; // Stats du mois en cours
 
-  return (
-    <section className="py-8">
+  return <section className="py-8">
       <div className="container">
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-2">Actions recommandées</h2>
@@ -68,11 +66,7 @@ export function RecommendedActions({
               <CardContent className="space-y-3">
                 {/* Lancer un scrap */}
                 <div className="space-y-2">
-                  <Button 
-                    size="lg" 
-                    className="w-full justify-start gap-3 h-auto py-5 relative overflow-hidden group hover:shadow-lg hover:shadow-primary/20 transition-all"
-                    onClick={() => setScrapModalOpen(true)}
-                  >
+                  <Button size="lg" className="w-full justify-start gap-3 h-auto py-5 relative overflow-hidden group hover:shadow-lg hover:shadow-primary/20 transition-all" onClick={() => setScrapModalOpen(true)}>
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                     <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-background/10 relative z-10">
                       <Search className="h-5 w-5" />
@@ -82,12 +76,10 @@ export function RecommendedActions({
                       <div className="text-xs opacity-90">Faible · Fort · Communautaire</div>
                     </div>
                   </Button>
-                  {communityScrapAvailable && (
-                    <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-success/10 border border-success/20">
+                  {communityScrapAvailable && <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-success/10 border border-success/20">
                       <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
                       <span className="text-xs font-medium text-success">1 scrap communautaire disponible aujourd'hui !</span>
-                    </div>
-                  )}
+                    </div>}
                 </div>
 
                 {/* Analyser watchlist */}
@@ -97,25 +89,19 @@ export function RecommendedActions({
                       <Eye className="h-5 w-5 text-accent mt-0.5" />
                       <div className="flex-1">
                         <h4 className="font-medium mb-2">Analyser mes composants</h4>
-                {watchlistItems.length > 0 ? (
-                          <div className="space-y-2">
-                            {watchlistItems.slice(0, 2).map((item, idx) => (
-                              <Link key={idx} to={`/catalog?search=${item.name}`}>
+                {watchlistItems.length > 0 ? <div className="space-y-2">
+                            {watchlistItems.slice(0, 2).map((item, idx) => <Link key={idx} to={`/catalog?search=${item.name}`}>
                                 <div className="flex items-center justify-between text-sm p-2 rounded hover:bg-muted/50 transition-colors cursor-pointer">
                                   <span className="text-muted-foreground">{item.name}</span>
                                   <Badge variant="outline">{item.category}</Badge>
                                 </div>
-                              </Link>
-                            ))}
+                              </Link>)}
                             <Link to="/catalog">
                               <Button variant="outline" size="sm" className="w-full mt-2">
                                 Voir ma watchlist
                               </Button>
                             </Link>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">Aucun composant suivi</p>
-                        )}
+                          </div> : <p className="text-sm text-muted-foreground">Aucun composant suivi</p>}
                       </div>
                     </div>
                   </CardContent>
@@ -128,22 +114,14 @@ export function RecommendedActions({
                       <Bell className="h-5 w-5 text-warning mt-0.5" />
                       <div className="flex-1">
                         <h4 className="font-medium mb-2">Mes alertes</h4>
-                        {alerts.length > 0 ? (
-                          <div className="space-y-2">
-                            {alerts.slice(0, 2).map((alert, idx) => (
-                              <div key={idx} className="text-sm p-2 rounded bg-warning/10 border border-warning/20">
+                        {alerts.length > 0 ? <div className="space-y-2">
+                            {alerts.slice(0, 2).map((alert, idx) => <div key={idx} className="text-sm p-2 rounded bg-warning/10 border border-warning/20">
                                 {alert.message}
-                              </div>
-                            ))}
-                            {alerts.length > 2 && (
-                              <p className="text-xs text-muted-foreground">
+                              </div>)}
+                            {alerts.length > 2 && <p className="text-xs text-muted-foreground">
                                 +{alerts.length - 2} autres alertes
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">Aucune alerte active</p>
-                        )}
+                              </p>}
+                          </div> : <p className="text-sm text-muted-foreground">Aucune alerte active</p>}
                       </div>
                     </div>
                   </CardContent>
@@ -169,12 +147,9 @@ export function RecommendedActions({
           </motion.div>
 
           {/* Formation & progression */}
-          <motion.div 
-            variants={itemVariants} 
-            initial="hidden" 
-            animate="visible"
-            transition={{ delay: 0.1 }}
-          >
+          <motion.div variants={itemVariants} initial="hidden" animate="visible" transition={{
+          delay: 0.1
+        }}>
             <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-background h-full">
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -217,36 +192,10 @@ export function RecommendedActions({
 
                 {/* Récompenses */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Trophy className="h-4 w-4 text-warning" />
-                    Récompenses à débloquer
-                  </h4>
+                  
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-2 rounded bg-muted/50">
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-success/20 flex items-center justify-center">
-                          <Award className="h-4 w-4 text-success" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">+1 crédit</p>
-                          <p className="text-xs text-muted-foreground">Par module terminé</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-2 rounded bg-muted/50">
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-warning/20 flex items-center justify-center">
-                          <Trophy className="h-4 w-4 text-warning" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">Badge Expert</p>
-                          <p className="text-xs text-muted-foreground">100% de complétion</p>
-                        </div>
-                      </div>
-                      {progressPercentage === 100 && (
-                        <Badge variant="default">Débloqué!</Badge>
-                      )}
-                    </div>
+                    
+                    
                   </div>
                 </div>
               </CardContent>
@@ -254,12 +203,9 @@ export function RecommendedActions({
           </motion.div>
 
           {/* Classement communautaire */}
-          <motion.div 
-            variants={itemVariants} 
-            initial="hidden" 
-            animate="visible"
-            transition={{ delay: 0.2 }}
-          >
+          <motion.div variants={itemVariants} initial="hidden" animate="visible" transition={{
+          delay: 0.2
+        }}>
             <Card className="border-warning/20 bg-gradient-to-br from-warning/5 to-background h-full">
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -270,10 +216,7 @@ export function RecommendedActions({
               <CardContent className="space-y-4">
                 {/* Rang actuel */}
                 <div className="text-center py-6">
-                  <div 
-                    className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-warning/20 to-warning/10 border-2 border-warning/30 mb-3 cursor-pointer hover:scale-105 transition-transform group"
-                    title={`${userScrapCount} scraps ce mois-ci – ${100 - userPercentile}e percentile`}
-                  >
+                  <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-warning/20 to-warning/10 border-2 border-warning/30 mb-3 cursor-pointer hover:scale-105 transition-transform group" title={`${userScrapCount} scraps ce mois-ci – ${100 - userPercentile}e percentile`}>
                     <span className="text-3xl font-bold text-warning">#{userRank}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">Ton classement global</p>
@@ -329,6 +272,5 @@ export function RecommendedActions({
       </div>
       
       <ScrapModal open={scrapModalOpen} onOpenChange={setScrapModalOpen} />
-    </section>
-  );
+    </section>;
 }
