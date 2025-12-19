@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useAdmin";
+import { useDataProviderStatus } from "@/providers/DataContext";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminUsers from "@/components/admin/AdminUsers";
@@ -18,12 +21,28 @@ import AdminHealth from "@/components/admin/AdminHealth";
 import AdminLogs from "@/components/admin/AdminLogs";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 
+const LOADING_TIMEOUT_MS = 8000;
+
 export default function Admin() {
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isMockMode } = useDataProviderStatus();
   
-  const { data: roleData, isLoading, isError, error } = useUserRole();
+  const { data: roleData, isLoading, isError, error, refetch } = useUserRole();
+
+  // Timeout detection for loading state
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, LOADING_TIMEOUT_MS);
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     if (!isLoading && !isError) {
@@ -37,12 +56,12 @@ export default function Admin() {
       }
     }
     
-    if (isError) {
+    if (isError && !loadingTimeout) {
       // If error fetching role, redirect to home
       console.error("Error checking admin status:", error);
       navigate("/home");
     }
-  }, [roleData, isLoading, isError, navigate, toast, error]);
+  }, [roleData, isLoading, isError, navigate, toast, error, loadingTimeout]);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -77,11 +96,46 @@ export default function Admin() {
     }
   };
 
+  const handleRetry = () => {
+    setLoadingTimeout(false);
+    refetch();
+  };
+
+  // Show timeout message after 8 seconds
+  if ((isLoading && loadingTimeout) || (isError && loadingTimeout)) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-6">
+          <Alert variant="destructive" className="max-w-md">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Données admin indisponibles</AlertTitle>
+            <AlertDescription>
+              {isMockMode 
+                ? "Le mock provider met du temps à répondre. Les données admin peuvent être incomplètes."
+                : "L'API n'est pas joignable ou met trop de temps à répondre."
+              }
+            </AlertDescription>
+          </Alert>
+          <div className="flex gap-3">
+            <Button onClick={handleRetry} variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Réessayer
+            </Button>
+            <Button onClick={() => navigate("/home")} variant="ghost">
+              Retour à l'accueil
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Vérification des permissions...</p>
         </div>
       </div>
     );

@@ -42,6 +42,12 @@ import type {
   SubscriptionPlan,
   UserSubscription,
   UserProfile,
+  AdminUsersResponse,
+  AdminJobsResponse,
+  AdminJobsFilters,
+  AdminLogsResponse,
+  AdminLogsFilters,
+  HealthStatus,
 } from "./types";
 
 function buildQueryString(params: Record<string, any>): string {
@@ -246,5 +252,37 @@ export const apiProvider: DataProvider = {
   },
   async subscribe(planId) {
     return apiPost(ENDPOINTS.BILLING.CHECKOUT_SESSION, { plan_id: planId });
+  },
+
+  // Admin
+  async getUserRole() {
+    return apiFetch<{ user_id: string; role: string }>('/v1/users/me/role');
+  },
+  async getAdminUsers(page = 1, limit = 20, search) {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    if (search) params.append('search', search);
+    return apiFetch<AdminUsersResponse>(`/v1/admin/users?${params.toString()}`);
+  },
+  async getAdminJobs(page = 1, limit = 20, filters) {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    if (filters?.status && filters.status !== 'all') params.append('status', filters.status);
+    if (filters?.type && filters.type !== 'all') params.append('type', filters.type);
+    if (filters?.search) params.append('search', filters.search);
+    return apiFetch<AdminJobsResponse>(`/v1/admin/jobs?${params.toString()}`);
+  },
+  async getAdminLogs(page = 1, limit = 50, filters) {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    if (filters?.level && filters.level !== 'all') params.append('level', filters.level);
+    if (filters?.search) params.append('search', filters.search);
+    return apiFetch<AdminLogsResponse>(`/v1/admin/logs?${params.toString()}`);
+  },
+  async getHealthStatus() {
+    return apiFetch<HealthStatus>('/health');
   },
 };

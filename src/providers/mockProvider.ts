@@ -1002,4 +1002,84 @@ export const mockProvider: DataProvider = {
     };
     setToStorage(STORAGE_KEYS.CREDITS, newCredits);
   },
+
+  // Admin
+  async getUserRole() {
+    await delay();
+    return {
+      user_id: 'mock-user-1',
+      role: 'admin', // In mock mode, always admin for testing
+    };
+  },
+  async getAdminUsers(page = 1, limit = 20, search) {
+    await delay();
+    const users = [
+      { id: 'user-1', email: 'admin@example.com', display_name: 'Admin Test', role: 'admin', credits_remaining: 400, plan_name: 'Elite', created_at: new Date(Date.now() - 90 * 86400000).toISOString(), last_sign_in_at: new Date().toISOString() },
+      { id: 'user-2', email: 'john@example.com', display_name: 'John Doe', role: 'user', credits_remaining: 120, plan_name: 'Pro', created_at: new Date(Date.now() - 60 * 86400000).toISOString(), last_sign_in_at: new Date(Date.now() - 86400000).toISOString() },
+      { id: 'user-3', email: 'jane@example.com', display_name: 'Jane Smith', role: 'user', credits_remaining: 25, plan_name: 'Basic', created_at: new Date(Date.now() - 30 * 86400000).toISOString(), last_sign_in_at: new Date(Date.now() - 3 * 86400000).toISOString() },
+      { id: 'user-4', email: 'bob@example.com', display_name: 'Bob Wilson', role: 'user', credits_remaining: 80, plan_name: 'Pro', created_at: new Date(Date.now() - 45 * 86400000).toISOString(), last_sign_in_at: new Date(Date.now() - 7 * 86400000).toISOString() },
+      { id: 'user-5', email: 'alice@example.com', display_name: null, role: 'user', credits_remaining: 10, plan_name: 'Basic', created_at: new Date(Date.now() - 15 * 86400000).toISOString(), last_sign_in_at: null },
+    ];
+    let filtered = users;
+    if (search) {
+      const s = search.toLowerCase();
+      filtered = users.filter(u => u.email.toLowerCase().includes(s) || u.display_name?.toLowerCase().includes(s));
+    }
+    const start = (page - 1) * limit;
+    return { items: filtered.slice(start, start + limit), total: filtered.length, page, page_size: limit };
+  },
+  async getAdminJobs(page = 1, limit = 20, filters) {
+    await delay();
+    const jobs = [
+      { id: 1, user_id: 'user-1', user_name: 'Admin Test', keyword: 'RTX 4060', platform: 'leboncoin', type: 'weak', status: 'completed', pages_scanned: 10, pages_target: 10, ads_found: 45, error_message: null, created_at: new Date().toISOString(), started_at: new Date().toISOString(), ended_at: new Date().toISOString() },
+      { id: 2, user_id: 'user-2', user_name: 'John Doe', keyword: 'Ryzen 5600X', platform: 'leboncoin', type: 'strong', status: 'completed', pages_scanned: 20, pages_target: 20, ads_found: 78, error_message: null, created_at: new Date(Date.now() - 3600000).toISOString(), started_at: new Date(Date.now() - 3600000).toISOString(), ended_at: new Date(Date.now() - 3000000).toISOString() },
+      { id: 3, user_id: 'user-3', user_name: 'Jane Smith', keyword: 'RTX 3080', platform: 'leboncoin', type: 'communautaire', status: 'running', pages_scanned: 5, pages_target: 15, ads_found: 18, error_message: null, created_at: new Date(Date.now() - 7200000).toISOString(), started_at: new Date(Date.now() - 7200000).toISOString(), ended_at: null },
+      { id: 4, user_id: 'user-4', user_name: 'Bob Wilson', keyword: '980 Pro', platform: 'leboncoin', type: 'weak', status: 'failed', pages_scanned: 3, pages_target: 10, ads_found: 0, error_message: 'Connection timeout', created_at: new Date(Date.now() - 86400000).toISOString(), started_at: new Date(Date.now() - 86400000).toISOString(), ended_at: new Date(Date.now() - 86000000).toISOString() },
+    ];
+    let filtered = jobs;
+    if (filters?.status && filters.status !== 'all') filtered = filtered.filter(j => j.status === filters.status);
+    if (filters?.type && filters.type !== 'all') filtered = filtered.filter(j => j.type === filters.type);
+    if (filters?.search) {
+      const s = filters.search.toLowerCase();
+      filtered = filtered.filter(j => j.keyword.toLowerCase().includes(s) || j.user_name?.toLowerCase().includes(s));
+    }
+    const start = (page - 1) * limit;
+    return { items: filtered.slice(start, start + limit), total: filtered.length, page, page_size: limit };
+  },
+  async getAdminLogs(page = 1, limit = 50, filters) {
+    await delay();
+    const logs = [
+      { id: 1, level: 'info' as const, message: 'User login successful', context: { user_id: 'user-1' }, created_at: new Date().toISOString() },
+      { id: 2, level: 'info' as const, message: 'Job started', context: { job_id: 1, keyword: 'RTX 4060' }, created_at: new Date(Date.now() - 60000).toISOString() },
+      { id: 3, level: 'warn' as const, message: 'Rate limit approached', context: { requests: 95, limit: 100 }, created_at: new Date(Date.now() - 120000).toISOString() },
+      { id: 4, level: 'error' as const, message: 'Connection timeout', context: { job_id: 4, error: 'ETIMEDOUT' }, created_at: new Date(Date.now() - 180000).toISOString() },
+      { id: 5, level: 'info' as const, message: 'Job completed', context: { job_id: 1, ads_found: 45 }, created_at: new Date(Date.now() - 300000).toISOString() },
+    ];
+    let filtered = logs;
+    if (filters?.level && filters.level !== 'all') filtered = filtered.filter(l => l.level === filters.level);
+    if (filters?.search) {
+      const s = filters.search.toLowerCase();
+      filtered = filtered.filter(l => l.message.toLowerCase().includes(s));
+    }
+    const start = (page - 1) * limit;
+    return { items: filtered.slice(start, start + limit), total: filtered.length, page, page_size: limit };
+  },
+  async getHealthStatus() {
+    await delay();
+    return {
+      status: 'healthy' as const,
+      version: '0.18.0-mock',
+      uptime_seconds: 86400,
+      services: [
+        { name: 'database', status: 'operational' as const, latency_ms: 12 },
+        { name: 'cache', status: 'operational' as const, latency_ms: 3 },
+        { name: 'scraper', status: 'operational' as const, latency_ms: 45 },
+      ],
+      metrics: {
+        db_connections: 15,
+        requests_per_minute: 120,
+        error_rate: 0.02,
+      },
+    };
+  },
 };
