@@ -711,4 +711,96 @@ export interface DataProvider {
   getSubscriptionHistory(): Promise<UserSubscription[]>;
   getUserProfile(): Promise<UserProfile>;
   subscribe(planId: string): Promise<void>;
+  
+  // Admin
+  getUserRole(): Promise<{ user_id: string; role: string }>;
+  getAdminUsers(page?: number, limit?: number, search?: string): Promise<AdminUsersResponse>;
+  getAdminJobs(page?: number, limit?: number, filters?: AdminJobsFilters): Promise<AdminJobsResponse>;
+  getAdminLogs(page?: number, limit?: number, filters?: AdminLogsFilters): Promise<AdminLogsResponse>;
+  getHealthStatus(): Promise<HealthStatus>;
+}
+
+// ============= Admin Types =============
+export interface AdminUser {
+  id: string;
+  email: string;
+  display_name: string | null;
+  role: string;
+  credits_remaining: number;
+  plan_name: string | null;
+  created_at: string;
+  last_sign_in_at: string | null;
+}
+
+export interface AdminUsersResponse {
+  items: AdminUser[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface AdminJob {
+  id: number;
+  user_id: string;
+  user_name: string | null;
+  keyword: string;
+  platform: string;
+  type: string;
+  status: string;
+  pages_scanned: number;
+  pages_target: number | null;
+  ads_found: number;
+  error_message: string | null;
+  created_at: string;
+  started_at: string | null;
+  ended_at: string | null;
+}
+
+export interface AdminJobsResponse {
+  items: AdminJob[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface AdminJobsFilters {
+  status?: string;
+  type?: string;
+  search?: string;
+}
+
+export interface SystemLog {
+  id: number;
+  level: 'info' | 'warn' | 'error';
+  message: string;
+  context: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface AdminLogsResponse {
+  items: SystemLog[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface AdminLogsFilters {
+  level?: string;
+  search?: string;
+}
+
+export interface HealthStatus {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  version: string;
+  uptime_seconds: number;
+  services: {
+    name: string;
+    status: 'operational' | 'degraded' | 'down';
+    latency_ms: number;
+  }[];
+  metrics: {
+    db_connections: number;
+    requests_per_minute: number;
+    error_rate: number;
+  };
 }
