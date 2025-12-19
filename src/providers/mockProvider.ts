@@ -459,6 +459,9 @@ export const mockProvider: DataProvider = {
     const paged = items.slice(start, start + limit);
     const total_pages = Math.ceil(total / limit);
 
+    // Debug tracking
+    trackEndpointCall('getDeals', 'mock', { ...filters, page, limit }, paged.length);
+
     return { items: paged, total, page, page_size: limit, total_pages };
   },
   async getMarketSummary() {
@@ -582,6 +585,9 @@ export const mockProvider: DataProvider = {
     const start = (page - 1) * limit;
     const paged = items.slice(start, start + limit);
     const total_pages = Math.ceil(total / limit);
+
+    // Debug tracking
+    trackEndpointCall('getCatalogModels', 'mock', { ...filters, page, limit }, paged.length);
 
     return { items: paged, total, page, page_size: limit, total_pages };
   },
