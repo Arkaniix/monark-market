@@ -174,20 +174,24 @@ export default function Community() {
     },
   ];
 
-  const taskStatusIcon = {
+  const taskStatusIcon: Record<string, typeof CheckCircle2> = {
     completed: CheckCircle2,
+    done: CheckCircle2,
     expired: Timer,
     failed: XCircle,
     pending: Clock,
     running: Activity,
+    in_progress: Activity,
   };
 
-  const taskStatusColor = {
+  const taskStatusColor: Record<string, string> = {
     completed: "text-green-600",
+    done: "text-green-600",
     expired: "text-orange-600",
     failed: "text-red-600",
     pending: "text-muted-foreground",
     running: "text-blue-600",
+    in_progress: "text-blue-600",
   };
 
   const faqs = [
