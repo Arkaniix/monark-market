@@ -524,7 +524,6 @@ export interface TrendsData {
 export interface UserProgress {
   modules_completed: number[];
   total_modules: number;
-  credits_earned: number;
   hours_spent: number;
 }
 
