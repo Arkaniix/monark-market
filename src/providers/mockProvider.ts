@@ -62,7 +62,6 @@ import {
   mockFAQ,
 } from "@/lib/trainingMockData";
 import {
-  communityNeeds,
   mockHistory,
   leaderboard30d,
   leaderboardAllTime,
@@ -73,6 +72,14 @@ import {
   generateEstimation,
   mockEstimationHistory,
 } from "@/lib/estimatorMockData";
+import {
+  mockDeals,
+  mockCatalogModels,
+  mockCommunityTasks,
+  mockCategories,
+  mockBrandsByCategory,
+  mockFamiliesByBrand,
+} from "@/lib/mockDataGenerator";
 
 // ============= localStorage helpers =============
 const STORAGE_KEYS = {
@@ -190,15 +197,15 @@ export const mockProvider: DataProvider = {
         scraps: Math.floor(Math.random() * 5) + 1,
         margin: Math.floor(Math.random() * 50) + 20,
       })),
-      top_deals: mockAds.slice(0, 5).map(ad => ({
-        id: parseInt(ad.id),
-        title: ad.title,
-        price: ad.price,
-        fair_value: ad.fairValue,
-        deviation_pct: Math.round((1 - ad.price / ad.fairValue) * 100),
-        city: ad.location,
-        condition: ad.condition,
-        category: ad.component,
+      top_deals: mockDeals.slice(0, 5).map(deal => ({
+        id: deal.id,
+        title: deal.title,
+        price: deal.price,
+        fair_value: deal.fair_value,
+        deviation_pct: deal.deviation_pct,
+        city: deal.city,
+        condition: deal.condition,
+        category: deal.category,
       })),
       trends: {
         rising: topIncreases.slice(0, 3).map(m => ({ name: m.model, change: m.var_30d_pct, category: m.category })),
@@ -334,21 +341,21 @@ export const mockProvider: DataProvider = {
   // Deals
   async getDeals(filters) {
     await delay();
-    let items = mockAds.map(ad => ({
-      id: parseInt(ad.id),
-      title: ad.title,
-      price: ad.price,
-      fair_value: ad.fairValue,
-      deviation_pct: Math.round((1 - ad.price / ad.fairValue) * 100),
-      city: ad.location,
-      region: ad.region,
-      condition: ad.condition,
-      category: ad.component,
-      model_name: ad.model,
-      platform: 'leboncoin',
-      url: '#',
-      published_at: ad.date,
-      score: ad.dealScore,
+    let items = mockDeals.map(deal => ({
+      id: deal.id,
+      title: deal.title,
+      price: deal.price,
+      fair_value: deal.fair_value,
+      deviation_pct: deal.deviation_pct,
+      city: deal.city,
+      region: deal.region,
+      condition: deal.condition,
+      category: deal.category,
+      model_name: deal.model_name,
+      platform: deal.platform,
+      url: deal.url,
+      published_at: deal.publication_date,
+      score: deal.score,
     }));
 
     // Apply filters
@@ -364,6 +371,10 @@ export const mockProvider: DataProvider = {
       items.sort((a, b) => filters.sort_order === 'desc' ? b.price - a.price : a.price - b.price);
     } else if (filters.sort_by === 'score') {
       items.sort((a, b) => filters.sort_order === 'desc' ? b.score - a.score : a.score - b.score);
+    } else if (filters.sort_by === 'date') {
+      items.sort((a, b) => filters.sort_order === 'desc' 
+        ? new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+        : new Date(a.published_at).getTime() - new Date(b.published_at).getTime());
     }
 
     // Paginate
@@ -377,57 +388,72 @@ export const mockProvider: DataProvider = {
   async getMarketSummary() {
     await delay();
     return {
-      total_ads: marketSummary.volume_total,
-      total_opportunities: 234,
-      median_price: marketSummary.median_price,
-      total_volume_24h: 1850,
+      total_ads: mockDeals.length,
+      total_opportunities: mockDeals.filter(d => d.score >= 75).length,
+      median_price: Math.round(mockDeals.reduce((sum, d) => sum + d.price, 0) / mockDeals.length),
+      total_volume_24h: mockDeals.length * 23,
     };
   },
 
   // Catalog
   async getCategories() {
     await delay();
-    return [
-      { id: 1, name: 'GPU', count: 450 },
-      { id: 2, name: 'CPU', count: 320 },
-      { id: 3, name: 'RAM', count: 280 },
-      { id: 4, name: 'SSD', count: 210 },
-      { id: 5, name: 'Motherboard', count: 150 },
-    ];
+    return mockCategories.map(cat => ({
+      ...cat,
+      count: mockCatalogModels.filter(m => m.category === cat.name).length * 15,
+    }));
   },
   async getBrands(category) {
     await delay();
-    if (category === 'GPU') return ['NVIDIA', 'AMD', 'Intel'];
-    if (category === 'CPU') return ['AMD', 'Intel'];
-    return ['Corsair', 'G.Skill', 'Kingston', 'Samsung', 'WD'];
+    if (category && mockBrandsByCategory[category]) {
+      return mockBrandsByCategory[category];
+    }
+    return Object.values(mockBrandsByCategory).flat().filter((v, i, a) => a.indexOf(v) === i);
   },
   async getFamilies(brand) {
     await delay();
-    if (brand === 'NVIDIA') return ['GeForce RTX 40', 'GeForce RTX 30', 'GeForce GTX 16'];
-    if (brand === 'AMD') return ['Radeon RX 7000', 'Radeon RX 6000', 'Ryzen 7000', 'Ryzen 5000'];
-    return ['Series A', 'Series B'];
+    if (brand && mockFamiliesByBrand[brand]) {
+      return mockFamiliesByBrand[brand];
+    }
+    return Object.values(mockFamiliesByBrand).flat().filter((v, i, a) => a.indexOf(v) === i).slice(0, 8);
   },
   async getCatalogModels(filters) {
     await delay();
-    let items: CatalogModel[] = mockModels.map((m, i) => ({
-      id: i + 1,
+    let items: CatalogModel[] = mockCatalogModels.map(m => ({
+      id: m.id,
       name: m.name,
       brand: m.brand,
-      family: null,
+      family: m.family,
       category: m.category,
-      median_price: m.medianPrice,
-      var_7d_pct: m.priceChange7d,
-      var_30d_pct: m.priceChange30d,
+      median_price: m.median_price,
+      var_7d_pct: m.var_7d_pct,
+      var_30d_pct: m.var_30d_pct,
       volume: m.volume,
-      liquidity: m.volume > 100 ? 'high' : m.volume > 50 ? 'medium' : 'low',
-      ads_count: Math.floor(m.volume * 1.5),
+      liquidity: m.liquidity,
+      ads_count: m.ads_count,
     }));
 
     if (filters.category) items = items.filter(i => i.category === filters.category);
     if (filters.brand) items = items.filter(i => i.brand === filters.brand);
+    if (filters.family) items = items.filter(i => i.family === filters.family);
     if (filters.search) {
       const s = filters.search.toLowerCase();
-      items = items.filter(i => i.name.toLowerCase().includes(s) || i.brand.toLowerCase().includes(s));
+      items = items.filter(i => 
+        i.name.toLowerCase().includes(s) || 
+        i.brand.toLowerCase().includes(s) ||
+        (i.family && i.family.toLowerCase().includes(s))
+      );
+    }
+
+    // Sort
+    if (filters.sort_by === 'price') {
+      items.sort((a, b) => filters.sort_order === 'desc' ? b.median_price - a.median_price : a.median_price - b.median_price);
+    } else if (filters.sort_by === 'var_7d') {
+      items.sort((a, b) => filters.sort_order === 'desc' ? b.var_7d_pct - a.var_7d_pct : a.var_7d_pct - b.var_7d_pct);
+    } else if (filters.sort_by === 'var_30d') {
+      items.sort((a, b) => filters.sort_order === 'desc' ? b.var_30d_pct - a.var_30d_pct : a.var_30d_pct - b.var_30d_pct);
+    } else if (filters.sort_by === 'volume') {
+      items.sort((a, b) => filters.sort_order === 'desc' ? b.volume - a.volume : a.volume - b.volume);
     }
 
     const page = filters.page || 1;
@@ -440,9 +466,9 @@ export const mockProvider: DataProvider = {
   async getCatalogSummary() {
     await delay();
     return {
-      total_models: mockModels.length,
-      total_brands: 15,
-      categories_count: 5,
+      total_models: mockCatalogModels.length,
+      total_brands: Object.keys(mockBrandsByCategory).length,
+      categories_count: mockCategories.length,
       last_update: new Date().toISOString(),
     };
   },
@@ -717,12 +743,17 @@ export const mockProvider: DataProvider = {
   async getAvailableTasks() {
     await delay();
     return {
-      active: communityNeeds.active,
-      summary: communityNeeds.summary,
-      tasks: communityNeeds.priority_models.map((m, i) => ({
-        id: `task_${i}`,
-        ...m,
-      })),
+      active: true,
+      summary: {
+        pending_missions: mockCommunityTasks.length,
+        estimated_pages: mockCommunityTasks.reduce((sum, t) => {
+          const pages = t.pages_hint.split('–').map(Number);
+          return sum + (pages[1] || pages[0] || 10);
+        }, 0),
+        coverage_7d_pct: 0.78,
+        credits_distributed_30d: 5820,
+      },
+      tasks: mockCommunityTasks,
     };
   },
   async getMyTasks() {
@@ -742,7 +773,7 @@ export const mockProvider: DataProvider = {
       total_contributors: 156,
       total_missions_30d: 1240,
       total_pages_30d: 12800,
-      total_credits_30d: communityNeeds.summary.credits_distributed_30d,
+      total_credits_30d: 5820,
       your_rank: 42,
       your_percentile: 85,
     };
