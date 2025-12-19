@@ -1,5 +1,5 @@
 // API Provider - wraps real API calls (aligned with monark_api_v0.18)
-import { apiFetch, apiPost, apiPut, apiDelete, ENDPOINTS } from "@/lib/api";
+import { apiFetch, apiPost, apiPut, apiDelete, ApiFeatureUnavailableError, ENDPOINTS } from "@/lib/api";
 import type {
   DataProvider,
   DashboardOverview,
@@ -92,19 +92,18 @@ export const apiProvider: DataProvider = {
     return apiDelete(ENDPOINTS.ALERTS.DELETE(id));
   },
 
-  // Notifications - NOT IMPLEMENTED in v0.18, return empty
+  // Notifications - NOT IMPLEMENTED in v0.18
   async getNotifications(limit) {
-    console.warn('[apiProvider] Notifications not implemented in API v0.18');
-    return { items: [], total: 0, unread_count: 0 };
+    throw new ApiFeatureUnavailableError('Notifications', 'Les notifications ne sont pas encore disponibles via l\'API.');
   },
   async markNotificationRead(id) {
-    console.warn('[apiProvider] Notifications not implemented in API v0.18');
+    throw new ApiFeatureUnavailableError('Notifications', 'Les notifications ne sont pas encore disponibles via l\'API.');
   },
   async markAllNotificationsRead() {
-    console.warn('[apiProvider] Notifications not implemented in API v0.18');
+    throw new ApiFeatureUnavailableError('Notifications', 'Les notifications ne sont pas encore disponibles via l\'API.');
   },
   async deleteNotification(id) {
-    console.warn('[apiProvider] Notifications not implemented in API v0.18');
+    throw new ApiFeatureUnavailableError('Notifications', 'Les notifications ne sont pas encore disponibles via l\'API.');
   },
 
   // Deals
@@ -124,20 +123,17 @@ export const apiProvider: DataProvider = {
     return apiFetch<Category[]>(ENDPOINTS.HARDWARE.CATEGORIES);
   },
   async getBrands(category) {
-    console.warn('[apiProvider] Catalog brands not implemented in API v0.18');
-    return [];
+    throw new ApiFeatureUnavailableError('Catalog Brands', 'Le filtre par marque n\'est pas encore disponible via l\'API.');
   },
   async getFamilies(brand) {
-    console.warn('[apiProvider] Catalog families not implemented in API v0.18');
-    return [];
+    throw new ApiFeatureUnavailableError('Catalog Families', 'Le filtre par famille n\'est pas encore disponible via l\'API.');
   },
   async getCatalogModels(filters) {
     const query = buildQueryString(filters);
     return apiFetch<CatalogResponse>(`${ENDPOINTS.HARDWARE.MODELS}${query}`);
   },
   async getCatalogSummary() {
-    console.warn('[apiProvider] Catalog summary not implemented in API v0.18');
-    return { total_models: 0, total_brands: 0, categories_count: 0, last_update: new Date().toISOString() };
+    throw new ApiFeatureUnavailableError('Catalog Summary', 'Les statistiques du catalogue ne sont pas encore disponibles via l\'API.');
   },
 
   // Model Detail (Hardware)
@@ -148,8 +144,7 @@ export const apiProvider: DataProvider = {
     return apiFetch<PriceHistoryPoint[]>(`${ENDPOINTS.MARKET.MODEL_HISTORY(modelId)}?period=${period}`);
   },
   async getModelAds(modelId, page = 1, limit = 10) {
-    console.warn('[apiProvider] Model ads endpoint not implemented in API v0.18');
-    return { items: [], total: 0, page, page_size: limit };
+    throw new ApiFeatureUnavailableError('Model Ads', 'La liste des annonces par modèle n\'est pas encore disponible via l\'API.');
   },
   async toggleModelWatchlist(modelId, add) {
     if (add) {
@@ -177,8 +172,7 @@ export const apiProvider: DataProvider = {
 
   // Estimator
   async getModelsAutocomplete(search) {
-    console.warn('[apiProvider] Models autocomplete not implemented in API v0.18');
-    return [];
+    throw new ApiFeatureUnavailableError('Models Autocomplete', 'L\'autocomplétion des modèles n\'est pas encore disponible via l\'API.');
   },
   async runEstimation(data) {
     return apiPost<EstimationResult>(ENDPOINTS.ESTIMATOR.RUN, data);

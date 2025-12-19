@@ -46,6 +46,17 @@ export class ApiException extends Error {
   }
 }
 
+// Special error for features not yet implemented in API
+export class ApiFeatureUnavailableError extends Error {
+  constructor(
+    public feature: string,
+    message?: string
+  ) {
+    super(message || `Feature "${feature}" is not available in API mode`);
+    this.name = 'ApiFeatureUnavailableError';
+  }
+}
+
 export interface ApiFetchOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;

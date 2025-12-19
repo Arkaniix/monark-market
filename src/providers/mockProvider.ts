@@ -343,6 +343,7 @@ export const mockProvider: DataProvider = {
     await delay();
     let items = mockDeals.map(deal => ({
       id: deal.id,
+      ad_id: deal.id,
       title: deal.title,
       price: deal.price,
       fair_value: deal.fair_value,
@@ -355,42 +356,54 @@ export const mockProvider: DataProvider = {
       platform: deal.platform,
       url: deal.url,
       published_at: deal.publication_date,
+      publication_date: deal.publication_date,
       score: deal.score,
+      item_type: 'component' as const,
+      delivery_possible: true,
     }));
 
     // Apply filters
     if (filters.category) items = items.filter(i => i.category === filters.category);
     if (filters.condition) items = items.filter(i => i.condition === filters.condition);
     if (filters.region) items = items.filter(i => i.region === filters.region);
+    if (filters.platform && filters.platform !== 'all') items = items.filter(i => i.platform === filters.platform);
+    if (filters.item_type && filters.item_type !== 'all') items = items.filter(i => i.item_type === filters.item_type);
     if (filters.price_min) items = items.filter(i => i.price >= filters.price_min!);
     if (filters.price_max) items = items.filter(i => i.price <= filters.price_max!);
     if (filters.deviation_min) items = items.filter(i => i.deviation_pct >= filters.deviation_min!);
 
     // Sort
-    if (filters.sort_by === 'price') {
-      items.sort((a, b) => filters.sort_order === 'desc' ? b.price - a.price : a.price - b.price);
+    if (filters.sort_by === 'price_asc') {
+      items.sort((a, b) => a.price - b.price);
+    } else if (filters.sort_by === 'price_desc') {
+      items.sort((a, b) => b.price - a.price);
     } else if (filters.sort_by === 'score') {
-      items.sort((a, b) => filters.sort_order === 'desc' ? b.score - a.score : a.score - b.score);
+      items.sort((a, b) => b.score - a.score);
     } else if (filters.sort_by === 'date') {
-      items.sort((a, b) => filters.sort_order === 'desc' 
-        ? new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
-        : new Date(a.published_at).getTime() - new Date(b.published_at).getTime());
+      items.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
     }
 
     // Paginate
     const page = filters.page || 1;
     const limit = filters.limit || 20;
+    const total = items.length;
     const start = (page - 1) * limit;
     const paged = items.slice(start, start + limit);
+    const total_pages = Math.ceil(total / limit);
 
-    return { items: paged, total: items.length, page, page_size: limit };
+    return { items: paged, total, page, page_size: limit, total_pages };
   },
   async getMarketSummary() {
     await delay();
+    const median = Math.round(mockDeals.reduce((sum, d) => sum + d.price, 0) / mockDeals.length);
     return {
       total_ads: mockDeals.length,
+      total_active_ads: mockDeals.length,
       total_opportunities: mockDeals.filter(d => d.score >= 75).length,
-      median_price: Math.round(mockDeals.reduce((sum, d) => sum + d.price, 0) / mockDeals.length),
+      median_price: median,
+      median_price_7d: median,
+      price_variation: -3.2,
+      new_deals_today: 12,
       total_volume_24h: mockDeals.length * 23,
     };
   },

@@ -8,6 +8,7 @@ export {
   setAccessToken,
   clearAccessToken,
   ApiException,
+  ApiFeatureUnavailableError,
   apiFetch,
   apiGet,
   apiPost,
