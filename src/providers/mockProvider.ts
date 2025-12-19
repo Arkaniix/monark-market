@@ -356,7 +356,7 @@ export const mockProvider: DataProvider = {
     await delay();
     let items = MOCK_DEALS.map(deal => ({
       id: deal.id,
-      ad_id: deal.id,
+      ad_id: deal.ad_id,
       title: deal.title,
       price: deal.price,
       fair_value: deal.fair_value,
@@ -368,32 +368,88 @@ export const mockProvider: DataProvider = {
       model_name: deal.model_name,
       platform: deal.platform,
       url: deal.url,
-      published_at: deal.publication_date,
+      published_at: deal.published_at,
       publication_date: deal.publication_date,
       score: deal.score,
-      item_type: 'component' as const,
-      delivery_possible: true,
+      item_type: deal.item_type,
+      delivery_possible: deal.delivery_possible,
     }));
 
-    // Apply filters
-    if (filters.category) items = items.filter(i => i.category === filters.category);
-    if (filters.condition) items = items.filter(i => i.condition === filters.condition);
-    if (filters.region) items = items.filter(i => i.region === filters.region);
-    if (filters.platform && filters.platform !== 'all') items = items.filter(i => i.platform === filters.platform);
-    if (filters.item_type && filters.item_type !== 'all') items = items.filter(i => i.item_type === filters.item_type);
-    if (filters.price_min) items = items.filter(i => i.price >= filters.price_min!);
-    if (filters.price_max) items = items.filter(i => i.price <= filters.price_max!);
-    if (filters.deviation_min) items = items.filter(i => i.deviation_pct >= filters.deviation_min!);
+    // Helper to check if a filter value is meaningful
+    const isValidFilter = (val: string | undefined | null): val is string => 
+      !!val && val !== '' && val.toLowerCase() !== 'all' && val.toLowerCase() !== 'toutes';
 
-    // Sort
-    if (filters.sort_by === 'price_asc') {
-      items.sort((a, b) => a.price - b.price);
-    } else if (filters.sort_by === 'price_desc') {
-      items.sort((a, b) => b.price - a.price);
-    } else if (filters.sort_by === 'score') {
-      items.sort((a, b) => b.score - a.score);
-    } else if (filters.sort_by === 'date') {
-      items.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+    // Apply filters only if they have meaningful values
+    if (isValidFilter(filters.category)) {
+      items = items.filter(i => i.category === filters.category);
+    }
+    if (isValidFilter(filters.condition)) {
+      items = items.filter(i => i.condition === filters.condition);
+    }
+    if (isValidFilter(filters.region)) {
+      items = items.filter(i => i.region === filters.region);
+    }
+    if (isValidFilter(filters.platform)) {
+      items = items.filter(i => i.platform === filters.platform);
+    }
+    if (isValidFilter(filters.item_type)) {
+      items = items.filter(i => i.item_type === filters.item_type);
+    }
+    
+    // Price filters - only apply if they are valid numbers > 0
+    if (filters.price_min && filters.price_min > 0) {
+      items = items.filter(i => i.price >= filters.price_min!);
+    }
+    if (filters.price_max && filters.price_max > 0) {
+      items = items.filter(i => i.price <= filters.price_max!);
+    }
+    if (filters.deviation_min && filters.deviation_min > 0) {
+      items = items.filter(i => i.deviation_pct >= filters.deviation_min!);
+    }
+
+    // Search filter (if provided via extended filters)
+    const searchTerm = (filters as Record<string, unknown>).search as string | undefined;
+    if (searchTerm && searchTerm.trim()) {
+      const s = searchTerm.toLowerCase().trim();
+      items = items.filter(i => 
+        i.title.toLowerCase().includes(s) ||
+        i.model_name.toLowerCase().includes(s) ||
+        i.city.toLowerCase().includes(s) ||
+        i.category.toLowerCase().includes(s)
+      );
+    }
+
+    // Sort - handle multiple sort options
+    const sortBy = filters.sort_by || 'score';
+    const sortOrder = filters.sort_order || 'desc';
+    
+    switch (sortBy) {
+      case 'price_asc':
+        items.sort((a, b) => a.price - b.price);
+        break;
+      case 'price_desc':
+        items.sort((a, b) => b.price - a.price);
+        break;
+      case 'price':
+        items.sort((a, b) => sortOrder === 'desc' ? b.price - a.price : a.price - b.price);
+        break;
+      case 'score':
+        items.sort((a, b) => sortOrder === 'desc' ? b.score - a.score : a.score - b.score);
+        break;
+      case 'date':
+        items.sort((a, b) => {
+          const dateA = new Date(a.published_at).getTime();
+          const dateB = new Date(b.published_at).getTime();
+          return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+        });
+        break;
+      case 'fair_value':
+      case 'deviation':
+        items.sort((a, b) => sortOrder === 'desc' ? b.deviation_pct - a.deviation_pct : a.deviation_pct - b.deviation_pct);
+        break;
+      default:
+        // Default sort by score desc
+        items.sort((a, b) => b.score - a.score);
     }
 
     // Paginate
@@ -463,29 +519,68 @@ export const mockProvider: DataProvider = {
       last_scan_at: m.last_scan_at,
     }));
 
-    if (filters.category) items = items.filter(i => i.category === filters.category);
-    if (filters.brand) items = items.filter(i => i.brand === filters.brand);
-    if (filters.family) items = items.filter(i => i.family === filters.family);
-    if (filters.search) {
-      const s = filters.search.toLowerCase();
+    // Helper to check if a filter value is meaningful
+    const isValidFilter = (val: string | undefined | null): val is string => 
+      !!val && val !== '' && val.toLowerCase() !== 'all' && val.toLowerCase() !== 'toutes';
+
+    // Apply filters only if they have meaningful values
+    if (isValidFilter(filters.category)) {
+      items = items.filter(i => i.category === filters.category);
+    }
+    if (isValidFilter(filters.brand)) {
+      items = items.filter(i => i.brand === filters.brand);
+    }
+    if (isValidFilter(filters.family)) {
+      items = items.filter(i => i.family === filters.family);
+    }
+    
+    // Search filter
+    if (filters.search && filters.search.trim()) {
+      const s = filters.search.toLowerCase().trim();
       items = items.filter(i => 
         i.name.toLowerCase().includes(s) || 
         i.brand.toLowerCase().includes(s) ||
-        (i.family && i.family.toLowerCase().includes(s))
+        (i.family && i.family.toLowerCase().includes(s)) ||
+        i.category.toLowerCase().includes(s)
       );
     }
 
-    // Sort
-    if (filters.sort_by === 'price') {
-      items.sort((a, b) => filters.sort_order === 'desc' ? b.median_price - a.median_price : a.median_price - b.median_price);
-    } else if (filters.sort_by === 'var_7d') {
-      items.sort((a, b) => filters.sort_order === 'desc' ? b.var_7d_pct - a.var_7d_pct : a.var_7d_pct - b.var_7d_pct);
-    } else if (filters.sort_by === 'var_30d') {
-      items.sort((a, b) => filters.sort_order === 'desc' ? (b.var_30d_pct ?? 0) - (a.var_30d_pct ?? 0) : (a.var_30d_pct ?? 0) - (b.var_30d_pct ?? 0));
-    } else if (filters.sort_by === 'volume') {
-      items.sort((a, b) => filters.sort_order === 'desc' ? b.volume - a.volume : a.volume - b.volume);
+    // Sort - handle multiple sort options
+    const sortBy = filters.sort_by || 'name';
+    const sortOrder = filters.sort_order || 'asc';
+    
+    switch (sortBy) {
+      case 'price':
+      case 'fair_value_30d':
+        items.sort((a, b) => sortOrder === 'desc' 
+          ? (b.fair_value_30d ?? b.median_price) - (a.fair_value_30d ?? a.median_price) 
+          : (a.fair_value_30d ?? a.median_price) - (b.fair_value_30d ?? b.median_price));
+        break;
+      case 'var_7d':
+        items.sort((a, b) => sortOrder === 'desc' ? b.var_7d_pct - a.var_7d_pct : a.var_7d_pct - b.var_7d_pct);
+        break;
+      case 'var_30d':
+        items.sort((a, b) => sortOrder === 'desc' 
+          ? (b.var_30d_pct ?? 0) - (a.var_30d_pct ?? 0) 
+          : (a.var_30d_pct ?? 0) - (b.var_30d_pct ?? 0));
+        break;
+      case 'volume':
+        items.sort((a, b) => sortOrder === 'desc' ? b.volume - a.volume : a.volume - b.volume);
+        break;
+      case 'liquidity':
+        items.sort((a, b) => sortOrder === 'desc' ? b.liquidity - a.liquidity : a.liquidity - b.liquidity);
+        break;
+      case 'ads_count':
+        items.sort((a, b) => sortOrder === 'desc' ? b.ads_count - a.ads_count : a.ads_count - b.ads_count);
+        break;
+      case 'name':
+      default:
+        items.sort((a, b) => sortOrder === 'desc' 
+          ? b.name.localeCompare(a.name) 
+          : a.name.localeCompare(b.name));
     }
 
+    // Paginate
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const total = items.length;
