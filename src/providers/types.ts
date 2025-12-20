@@ -31,12 +31,19 @@ export interface WatchlistResponse {
 }
 
 // ============= Alerts =============
+export type AlertType = 'deal_detected' | 'price_below' | 'price_above' | 'variation' | 'location' | 'new_listing';
+
 export interface Alert {
   id: number;
   target_type: 'ad' | 'model';
   target_id: number;
-  alert_type: 'deal_detected' | 'price_below' | 'price_above';
+  alert_type: AlertType;
   price_threshold?: number;
+  variation_threshold?: number;
+  region?: string;
+  condition?: string;
+  platform?: string;
+  cooldown_hours?: number;
   is_active: boolean;
   created_at: string;
   last_triggered_at?: string;
@@ -53,14 +60,24 @@ export interface AlertsResponse {
 export interface CreateAlertPayload {
   target_type: 'ad' | 'model';
   target_id: number;
-  alert_type: 'deal_detected' | 'price_below' | 'price_above';
+  alert_type: AlertType;
   price_threshold?: number;
+  variation_threshold?: number;
+  region?: string;
+  condition?: string;
+  platform?: string;
+  cooldown_hours?: number;
 }
 
 export interface UpdateAlertPayload {
   is_active?: boolean;
-  alert_type?: 'deal_detected' | 'price_below' | 'price_above';
+  alert_type?: AlertType;
   price_threshold?: number;
+  variation_threshold?: number;
+  region?: string;
+  condition?: string;
+  platform?: string;
+  cooldown_hours?: number;
 }
 
 // ============= Notifications =============
