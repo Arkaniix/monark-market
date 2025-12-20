@@ -302,7 +302,7 @@ export interface AdDetail {
   components: AdComponent[];
   images: string[];
   is_in_watchlist: boolean;
-  item_type?: 'component' | 'pc';
+  item_type?: 'component' | 'pc' | 'lot';
   pc_components?: PCComponents;
   price_history_30d?: number[];
 }

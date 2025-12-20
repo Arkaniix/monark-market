@@ -1,106 +1,86 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch, apiPost } from "@/lib/api";
-
-export interface ModelSpecs {
-  vram_gb?: number;
-  tdp_w?: number;
-  memory_type?: string;
-  bus_width_bit?: number;
-  chip?: string;
-  release_date?: string;
-  outputs_count?: number;
-  specs_json?: Record<string, unknown>;
-}
-
-export interface ModelDetail {
-  id: number;
-  name: string;
-  brand: string;
-  family: string;
-  category: string;
-  aliases: string[];
-  specs: ModelSpecs | null;
-  kpi: {
-    median_30d: number;
-    var_7d_pct: number;
-    var_30d_pct: number;
-    var_90d_pct: number;
-    fair_value_30d: number;
-    volume_active: number;
-    rarity_index: number;
-    median_days_to_sell: number;
-    last_scan_at: string;
-  };
-}
-
-export interface PriceHistoryPoint {
-  date: string;
-  price_median: number;
-  price_p25: number;
-  price_p75: number;
-  ads_count: number;
-}
-
-export interface ModelAd {
-  id: number;
-  ad_id: number;
-  title: string;
-  price: number;
-  fair_value: number;
-  score: number;
-  city: string;
-  region: string;
-  condition: string;
-  platform: string;
-  publication_date: string;
-  url: string;
-}
-
-export interface ModelAdsResponse {
-  items: ModelAd[];
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-}
+import { useDataProvider } from "@/providers";
 
 export function useModelDetail(modelId: string | undefined) {
+  const provider = useDataProvider();
+  
   return useQuery({
     queryKey: ['model-detail', modelId],
-    queryFn: () => apiFetch<ModelDetail>(`/v1/models/${modelId}`),
+    queryFn: async () => {
+      if (!modelId) throw new Error('No modelId provided');
+      const model = await provider.getModelDetail(modelId);
+      return {
+        id: model.id,
+        name: model.name,
+        brand: model.brand,
+        family: model.family,
+        category: model.category,
+        aliases: model.aliases,
+        specs: model.specs,
+        kpi: {
+          median_30d: model.market.median_price,
+          var_7d_pct: model.market.var_7d_pct,
+          var_30d_pct: model.market.var_30d_pct,
+          var_90d_pct: model.market.var_90d_pct,
+          fair_value_30d: Math.round(model.market.median_price * 0.95),
+          volume_active: model.market.volume,
+          rarity_index: Math.max(0, Math.min(1, 1 - (model.market.volume / 300))),
+          median_days_to_sell: model.market.median_days_to_sell,
+          last_scan_at: new Date().toISOString(),
+        },
+      };
+    },
     enabled: !!modelId,
+    retry: false,
   });
 }
 
 export function useModelPriceHistory(modelId: string | undefined, period: '7' | '30' | '90' = '30') {
+  const provider = useDataProvider();
+  
   return useQuery({
     queryKey: ['model-price-history', modelId, period],
-    queryFn: () => apiFetch<PriceHistoryPoint[]>(`/v1/market/history?model_id=${modelId}&period=${period}`),
+    queryFn: async () => {
+      if (!modelId) throw new Error('No modelId provided');
+      return provider.getModelPriceHistory(modelId, period);
+    },
     enabled: !!modelId,
   });
 }
 
 export function useModelAds(modelId: string | undefined, page: number = 1, limit: number = 10) {
+  const provider = useDataProvider();
+  
   return useQuery({
     queryKey: ['model-ads', modelId, page, limit],
-    queryFn: () => apiFetch<ModelAdsResponse>(`/v1/ads?model_id=${modelId}&page=${page}&limit=${limit}`),
+    queryFn: async () => {
+      if (!modelId) throw new Error('No modelId provided');
+      const result = await provider.getModelAds(modelId, page, limit);
+      return {
+        items: result.items.map(ad => ({
+          ...ad,
+          ad_id: ad.id,
+          fair_value: Math.round(ad.price * 1.1),
+          region: 'France',
+          publication_date: ad.published_at,
+        })),
+        total: result.total,
+        page: result.page,
+        page_size: result.page_size,
+        total_pages: Math.ceil(result.total / result.page_size),
+      };
+    },
     enabled: !!modelId,
   });
 }
 
 export function useToggleModelWatchlist() {
+  const provider = useDataProvider();
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async ({ modelId, action }: { modelId: number; action: 'add' | 'remove' }) => {
-      if (action === 'add') {
-        return apiPost('/v1/watchlist', {
-          target_type: 'model',
-          target_id: modelId,
-        });
-      } else {
-        return apiFetch(`/v1/watchlist/model/${modelId}`, { method: 'DELETE' });
-      }
+      return provider.toggleModelWatchlist(modelId, action === 'add');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] });
@@ -109,16 +89,12 @@ export function useToggleModelWatchlist() {
 }
 
 export function useCreatePriceAlert() {
+  const provider = useDataProvider();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: {
-      model_id: number;
-      price_max?: number;
-      variation_min?: number;
-      notify_new_deals?: boolean;
-    }) => {
-      return apiPost('/v1/alerts', data);
+    mutationFn: async (data: { model_id: number; price_max?: number; variation_min?: number; notify_new_deals?: boolean }) => {
+      return provider.createPriceAlert(data.model_id, data.price_max || 0);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
