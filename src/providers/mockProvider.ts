@@ -122,25 +122,84 @@ function setToStorage<T>(key: string, value: T): void {
   }
 }
 
-// ============= Initial mock data =============
-const initialWatchlist: WatchlistEntry[] = [
-  { id: 1, target_type: 'model', target_id: 1, created_at: new Date().toISOString(), name: 'RTX 4060 Ti', brand: 'NVIDIA', category: 'GPU', current_price: 380, price_change_7d: -2.3 },
-  { id: 2, target_type: 'ad', target_id: 1, created_at: new Date().toISOString(), name: 'RTX 4060 Ti 8GB MSI', category: 'GPU', current_price: 320, fair_value: 380 },
-];
+// ============= Initialize mock data with localStorage persistence =============
+function initializeWatchlist(): WatchlistEntry[] {
+  const stored = getFromStorage<WatchlistEntry[] | null>(STORAGE_KEYS.WATCHLIST, null);
+  if (stored && stored.length > 0) return stored;
+  
+  // 8 items mix: 5 models + 3 ads with IDs matching MOCK_MODELS/MOCK_ADS
+  const initial: WatchlistEntry[] = [
+    { id: 1, target_type: 'model', target_id: 1, created_at: new Date(Date.now() - 86400000 * 2).toISOString(), name: 'RTX 4060 Ti 8GB', brand: 'NVIDIA', category: 'GPU', current_price: 385, price_change_7d: -2.3 },
+    { id: 2, target_type: 'model', target_id: 5, created_at: new Date(Date.now() - 86400000 * 5).toISOString(), name: 'Ryzen 7 5800X3D', brand: 'AMD', category: 'CPU', current_price: 290, price_change_7d: -5.1 },
+    { id: 3, target_type: 'model', target_id: 12, created_at: new Date(Date.now() - 86400000 * 8).toISOString(), name: 'RTX 3070', brand: 'NVIDIA', category: 'GPU', current_price: 340, price_change_7d: 1.2 },
+    { id: 4, target_type: 'model', target_id: 25, created_at: new Date(Date.now() - 86400000 * 12).toISOString(), name: 'Samsung 980 Pro 1TB', brand: 'Samsung', category: 'SSD', current_price: 110, price_change_7d: -3.8 },
+    { id: 5, target_type: 'model', target_id: 30, created_at: new Date(Date.now() - 86400000 * 15).toISOString(), name: 'Corsair Vengeance 32GB DDR5', brand: 'Corsair', category: 'RAM', current_price: 125, price_change_7d: 0.5 },
+    { id: 6, target_type: 'ad', target_id: 3, created_at: new Date(Date.now() - 86400000 * 3).toISOString(), name: 'MSI RTX 4060 Ti Gaming X', category: 'GPU', current_price: 320, fair_value: 385 },
+    { id: 7, target_type: 'ad', target_id: 15, created_at: new Date(Date.now() - 86400000 * 7).toISOString(), name: 'Gigabyte RTX 3080 Eagle OC', category: 'GPU', current_price: 450, fair_value: 520 },
+    { id: 8, target_type: 'ad', target_id: 42, created_at: new Date(Date.now() - 86400000 * 10).toISOString(), name: 'AMD Ryzen 5 5600X', category: 'CPU', current_price: 120, fair_value: 145 },
+  ];
+  setToStorage(STORAGE_KEYS.WATCHLIST, initial);
+  return initial;
+}
 
-const initialAlerts: Alert[] = [
-  { id: 1, target_type: 'model', target_id: 1, alert_type: 'price_below', price_threshold: 350, is_active: true, created_at: new Date().toISOString(), target_name: 'RTX 4060 Ti', target_category: 'GPU', current_price: 380 },
-  { id: 2, target_type: 'model', target_id: 5, alert_type: 'deal_detected', is_active: true, created_at: new Date(Date.now() - 86400000).toISOString(), target_name: 'Ryzen 7 5800X3D', target_category: 'CPU', current_price: 290 },
-  { id: 3, target_type: 'ad', target_id: 12, alert_type: 'price_below', price_threshold: 200, is_active: true, created_at: new Date(Date.now() - 172800000).toISOString(), target_name: 'Samsung 980 Pro 1TB', target_category: 'SSD', current_price: 220 },
-  { id: 4, target_type: 'model', target_id: 8, alert_type: 'price_above', price_threshold: 150, is_active: false, created_at: new Date(Date.now() - 259200000).toISOString(), target_name: 'Corsair Vengeance 32GB', target_category: 'RAM', current_price: 140 },
-  { id: 5, target_type: 'model', target_id: 3, alert_type: 'deal_detected', is_active: true, created_at: new Date(Date.now() - 345600000).toISOString(), target_name: 'RTX 4070', target_category: 'GPU', current_price: 520 },
-];
+function initializeAlerts(): Alert[] {
+  const stored = getFromStorage<Alert[] | null>(STORAGE_KEYS.ALERTS, null);
+  if (stored && stored.length > 0) return stored;
+  
+  // 6 active + 2 inactive = 8 alerts with varied types
+  const now = Date.now();
+  const initial: Alert[] = [
+    { id: 1, target_type: 'model', target_id: 1, alert_type: 'price_below', price_threshold: 350, is_active: true, created_at: new Date(now - 86400000 * 3).toISOString(), target_name: 'RTX 4060 Ti 8GB', target_category: 'GPU', current_price: 385 },
+    { id: 2, target_type: 'model', target_id: 5, alert_type: 'deal_detected', is_active: true, created_at: new Date(now - 86400000 * 7).toISOString(), last_triggered_at: new Date(now - 3600000 * 5).toISOString(), target_name: 'Ryzen 7 5800X3D', target_category: 'CPU', current_price: 290 },
+    { id: 3, target_type: 'model', target_id: 12, alert_type: 'variation', variation_threshold: 10, is_active: true, created_at: new Date(now - 86400000 * 14).toISOString(), target_name: 'RTX 3070', target_category: 'GPU', current_price: 340 },
+    { id: 4, target_type: 'ad', target_id: 3, alert_type: 'price_below', price_threshold: 300, is_active: true, created_at: new Date(now - 86400000 * 5).toISOString(), target_name: 'MSI RTX 4060 Ti Gaming X', target_category: 'GPU', current_price: 320 },
+    { id: 5, target_type: 'model', target_id: 25, alert_type: 'new_listing', region: 'ile-de-france', is_active: true, created_at: new Date(now - 86400000 * 20).toISOString(), target_name: 'Samsung 980 Pro 1TB', target_category: 'SSD', current_price: 110 },
+    { id: 6, target_type: 'model', target_id: 8, alert_type: 'price_above', price_threshold: 600, is_active: true, created_at: new Date(now - 86400000 * 25).toISOString(), target_name: 'RTX 4070', target_category: 'GPU', current_price: 520 },
+    { id: 7, target_type: 'model', target_id: 30, alert_type: 'location', region: 'auvergne-rhone-alpes', is_active: false, created_at: new Date(now - 86400000 * 30).toISOString(), target_name: 'Corsair Vengeance 32GB DDR5', target_category: 'RAM', current_price: 125 },
+    { id: 8, target_type: 'ad', target_id: 15, alert_type: 'deal_detected', is_active: false, created_at: new Date(now - 86400000 * 45).toISOString(), last_triggered_at: new Date(now - 86400000 * 10).toISOString(), target_name: 'Gigabyte RTX 3080 Eagle OC', target_category: 'GPU', current_price: 450 },
+  ];
+  setToStorage(STORAGE_KEYS.ALERTS, initial);
+  return initial;
+}
 
-const initialNotifications: Notification[] = [
-  { id: '1', type: 'price_alert', title: 'Alerte prix', message: 'RTX 4060 Ti est passé sous 380€', is_read: false, created_at: new Date().toISOString(), link: '/model/1' },
-  { id: '2', type: 'deal', title: 'Bonne affaire détectée', message: 'Ryzen 7 5800X3D à 270€ (-12%)', is_read: false, created_at: new Date(Date.now() - 3600000).toISOString(), link: '/ad/2' },
-  { id: '3', type: 'community', title: 'Mission terminée', message: 'Vous avez gagné 2 crédits', is_read: true, created_at: new Date(Date.now() - 86400000).toISOString() },
-];
+function initializeNotifications(): Notification[] {
+  const stored = getFromStorage<Notification[] | null>(STORAGE_KEYS.NOTIFICATIONS, null);
+  if (stored && stored.length > 0) return stored;
+  
+  const now = Date.now();
+  const types = ['deal_detected', 'price_alert', 'community_reward'] as const;
+  
+  // Generate 20 notifications with mix of types over the past 14 days
+  const initial: Notification[] = [
+    // Today - 3 notifications
+    { id: 'n1', type: 'deal_detected', title: 'Bonne affaire détectée !', message: 'RTX 4060 Ti à 320€ (-17%) trouvée à Paris', is_read: false, created_at: new Date(now - 3600000 * 1).toISOString(), link: '/ads/3' },
+    { id: 'n2', type: 'price_alert', title: 'Alerte prix déclenchée', message: 'Ryzen 7 5800X3D est passé sous 280€', is_read: false, created_at: new Date(now - 3600000 * 3).toISOString(), link: '/models/5' },
+    { id: 'n3', type: 'community_reward', title: 'Récompense communauté', message: 'Vous avez gagné 3 crédits pour votre contribution', is_read: false, created_at: new Date(now - 3600000 * 6).toISOString() },
+    // Yesterday - 4 notifications
+    { id: 'n4', type: 'deal_detected', title: 'Deal exceptionnel !', message: 'RTX 3080 à 450€ (-13%) disponible à Lyon', is_read: false, created_at: new Date(now - 86400000 - 3600000 * 2).toISOString(), link: '/ads/15' },
+    { id: 'n5', type: 'price_alert', title: 'Baisse de prix', message: 'Samsung 980 Pro 1TB a baissé de 8%', is_read: false, created_at: new Date(now - 86400000 - 3600000 * 5).toISOString(), link: '/models/25' },
+    { id: 'n6', type: 'community_reward', title: 'Mission terminée', message: 'Mission "Scrap GPU" complétée, +2 crédits', is_read: true, created_at: new Date(now - 86400000 - 3600000 * 8).toISOString() },
+    { id: 'n7', type: 'deal_detected', title: 'Opportunité GPU', message: 'RTX 4070 Super à 590€ à Marseille', is_read: true, created_at: new Date(now - 86400000 - 3600000 * 12).toISOString(), link: '/ads/28' },
+    // 2-3 days ago - 4 notifications  
+    { id: 'n8', type: 'price_alert', title: 'Alerte variation', message: 'RTX 3070 a augmenté de 5% cette semaine', is_read: true, created_at: new Date(now - 86400000 * 2 - 3600000 * 4).toISOString(), link: '/models/12' },
+    { id: 'n9', type: 'deal_detected', title: 'Deal CPU détecté', message: 'Ryzen 5 5600X à 120€ (-18%)', is_read: true, created_at: new Date(now - 86400000 * 2 - 3600000 * 10).toISOString(), link: '/ads/42' },
+    { id: 'n10', type: 'community_reward', title: 'Contribution validée', message: 'Votre scrap a ajouté 47 nouvelles annonces', is_read: true, created_at: new Date(now - 86400000 * 3 - 3600000 * 3).toISOString() },
+    { id: 'n11', type: 'price_alert', title: 'Prix cible atteint', message: 'Corsair Vengeance DDR5 disponible sous 120€', is_read: true, created_at: new Date(now - 86400000 * 3 - 3600000 * 8).toISOString(), link: '/models/30' },
+    // 4-7 days ago - 5 notifications
+    { id: 'n12', type: 'deal_detected', title: 'Deal RAM', message: 'Kit DDR5 32GB à 95€ à Toulouse', is_read: true, created_at: new Date(now - 86400000 * 4 - 3600000 * 6).toISOString(), link: '/ads/56' },
+    { id: 'n13', type: 'community_reward', title: 'Rang amélioré', message: 'Vous êtes maintenant dans le top 100 contributeurs', is_read: true, created_at: new Date(now - 86400000 * 5 - 3600000 * 2).toISOString() },
+    { id: 'n14', type: 'price_alert', title: 'Tendance baissière', message: 'RTX 4080 en baisse de 12% sur 30 jours', is_read: true, created_at: new Date(now - 86400000 * 5 - 3600000 * 10).toISOString(), link: '/models/6' },
+    { id: 'n15', type: 'deal_detected', title: 'Deal SSD', message: 'Samsung 990 Pro 2TB à 180€', is_read: true, created_at: new Date(now - 86400000 * 6 - 3600000 * 4).toISOString(), link: '/ads/71' },
+    { id: 'n16', type: 'community_reward', title: 'Bonus hebdomadaire', message: '+5 crédits pour votre activité cette semaine', is_read: true, created_at: new Date(now - 86400000 * 7).toISOString() },
+    // 8-14 days ago - 4 notifications
+    { id: 'n17', type: 'deal_detected', title: 'Opportunité rare', message: 'RTX 4090 à 1450€ (-10%) à Bordeaux', is_read: true, created_at: new Date(now - 86400000 * 9 - 3600000 * 5).toISOString(), link: '/ads/89' },
+    { id: 'n18', type: 'price_alert', title: 'Nouvelle annonce', message: 'Nouveau listing RTX 4060 Ti dans votre région', is_read: true, created_at: new Date(now - 86400000 * 11 - 3600000 * 8).toISOString(), link: '/models/1' },
+    { id: 'n19', type: 'community_reward', title: 'Badge débloqué', message: 'Badge "Chasseur de deals" obtenu', is_read: true, created_at: new Date(now - 86400000 * 12 - 3600000 * 3).toISOString() },
+    { id: 'n20', type: 'deal_detected', title: 'Deal CM', message: 'ASUS ROG Strix B650E-F à 220€', is_read: true, created_at: new Date(now - 86400000 * 14).toISOString(), link: '/ads/102' },
+  ];
+  setToStorage(STORAGE_KEYS.NOTIFICATIONS, initial);
+  return initial;
+}
 
 const initialCredits: UserCredits = {
   credits_remaining: 15,
@@ -192,9 +251,9 @@ export const mockProvider: DataProvider = {
   async getDashboard() {
     track('getDashboard');
     await delay();
-    const watchlist = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
+    const watchlist = initializeWatchlist();
     const credits = getFromStorage(STORAGE_KEYS.CREDITS, initialCredits);
-    const notifications = getFromStorage(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
+    const notifications = initializeNotifications();
     const trainingProgress = getFromStorage(STORAGE_KEYS.TRAINING_PROGRESS, mockUserProgress);
 
     return {
@@ -269,12 +328,12 @@ export const mockProvider: DataProvider = {
   // Watchlist
   async getWatchlist() {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
+    const items = initializeWatchlist();
     return { items, total: items.length };
   },
   async addToWatchlist(data) {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
+    const items = initializeWatchlist();
     const newEntry: WatchlistEntry = {
       id: generateId(),
       target_type: data.target_type,
@@ -288,7 +347,7 @@ export const mockProvider: DataProvider = {
   },
   async removeFromWatchlist(id) {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
+    const items = initializeWatchlist();
     const filtered = items.filter(item => item.id !== id);
     setToStorage(STORAGE_KEYS.WATCHLIST, filtered);
   },
@@ -296,12 +355,12 @@ export const mockProvider: DataProvider = {
   // Alerts
   async getAlerts() {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.ALERTS, initialAlerts);
+    const items = initializeAlerts();
     return { items, total: items.length };
   },
   async createAlert(data) {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.ALERTS, initialAlerts);
+    const items = initializeAlerts();
     const newAlert: Alert = {
       id: generateId(),
       ...data,
@@ -315,7 +374,7 @@ export const mockProvider: DataProvider = {
   },
   async updateAlert(id, data) {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.ALERTS, initialAlerts);
+    const items = initializeAlerts();
     const index = items.findIndex(a => a.id === id);
     if (index >= 0) {
       items[index] = { ...items[index], ...data };
@@ -326,7 +385,7 @@ export const mockProvider: DataProvider = {
   },
   async deleteAlert(id) {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.ALERTS, initialAlerts);
+    const items = initializeAlerts();
     const filtered = items.filter(a => a.id !== id);
     setToStorage(STORAGE_KEYS.ALERTS, filtered);
   },
@@ -334,14 +393,14 @@ export const mockProvider: DataProvider = {
   // Notifications
   async getNotifications(limit) {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
+    const items = initializeNotifications();
     const limited = limit ? items.slice(0, limit) : items;
     const unread_count = items.filter(n => !n.is_read).length;
     return { items: limited, total: items.length, unread_count };
   },
   async markNotificationRead(id) {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
+    const items = initializeNotifications();
     const index = items.findIndex(n => n.id === id);
     if (index >= 0) {
       items[index].is_read = true;
@@ -350,13 +409,13 @@ export const mockProvider: DataProvider = {
   },
   async markAllNotificationsRead() {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
+    const items = initializeNotifications();
     items.forEach(n => n.is_read = true);
     setToStorage(STORAGE_KEYS.NOTIFICATIONS, items);
   },
   async deleteNotification(id) {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
+    const items = initializeNotifications();
     const filtered = items.filter(n => n.id !== id);
     setToStorage(STORAGE_KEYS.NOTIFICATIONS, filtered);
   },
@@ -629,7 +688,7 @@ export const mockProvider: DataProvider = {
       throw new Error('MODEL_NOT_FOUND');
     }
     
-    const watchlist = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
+    const watchlist = initializeWatchlist();
     const isInWatchlist = watchlist.some(w => w.target_type === 'model' && w.target_id === id);
     
     return {
@@ -693,7 +752,7 @@ export const mockProvider: DataProvider = {
   },
   async toggleModelWatchlist(modelId, add) {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
+    const items = initializeWatchlist();
     if (add) {
       const m = mockModels[(modelId - 1) % mockModels.length];
       items.push({
@@ -714,7 +773,7 @@ export const mockProvider: DataProvider = {
   },
   async createPriceAlert(modelId, threshold) {
     await delay();
-    const items = getFromStorage(STORAGE_KEYS.ALERTS, initialAlerts);
+    const items = initializeAlerts();
     const m = mockModels[(modelId - 1) % mockModels.length];
     items.push({
       id: generateId(),
@@ -741,7 +800,7 @@ export const mockProvider: DataProvider = {
       throw new Error('AD_NOT_FOUND');
     }
     
-    const watchlist = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
+    const watchlist = initializeWatchlist();
     const isInWatchlist = watchlist.some(w => w.target_type === 'ad' && w.target_id === id);
 
     // Check if this is a PC ad (IDs 1000+ are PCs)
