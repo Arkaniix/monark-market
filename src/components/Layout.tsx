@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, TrendingUp, Home, Zap, User, Menu, Calculator, Users, GraduationCap, LogOut, Shield, Scale, MessageCircle } from "lucide-react";
+import { Search, Radar, Home, Zap, User, Menu, Calculator, Users, GraduationCap, LogOut, Shield, Scale, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
@@ -14,7 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 const navigation = [
   { name: "Accueil", href: "/", icon: Home },
   { name: "Marché", href: "/deals", icon: Zap },
-  { name: "Tendances", href: "/trends", icon: TrendingUp },
+  { name: "Suivi", href: "/tracking", icon: Radar },
   { name: "Catalogue", href: "/catalog", icon: Search },
   { name: "Estimator", href: "/estimator", icon: Calculator },
   { name: "Communauté", href: "/community", icon: Users },

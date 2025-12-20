@@ -1,9 +1,10 @@
 import { ComponentType } from "react";
+import { Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Deals from "./pages/Deals";
-import Trends from "./pages/Trends";
+import Tracking from "./pages/Tracking";
 import Catalog from "./pages/Catalog";
 import ModelDetail from "./pages/ModelDetail";
 import PCDetail from "./pages/PCDetail";
@@ -20,6 +21,9 @@ import RGPD from "./pages/RGPD";
 import LegalNotice from "./pages/LegalNotice";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
+
+// Composant de redirection pour compatibilité
+const TrendsRedirect = () => <Navigate to="/tracking" replace />;
 
 export interface RouteConfig {
   path: string;
@@ -74,8 +78,14 @@ export const routes: RouteConfig[] = [
     requiresAuth: true,
   },
   {
+    path: "/tracking",
+    component: Tracking,
+    requiresAuth: true,
+  },
+  // Redirection de compatibilité /trends -> /tracking
+  {
     path: "/trends",
-    component: Trends,
+    component: TrendsRedirect,
     requiresAuth: true,
   },
   {
