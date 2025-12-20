@@ -8,14 +8,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useRemoveFromWatchlist } from "@/hooks/useWatchlist";
-import { useCreateAlert } from "@/hooks/useProviderData";
 import { useDataProvider } from "@/providers";
 import { useToast } from "@/hooks/use-toast";
-import type { WatchlistEntry, PriceHistoryPoint, CreateAlertPayload } from "@/providers/types";
+import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
+import type { WatchlistEntry, PriceHistoryPoint } from "@/providers/types";
 import {
   LineChart,
   Line,
@@ -64,159 +61,13 @@ function PriceSparkline({ data, isLoading }: { data: { price: number }[]; isLoad
   );
 }
 
-// Alert creation modal
-function CreateAlertModal({
-  open,
-  onClose,
-  item,
-  onSuccess,
-}: {
-  open: boolean;
-  onClose: () => void;
-  item: WatchlistEntry | null;
-  onSuccess: () => void;
-}) {
-  const [alertType, setAlertType] = useState<'deal_detected' | 'price_below' | 'price_above'>('deal_detected');
-  const [threshold, setThreshold] = useState<string>('');
-  const createAlert = useCreateAlert();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (item?.current_price) {
-      setThreshold(Math.round(item.current_price * 0.9).toString());
-    }
-  }, [item]);
-
-  const handleSubmit = () => {
-    if (!item) return;
-
-    const payload: CreateAlertPayload = {
-      target_type: item.target_type,
-      target_id: item.target_id,
-      alert_type: alertType,
-      price_threshold: alertType !== 'deal_detected' ? parseFloat(threshold) : undefined,
-    };
-
-    createAlert.mutate(payload, {
-      onSuccess: () => {
-        toast({
-          title: "Alerte créée",
-          description: `Vous serez notifié pour ${item.name || 'cet élément'}`,
-        });
-        onSuccess();
-        onClose();
-      },
-      onError: () => {
-        toast({
-          title: "Erreur",
-          description: "Impossible de créer l'alerte",
-          variant: "destructive",
-        });
-      },
-    });
-  };
-
-  if (!item) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-amber-500" />
-            Créer une alerte
-          </DialogTitle>
-          <DialogDescription>
-            Configurez une alerte pour <span className="font-medium text-foreground">{item.name}</span>
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          {/* Prix actuel */}
-          {item.current_price && (
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <span className="text-sm text-muted-foreground">Prix actuel</span>
-              <span className="font-semibold">{item.current_price.toLocaleString('fr-FR')} €</span>
-            </div>
-          )}
-
-          {/* Type d'alerte */}
-          <div className="space-y-2">
-            <Label>Type d'alerte</Label>
-            <RadioGroup value={alertType} onValueChange={(v) => setAlertType(v as typeof alertType)}>
-              <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/50">
-                <RadioGroupItem value="deal_detected" id="deal" />
-                <Label htmlFor="deal" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Bonne affaire</div>
-                  <div className="text-xs text-muted-foreground">Notifié quand une bonne affaire est détectée</div>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/50">
-                <RadioGroupItem value="price_below" id="below" />
-                <Label htmlFor="below" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Prix en dessous de...</div>
-                  <div className="text-xs text-muted-foreground">Notifié quand le prix passe sous un seuil</div>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/50">
-                <RadioGroupItem value="price_above" id="above" />
-                <Label htmlFor="above" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Prix au dessus de...</div>
-                  <div className="text-xs text-muted-foreground">Notifié quand le prix dépasse un seuil</div>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Seuil de prix */}
-          {alertType !== 'deal_detected' && (
-            <div className="space-y-2">
-              <Label htmlFor="threshold">Seuil de prix (€)</Label>
-              <div className="relative">
-                <Input
-                  id="threshold"
-                  type="number"
-                  value={threshold}
-                  onChange={(e) => setThreshold(e.target.value)}
-                  placeholder="Ex: 350"
-                  className="pr-8"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
-              </div>
-              {item.current_price && (
-                <p className="text-xs text-muted-foreground">
-                  {alertType === 'price_below' 
-                    ? `Actuellement ${((1 - parseFloat(threshold || '0') / item.current_price) * 100).toFixed(0)}% en dessous du prix actuel`
-                    : `Actuellement ${((parseFloat(threshold || '0') / item.current_price - 1) * 100).toFixed(0)}% au dessus du prix actuel`
-                  }
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Annuler
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={createAlert.isPending || (alertType !== 'deal_detected' && !threshold)}
-          >
-            {createAlert.isPending ? "Création..." : "Créer l'alerte"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export function WatchlistTab({ watchlist, isLoading, error, refetch }: WatchlistTabProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [alertModalOpen, setAlertModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<WatchlistEntry | null>(null);
+  const [alertTarget, setAlertTarget] = useState<AlertTarget | null>(null);
   const [priceHistories, setPriceHistories] = useState<Record<number, { price: number }[]>>({});
   const [loadingHistories, setLoadingHistories] = useState<Set<number>>(new Set());
 
@@ -295,7 +146,13 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(price);
 
   const openAlertModal = (item: WatchlistEntry) => {
-    setSelectedItem(item);
+    setAlertTarget({
+      type: item.target_type,
+      id: item.target_id,
+      name: item.name || `${item.target_type === 'model' ? 'Modèle' : 'Annonce'} #${item.target_id}`,
+      category: item.category,
+      currentPrice: item.current_price,
+    });
     setAlertModalOpen(true);
   };
 
@@ -559,7 +416,7 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
       <CreateAlertModal
         open={alertModalOpen}
         onClose={() => setAlertModalOpen(false)}
-        item={selectedItem}
+        target={alertTarget}
         onSuccess={refetch}
       />
     </>

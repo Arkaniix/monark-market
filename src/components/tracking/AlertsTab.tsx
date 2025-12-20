@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Bell, Plus, Trash2, RefreshCw, AlertCircle, TrendingDown, TrendingUp, Power, Pencil, ChevronLeft, ChevronRight, Target, Package, Clock, BarChart3, X, Check } from "lucide-react";
+import { Bell, Plus, Trash2, RefreshCw, AlertCircle, TrendingDown, TrendingUp, Power, Pencil, ChevronLeft, ChevronRight, Target, Package, Clock, BarChart3, X, Check, MapPin, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,11 +83,17 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'deal_detected':
-        return <TrendingDown className="h-4 w-4 text-green-500" />;
+        return <Sparkles className="h-4 w-4 text-green-500" />;
       case 'price_above':
         return <TrendingUp className="h-4 w-4 text-red-500" />;
       case 'price_below':
         return <TrendingDown className="h-4 w-4 text-blue-500" />;
+      case 'variation':
+        return <RefreshCw className="h-4 w-4 text-amber-500" />;
+      case 'location':
+        return <MapPin className="h-4 w-4 text-purple-500" />;
+      case 'new_listing':
+        return <Package className="h-4 w-4 text-cyan-500" />;
       default:
         return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
@@ -101,6 +107,12 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
         return 'Prix au-dessus';
       case 'price_below':
         return 'Prix en-dessous';
+      case 'variation':
+        return 'Variation';
+      case 'location':
+        return 'Localisation';
+      case 'new_listing':
+        return 'Nouvelle annonce';
       default:
         return type;
     }
@@ -114,6 +126,12 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
         return alert.price_threshold ? `Prix < ${formatPrice(alert.price_threshold)}` : 'Prix en baisse';
       case 'price_above':
         return alert.price_threshold ? `Prix > ${formatPrice(alert.price_threshold)}` : 'Prix en hausse';
+      case 'variation':
+        return alert.variation_threshold ? `Variation > ${alert.variation_threshold}%` : 'Variation de prix';
+      case 'location':
+        return alert.region ? `Région: ${alert.region}` : 'Localisation spécifique';
+      case 'new_listing':
+        return 'Nouvelle annonce correspondante';
       default:
         return 'Alerte active';
     }
@@ -319,6 +337,9 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
                 <SelectItem value="deal_detected">Bonne affaire</SelectItem>
                 <SelectItem value="price_below">Prix en-dessous</SelectItem>
                 <SelectItem value="price_above">Prix au-dessus</SelectItem>
+                <SelectItem value="variation">Variation</SelectItem>
+                <SelectItem value="location">Localisation</SelectItem>
+                <SelectItem value="new_listing">Nouvelle annonce</SelectItem>
               </SelectContent>
             </Select>
             <Select value={targetFilter} onValueChange={(v) => { setTargetFilter(v); setPage(1); }}>
@@ -506,6 +527,9 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
                   <SelectItem value="deal_detected">Bonne affaire détectée</SelectItem>
                   <SelectItem value="price_below">Prix en-dessous du seuil</SelectItem>
                   <SelectItem value="price_above">Prix au-dessus du seuil</SelectItem>
+                  <SelectItem value="variation">Variation de prix</SelectItem>
+                  <SelectItem value="location">Localisation spécifique</SelectItem>
+                  <SelectItem value="new_listing">Nouvelle annonce</SelectItem>
                 </SelectContent>
               </Select>
             </div>
