@@ -35,12 +35,14 @@ export interface Alert {
   id: number;
   target_type: 'ad' | 'model';
   target_id: number;
-  alert_type: 'price_drop' | 'price_threshold' | 'availability';
-  threshold_value?: number;
+  alert_type: 'deal_detected' | 'price_below' | 'price_above';
+  price_threshold?: number;
   is_active: boolean;
   created_at: string;
   last_triggered_at?: string;
-  name?: string;
+  target_name?: string;
+  target_category?: string;
+  current_price?: number;
 }
 
 export interface AlertsResponse {
@@ -51,13 +53,14 @@ export interface AlertsResponse {
 export interface CreateAlertPayload {
   target_type: 'ad' | 'model';
   target_id: number;
-  alert_type: 'price_drop' | 'price_threshold' | 'availability';
-  threshold_value?: number;
+  alert_type: 'deal_detected' | 'price_below' | 'price_above';
+  price_threshold?: number;
 }
 
 export interface UpdateAlertPayload {
   is_active?: boolean;
-  threshold_value?: number;
+  alert_type?: 'deal_detected' | 'price_below' | 'price_above';
+  price_threshold?: number;
 }
 
 // ============= Notifications =============

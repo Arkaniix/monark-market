@@ -129,7 +129,11 @@ const initialWatchlist: WatchlistEntry[] = [
 ];
 
 const initialAlerts: Alert[] = [
-  { id: 1, target_type: 'model', target_id: 1, alert_type: 'price_threshold', threshold_value: 350, is_active: true, created_at: new Date().toISOString(), name: 'RTX 4060 Ti' },
+  { id: 1, target_type: 'model', target_id: 1, alert_type: 'price_below', price_threshold: 350, is_active: true, created_at: new Date().toISOString(), target_name: 'RTX 4060 Ti', target_category: 'GPU', current_price: 380 },
+  { id: 2, target_type: 'model', target_id: 5, alert_type: 'deal_detected', is_active: true, created_at: new Date(Date.now() - 86400000).toISOString(), target_name: 'Ryzen 7 5800X3D', target_category: 'CPU', current_price: 290 },
+  { id: 3, target_type: 'ad', target_id: 12, alert_type: 'price_below', price_threshold: 200, is_active: true, created_at: new Date(Date.now() - 172800000).toISOString(), target_name: 'Samsung 980 Pro 1TB', target_category: 'SSD', current_price: 220 },
+  { id: 4, target_type: 'model', target_id: 8, alert_type: 'price_above', price_threshold: 150, is_active: false, created_at: new Date(Date.now() - 259200000).toISOString(), target_name: 'Corsair Vengeance 32GB', target_category: 'RAM', current_price: 140 },
+  { id: 5, target_type: 'model', target_id: 3, alert_type: 'deal_detected', is_active: true, created_at: new Date(Date.now() - 345600000).toISOString(), target_name: 'RTX 4070', target_category: 'GPU', current_price: 520 },
 ];
 
 const initialNotifications: Notification[] = [
@@ -303,7 +307,7 @@ export const mockProvider: DataProvider = {
       ...data,
       is_active: true,
       created_at: new Date().toISOString(),
-      name: 'Alerte personnalisée',
+      target_name: 'Alerte personnalisée',
     };
     items.push(newAlert);
     setToStorage(STORAGE_KEYS.ALERTS, items);
@@ -716,11 +720,11 @@ export const mockProvider: DataProvider = {
       id: generateId(),
       target_type: 'model',
       target_id: modelId,
-      alert_type: 'price_threshold',
-      threshold_value: threshold,
+      alert_type: 'price_below',
+      price_threshold: threshold,
       is_active: true,
       created_at: new Date().toISOString(),
-      name: m.name,
+      target_name: m.name,
     });
     setToStorage(STORAGE_KEYS.ALERTS, items);
   },

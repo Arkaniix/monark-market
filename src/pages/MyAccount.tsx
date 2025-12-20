@@ -199,8 +199,8 @@ export default function MyAccount() {
     createAlert.mutate({
       target_type: 'model',
       target_id: selectedModelId,
-      alert_type: alertType === 'deal_detected' ? 'availability' : 'price_threshold',
-      threshold_value: priceThreshold ? parseFloat(priceThreshold) : undefined
+      alert_type: alertType as 'deal_detected' | 'price_below' | 'price_above',
+      price_threshold: priceThreshold ? parseFloat(priceThreshold) : undefined
     }, {
       onSuccess: () => {
         toast({ title: "Alerte créée", description: "Vous serez notifié" });
@@ -646,11 +646,13 @@ export default function MyAccount() {
                         <div className="flex items-center gap-3">
                           <Bell className={`h-5 w-5 ${alert.is_active ? "text-primary" : "text-muted-foreground"}`} />
                           <div>
-                            <p className="font-medium">{alert.name || 'Alerte'}</p>
+                            <p className="font-medium">{alert.target_name || 'Alerte'}</p>
                             <p className="text-sm text-muted-foreground">
-                              {alert.alert_type === 'price_threshold' && alert.threshold_value
-                                ? `Prix ${alert.threshold_value}€`
-                                : alert.alert_type === 'price_drop' ? 'Baisse de prix' : 'Disponibilité'}
+                              {alert.alert_type === 'price_below' && alert.price_threshold
+                                ? `Prix < ${alert.price_threshold}€`
+                                : alert.alert_type === 'price_above' && alert.price_threshold
+                                ? `Prix > ${alert.price_threshold}€`
+                                : 'Deal détecté'}
                             </p>
                           </div>
                         </div>

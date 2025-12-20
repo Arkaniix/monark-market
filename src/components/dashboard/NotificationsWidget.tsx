@@ -3,9 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Bell, Eye, AlertCircle, TrendingDown, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
-import { useNotifications, useMarkNotificationRead } from "@/hooks/useNotifications";
-import { useWatchlist } from "@/hooks/useWatchlist";
-import { useAlerts } from "@/hooks/useAlerts";
+import { useNotifications, useMarkNotificationRead, useWatchlist, useAlerts } from "@/hooks/useProviderData";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
