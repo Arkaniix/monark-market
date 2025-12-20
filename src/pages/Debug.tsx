@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
-import { RefreshCw, CheckCircle2, XCircle, AlertCircle, Server, Database, Key, User, Loader2, Activity, Package, Code, Eye } from "lucide-react";
+import { RefreshCw, CheckCircle2, XCircle, AlertCircle, Server, Database, Key, User, Loader2, Activity, Package, Code, Eye, Search } from "lucide-react";
 import { getDebugState, subscribeDebugState, resetDebugState } from "@/lib/debugTracker";
 import { getMockDataStats, getMockDataSamples } from "@/providers/mockDataset";
+import { useDataProvider } from "@/providers";
 
 const ENV_VARS = {
   VITE_DATA_PROVIDER: import.meta.env.VITE_DATA_PROVIDER || 'mock',
@@ -20,10 +22,19 @@ type HealthStatus = 'idle' | 'checking' | 'ok' | 'error';
 
 export default function Debug() {
   const { user, isLoading: authLoading, isAdmin } = useAuth();
+  const provider = useDataProvider();
   const [healthStatus, setHealthStatus] = useState<HealthStatus>('idle');
   const [healthMessage, setHealthMessage] = useState<string>('');
   const [healthLatency, setHealthLatency] = useState<number | null>(null);
   const [debugState, setDebugState] = useState(getDebugState());
+
+  // Test Ad/Model ID states
+  const [testAdId, setTestAdId] = useState<string>('');
+  const [testAdResult, setTestAdResult] = useState<string>('');
+  const [testAdLoading, setTestAdLoading] = useState(false);
+  const [testModelId, setTestModelId] = useState<string>('');
+  const [testModelResult, setTestModelResult] = useState<string>('');
+  const [testModelLoading, setTestModelLoading] = useState(false);
 
   const activeProvider = ENV_VARS.VITE_DATA_PROVIDER;
   const apiUrl = ENV_VARS.VITE_API_URL;
@@ -427,6 +438,90 @@ export default function Debug() {
                 <pre className="p-3 rounded-lg bg-muted text-xs overflow-x-auto max-h-[300px]">
                   {JSON.stringify(getMockDataSamples().models, null, 2)}
                 </pre>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Provider Test Tools */}
+          <Card className="border-dashed border-blue-500/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="h-5 w-5 text-blue-500" />
+                Test Provider Methods
+              </CardTitle>
+              <CardDescription>Tester getAdDetail / getModelDetail directement</CardDescription>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-6">
+              {/* Test Ad ID */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Test Ad ID</h4>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Ex: 1, 2, 50..."
+                    value={testAdId}
+                    onChange={(e) => setTestAdId(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    disabled={testAdLoading || !testAdId.trim()}
+                    onClick={async () => {
+                      setTestAdLoading(true);
+                      setTestAdResult('');
+                      try {
+                        const result = await provider.getAdDetail(testAdId.trim());
+                        setTestAdResult(JSON.stringify(result, null, 2));
+                      } catch (err) {
+                        setTestAdResult(`ERROR: ${err instanceof Error ? err.message : String(err)}`);
+                      } finally {
+                        setTestAdLoading(false);
+                      }
+                    }}
+                  >
+                    {testAdLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Test'}
+                  </Button>
+                </div>
+                {testAdResult && (
+                  <pre className={`p-3 rounded-lg text-xs overflow-x-auto max-h-[200px] ${testAdResult.startsWith('ERROR') ? 'bg-destructive/10 text-destructive' : 'bg-muted'}`}>
+                    {testAdResult}
+                  </pre>
+                )}
+              </div>
+
+              {/* Test Model ID */}
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Test Model ID</h4>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Ex: 1, 2, 10..."
+                    value={testModelId}
+                    onChange={(e) => setTestModelId(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    disabled={testModelLoading || !testModelId.trim()}
+                    onClick={async () => {
+                      setTestModelLoading(true);
+                      setTestModelResult('');
+                      try {
+                        const result = await provider.getModelDetail(testModelId.trim());
+                        setTestModelResult(JSON.stringify(result, null, 2));
+                      } catch (err) {
+                        setTestModelResult(`ERROR: ${err instanceof Error ? err.message : String(err)}`);
+                      } finally {
+                        setTestModelLoading(false);
+                      }
+                    }}
+                  >
+                    {testModelLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Test'}
+                  </Button>
+                </div>
+                {testModelResult && (
+                  <pre className={`p-3 rounded-lg text-xs overflow-x-auto max-h-[200px] ${testModelResult.startsWith('ERROR') ? 'bg-destructive/10 text-destructive' : 'bg-muted'}`}>
+                    {testModelResult}
+                  </pre>
+                )}
               </div>
             </CardContent>
           </Card>
