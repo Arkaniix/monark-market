@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Eye, Plus, Trash2, ExternalLink, TrendingDown, TrendingUp, Bell, Search, Filter, ChevronLeft, ChevronRight, Package, Tag, DollarSign, Percent, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { Eye, Plus, Trash2, ExternalLink, TrendingDown, TrendingUp, Bell, Search, Filter, ChevronLeft, ChevronRight, Package, Tag, DollarSign, Percent, ArrowDownRight, ArrowUpRight, Sparkles, Target, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -244,88 +244,273 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
     setAlertModalOpen(true);
   };
 
-  // Item component
-  const WatchlistItem = ({ item, isModel }: { item: WatchlistEntry; isModel: boolean }) => (
-    <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors group">
-      <div className="flex items-center gap-4 flex-1 min-w-0">
-        {/* Icône type */}
-        <div className={`p-2 rounded-lg flex-shrink-0 ${isModel ? 'bg-blue-500/10' : 'bg-purple-500/10'}`}>
-          {isModel ? <Package className="h-4 w-4 text-blue-500" /> : <Tag className="h-4 w-4 text-purple-500" />}
-        </div>
+  // Calculer le score d'opportunité (écart prix actuel vs juste prix)
+  const getOpportunityScore = (item: WatchlistEntry): { score: number; label: string; color: string } => {
+    if (!item.current_price || !item.fair_value) return { score: 0, label: '—', color: 'text-muted-foreground' };
+    const diff = ((item.fair_value - item.current_price) / item.fair_value) * 100;
+    if (diff >= 15) return { score: 3, label: 'Excellente affaire', color: 'text-green-500' };
+    if (diff >= 5) return { score: 2, label: 'Bon prix', color: 'text-emerald-500' };
+    if (diff >= -5) return { score: 1, label: 'Prix correct', color: 'text-amber-500' };
+    return { score: 0, label: 'Au-dessus du marché', color: 'text-red-500' };
+  };
 
-        {/* Infos principales */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <Link 
-              to={isModel ? `/catalog/${item.target_id}` : `/ad/${item.target_id}`} 
-              className="font-medium hover:text-primary truncate"
+  // Temps depuis ajout à la watchlist
+  const getTimeAgo = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "Aujourd'hui";
+    if (diffDays === 1) return "Hier";
+    if (diffDays < 7) return `Il y a ${diffDays}j`;
+    if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} sem.`;
+    return `Il y a ${Math.floor(diffDays / 30)} mois`;
+  };
+
+  // Model Item - avec sparkline et métriques marché
+  const ModelWatchlistItem = ({ item }: { item: WatchlistEntry }) => {
+    const opportunity = getOpportunityScore(item);
+    const priceDiff = item.fair_value && item.current_price 
+      ? item.current_price - item.fair_value 
+      : 0;
+
+    return (
+      <div className="p-4 rounded-lg border bg-card hover:border-primary/30 transition-all group">
+        <div className="flex items-start gap-4">
+          {/* Indicateur opportunité */}
+          <div className={`flex flex-col items-center justify-center p-2 rounded-lg min-w-[60px] ${
+            opportunity.score >= 2 ? 'bg-green-500/10' : 
+            opportunity.score === 1 ? 'bg-amber-500/10' : 'bg-muted'
+          }`}>
+            {opportunity.score >= 2 ? (
+              <Sparkles className="h-5 w-5 text-green-500 mb-1" />
+            ) : opportunity.score === 1 ? (
+              <Target className="h-5 w-5 text-amber-500 mb-1" />
+            ) : (
+              <Package className="h-5 w-5 text-muted-foreground mb-1" />
+            )}
+            <span className={`text-[10px] font-medium text-center leading-tight ${opportunity.color}`}>
+              {opportunity.label}
+            </span>
+          </div>
+
+          {/* Contenu principal */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <Link 
+                to={`/catalog/${item.target_id}`} 
+                className="font-semibold hover:text-primary truncate"
+              >
+                {item.name || `${item.brand || 'Modèle'} #${item.target_id}`}
+              </Link>
+              {item.brand && <Badge variant="outline" className="text-xs">{item.brand}</Badge>}
+              {item.category && <Badge variant="secondary" className="text-xs">{item.category}</Badge>}
+            </div>
+
+            {/* Métriques prix */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Prix médian</p>
+                <p className="font-bold text-lg">{item.current_price ? formatPrice(item.current_price) : '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Juste prix</p>
+                <p className="font-medium">{item.fair_value ? formatPrice(item.fair_value) : '—'}</p>
+                {priceDiff !== 0 && (
+                  <p className={`text-xs ${priceDiff < 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {priceDiff > 0 ? '+' : ''}{formatPrice(priceDiff)}
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Tendance 7j</p>
+                <div className="flex items-center gap-1">
+                  {item.price_change_7d !== undefined && item.price_change_7d !== 0 ? (
+                    <>
+                      {item.price_change_7d < 0 ? (
+                        <TrendingDown className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <TrendingUp className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className={`font-medium ${item.price_change_7d < 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {item.price_change_7d > 0 ? '+' : ''}{item.price_change_7d.toFixed(1)}%
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <p className="text-xs text-muted-foreground mb-1">Évolution</p>
+                <PriceSparkline 
+                  data={priceHistories[item.target_id] || []} 
+                  isLoading={loadingHistories.has(item.target_id)} 
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-60 group-hover:opacity-100"
+              onClick={() => openAlertModal(item)}
+              title="Créer une alerte"
             >
-              {item.name || `${item.brand || 'Inconnu'} #${item.target_id}`}
+              <Bell className="h-4 w-4" />
+            </Button>
+            <Link to={`/catalog/${item.target_id}`}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-60 group-hover:opacity-100" title="Voir">
+                <ExternalLink className="h-4 w-4" />
+              </Button>
             </Link>
-            {item.category && <Badge variant="outline" className="text-xs">{item.category}</Badge>}
-            {item.brand && <span className="text-xs text-muted-foreground">{item.brand}</span>}
-          </div>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-            {item.current_price && (
-              <span className="flex items-center gap-1">
-                <span className="font-medium text-foreground">{formatPrice(item.current_price)}</span>
-              </span>
-            )}
-            {item.fair_value && item.fair_value !== item.current_price && (
-              <span className="text-xs">
-                Juste prix : {formatPrice(item.fair_value)}
-              </span>
-            )}
-            {item.price_change_7d !== undefined && item.price_change_7d !== 0 && (
-              <span className={`flex items-center gap-1 ${item.price_change_7d < 0 ? "text-green-500" : "text-red-500"}`}>
-                {item.price_change_7d < 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                {item.price_change_7d > 0 ? "+" : ""}{item.price_change_7d.toFixed(1)}%
-              </span>
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-60 group-hover:opacity-100 text-destructive hover:text-destructive"
+              onClick={() => removeFromWatchlist.mutate(item.id)}
+              disabled={removeFromWatchlist.isPending}
+              title="Retirer"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
+      </div>
+    );
+  };
 
-        {/* Sparkline (modèles uniquement) */}
-        {isModel && (
-          <div className="hidden md:block">
-            <PriceSparkline 
-              data={priceHistories[item.target_id] || []} 
-              isLoading={loadingHistories.has(item.target_id)} 
-            />
+  // Ad Item - avec infos vendeur, statut, localisation
+  const AdWatchlistItem = ({ item }: { item: WatchlistEntry }) => {
+    const opportunity = getOpportunityScore(item);
+    const timeAgo = item.created_at ? getTimeAgo(item.created_at) : null;
+    const priceDiff = item.fair_value && item.current_price 
+      ? item.current_price - item.fair_value 
+      : 0;
+
+    // Simuler un statut d'annonce (en prod, viendrait des données)
+    const adStatus = item.current_price ? 'active' : 'unknown';
+
+    return (
+      <div className={`p-4 rounded-lg border transition-all group ${
+        opportunity.score >= 2 ? 'border-green-500/30 bg-green-500/5' : 'bg-card hover:border-primary/30'
+      }`}>
+        <div className="flex items-start gap-4">
+          {/* Badge opportunité pour annonce */}
+          <div className={`flex flex-col items-center justify-center p-2 rounded-lg min-w-[60px] ${
+            opportunity.score >= 2 ? 'bg-green-500/20' : 
+            opportunity.score === 1 ? 'bg-amber-500/10' : 'bg-purple-500/10'
+          }`}>
+            {opportunity.score >= 2 ? (
+              <>
+                <Sparkles className="h-5 w-5 text-green-500 mb-1" />
+                <span className="text-[10px] font-bold text-green-500 text-center">À SAISIR</span>
+              </>
+            ) : (
+              <>
+                <Tag className="h-5 w-5 text-purple-500 mb-1" />
+                <span className="text-[10px] font-medium text-purple-500 text-center">Annonce</span>
+              </>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 ml-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={() => openAlertModal(item)}
-          title="Créer une alerte"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="hidden lg:inline">Alerte</span>
-        </Button>
-        <Link to={isModel ? `/catalog/${item.target_id}` : `/ad/${item.target_id}`}>
-          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity" title="Voir">
-            <ExternalLink className="h-4 w-4" />
-          </Button>
-        </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => removeFromWatchlist.mutate(item.id)}
-          disabled={removeFromWatchlist.isPending}
-          title="Retirer"
-          className="text-destructive hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+          {/* Contenu principal */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <Link 
+                to={`/ad/${item.target_id}`} 
+                className="font-semibold hover:text-primary truncate"
+              >
+                {item.name || `Annonce #${item.target_id}`}
+              </Link>
+              {adStatus === 'active' && (
+                <Badge variant="outline" className="text-xs text-green-500 border-green-500/30">
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1" />
+                  En ligne
+                </Badge>
+              )}
+              {item.category && <Badge variant="secondary" className="text-xs">{item.category}</Badge>}
+            </div>
+
+            {/* Infos annonce */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Prix affiché</p>
+                <p className="font-bold text-lg">{item.current_price ? formatPrice(item.current_price) : '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">vs Juste prix</p>
+                {priceDiff !== 0 ? (
+                  <div className={`flex items-center gap-1 ${priceDiff < 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {priceDiff < 0 ? <ArrowDownRight className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                    <span className="font-bold">{priceDiff > 0 ? '+' : ''}{formatPrice(priceDiff)}</span>
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
+                {item.fair_value && <p className="text-xs text-muted-foreground">({formatPrice(item.fair_value)})</p>}
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Économie potentielle</p>
+                {priceDiff < 0 ? (
+                  <p className="font-bold text-green-500">{formatPrice(Math.abs(priceDiff))}</p>
+                ) : (
+                  <p className="text-muted-foreground">—</p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Suivi depuis</p>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span className="text-sm">{timeAgo || 'Récemment'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Conseil action */}
+            {opportunity.score >= 2 && (
+              <div className="mt-3 p-2 rounded bg-green-500/10 border border-green-500/20">
+                <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  <strong>Recommandation :</strong> Prix {formatPrice(Math.abs(priceDiff))} sous le marché — contactez rapidement le vendeur
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-60 group-hover:opacity-100"
+              onClick={() => openAlertModal(item)}
+              title="Créer une alerte"
+            >
+              <Bell className="h-4 w-4" />
+            </Button>
+            <Link to={`/ad/${item.target_id}`}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-60 group-hover:opacity-100" title="Voir">
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-60 group-hover:opacity-100 text-destructive hover:text-destructive"
+              onClick={() => removeFromWatchlist.mutate(item.id)}
+              disabled={removeFromWatchlist.isPending}
+              title="Retirer"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Skeleton
   const ListSkeleton = () => (
@@ -449,9 +634,9 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
                     <h3 className="font-semibold">Modèles suivis</h3>
                     <Badge variant="secondary">{filteredModels.length}</Badge>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {filteredModels.map(item => (
-                      <WatchlistItem key={item.id} item={item} isModel={true} />
+                      <ModelWatchlistItem key={item.id} item={item} />
                     ))}
                   </div>
                 </div>
@@ -465,9 +650,9 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
                     <h3 className="font-semibold">Annonces suivies</h3>
                     <Badge variant="secondary">{filteredAds.length}</Badge>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {filteredAds.map(item => (
-                      <WatchlistItem key={item.id} item={item} isModel={false} />
+                      <AdWatchlistItem key={item.id} item={item} />
                     ))}
                   </div>
                 </div>
