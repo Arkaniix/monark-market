@@ -156,64 +156,93 @@ export function WatchlistItemCard({
               </div>
 
               {/* Indicateurs visuels */}
-              <div className="space-y-2">
-                {/* Écart au juste prix */}
+              <div className="space-y-3 pt-2 border-t">
+                {/* Écart au juste prix - avec barre visuelle améliorée */}
                 <div>
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-muted-foreground">Écart juste prix</span>
-                    <span className={deviation < 0 ? "text-green-500" : deviation > 0 ? "text-red-500" : ""}>
+                  <div className="flex items-center justify-between text-xs mb-1.5">
+                    <span className="text-muted-foreground font-medium">Écart au juste prix</span>
+                    <span className={`font-semibold ${deviation < -5 ? "text-green-500" : deviation > 5 ? "text-red-500" : "text-muted-foreground"}`}>
                       {deviation > 0 ? "+" : ""}{deviation.toFixed(1)}%
+                      {deviation < -10 && " 🎯"}
                     </span>
                   </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden relative">
+                  <div className="h-3 bg-muted rounded-full overflow-hidden relative">
+                    {/* Ligne centrale (juste prix) */}
                     <div 
-                      className="absolute top-0 left-1/2 h-full w-0.5 bg-foreground/30"
+                      className="absolute top-0 left-1/2 h-full w-0.5 bg-foreground/40 z-10"
                       style={{ transform: 'translateX(-50%)' }}
                     />
-                    <div 
-                      className={`h-full transition-all ${
-                        deviation < 0 ? "bg-green-500" : "bg-red-500"
-                      }`}
-                      style={{ 
-                        width: `${Math.min(50, Math.abs(deviation))}%`,
-                        marginLeft: deviation < 0 ? `${50 - Math.min(50, Math.abs(deviation))}%` : '50%'
-                      }}
-                    />
+                    {/* Barre de déviation */}
+                    {Math.abs(deviation) > 0.5 ? (
+                      <div 
+                        className={`absolute top-0 h-full transition-all rounded-full ${
+                          deviation < 0 ? "bg-green-500" : "bg-red-500"
+                        }`}
+                        style={{ 
+                          width: `${Math.max(4, Math.min(50, Math.abs(deviation) * 1.5))}%`,
+                          left: deviation < 0 
+                            ? `${50 - Math.min(50, Math.abs(deviation) * 1.5)}%` 
+                            : '50%'
+                        }}
+                      />
+                    ) : (
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-4 bg-primary/50 rounded-full" />
+                    )}
+                    {/* Labels visuels */}
+                    <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[9px] text-green-600 font-medium">−</span>
+                    <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] text-red-500 font-medium">+</span>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+                    <span>Sous-évalué</span>
+                    <span>Surévalué</span>
                   </div>
                 </div>
 
                 {/* Position dans la fourchette de prix 30j */}
                 {trendData.length > 1 && (
                   <div>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Position 30j</span>
-                      <span>
-                        {formatPrice(priceMin)} - {formatPrice(priceMax)}
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="text-muted-foreground font-medium">Position dans la fourchette 30j</span>
+                      <span className="text-xs">
+                        {formatPrice(priceMin)} → {formatPrice(priceMax)}
                       </span>
                     </div>
-                    <div className="relative">
-                      <Progress value={currentVsRange} className="h-2" />
+                    <div className="relative h-3">
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 via-muted to-red-500/20 rounded-full" />
+                      <Progress value={currentVsRange} className="h-3 bg-transparent" />
                       <div 
-                        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary border-2 border-background shadow"
-                        style={{ left: `calc(${currentVsRange}% - 6px)` }}
-                      />
+                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary border-2 border-background shadow-lg flex items-center justify-center"
+                        style={{ left: `calc(${Math.max(5, Math.min(95, currentVsRange))}% - 8px)` }}
+                      >
+                        <span className="text-[8px] text-primary-foreground font-bold">€</span>
+                      </div>
                     </div>
                     <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                      <span>Min</span>
-                      <span>Max</span>
+                      <span className="text-green-600">Min 30j</span>
+                      <span className="text-red-500">Max 30j</span>
                     </div>
                   </div>
                 )}
 
-                {/* Variation 7j */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Variation 7 jours</span>
-                  <div className={`flex items-center gap-1 text-sm font-medium ${
-                    priceChange < 0 ? "text-green-500" : priceChange > 0 ? "text-red-500" : "text-muted-foreground"
-                  }`}>
-                    {priceChange < 0 ? <TrendingDown className="h-3 w-3" /> : 
-                     priceChange > 0 ? <TrendingUp className="h-3 w-3" /> : null}
-                    {priceChange > 0 ? "+" : ""}{priceChange.toFixed(1)}%
+                {/* Variation 7j - avec barre */}
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-muted-foreground font-medium">Tendance 7 jours</span>
+                    <div className={`flex items-center gap-1 text-sm font-semibold ${
+                      priceChange < 0 ? "text-green-500" : priceChange > 0 ? "text-red-500" : "text-muted-foreground"
+                    }`}>
+                      {priceChange < 0 ? <TrendingDown className="h-4 w-4" /> : 
+                       priceChange > 0 ? <TrendingUp className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
+                      {priceChange > 0 ? "+" : ""}{priceChange.toFixed(1)}%
+                    </div>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all rounded-full ${
+                        priceChange < 0 ? "bg-green-500" : priceChange > 0 ? "bg-red-500" : "bg-muted-foreground"
+                      }`}
+                      style={{ width: `${Math.max(5, Math.min(100, Math.abs(priceChange) * 5 + 10))}%` }}
+                    />
                   </div>
                 </div>
               </div>
