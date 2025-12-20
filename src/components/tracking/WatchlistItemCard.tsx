@@ -1,15 +1,26 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { 
-  Package, Tag, TrendingDown, TrendingUp, Bell, ExternalLink, Trash2, 
-  Zap, Clock, Target, BarChart3, AlertTriangle, CheckCircle2, Minus
+import {
+  Package,
+  Tag,
+  TrendingDown,
+  TrendingUp,
+  Bell,
+  ExternalLink,
+  Trash2,
+  Zap,
+  BarChart3,
+  AlertTriangle,
+  CheckCircle2,
+  Minus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
-import type { WatchlistEntry, PriceHistoryPoint } from "@/providers/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { WatchlistEntry } from "@/providers/types";
 import {
   AreaChart,
   Area,
@@ -39,7 +50,7 @@ export function WatchlistItemCard({
   onRemove,
   isRemoving,
 }: WatchlistItemCardProps) {
-  const [showChart, setShowChart] = useState(false);
+  const [showChart, setShowChart] = useState(true);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(price);
@@ -209,19 +220,25 @@ export function WatchlistItemCard({
             </div>
           </div>
 
-          {/* Graphique interactif */}
-          {isModel && trendData.length > 1 && (
+          {/* Graphique (visible par défaut sur les modèles) */}
+          {isModel && (
             <div className="mt-4">
-              <button 
-                onClick={() => setShowChart(!showChart)}
-                className="text-xs text-primary hover:underline flex items-center gap-1 mb-2"
-              >
-                <BarChart3 className="h-3 w-3" />
-                {showChart ? "Masquer le graphique" : "Voir l'historique 30j"}
-              </button>
-              
-              {showChart && (
-                <div className="h-32 mt-2">
+              <div className="flex items-center justify-between mb-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setShowChart(!showChart)}
+                >
+                  <BarChart3 className="h-3 w-3 mr-1" />
+                  {showChart ? "Masquer" : "Afficher"} le graphique 30j
+                </Button>
+                {isLoadingHistory && <Skeleton className="h-4 w-28" />}
+              </div>
+
+              {showChart && trendData.length > 1 ? (
+                <div className="h-32">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData}>
                       <defs>
@@ -230,38 +247,40 @@ export function WatchlistItemCard({
                           <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <XAxis 
-                        dataKey="date" 
-                        tick={{ fontSize: 10 }} 
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 10 }}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(v) => v ? new Date(v).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : ''}
+                        tickFormatter={(v) =>
+                          v ? new Date(v).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }) : ""
+                        }
                         interval="preserveStartEnd"
                       />
-                      <YAxis 
-                        domain={['dataMin - 20', 'dataMax + 20']} 
+                      <YAxis
+                        domain={["dataMin - 20", "dataMax + 20"]}
                         tick={{ fontSize: 10 }}
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(v) => `${v}€`}
                         width={50}
                       />
-                      <RechartsTooltip 
+                      <RechartsTooltip
                         formatter={(value: number) => [formatPrice(value), "Prix"]}
-                        labelFormatter={(label) => label ? new Date(label).toLocaleDateString('fr-FR') : ''}
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--card))', 
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '6px',
-                          fontSize: '12px'
+                        labelFormatter={(label) => (label ? new Date(label).toLocaleDateString("fr-FR") : "")}
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "6px",
+                          fontSize: "12px",
                         }}
                       />
                       {fairValue > 0 && (
-                        <ReferenceLine 
-                          y={fairValue} 
-                          stroke="hsl(var(--muted-foreground))" 
+                        <ReferenceLine
+                          y={fairValue}
+                          stroke="hsl(var(--muted-foreground))"
                           strokeDasharray="3 3"
-                          label={{ value: 'Juste prix', fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                          label={{ value: "Juste prix", fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                         />
                       )}
                       <Area
@@ -273,6 +292,12 @@ export function WatchlistItemCard({
                       />
                     </AreaChart>
                   </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="h-32 rounded-md border bg-muted/30 flex items-center justify-center">
+                  <span className="text-xs text-muted-foreground">
+                    {isLoadingHistory ? "Chargement de l'historique…" : "Historique insuffisant"}
+                  </span>
                 </div>
               )}
             </div>
