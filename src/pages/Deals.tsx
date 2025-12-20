@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { 
   Flame, MapPin, Calendar, TrendingDown, Package, Truck, ExternalLink, 
-  RotateCcw, DollarSign, BarChart3, Sparkles, Heart, Cpu, HardDrive, 
+  RotateCcw, DollarSign, BarChart3, Sparkles, Star, Bell, Cpu, HardDrive, 
   CircuitBoard, Monitor, TrendingUp
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -21,6 +21,7 @@ import { fr } from "date-fns/locale";
 import { useDeals, useMarketSummary, useAddToWatchlist, type DealsFilters } from "@/hooks/useDeals";
 import { DealsSkeleton, MarketSummarySkeleton } from "@/components/deals/DealsSkeleton";
 import { toast } from "@/hooks/use-toast";
+import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
 
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
 
@@ -48,6 +49,10 @@ export default function Deals() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
 
+  // Alert modal state
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertTarget, setAlertTarget] = useState<AlertTarget | null>(null);
+
   // Build filters object
   const filters: DealsFilters = {
     platform,
@@ -65,6 +70,16 @@ export default function Deals() {
   const { data: dealsData, isLoading: dealsLoading, error: dealsError } = useDeals(filters);
   const { data: summary, isLoading: summaryLoading } = useMarketSummary();
   const addToWatchlist = useAddToWatchlist();
+
+  const openAlertModal = (deal: { id: number; title: string; price: number }) => {
+    setAlertTarget({
+      type: "ad",
+      id: deal.id,
+      name: deal.title,
+      currentPrice: deal.price,
+    });
+    setAlertModalOpen(true);
+  };
 
   const resetFilters = () => {
     setPlatform("all");
@@ -497,14 +512,36 @@ export default function Deals() {
                                   Voir annonce
                                 </Button>
                               )}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleAddToWatchlist(deal.id, deal.title)}
-                                disabled={addToWatchlist.isPending || !deal.id}
-                              >
-                                <Heart className="h-4 w-4" />
-                              </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleAddToWatchlist(deal.id, deal.title)}
+                                      disabled={addToWatchlist.isPending || !deal.id}
+                                    >
+                                      <Star className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Suivre</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => openAlertModal(deal)}
+                                      disabled={!deal.id}
+                                    >
+                                      <Bell className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Alerter</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                               {deal.url && (
                                 <Button variant="outline" size="sm" asChild>
                                   <a href={deal.url} target="_blank" rel="noopener noreferrer">
@@ -574,6 +611,14 @@ export default function Deals() {
           )}
         </div>
       </div>
+
+      {/* Alert Modal */}
+      <CreateAlertModal
+        open={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        target={alertTarget}
+        onSuccess={() => setAlertModalOpen(false)}
+      />
     </div>
   );
 }

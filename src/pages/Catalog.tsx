@@ -15,7 +15,8 @@ import {
   List,
   Package,
   Activity,
-  Heart,
+  Star,
+  Bell,
   BarChart3,
   RotateCcw
 } from "lucide-react";
@@ -32,6 +33,7 @@ import {
 } from "@/hooks/useCatalog";
 import { CatalogSkeleton, CatalogSummarySkeleton } from "@/components/catalog/CatalogSkeleton";
 import { toast } from "@/hooks/use-toast";
+import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
 
 const ITEMS_PER_PAGE = 24;
 
@@ -67,6 +69,10 @@ export default function Catalog() {
     parseInt(searchParams.get("page") || "1")
   );
 
+  // Alert modal state
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertTarget, setAlertTarget] = useState<AlertTarget | null>(null);
+
   // Build filters
   const filters: CatalogFilters = {
     category,
@@ -86,6 +92,16 @@ export default function Catalog() {
   const { data: modelsData, isLoading: modelsLoading, error: modelsError } = useCatalogModels(filters);
   const { data: summary, isLoading: summaryLoading } = useCatalogSummary();
   const addToWatchlist = useAddModelToWatchlist();
+
+  const openAlertModal = (model: { id: number; name: string; fair_value_30d?: number; price_median_30d?: number }) => {
+    setAlertTarget({
+      type: "model",
+      id: model.id,
+      name: model.name,
+      currentPrice: model.fair_value_30d || model.price_median_30d,
+    });
+    setAlertModalOpen(true);
+  };
 
   const resetFilters = () => {
     setSearchQuery("");
@@ -436,14 +452,36 @@ export default function Catalog() {
                               Voir détails
                             </Button>
                           )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleAddToWatchlist(model.id, model.name)}
-                            disabled={addToWatchlist.isPending || !model.id}
-                          >
-                            <Heart className="h-4 w-4" />
-                          </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleAddToWatchlist(model.id, model.name)}
+                                  disabled={addToWatchlist.isPending || !model.id}
+                                >
+                                  <Star className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Suivre</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openAlertModal(model)}
+                                  disabled={!model.id}
+                                >
+                                  <Bell className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Alerter</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
                     </CardContent>
@@ -504,6 +542,14 @@ export default function Catalog() {
           </>
         )}
       </div>
+
+      {/* Alert Modal */}
+      <CreateAlertModal
+        open={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        target={alertTarget}
+        onSuccess={() => setAlertModalOpen(false)}
+      />
     </div>
   );
 }

@@ -54,7 +54,7 @@ const COOLDOWNS = [
   { value: "48", label: "48 heures" },
 ];
 
-interface AlertTarget {
+export interface AlertTarget {
   type: 'ad' | 'model';
   id: number;
   name: string;
@@ -448,6 +448,3 @@ export function CreateAlertModal({
     </Dialog>
   );
 }
-
-// Export du type pour utilisation externe
-export type { AlertTarget };
