@@ -11,7 +11,6 @@ import { format, isToday, isYesterday, subDays, startOfWeek, isWithinInterval } 
 import { fr } from "date-fns/locale";
 import { useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from "@/hooks/useNotifications";
 import type { Notification } from "@/providers/types";
-
 interface NotificationsTabProps {
   notifications: Notification[];
   isLoading: boolean;
@@ -25,31 +24,35 @@ const generateVolumeData = () => {
   for (let i = 6; i >= 0; i--) {
     const date = subDays(new Date(), i);
     data.push({
-      date: format(date, 'EEE', { locale: fr }),
+      date: format(date, 'EEE', {
+        locale: fr
+      }),
       fullDate: format(date, 'dd/MM'),
-      count: Math.floor(Math.random() * 12) + (i < 2 ? 3 : 1),
+      count: Math.floor(Math.random() * 12) + (i < 2 ? 3 : 1)
     });
   }
   return data;
 };
-
 type DateGroup = 'today' | 'yesterday' | 'thisWeek' | 'older';
-
 interface GroupedNotifications {
   today: Notification[];
   yesterday: Notification[];
   thisWeek: Notification[];
   older: Notification[];
 }
-
-export function NotificationsTab({ notifications, isLoading, error, refetch }: NotificationsTabProps) {
+export function NotificationsTab({
+  notifications,
+  isLoading,
+  error,
+  refetch
+}: NotificationsTabProps) {
   const navigate = useNavigate();
-  
+
   // Mutations
   const markNotificationRead = useMarkNotificationRead();
   const markAllNotificationsRead = useMarkAllNotificationsRead();
   const deleteNotification = useDeleteNotification();
-  
+
   // Données graphique
   const volumeData = useMemo(() => generateVolumeData(), []);
   const totalVolume7d = volumeData.reduce((sum, d) => sum + d.count, 0);
@@ -61,28 +64,33 @@ export function NotificationsTab({ notifications, isLoading, error, refetch }: N
   // Grouper par date
   const groupByDate = (items: Notification[]): GroupedNotifications => {
     const now = new Date();
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-    
+    const weekStart = startOfWeek(now, {
+      weekStartsOn: 1
+    });
     return items.reduce<GroupedNotifications>((groups, notif) => {
       const date = new Date(notif.created_at);
-      
       if (isToday(date)) {
         groups.today.push(notif);
       } else if (isYesterday(date)) {
         groups.yesterday.push(notif);
-      } else if (isWithinInterval(date, { start: weekStart, end: now })) {
+      } else if (isWithinInterval(date, {
+        start: weekStart,
+        end: now
+      })) {
         groups.thisWeek.push(notif);
       } else {
         groups.older.push(notif);
       }
-      
       return groups;
-    }, { today: [], yesterday: [], thisWeek: [], older: [] });
+    }, {
+      today: [],
+      yesterday: [],
+      thisWeek: [],
+      older: []
+    });
   };
-
   const groupedUnread = useMemo(() => groupByDate(unreadNotifications), [unreadNotifications]);
   const groupedRead = useMemo(() => groupByDate(readNotifications), [readNotifications]);
-
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'alert':
@@ -99,69 +107,52 @@ export function NotificationsTab({ notifications, isLoading, error, refetch }: N
         return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
   };
-
   const handleNotificationClick = (notification: Notification) => {
     // Marquer comme lu si non lu
     if (!notification.is_read) {
       markNotificationRead.mutate(notification.id);
     }
-    
+
     // Navigation selon le lien ou le type
     if (notification.link) {
       navigate(notification.link);
     }
   };
-
   const formatTime = (dateStr: string) => {
-    return format(new Date(dateStr), 'HH:mm', { locale: fr });
+    return format(new Date(dateStr), 'HH:mm', {
+      locale: fr
+    });
   };
 
   // Skeleton
-  const ListSkeleton = () => (
-    <div className="space-y-3">
-      {[1, 2, 3, 4, 5].map(i => (
-        <div key={i} className="flex items-center gap-3 p-4 rounded-lg border">
+  const ListSkeleton = () => <div className="space-y-3">
+      {[1, 2, 3, 4, 5].map(i => <div key={i} className="flex items-center gap-3 p-4 rounded-lg border">
           <Skeleton className="h-10 w-10 rounded-lg" />
           <div className="flex-1">
             <Skeleton className="h-5 w-48 mb-2" />
             <Skeleton className="h-4 w-64" />
           </div>
           <Skeleton className="h-8 w-8" />
-        </div>
-      ))}
-    </div>
-  );
+        </div>)}
+    </div>;
 
   // Rendu d'un groupe de notifications
   const renderGroup = (label: string, items: Notification[], isRead: boolean) => {
     if (items.length === 0) return null;
-    
-    return (
-      <div className="mb-6">
+    return <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <h4 className="text-sm font-medium text-muted-foreground">{label}</h4>
           <Badge variant="outline" className="text-xs">{items.length}</Badge>
         </div>
         <div className="space-y-2">
-          {items.map((notification) => (
-            <div
-              key={notification.id}
-              onClick={() => handleNotificationClick(notification)}
-              className={`flex items-start gap-3 p-4 rounded-lg border transition-all cursor-pointer group ${
-                isRead 
-                  ? 'bg-muted/30 hover:bg-muted/50' 
-                  : 'bg-card border-primary/20 shadow-sm hover:shadow-md hover:border-primary/40'
-              }`}
-            >
+          {items.map(notification => <div key={notification.id} onClick={() => handleNotificationClick(notification)} className={`flex items-start gap-3 p-4 rounded-lg border transition-all cursor-pointer group ${isRead ? 'bg-muted/30 hover:bg-muted/50' : 'bg-card border-primary/20 shadow-sm hover:shadow-md hover:border-primary/40'}`}>
               <div className={`p-2 rounded-lg flex-shrink-0 ${isRead ? 'bg-muted' : 'bg-primary/10'}`}>
                 {getNotificationIcon(notification.type)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  {!isRead && (
-                    <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 animate-pulse" />
-                  )}
+                  {!isRead && <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 animate-pulse" />}
                   <span className={`font-medium truncate ${isRead ? 'text-muted-foreground' : ''}`}>
                     {notification.title}
                   </span>
@@ -172,137 +163,44 @@ export function NotificationsTab({ notifications, isLoading, error, refetch }: N
                 <p className="text-sm text-muted-foreground line-clamp-2">{notification.message}</p>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                {!isRead && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      markNotificationRead.mutate(notification.id);
-                    }}
-                    title="Marquer comme lu"
-                  >
+                {!isRead && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
+              e.stopPropagation();
+              markNotificationRead.mutate(notification.id);
+            }} title="Marquer comme lu">
                     <CheckCircle2 className="h-4 w-4" />
-                  </Button>
-                )}
-                {notification.link && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(notification.link!);
-                    }}
-                    title="Voir le détail"
-                  >
+                  </Button>}
+                {notification.link && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
+              e.stopPropagation();
+              navigate(notification.link!);
+            }} title="Voir le détail">
                     <ExternalLink className="h-4 w-4" />
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteNotification.mutate(notification.id);
-                  }}
-                  title="Supprimer"
-                >
+                  </Button>}
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={e => {
+              e.stopPropagation();
+              deleteNotification.mutate(notification.id);
+            }} title="Supprimer">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-          ))}
+            </div>)}
         </div>
-      </div>
-    );
+      </div>;
   };
 
   // Rendu des groupes pour une section (lue ou non lue)
   const renderGroupedNotifications = (grouped: GroupedNotifications, isRead: boolean) => {
     const hasAny = grouped.today.length > 0 || grouped.yesterday.length > 0 || grouped.thisWeek.length > 0 || grouped.older.length > 0;
-    
     if (!hasAny) return null;
-    
-    return (
-      <>
+    return <>
         {renderGroup("Aujourd'hui", grouped.today, isRead)}
         {renderGroup("Hier", grouped.yesterday, isRead)}
         {renderGroup("Cette semaine", grouped.thisWeek, isRead)}
         {renderGroup("Plus ancien", grouped.older, isRead)}
-      </>
-    );
+      </>;
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Graphique volume 7 jours */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-green-500" />
-                Volume de notifications
-              </CardTitle>
-              <CardDescription>Sur les 7 derniers jours</CardDescription>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold">{totalVolume7d}</p>
-              <p className="text-xs text-muted-foreground">notifications reçues</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[100px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={volumeData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
-                <defs>
-                  <linearGradient id="colorNotif" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 11 }} 
-                  tickLine={false}
-                  axisLine={false}
-                  className="text-muted-foreground"
-                />
-                <YAxis 
-                  tick={{ fontSize: 10 }} 
-                  tickLine={false}
-                  axisLine={false}
-                  width={20}
-                  className="text-muted-foreground"
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--popover))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }}
-                  formatter={(value: number) => [`${value} notifications`, '']}
-                  labelFormatter={(label, payload) => payload[0]?.payload?.fullDate || label}
-                />
-                <Area 
-                  type="monotone"
-                  dataKey="count" 
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  fill="url(#colorNotif)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      
 
       {/* Liste notifications */}
       <Card>
@@ -312,9 +210,7 @@ export function NotificationsTab({ notifications, isLoading, error, refetch }: N
               <CardTitle className="flex items-center gap-2">
                 <Inbox className="h-5 w-5 text-green-500" />
                 Inbox
-                {unreadNotifications.length > 0 && (
-                  <Badge variant="destructive">{unreadNotifications.length} non lues</Badge>
-                )}
+                {unreadNotifications.length > 0 && <Badge variant="destructive">{unreadNotifications.length} non lues</Badge>}
               </CardTitle>
               <CardDescription className="mt-1">
                 Vos alertes et notifications système
@@ -324,26 +220,15 @@ export function NotificationsTab({ notifications, isLoading, error, refetch }: N
               <Button variant="outline" size="icon" onClick={refetch}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
-              {unreadNotifications.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => markAllNotificationsRead.mutate()}
-                  disabled={markAllNotificationsRead.isPending}
-                  className="gap-2"
-                >
+              {unreadNotifications.length > 0 && <Button variant="outline" size="sm" onClick={() => markAllNotificationsRead.mutate()} disabled={markAllNotificationsRead.isPending} className="gap-2">
                   <CheckCircle2 className="h-4 w-4" />
                   Tout marquer lu
-                </Button>
-              )}
+                </Button>}
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <ListSkeleton />
-          ) : error ? (
-            <Alert variant="destructive">
+          {isLoading ? <ListSkeleton /> : error ? <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Erreur</AlertTitle>
               <AlertDescription>
@@ -352,9 +237,7 @@ export function NotificationsTab({ notifications, isLoading, error, refetch }: N
                   Réessayer
                 </Button>
               </AlertDescription>
-            </Alert>
-          ) : notifications.length === 0 ? (
-            <div className="text-center py-16">
+            </Alert> : notifications.length === 0 ? <div className="text-center py-16">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-4">
                 <Inbox className="h-8 w-8 text-green-500" />
               </div>
@@ -362,38 +245,28 @@ export function NotificationsTab({ notifications, isLoading, error, refetch }: N
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Vos notifications apparaîtront ici lorsque vos alertes seront déclenchées ou que vous recevrez des messages système.
               </p>
-            </div>
-          ) : (
-            <div>
+            </div> : <div>
               {/* Section non lues */}
-              {unreadNotifications.length > 0 && (
-                <div className="mb-8">
+              {unreadNotifications.length > 0 && <div className="mb-8">
                   <div className="flex items-center gap-2 mb-4 pb-2 border-b">
                     <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                     <h3 className="font-semibold">Non lues</h3>
                     <Badge>{unreadNotifications.length}</Badge>
                   </div>
                   {renderGroupedNotifications(groupedUnread, false)}
-                </div>
-              )}
+                </div>}
 
               {/* Section lues */}
-              {readNotifications.length > 0 && (
-                <div>
-                  {unreadNotifications.length > 0 && (
-                    <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+              {readNotifications.length > 0 && <div>
+                  {unreadNotifications.length > 0 && <div className="flex items-center gap-2 mb-4 pb-2 border-b">
                       <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
                       <h3 className="font-medium text-muted-foreground">Déjà lues</h3>
                       <Badge variant="outline">{readNotifications.length}</Badge>
-                    </div>
-                  )}
+                    </div>}
                   {renderGroupedNotifications(groupedRead, true)}
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
