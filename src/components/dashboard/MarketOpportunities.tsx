@@ -248,9 +248,9 @@ export function MarketOpportunities({
                       <span className="font-medium">27%</span>
                     </div>
                   </div>
-                  <Link to="/trends">
+                  <Link to="/catalog">
                     <Button variant="outline" size="sm" className="w-full mt-4">
-                      Voir page complète
+                      Explorer le catalogue
                     </Button>
                   </Link>
                 </div>
