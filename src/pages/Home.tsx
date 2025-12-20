@@ -1,8 +1,9 @@
-import { useDashboard } from "@/hooks/useDashboard";
+import { useDashboard, useTrends } from "@/hooks/useProviderData";
 import { useAuth } from "@/context/AuthContext";
 import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
 import { PersonalStats } from "@/components/dashboard/PersonalStats";
 import { MarketOpportunities } from "@/components/dashboard/MarketOpportunities";
+import { MarketTrends } from "@/components/dashboard/MarketTrends";
 import { RecommendedActions } from "@/components/dashboard/RecommendedActions";
 import { NotificationsWidget } from "@/components/dashboard/NotificationsWidget";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 export default function Home() {
   const { user } = useAuth();
   const { data, isLoading, isError, error, refetch } = useDashboard();
+  const { data: trendsData, isLoading: trendsLoading } = useTrends("30");
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -113,6 +115,9 @@ export default function Home() {
         recentActivity={recentActivity}
         performanceData={performanceData}
       />
+
+      {/* Tendances globales du marché */}
+      <MarketTrends data={trendsData} isLoading={trendsLoading} />
 
       {/* Opportunités & Marché */}
       <MarketOpportunities
