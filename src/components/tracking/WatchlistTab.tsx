@@ -114,7 +114,7 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
   const [page, setPage] = useState(1);
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertTarget, setAlertTarget] = useState<AlertTarget | null>(null);
-  const [priceHistories, setPriceHistories] = useState<Record<number, { price: number }[]>>({});
+  const [priceHistories, setPriceHistories] = useState<Record<number, { price: number; date?: string }[]>>({});
   const [loadingHistories, setLoadingHistories] = useState<Set<number>>(new Set());
 
   const removeFromWatchlist = useRemoveFromWatchlist();
@@ -167,7 +167,10 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
         if (history && history.length > 0) {
           setPriceHistories(prev => ({
             ...prev,
-            [item.target_id]: history.slice(-20).map((p: PriceHistoryPoint) => ({ price: p.price_median })),
+            [item.target_id]: history.slice(-20).map((p: PriceHistoryPoint) => ({ 
+              price: p.price_median,
+              date: p.date 
+            })),
           }));
         } else {
           // Générer mock si pas de données
@@ -465,15 +468,21 @@ function NoResults({ onReset }: { onReset: () => void }) {
   );
 }
 
-// Mock sparkline generator
-function generateMockSparkline(basePrice: number): { price: number }[] {
-  const points: { price: number }[] = [];
+// Mock sparkline generator with dates
+function generateMockSparkline(basePrice: number): { price: number; date: string }[] {
+  const points: { price: number; date: string }[] = [];
   let price = basePrice * (0.9 + Math.random() * 0.2);
+  const now = new Date();
   
-  for (let i = 0; i < 20; i++) {
+  for (let i = 19; i >= 0; i--) {
     const change = (Math.random() - 0.5) * 0.04;
     price = price * (1 + change);
-    points.push({ price: Math.round(price) });
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    points.push({ 
+      price: Math.round(price),
+      date: date.toISOString().split('T')[0]
+    });
   }
   
   return points;
