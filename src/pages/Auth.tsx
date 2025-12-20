@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { ApiException } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon } from "lucide-react";
+import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { motion } from "framer-motion";
 
@@ -213,7 +213,16 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 lg:p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 lg:p-8 relative">
+      {/* Bouton retour vers la page d'accueil */}
+      <Link 
+        to="/landing" 
+        className="absolute top-4 left-4 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+      >
+        <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+        <span className="hidden sm:inline">Retour à l'accueil</span>
+      </Link>
+
       <div className="w-full max-w-6xl grid gap-8 items-start lg:grid-cols-2">
         {/* Left Panel - Marketing Content */}
         <div className="hidden lg:flex flex-col gap-8 p-8">
