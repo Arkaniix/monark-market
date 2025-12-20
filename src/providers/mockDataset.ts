@@ -333,7 +333,36 @@ function generateModels(): InternalModel[] {
   return models;
 }
 
-// ============= Internal Deal Type =============
+// ============= Internal Ad Type (Full Detail) =============
+export interface InternalAd {
+  id: number;
+  ad_id: number;
+  title: string;
+  description: string;
+  price: number;
+  fair_value: number;
+  deviation_pct: number;
+  score: number;
+  platform: string;
+  city: string;
+  region: string;
+  postal_code: string;
+  condition: string;
+  category: string;
+  model_name: string;
+  model_id: number | null;
+  item_type: 'component' | 'pc' | 'lot';
+  delivery_possible: boolean;
+  secured_payment: boolean;
+  published_at: string;
+  first_seen_at: string;
+  last_seen_at: string;
+  status: string;
+  seller_type: string;
+  url: string;
+}
+
+// ============= Internal Deal Type (List View) =============
 export interface InternalDeal {
   id: number;
   ad_id: number;
@@ -356,9 +385,17 @@ export interface InternalDeal {
   url: string;
 }
 
-// ============= Generate Deals =============
-function generateDeals(count: number, models: InternalModel[]): InternalDeal[] {
-  const deals: InternalDeal[] = [];
+// ============= Price History Point =============
+export interface InternalPricePoint {
+  date: string;
+  price: number;
+}
+
+// ============= Generate Ads (Full Detail, 50+ items) =============
+function generateAds(count: number, models: InternalModel[]): InternalAd[] {
+  const ads: InternalAd[] = [];
+  const sellerTypes = ['Particulier', 'Professionnel', 'Boutique'];
+  const statusOptions = ['active', 'active', 'active', 'active', 'sold'];
 
   for (let i = 0; i < count; i++) {
     const model = models[Math.floor(random() * models.length)];
@@ -371,14 +408,15 @@ function generateDeals(count: number, models: InternalModel[]): InternalDeal[] {
     const suffix = model.category === 'GPU' ? pick(SUFFIXES) : '';
 
     // Calculate price with realistic discount
-    const discountFactor = 0.68 + random() * 0.40; // 68% to 108% of fair value
+    const discountFactor = 0.68 + random() * 0.40;
     const price = Math.round(model.fair_value_30d * discountFactor);
     const deviationPct = Math.round((1 - price / model.fair_value_30d) * 100);
     const score = Math.min(100, Math.max(35, 45 + deviationPct * 1.8 + random() * 10));
 
-    // Random date in last 30 days
-    const daysAgo = Math.floor(random() * 30);
+    // Random date in last 60 days
+    const daysAgo = Math.floor(random() * 60);
     const pubDate = new Date(Date.now() - daysAgo * 86400000);
+    const firstSeen = new Date(pubDate.getTime() - Math.floor(random() * 7) * 86400000);
 
     const title = cardBrand && suffix
       ? `${cardBrand} ${model.name} ${suffix}`.trim()
@@ -386,10 +424,13 @@ function generateDeals(count: number, models: InternalModel[]): InternalDeal[] {
         ? `${cardBrand} ${model.name}`.trim()
         : model.name;
 
-    deals.push({
+    const postalCode = String(10000 + Math.floor(random() * 90000));
+
+    ads.push({
       id: i + 1,
       ad_id: 30000000 + i,
       title,
+      description: `${title} en ${condition.toLowerCase()}. ${model.category} ${model.brand}. Prix négociable.`,
       price,
       fair_value: model.fair_value_30d,
       deviation_pct: deviationPct,
@@ -397,20 +438,111 @@ function generateDeals(count: number, models: InternalModel[]): InternalDeal[] {
       platform,
       city,
       region,
+      postal_code: postalCode,
       condition,
       category: model.category,
       model_name: model.name,
       model_id: model.id,
       item_type: 'component',
       delivery_possible: random() > 0.25,
+      secured_payment: random() > 0.3,
       published_at: pubDate.toISOString(),
-      publication_date: pubDate.toISOString(),
+      first_seen_at: firstSeen.toISOString(),
+      last_seen_at: new Date(Date.now() - Math.floor(random() * 2) * 86400000).toISOString(),
+      status: pick(statusOptions),
+      seller_type: pick(sellerTypes),
       url: `https://www.${platform}.fr/ad/${30000000 + i}`,
     });
   }
 
-  // Sort by score descending
-  return deals.sort((a, b) => b.score - a.score);
+  return ads;
+}
+
+// ============= Generate Deals from Ads =============
+function generateDeals(ads: InternalAd[]): InternalDeal[] {
+  return ads
+    .filter(ad => ad.score >= 60) // Only good deals
+    .sort((a, b) => b.score - a.score)
+    .map(ad => ({
+      id: ad.id,
+      ad_id: ad.ad_id,
+      title: ad.title,
+      price: ad.price,
+      fair_value: ad.fair_value,
+      deviation_pct: ad.deviation_pct,
+      score: ad.score,
+      platform: ad.platform,
+      city: ad.city,
+      region: ad.region,
+      condition: ad.condition,
+      category: ad.category,
+      model_name: ad.model_name,
+      model_id: ad.model_id,
+      item_type: ad.item_type,
+      delivery_possible: ad.delivery_possible,
+      published_at: ad.published_at,
+      publication_date: ad.published_at,
+      url: ad.url,
+    }));
+}
+
+// ============= Generate Price History for an Ad =============
+export function generateAdPriceHistory(adId: number, basePrice: number): InternalPricePoint[] {
+  const seedRandom = createSeededRandom(adId * 31);
+  const numPoints = 10 + Math.floor(seedRandom() * 20); // 10-30 points
+  const points: InternalPricePoint[] = [];
+  
+  let currentPrice = basePrice * (1.05 + seedRandom() * 0.15); // Start slightly higher
+  
+  for (let i = numPoints - 1; i >= 0; i--) {
+    const daysAgo = Math.floor(i * (30 / numPoints));
+    const date = new Date(Date.now() - daysAgo * 86400000);
+    
+    points.push({
+      date: date.toISOString(),
+      price: Math.round(currentPrice),
+    });
+    
+    // Random price change (mostly decreasing)
+    if (seedRandom() > 0.3) {
+      currentPrice = currentPrice * (0.96 + seedRandom() * 0.05);
+    }
+  }
+  
+  // Ensure last price matches basePrice approximately
+  if (points.length > 0) {
+    points[points.length - 1].price = basePrice;
+  }
+  
+  return points;
+}
+
+// ============= Generate Price History for a Model =============
+export function generateModelPriceHistory(modelId: number, days: number): { date: string; price_median: number; price_p25: number; price_p75: number; volume: number }[] {
+  const seedRandom = createSeededRandom(modelId * 17);
+  const basePrice = 200 + seedRandom() * 800;
+  const points: { date: string; price_median: number; price_p25: number; price_p75: number; volume: number }[] = [];
+  
+  let price = basePrice;
+  
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(Date.now() - i * 86400000);
+    const variance = seedRandom() * 0.08 - 0.04;
+    price = price * (1 + variance);
+    
+    const p25 = Math.round(price * 0.85);
+    const p75 = Math.round(price * 1.15);
+    
+    points.push({
+      date: date.toISOString().split('T')[0],
+      price_median: Math.round(price),
+      price_p25: p25,
+      price_p75: p75,
+      volume: Math.floor(20 + seedRandom() * 80),
+    });
+  }
+  
+  return points;
 }
 
 // ============= Generate Community Tasks =============
@@ -474,7 +606,8 @@ function generateCommunityTasks(count: number, models: InternalModel[]): Interna
 
 // ============= Pre-generated Deterministic Datasets =============
 export const MOCK_MODELS = generateModels();
-export const MOCK_DEALS = generateDeals(85, MOCK_MODELS);
+export const MOCK_ADS = generateAds(80, MOCK_MODELS); // 80 ads for detail views
+export const MOCK_DEALS = generateDeals(MOCK_ADS); // Deals derived from ads
 export const MOCK_COMMUNITY_TASKS = generateCommunityTasks(12, MOCK_MODELS);
 
 // ============= Derived Category/Brand Data =============

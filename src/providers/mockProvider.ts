@@ -78,13 +78,17 @@ import { trackEndpointCall } from "@/lib/debugTracker";
 import {
   MOCK_MODELS,
   MOCK_DEALS,
+  MOCK_ADS,
   MOCK_COMMUNITY_TASKS,
   MOCK_CATEGORIES,
   MOCK_BRANDS_BY_CATEGORY,
   MOCK_FAMILIES_BY_BRAND,
   getMockDataStats,
+  generateAdPriceHistory,
+  generateModelPriceHistory,
   type InternalModel,
   type InternalDeal,
+  type InternalAd,
   type InternalCommunityTask,
 } from "./mockDataset";
 
@@ -609,60 +613,79 @@ export const mockProvider: DataProvider = {
 
   // Model Detail
   async getModelDetail(modelId) {
+    track('getModelDetail');
     await delay();
-    const idx = parseInt(modelId) - 1;
-    const m = mockModels[idx % mockModels.length];
+    
+    // Parse ID and find model
+    const id = parseInt(modelId, 10);
+    const model = MOCK_MODELS.find(m => m.id === id);
+    
+    // Handle NotFound
+    if (!model) {
+      throw new Error('MODEL_NOT_FOUND');
+    }
+    
     const watchlist = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
-    const isInWatchlist = watchlist.some(w => w.target_type === 'model' && w.target_id === parseInt(modelId));
+    const isInWatchlist = watchlist.some(w => w.target_type === 'model' && w.target_id === id);
     
     return {
-      id: parseInt(modelId),
-      name: m.name,
-      brand: m.brand,
-      family: null,
-      category: m.category,
-      aliases: [],
-      specs: { vram_gb: 8, memory_type: 'GDDR6', tdp_w: 200 },
+      id: model.id,
+      name: model.name,
+      brand: model.brand,
+      family: model.family,
+      category: model.category,
+      aliases: model.aliases || [],
+      specs: { 
+        vram_gb: model.category === 'GPU' ? 8 + Math.floor(model.id % 4) * 4 : undefined, 
+        memory_type: model.category === 'GPU' ? 'GDDR6X' : undefined, 
+        tdp_w: model.category === 'GPU' ? 150 + (model.id % 10) * 20 : undefined 
+      },
       market: {
-        median_price: m.medianPrice,
-        price_p25: Math.round(m.medianPrice * 0.85),
-        price_p75: Math.round(m.medianPrice * 1.15),
-        var_7d_pct: m.priceChange7d,
-        var_30d_pct: m.priceChange30d,
-        var_90d_pct: m.priceChange30d * 1.5,
-        volume: m.volume,
-        ads_count: Math.floor(m.volume * 1.5),
-        median_days_to_sell: 5,
+        median_price: model.median_price,
+        price_p25: Math.round(model.median_price * 0.85),
+        price_p75: Math.round(model.median_price * 1.15),
+        var_7d_pct: model.var_7d_pct,
+        var_30d_pct: model.var_30d_pct,
+        var_90d_pct: model.var_30d_pct * 1.5,
+        volume: model.volume,
+        ads_count: model.ads_count,
+        median_days_to_sell: 3 + (model.id % 8),
       },
       is_in_watchlist: isInWatchlist,
     };
   },
   async getModelPriceHistory(modelId, period = '30') {
+    track('getModelPriceHistory');
     await delay();
-    const days = parseInt(period);
-    return Array.from({ length: days }, (_, i) => ({
-      date: new Date(Date.now() - (days - i) * 86400000).toISOString().split('T')[0],
-      price_median: 350 + Math.random() * 50 - 25,
-      price_p25: 300 + Math.random() * 30,
-      price_p75: 400 + Math.random() * 30,
-      volume: Math.floor(Math.random() * 50) + 20,
-    }));
+    const id = parseInt(modelId, 10);
+    const days = parseInt(period, 10);
+    return generateModelPriceHistory(id, days);
   },
   async getModelAds(modelId, page = 1, limit = 10) {
+    track('getModelAds');
     await delay();
-    const ads = mockAds.slice(0, 10).map((ad, i) => ({
-      id: i + 1,
-      title: ad.title,
-      price: ad.price,
-      condition: ad.condition,
-      city: ad.location,
-      platform: 'leboncoin',
-      url: '#',
-      published_at: ad.date,
-      score: ad.dealScore,
-      deviation_pct: Math.round((1 - ad.price / ad.fairValue) * 100),
-    }));
-    return { items: ads, total: ads.length, page, page_size: limit };
+    const id = parseInt(modelId, 10);
+    
+    // Find ads for this model
+    const modelAds = MOCK_ADS
+      .filter(ad => ad.model_id === id)
+      .map(ad => ({
+        id: ad.id,
+        title: ad.title,
+        price: ad.price,
+        condition: ad.condition,
+        city: ad.city,
+        platform: ad.platform,
+        url: ad.url,
+        published_at: ad.published_at,
+        score: ad.score,
+        deviation_pct: ad.deviation_pct,
+      }));
+    
+    const start = (page - 1) * limit;
+    const paged = modelAds.slice(start, start + limit);
+    
+    return { items: paged, total: modelAds.length, page, page_size: limit };
   },
   async toggleModelWatchlist(modelId, add) {
     await delay();
@@ -704,8 +727,16 @@ export const mockProvider: DataProvider = {
 
   // Ad Detail
   async getAdDetail(adId) {
+    track('getAdDetail');
     await delay();
-    const id = parseInt(adId);
+    
+    // Parse ID - support both string and number
+    const id = parseInt(String(adId), 10);
+    
+    if (isNaN(id)) {
+      throw new Error('AD_NOT_FOUND');
+    }
+    
     const watchlist = getFromStorage(STORAGE_KEYS.WATCHLIST, initialWatchlist);
     const isInWatchlist = watchlist.some(w => w.target_type === 'ad' && w.target_id === id);
 
@@ -760,48 +791,61 @@ export const mockProvider: DataProvider = {
       };
     }
 
-    // Regular component ad
-    const idx = (id - 1) % mockAds.length;
-    const ad = mockAds[idx];
+    // Find ad in MOCK_ADS by id
+    const ad = MOCK_ADS.find(a => a.id === id);
+    
+    // Handle NotFound
+    if (!ad) {
+      throw new Error('AD_NOT_FOUND');
+    }
 
     return {
-      id,
+      id: ad.id,
       title: ad.title,
-      description: 'Description détaillée de l\'annonce...',
+      description: ad.description,
       price: ad.price,
-      fair_value: ad.fairValue,
-      deviation_pct: Math.round((1 - ad.price / ad.fairValue) * 100),
-      score: ad.dealScore,
+      fair_value: ad.fair_value,
+      deviation_pct: ad.deviation_pct,
+      score: ad.score,
       condition: ad.condition,
-      city: ad.location,
+      city: ad.city,
       region: ad.region,
-      postal_code: '75015',
-      platform: 'leboncoin',
-      url: '#',
-      published_at: ad.date,
-      first_seen_at: ad.date,
-      last_seen_at: new Date().toISOString(),
-      status: 'active',
-      seller_type: ad.seller,
-      delivery_possible: ad.shipping,
-      secured_payment: true,
-      model: { id: 1, name: ad.model, brand: 'NVIDIA', category: ad.component },
+      postal_code: ad.postal_code,
+      platform: ad.platform,
+      url: ad.url,
+      published_at: ad.published_at,
+      first_seen_at: ad.first_seen_at,
+      last_seen_at: ad.last_seen_at,
+      status: ad.status,
+      seller_type: ad.seller_type,
+      delivery_possible: ad.delivery_possible,
+      secured_payment: ad.secured_payment,
+      model: ad.model_id ? { 
+        id: ad.model_id, 
+        name: ad.model_name, 
+        brand: MOCK_MODELS.find(m => m.id === ad.model_id)?.brand || 'Unknown', 
+        category: ad.category 
+      } : null,
       components: [],
       images: [],
       is_in_watchlist: isInWatchlist,
-      item_type: 'component' as const,
+      item_type: ad.item_type,
     };
   },
   async getAdPriceHistory(adId) {
+    track('getAdPriceHistory');
     await delay();
-    const ad = mockAds[parseInt(adId) % mockAds.length];
-    return {
-      points: ad.priceHistory || [
-        { date: new Date(Date.now() - 14 * 86400000).toISOString(), price: ad.price + 30 },
-        { date: new Date(Date.now() - 7 * 86400000).toISOString(), price: ad.price + 15 },
-        { date: new Date().toISOString(), price: ad.price },
-      ],
-    };
+    
+    const id = parseInt(String(adId), 10);
+    const ad = MOCK_ADS.find(a => a.id === id);
+    
+    // If not found, return empty points
+    if (!ad) {
+      return { points: [] };
+    }
+    
+    const points = generateAdPriceHistory(id, ad.price);
+    return { points };
   },
 
   // Estimator

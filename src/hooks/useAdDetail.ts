@@ -1,86 +1,68 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch, apiPost } from "@/lib/api";
-
-export interface AdComponent {
-  role: string;
-  model_id: number | null;
-  model_name: string;
-  brand: string;
-  category: string;
-}
-
-export interface AdPricePoint {
-  id: number;
-  price: number;
-  seen_at: string;
-  price_drop: boolean;
-}
-
-export interface AdDetail {
-  id: number;
-  ad_id: number;
-  platform: string;
-  platform_ad_id: string;
-  url: string;
-  title: string;
-  description: string | null;
-  price: number;
-  condition: string | null;
-  category: string | null;
-  subcategory: string | null;
-  city: string | null;
-  postal_code: string | null;
-  region: string | null;
-  delivery_possible: boolean;
-  secured_payment: boolean;
-  published_at: string | null;
-  first_seen_at: string;
-  last_seen_at: string;
-  status: string;
-  item_type: 'component' | 'pc' | 'lot';
-  model_id: number | null;
-  model_name: string | null;
-  model_confidence: number | null;
-  // Deal score info
-  score: number | null;
-  fair_value: number | null;
-  deviation_pct: number | null;
-  // Components for PC/lot
-  components: AdComponent[] | null;
-}
-
-export interface AdPriceHistory {
-  items: AdPricePoint[];
-  current_price: number;
-  initial_price: number;
-  price_drops_count: number;
-}
+import { useDataProvider } from "@/providers";
 
 export function useAdDetail(adId: string | undefined) {
+  const provider = useDataProvider();
+  
   return useQuery({
     queryKey: ['ad-detail', adId],
-    queryFn: () => apiFetch<AdDetail>(`/v1/ads/${adId}`),
+    queryFn: async () => {
+      if (!adId) throw new Error('No adId provided');
+      const ad = await provider.getAdDetail(adId);
+      // Transform to UI expected format
+      return {
+        ...ad,
+        ad_id: ad.id,
+        platform_ad_id: `AD-${ad.id}`,
+        category: ad.model?.category || 'Unknown',
+        model_id: ad.model?.id || null,
+        model_name: ad.model?.name || null,
+        model_confidence: 0.95,
+        components: ad.components?.map(c => ({
+          role: c.type,
+          model_id: null,
+          model_name: c.model,
+          brand: c.brand,
+          category: c.type,
+        })) || [],
+      };
+    },
     enabled: !!adId,
+    retry: false,
   });
 }
 
 export function useAdPriceHistory(adId: string | undefined) {
+  const provider = useDataProvider();
+  
   return useQuery({
     queryKey: ['ad-price-history', adId],
-    queryFn: () => apiFetch<AdPriceHistory>(`/v1/ads/${adId}/prices`),
+    queryFn: async () => {
+      if (!adId) throw new Error('No adId provided');
+      const result = await provider.getAdPriceHistory(adId);
+      return {
+        items: result.points.map((p, i) => ({
+          id: i + 1,
+          price: p.price,
+          seen_at: p.date,
+          price_drop: i > 0 ? result.points[i-1].price > p.price : false,
+        })),
+        current_price: result.points.length > 0 ? result.points[result.points.length - 1].price : 0,
+        initial_price: result.points.length > 0 ? result.points[0].price : 0,
+        price_drops_count: result.points.filter((p, i) => i > 0 && result.points[i-1].price > p.price).length,
+      };
+    },
     enabled: !!adId,
   });
 }
 
 export function useAddAdToWatchlist() {
+  const provider = useDataProvider();
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async (adId: number) => {
-      return apiPost('/v1/watchlist', {
-        target_type: 'ad',
-        target_id: adId,
-      });
+      return provider.addToWatchlist({ target_type: 'ad', target_id: adId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] });
@@ -88,19 +70,18 @@ export function useAddAdToWatchlist() {
   });
 }
 
-export interface CreateAlertPayload {
-  target_type: 'ad' | 'model';
-  target_id: number;
-  alert_type: 'deal_detected' | 'price_below';
-  price_threshold?: number;
-}
-
 export function useCreateAdAlert() {
+  const provider = useDataProvider();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: CreateAlertPayload) => {
-      return apiPost('/v1/alerts', data);
+    mutationFn: async (data: { target_type: 'ad' | 'model'; target_id: number; alert_type: string; price_threshold?: number }) => {
+      return provider.createAlert({
+        target_type: data.target_type,
+        target_id: data.target_id,
+        alert_type: data.alert_type as 'price_drop' | 'price_threshold' | 'availability',
+        threshold_value: data.price_threshold,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
