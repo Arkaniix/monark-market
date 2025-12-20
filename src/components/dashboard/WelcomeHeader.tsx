@@ -99,10 +99,10 @@ export function WelcomeHeader({
                   Lancer un scrap
                 </div>
               </Button>
-              <Link to="/trends">
+              <Link to="/tracking">
                 <Button variant="outline" size="lg" className="gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Mes tendances
+                  Mon suivi
                 </Button>
               </Link>
               <Link to="/catalog">

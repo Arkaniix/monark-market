@@ -336,12 +336,12 @@ export default function Training() {
           <Card className="hover-scale cursor-pointer">
             <CardHeader>
               <TrendingUp className="h-8 w-8 text-primary mb-2" />
-              <CardTitle className="text-lg">Explorer les Tendances</CardTitle>
-              <CardDescription>Analyse du marché hardware</CardDescription>
+              <CardTitle className="text-lg">Mon suivi</CardTitle>
+              <CardDescription>Watchlist et alertes</CardDescription>
             </CardHeader>
             <CardContent>
               <Button variant="ghost" size="sm" className="w-full" asChild>
-                <Link to="/trends">
+                <Link to="/tracking">
                   Accéder
                   <ArrowRight className="ml-2 h-3 w-3" />
                 </Link>

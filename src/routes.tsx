@@ -22,8 +22,8 @@ import LegalNotice from "./pages/LegalNotice";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
 
-// Composant de redirection pour compatibilité
-const TrendsRedirect = () => <Navigate to="/tracking" replace />;
+// Redirection legacy /trends vers /
+const TrendsRedirect = () => <Navigate to="/" replace />;
 
 export interface RouteConfig {
   path: string;
@@ -82,11 +82,11 @@ export const routes: RouteConfig[] = [
     component: Tracking,
     requiresAuth: true,
   },
-  // Redirection de compatibilité /trends -> /tracking
+  // Redirection legacy /trends -> / (tendances sur Home)
   {
     path: "/trends",
     component: TrendsRedirect,
-    requiresAuth: true,
+    requiresAuth: false,
   },
   {
     path: "/catalog",
