@@ -62,6 +62,8 @@ export function useAlerts() {
   return useQuery({
     queryKey: ["alerts"],
     queryFn: () => provider.getAlerts(),
+    enabled: true,
+    retry: 1,
   });
 }
 

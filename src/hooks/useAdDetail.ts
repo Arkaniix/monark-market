@@ -79,8 +79,8 @@ export function useCreateAdAlert() {
       return provider.createAlert({
         target_type: data.target_type,
         target_id: data.target_id,
-        alert_type: data.alert_type as 'price_drop' | 'price_threshold' | 'availability',
-        threshold_value: data.price_threshold,
+        alert_type: data.alert_type as 'deal_detected' | 'price_below' | 'price_above',
+        price_threshold: data.price_threshold,
       });
     },
     onSuccess: () => {
