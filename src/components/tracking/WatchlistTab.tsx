@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Eye, Plus, Trash2, ExternalLink, TrendingDown, TrendingUp, Bell, Search, Filter, ChevronLeft, ChevronRight, Package, Tag, DollarSign, Percent, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { Eye, Plus, Search, Filter, ChevronLeft, ChevronRight, Package, Tag, DollarSign, TrendingDown, TrendingUp, ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,58 +12,16 @@ import { useRemoveFromWatchlist } from "@/hooks/useWatchlist";
 import { useDataProvider } from "@/providers";
 import { useToast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
+import { WatchlistItemCard } from "./WatchlistItemCard";
 import type { WatchlistEntry, PriceHistoryPoint } from "@/providers/types";
-import {
-  LineChart,
-  Line,
-  ResponsiveContainer,
-  YAxis,
-  XAxis,
-  Tooltip,
-  Area,
-  AreaChart,
-  CartesianGrid,
-} from "recharts";
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 6;
 
 interface WatchlistTabProps {
   watchlist: WatchlistEntry[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
-}
-
-// Sparkline component
-function PriceSparkline({ data, isLoading }: { data: { price: number }[]; isLoading: boolean }) {
-  if (isLoading) {
-    return <Skeleton className="h-8 w-24" />;
-  }
-
-  if (!data || data.length < 2) {
-    return <div className="h-8 w-24 flex items-center justify-center text-xs text-muted-foreground">—</div>;
-  }
-
-  const firstPrice = data[0]?.price || 0;
-  const lastPrice = data[data.length - 1]?.price || 0;
-  const isUp = lastPrice > firstPrice;
-
-  return (
-    <div className="h-8 w-24">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <YAxis domain={['dataMin', 'dataMax']} hide />
-          <Line
-            type="monotone"
-            dataKey="price"
-            stroke={isUp ? "hsl(0, 84%, 60%)" : "hsl(142, 76%, 36%)"}
-            strokeWidth={1.5}
-            dot={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
 }
 
 // Portfolio Overview Card - Valeur totale et économies potentielles
@@ -244,88 +202,18 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
     setAlertModalOpen(true);
   };
 
-  // Item component
-  const WatchlistItem = ({ item, isModel }: { item: WatchlistEntry; isModel: boolean }) => (
-    <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors group">
-      <div className="flex items-center gap-4 flex-1 min-w-0">
-        {/* Icône type */}
-        <div className={`p-2 rounded-lg flex-shrink-0 ${isModel ? 'bg-blue-500/10' : 'bg-purple-500/10'}`}>
-          {isModel ? <Package className="h-4 w-4 text-blue-500" /> : <Tag className="h-4 w-4 text-purple-500" />}
-        </div>
-
-        {/* Infos principales */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <Link 
-              to={isModel ? `/catalog/${item.target_id}` : `/ad/${item.target_id}`} 
-              className="font-medium hover:text-primary truncate"
-            >
-              {item.name || `${item.brand || 'Inconnu'} #${item.target_id}`}
-            </Link>
-            {item.category && <Badge variant="outline" className="text-xs">{item.category}</Badge>}
-            {item.brand && <span className="text-xs text-muted-foreground">{item.brand}</span>}
-          </div>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-            {item.current_price && (
-              <span className="flex items-center gap-1">
-                <span className="font-medium text-foreground">{formatPrice(item.current_price)}</span>
-              </span>
-            )}
-            {item.fair_value && item.fair_value !== item.current_price && (
-              <span className="text-xs">
-                Juste prix : {formatPrice(item.fair_value)}
-              </span>
-            )}
-            {item.price_change_7d !== undefined && item.price_change_7d !== 0 && (
-              <span className={`flex items-center gap-1 ${item.price_change_7d < 0 ? "text-green-500" : "text-red-500"}`}>
-                {item.price_change_7d < 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                {item.price_change_7d > 0 ? "+" : ""}{item.price_change_7d.toFixed(1)}%
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Sparkline (modèles uniquement) */}
-        {isModel && (
-          <div className="hidden md:block">
-            <PriceSparkline 
-              data={priceHistories[item.target_id] || []} 
-              isLoading={loadingHistories.has(item.target_id)} 
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-1 ml-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={() => openAlertModal(item)}
-          title="Créer une alerte"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="hidden lg:inline">Alerte</span>
-        </Button>
-        <Link to={isModel ? `/catalog/${item.target_id}` : `/ad/${item.target_id}`}>
-          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity" title="Voir">
-            <ExternalLink className="h-4 w-4" />
-          </Button>
-        </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => removeFromWatchlist.mutate(item.id)}
-          disabled={removeFromWatchlist.isPending}
-          title="Retirer"
-          className="text-destructive hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
+  const { toast } = useToast();
+  
+  const handleRemove = (item: WatchlistEntry) => {
+    removeFromWatchlist.mutate(item.id, {
+      onSuccess: () => {
+        toast({
+          title: "Retiré de la watchlist",
+          description: `${item.name || 'Élément'} a été retiré de votre watchlist.`,
+        });
+      }
+    });
+  };
 
   // Skeleton
   const ListSkeleton = () => (
@@ -449,9 +337,18 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
                     <h3 className="font-semibold">Modèles suivis</h3>
                     <Badge variant="secondary">{filteredModels.length}</Badge>
                   </div>
-                  <div className="space-y-2">
+                  <div className="grid gap-4 md:grid-cols-2">
                     {filteredModels.map(item => (
-                      <WatchlistItem key={item.id} item={item} isModel={true} />
+                      <WatchlistItemCard 
+                        key={item.id} 
+                        item={item} 
+                        isModel={true}
+                        priceHistory={priceHistories[item.target_id] || []}
+                        isLoadingHistory={loadingHistories.has(item.target_id)}
+                        onCreateAlert={() => openAlertModal(item)}
+                        onRemove={() => handleRemove(item)}
+                        isRemoving={removeFromWatchlist.isPending}
+                      />
                     ))}
                   </div>
                 </div>
@@ -465,9 +362,18 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
                     <h3 className="font-semibold">Annonces suivies</h3>
                     <Badge variant="secondary">{filteredAds.length}</Badge>
                   </div>
-                  <div className="space-y-2">
+                  <div className="grid gap-4 md:grid-cols-2">
                     {filteredAds.map(item => (
-                      <WatchlistItem key={item.id} item={item} isModel={false} />
+                      <WatchlistItemCard 
+                        key={item.id} 
+                        item={item} 
+                        isModel={false}
+                        priceHistory={[]}
+                        isLoadingHistory={false}
+                        onCreateAlert={() => openAlertModal(item)}
+                        onRemove={() => handleRemove(item)}
+                        isRemoving={removeFromWatchlist.isPending}
+                      />
                     ))}
                   </div>
                 </div>
