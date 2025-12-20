@@ -25,17 +25,44 @@ interface AlertsTabProps {
 
 const ITEMS_PER_PAGE = 5;
 
-// Mock des alertes déclenchées sur 30 jours
-const generateTriggeredAlertsData = () => {
-  const data = [];
-  for (let i = 29; i >= 0; i--) {
-    const date = subDays(new Date(), i);
-    data.push({
-      date: format(date, 'dd/MM'),
-      triggered: Math.floor(Math.random() * 8) + (i < 7 ? 2 : 0),
-    });
-  }
-  return data;
+// Analyse des alertes pour générer des métriques utiles
+const analyzeAlerts = (alerts: AlertType[]) => {
+  const activeAlerts = alerts.filter(a => a.is_active);
+  const inactiveAlerts = alerts.filter(a => !a.is_active);
+  
+  // Répartition par type
+  const byType = alerts.reduce((acc, alert) => {
+    acc[alert.alert_type] = (acc[alert.alert_type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // Répartition par cible
+  const modelAlerts = alerts.filter(a => a.target_type === 'model');
+  const adAlerts = alerts.filter(a => a.target_type === 'ad');
+  
+  // Alertes avec seuils de prix
+  const priceAlerts = alerts.filter(a => a.price_threshold);
+  const avgThreshold = priceAlerts.length > 0 
+    ? priceAlerts.reduce((sum, a) => sum + (a.price_threshold || 0), 0) / priceAlerts.length 
+    : 0;
+  
+  // Alertes créées récemment (7 derniers jours)
+  const recentAlerts = alerts.filter(a => {
+    const createdAt = new Date(a.created_at);
+    const weekAgo = subDays(new Date(), 7);
+    return createdAt >= weekAgo;
+  });
+
+  return {
+    total: alerts.length,
+    active: activeAlerts.length,
+    inactive: inactiveAlerts.length,
+    byType,
+    modelAlerts: modelAlerts.length,
+    adAlerts: adAlerts.length,
+    avgThreshold,
+    recentAlerts: recentAlerts.length,
+  };
 };
 
 export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps) {
@@ -54,9 +81,8 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
   const updateAlert = useUpdateAlert();
   const deleteAlert = useDeleteAlert();
   
-  // Données graphique
-  const triggeredAlertsData = useMemo(() => generateTriggeredAlertsData(), []);
-  const totalTriggered30d = triggeredAlertsData.reduce((sum, d) => sum + d.triggered, 0);
+  // Analyse des alertes
+  const alertStats = useMemo(() => analyzeAlerts(alerts), [alerts]);
 
   // Filtrage
   const filteredAlerts = useMemo(() => {
@@ -230,60 +256,68 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
 
   return (
     <div className="space-y-6">
-      {/* Graphique alertes déclenchées */}
-      <Card>
+      {/* Dashboard alertes - Statistiques réelles */}
+      <Card className="bg-gradient-to-br from-amber-500/5 via-transparent to-transparent border-amber-500/20">
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-amber-500" />
-                Alertes déclenchées
-              </CardTitle>
-              <CardDescription>Sur les 30 derniers jours</CardDescription>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold">{totalTriggered30d}</p>
-              <p className="text-xs text-muted-foreground">alertes déclenchées</p>
-            </div>
-          </div>
+          <CardTitle className="text-base flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-amber-500" />
+            Vue d'ensemble de vos alertes
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[120px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={triggeredAlertsData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 10 }} 
-                  tickLine={false}
-                  axisLine={false}
-                  interval={4}
-                  className="text-muted-foreground"
-                />
-                <YAxis 
-                  tick={{ fontSize: 10 }} 
-                  tickLine={false}
-                  axisLine={false}
-                  width={25}
-                  className="text-muted-foreground"
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--popover))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }}
-                  formatter={(value: number) => [`${value} alertes`, '']}
-                />
-                <Bar 
-                  dataKey="triggered" 
-                  fill="hsl(var(--primary))" 
-                  radius={[2, 2, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Alertes actives */}
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Alertes actives</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-2xl font-bold text-green-500">{alertStats.active}</p>
+                <p className="text-sm text-muted-foreground">/ {alertStats.total}</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {alertStats.inactive > 0 ? `${alertStats.inactive} inactive${alertStats.inactive > 1 ? 's' : ''}` : 'Toutes actives'}
+              </p>
+            </div>
+
+            {/* Répartition cibles */}
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Cibles surveillées</p>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <Target className="h-3 w-3 text-blue-500" />
+                  <span className="font-bold">{alertStats.modelAlerts}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Package className="h-3 w-3 text-purple-500" />
+                  <span className="font-bold">{alertStats.adAlerts}</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">modèles / annonces</p>
+            </div>
+
+            {/* Seuil moyen */}
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Seuil prix moyen</p>
+              <p className="text-xl font-bold">
+                {alertStats.avgThreshold > 0 ? formatPrice(alertStats.avgThreshold) : '—'}
+              </p>
+              <p className="text-xs text-muted-foreground">sur les alertes prix</p>
+            </div>
+
+            {/* Types d'alertes */}
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Types configurés</p>
+              <div className="flex flex-wrap gap-1">
+                {Object.entries(alertStats.byType).slice(0, 3).map(([type, count]) => (
+                  <Badge key={type} variant="outline" className="text-xs gap-1">
+                    {getAlertIcon(type)}
+                    {count}
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {alertStats.recentAlerts > 0 ? `+${alertStats.recentAlerts} cette semaine` : 'Aucune récente'}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
