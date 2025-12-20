@@ -427,14 +427,20 @@ export default function Catalog() {
 
                         {/* Actions */}
                         <div className="flex gap-2 pt-2">
-                          <Button className="flex-1" size="sm" asChild>
-                            <Link to={`/models/${model.id}`}>Voir détails</Link>
-                          </Button>
+                          {model.id ? (
+                            <Button className="flex-1" size="sm" asChild>
+                              <Link to={`/models/${model.id}`}>Voir détails</Link>
+                            </Button>
+                          ) : (
+                            <Button className="flex-1" size="sm" disabled>
+                              Voir détails
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleAddToWatchlist(model.id, model.name)}
-                            disabled={addToWatchlist.isPending}
+                            disabled={addToWatchlist.isPending || !model.id}
                           >
                             <Heart className="h-4 w-4" />
                           </Button>

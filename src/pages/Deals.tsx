@@ -488,22 +488,30 @@ export default function Deals() {
                             </div>
 
                             <div className="flex gap-2">
-                              <Button className="flex-1" variant="default" size="sm" asChild>
-                                <Link to={`/ads/${deal.ad_id}`}>Voir annonce</Link>
-                              </Button>
+                              {deal.id ? (
+                                <Button className="flex-1" variant="default" size="sm" asChild>
+                                  <Link to={`/ads/${deal.id}`}>Voir annonce</Link>
+                                </Button>
+                              ) : (
+                                <Button className="flex-1" variant="default" size="sm" disabled>
+                                  Voir annonce
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleAddToWatchlist(deal.ad_id, deal.title)}
-                                disabled={addToWatchlist.isPending}
+                                onClick={() => handleAddToWatchlist(deal.id, deal.title)}
+                                disabled={addToWatchlist.isPending || !deal.id}
                               >
                                 <Heart className="h-4 w-4" />
                               </Button>
-                              <Button variant="outline" size="sm" asChild>
-                                <a href={deal.url} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
-                              </Button>
+                              {deal.url && (
+                                <Button variant="outline" size="sm" asChild>
+                                  <a href={deal.url} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="h-4 w-4" />
+                                  </a>
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </CardContent>
