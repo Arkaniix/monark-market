@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Eye, Plus, Trash2, ExternalLink, TrendingDown, TrendingUp, Bell, Search, Filter, ChevronLeft, ChevronRight, Package, Tag } from "lucide-react";
+import { Eye, Plus, Trash2, ExternalLink, TrendingDown, TrendingUp, Bell, Search, Filter, ChevronLeft, ChevronRight, Package, Tag, DollarSign, Percent, ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,11 @@ import {
   Line,
   ResponsiveContainer,
   YAxis,
+  XAxis,
+  Tooltip,
+  Area,
+  AreaChart,
+  CartesianGrid,
 } from "recharts";
 
 const ITEMS_PER_PAGE = 5;
@@ -58,6 +63,89 @@ function PriceSparkline({ data, isLoading }: { data: { price: number }[]; isLoad
         </LineChart>
       </ResponsiveContainer>
     </div>
+  );
+}
+
+// Portfolio Overview Card - Valeur totale et économies potentielles
+function WatchlistPortfolioCard({ watchlist }: { watchlist: WatchlistEntry[] }) {
+  const models = watchlist.filter(item => item.target_type === 'model');
+  
+  // Calculer les métriques réelles
+  const totalCurrentValue = models.reduce((sum, item) => sum + (item.current_price || 0), 0);
+  const totalFairValue = models.reduce((sum, item) => sum + (item.fair_value || item.current_price || 0), 0);
+  const potentialSavings = totalFairValue - totalCurrentValue;
+  
+  const itemsWithDrops = models.filter(item => (item.price_change_7d || 0) < 0);
+  const itemsWithRises = models.filter(item => (item.price_change_7d || 0) > 0);
+  const avgVariation = models.length > 0 
+    ? models.reduce((sum, item) => sum + (item.price_change_7d || 0), 0) / models.length 
+    : 0;
+
+  const formatPrice = (price: number) => 
+    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price);
+
+  if (models.length === 0) return null;
+
+  return (
+    <Card className="mb-6 bg-gradient-to-br from-primary/5 via-transparent to-transparent border-primary/20">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-primary" />
+          Résumé de votre watchlist
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Valeur totale surveillée */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Valeur totale surveillée</p>
+            <p className="text-xl font-bold">{formatPrice(totalCurrentValue)}</p>
+            <p className="text-xs text-muted-foreground">{models.length} modèle{models.length > 1 ? 's' : ''}</p>
+          </div>
+
+          {/* Économies potentielles */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Économies potentielles</p>
+            <p className={`text-xl font-bold ${potentialSavings > 0 ? 'text-green-500' : potentialSavings < 0 ? 'text-red-500' : ''}`}>
+              {potentialSavings > 0 ? '+' : ''}{formatPrice(potentialSavings)}
+            </p>
+            <p className="text-xs text-muted-foreground">vs juste prix estimé</p>
+          </div>
+
+          {/* Tendance 7j */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Tendance 7 jours</p>
+            <div className="flex items-center gap-2">
+              {avgVariation < 0 ? (
+                <ArrowDownRight className="h-5 w-5 text-green-500" />
+              ) : avgVariation > 0 ? (
+                <ArrowUpRight className="h-5 w-5 text-red-500" />
+              ) : null}
+              <p className={`text-xl font-bold ${avgVariation < 0 ? 'text-green-500' : avgVariation > 0 ? 'text-red-500' : ''}`}>
+                {avgVariation > 0 ? '+' : ''}{avgVariation.toFixed(1)}%
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">variation moyenne</p>
+          </div>
+
+          {/* Mouvements */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Mouvements 7j</p>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 text-green-500">
+                <TrendingDown className="h-4 w-4" />
+                <span className="font-bold">{itemsWithDrops.length}</span>
+              </div>
+              <div className="flex items-center gap-1 text-red-500">
+                <TrendingUp className="h-4 w-4" />
+                <span className="font-bold">{itemsWithRises.length}</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">baisses / hausses</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -297,6 +385,9 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
 
   return (
     <>
+      {/* Dashboard résumé */}
+      <WatchlistPortfolioCard watchlist={watchlist} />
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
