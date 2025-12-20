@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Bell, Eye, Radar, Plus, Trash2, ExternalLink, TrendingDown, TrendingUp, Search, Filter, ChevronLeft, ChevronRight, RefreshCw, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { Bell, Eye, Radar, Plus, Trash2, ExternalLink, ChevronLeft, ChevronRight, RefreshCw, AlertCircle, CheckCircle2, Clock, TrendingDown, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWatchlist } from "@/hooks/useWatchlist";
-import { useAlerts, useDeleteAlert, useUpdateAlert } from "@/hooks/useProviderData";
+import { useAlerts } from "@/hooks/useProviderData";
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from "@/hooks/useNotifications";
 import { TrackingSkeleton } from "@/components/tracking/TrackingSkeleton";
 import { WatchlistTab } from "@/components/tracking/WatchlistTab";
+import { AlertsTab } from "@/components/tracking/AlertsTab";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -21,11 +22,7 @@ const ITEMS_PER_PAGE = 5;
 export default function Tracking() {
   const [activeTab, setActiveTab] = useState("watchlist");
   
-  // Filtres et pagination pour alertes et notifications
-  const [alertsFilter, setAlertsFilter] = useState<string>("all");
-  const [alertsType, setAlertsType] = useState<string>("all");
-  const [alertsPage, setAlertsPage] = useState(1);
-  
+  // Filtres et pagination pour notifications
   const [notificationsFilter, setNotificationsFilter] = useState<string>("all");
   const [notificationsPage, setNotificationsPage] = useState(1);
 
@@ -35,8 +32,6 @@ export default function Tracking() {
   const { data: notificationsData, isLoading: notificationsLoading, error: notificationsError, refetch: refetchNotifications } = useNotifications();
 
   // Mutations
-  const deleteAlert = useDeleteAlert();
-  const updateAlert = useUpdateAlert();
   const markNotificationRead = useMarkNotificationRead();
   const markAllNotificationsRead = useMarkAllNotificationsRead();
   const deleteNotification = useDeleteNotification();
@@ -44,25 +39,6 @@ export default function Tracking() {
   const watchlist = watchlistData?.items ?? [];
   const alerts = alertsData?.items ?? [];
   const notifications = notificationsData?.items ?? [];
-
-  // Filtrage alertes
-  const filteredAlerts = useMemo(() => {
-    return alerts.filter(alert => {
-      const matchesStatus = alertsFilter === "all" || 
-        (alertsFilter === "active" && alert.is_active) ||
-        (alertsFilter === "inactive" && !alert.is_active);
-      const matchesType = alertsType === "all" || alert.alert_type === alertsType;
-      return matchesStatus && matchesType;
-    });
-  }, [alerts, alertsFilter, alertsType]);
-
-  const paginatedAlerts = useMemo(() => {
-    const start = (alertsPage - 1) * ITEMS_PER_PAGE;
-    return filteredAlerts.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredAlerts, alertsPage]);
-
-  const alertsTotalPages = Math.ceil(filteredAlerts.length / ITEMS_PER_PAGE);
-
   // Filtrage notifications
   const filteredNotifications = useMemo(() => {
     return notifications.filter(notif => {
@@ -298,167 +274,12 @@ export default function Tracking() {
 
           {/* ============= ALERTS TAB ============= */}
           <TabsContent value="alerts">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Bell className="h-5 w-5 text-amber-500" />
-                      Mes alertes
-                      <Badge variant="outline">{filteredAlerts.length}</Badge>
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      Soyez notifié quand les conditions de vos alertes sont remplies
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="icon" onClick={() => refetchAlerts()}>
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                    <Link to="/catalog">
-                      <Button size="sm" className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Créer
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Filtres */}
-                <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                  <Select value={alertsFilter} onValueChange={(v) => { setAlertsFilter(v); setAlertsPage(1); }}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                      <SelectValue placeholder="Statut" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les statuts</SelectItem>
-                      <SelectItem value="active">Actives uniquement</SelectItem>
-                      <SelectItem value="inactive">Inactives uniquement</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={alertsType} onValueChange={(v) => { setAlertsType(v); setAlertsPage(1); }}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                      <SelectValue placeholder="Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les types</SelectItem>
-                      <SelectItem value="deal_detected">Bonne affaire</SelectItem>
-                      <SelectItem value="price_below">Prix en-dessous</SelectItem>
-                      <SelectItem value="price_above">Prix au-dessus</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {alertsLoading ? (
-                  <ListSkeleton />
-                ) : alertsError ? (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Erreur</AlertTitle>
-                    <AlertDescription>
-                      Impossible de charger les alertes.
-                      <Button variant="link" className="p-0 ml-2" onClick={() => refetchAlerts()}>
-                        Réessayer
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                ) : filteredAlerts.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 mb-4">
-                      <Bell className="h-8 w-8 text-amber-500" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      {alerts.length === 0 ? "Aucune alerte configurée" : "Aucun résultat"}
-                    </h3>
-                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                      {alerts.length === 0 
-                        ? "Créez des alertes pour être notifié quand un modèle atteint votre prix cible ou qu'une bonne affaire apparaît." 
-                        : "Aucune alerte ne correspond à vos critères."}
-                    </p>
-                    {alerts.length === 0 ? (
-                      <Link to="/catalog">
-                        <Button className="gap-2">
-                          <Plus className="h-4 w-4" />
-                          Créer une alerte
-                        </Button>
-                      </Link>
-                    ) : (
-                      <Button variant="outline" onClick={() => { setAlertsFilter("all"); setAlertsType("all"); }}>
-                        Réinitialiser les filtres
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-3">
-                      {paginatedAlerts.map((alert) => (
-                        <div
-                          key={alert.id}
-                          className={`flex items-center justify-between p-4 rounded-lg border transition-colors group ${
-                            alert.is_active ? 'bg-card hover:bg-muted/50' : 'bg-muted/30'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className={`p-2 rounded-lg ${alert.is_active ? 'bg-amber-500/10' : 'bg-muted'}`}>
-                              {getAlertIcon(alert.alert_type)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <span className={`font-medium truncate ${!alert.is_active && 'text-muted-foreground'}`}>
-                                  {alert.target_name || `Modèle #${alert.target_id}`}
-                                </span>
-                                <Badge variant={alert.is_active ? "default" : "secondary"}>
-                                  {alert.is_active ? "Active" : "Inactive"}
-                                </Badge>
-                                <Badge variant="outline">{getAlertLabel(alert.alert_type)}</Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                {alert.alert_type === 'price_below' && `Notifier si prix < ${formatPrice(alert.price_threshold || 0)}`}
-                                {alert.alert_type === 'price_above' && `Notifier si prix > ${formatPrice(alert.price_threshold || 0)}`}
-                                {alert.alert_type === 'deal_detected' && 'Notifier pour les bonnes affaires'}
-                                {alert.current_price && ` • Prix actuel : ${formatPrice(alert.current_price)}`}
-                              </p>
-                              {alert.last_triggered_at && (
-                                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  Dernière notification : {formatDistanceToNow(new Date(alert.last_triggered_at), { addSuffix: true, locale: fr })}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => updateAlert.mutate({ id: alert.id, data: { is_active: !alert.is_active } })}
-                              disabled={updateAlert.isPending}
-                            >
-                              {alert.is_active ? "Désactiver" : "Activer"}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteAlert.mutate(alert.id)}
-                              disabled={deleteAlert.isPending}
-                              title="Supprimer l'alerte"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <Pagination
-                      currentPage={alertsPage}
-                      totalPages={alertsTotalPages}
-                      onPageChange={setAlertsPage}
-                      totalItems={filteredAlerts.length}
-                    />
-                  </>
-                )}
-              </CardContent>
-            </Card>
+            <AlertsTab
+              alerts={alerts}
+              isLoading={alertsLoading}
+              error={alertsError as Error | null}
+              refetch={refetchAlerts}
+            />
           </TabsContent>
 
           {/* ============= NOTIFICATIONS TAB ============= */}
