@@ -35,3 +35,16 @@ export {
   useUserJobs,
   useUserCredits,
 } from "./useProviderData";
+
+// Entitlements - single source of truth for user permissions
+export {
+  useEntitlements,
+  useCanCreateAlert,
+  useCanScrap,
+  useCanAddToWatchlist,
+  useCanExport,
+  type PlanType,
+  type ScrapType,
+  type PlanLimits,
+  type Entitlements,
+} from "./useEntitlements";
