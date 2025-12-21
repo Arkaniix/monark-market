@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Bell, Eye, Radar } from "lucide-react";
+import { Bell, Eye, Radar, Crown, Infinity, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useAlerts } from "@/hooks/useProviderData";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { TrackingSkeleton } from "@/components/tracking/TrackingSkeleton";
 import { WatchlistTab } from "@/components/tracking/WatchlistTab";
 import { AlertsTab } from "@/components/tracking/AlertsTab";
@@ -18,6 +21,12 @@ export default function Tracking() {
   const { data: watchlistData, isLoading: watchlistLoading, error: watchlistError, refetch: refetchWatchlist } = useWatchlist();
   const { data: alertsData, isLoading: alertsLoading, error: alertsError, refetch: refetchAlerts } = useAlerts();
   const { data: notificationsData, isLoading: notificationsLoading, error: notificationsError, refetch: refetchNotifications } = useNotifications();
+  
+  // Entitlements pour les limites
+  const { plan, limits, helpers } = useEntitlements();
+  const activeAlertsCount = helpers.getActiveAlertsCount();
+  const maxAlerts = limits.maxAlerts;
+  const alertsLimitReached = activeAlertsCount >= maxAlerts;
 
   const watchlist = watchlistData?.items ?? [];
   const alerts = alertsData?.items ?? [];
@@ -47,9 +56,16 @@ export default function Tracking() {
           </p>
         </div>
 
-        {/* Stats rapides */}
+        {/* Stats rapides avec indication des limites */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setActiveTab("watchlist")}>
+          {/* Watchlist - Gratuit & Illimité */}
+          <Card className="cursor-pointer hover:border-primary/50 transition-colors relative overflow-hidden" onClick={() => setActiveTab("watchlist")}>
+            <div className="absolute top-2 right-2 flex gap-1">
+              <Badge variant="secondary" className="text-[10px] bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
+                <Infinity className="h-3 w-3 mr-0.5" />
+                Illimité
+              </Badge>
+            </div>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-500/10">
@@ -62,19 +78,47 @@ export default function Tracking() {
               </div>
             </CardContent>
           </Card>
-          <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setActiveTab("alerts")}>
+
+          {/* Alertes - Limité par plan */}
+          <Card className="cursor-pointer hover:border-primary/50 transition-colors relative overflow-hidden" onClick={() => setActiveTab("alerts")}>
+            <div className="absolute top-2 right-2">
+              <Badge 
+                variant="outline" 
+                className={`text-[10px] ${alertsLimitReached ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' : ''}`}
+              >
+                {alertsLimitReached && <Lock className="h-3 w-3 mr-0.5" />}
+                {activeAlertsCount}/{maxAlerts}
+              </Badge>
+            </div>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-amber-500/10">
                   <Bell className="h-5 w-5 text-amber-500" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{alerts.filter(a => a.is_active).length}</p>
+                <div className="flex-1">
+                  <p className="text-2xl font-bold">{activeAlertsCount}</p>
                   <p className="text-sm text-muted-foreground">Alertes actives</p>
                 </div>
               </div>
+              {/* Mini progress bar */}
+              <Progress 
+                value={(activeAlertsCount / maxAlerts) * 100} 
+                className={`h-1 mt-3 ${alertsLimitReached ? '[&>div]:bg-amber-500' : ''}`}
+              />
+              {alertsLimitReached && plan !== "elite" && (
+                <Link 
+                  to="/account?tab=subscription" 
+                  className="text-xs text-primary hover:underline mt-2 flex items-center gap-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Crown className="h-3 w-3" />
+                  Augmenter la limite
+                </Link>
+              )}
             </CardContent>
           </Card>
+
+          {/* Notifications - Toujours accessibles */}
           <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setActiveTab("notifications")}>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -100,11 +144,19 @@ export default function Tracking() {
               <Eye className="h-4 w-4" />
               <span className="hidden sm:inline">Watchlist</span>
               <Badge variant="secondary" className="ml-1">{watchlist.length}</Badge>
+              <Badge variant="outline" className="ml-1 text-[10px] hidden lg:inline-flex bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
+                Gratuit
+              </Badge>
             </TabsTrigger>
             <TabsTrigger value="alerts" className="gap-2">
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Alertes</span>
-              <Badge variant="secondary" className="ml-1">{alerts.filter(a => a.is_active).length}</Badge>
+              <Badge 
+                variant={alertsLimitReached ? "destructive" : "secondary"} 
+                className="ml-1"
+              >
+                {activeAlertsCount}/{maxAlerts}
+              </Badge>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2">
               <Radar className="h-4 w-4" />

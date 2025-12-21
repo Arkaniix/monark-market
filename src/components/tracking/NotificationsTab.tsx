@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Bell, Trash2, RefreshCw, AlertCircle, CheckCircle2, ExternalLink, Inbox, Calendar, TrendingDown, BarChart3 } from "lucide-react";
+import { Bell, Trash2, RefreshCw, AlertCircle, CheckCircle2, ExternalLink, Inbox, Calendar, TrendingDown, BarChart3, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,19 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { format, isToday, isYesterday, subDays, startOfWeek, isWithinInterval } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from "@/hooks/useNotifications";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import type { Notification } from "@/providers/types";
+
+// Types de notifications considérées comme "premium"
+const PREMIUM_NOTIFICATION_TYPES = ['deal_detected', 'price_analysis', 'market_insight', 'exclusive_deal'];
+
+// Helper pour déterminer si une notification est premium
+const isPremiumNotification = (notification: Notification): boolean => {
+  return PREMIUM_NOTIFICATION_TYPES.includes(notification.type) || 
+         notification.title?.toLowerCase().includes('exclusi') ||
+         notification.title?.toLowerCase().includes('analyse') ||
+         notification.message?.toLowerCase().includes('opportunité rare');
+};
 interface NotificationsTabProps {
   notifications: Notification[];
   isLoading: boolean;
@@ -95,6 +107,8 @@ export function NotificationsTab({
   refetch
 }: NotificationsTabProps) {
   const navigate = useNavigate();
+  const { plan } = useEntitlements();
+  const isPro = plan === 'pro' || plan === 'elite';
 
   // Mutations
   const markNotificationRead = useMarkNotificationRead();
@@ -193,43 +207,62 @@ export function NotificationsTab({
           <Badge variant="outline" className="text-xs">{items.length}</Badge>
         </div>
         <div className="space-y-2">
-          {items.map(notification => <div key={notification.id} onClick={() => handleNotificationClick(notification)} className={`flex items-start gap-3 p-4 rounded-lg border transition-all cursor-pointer group ${isRead ? 'bg-muted/30 hover:bg-muted/50' : 'bg-card border-primary/20 shadow-sm hover:shadow-md hover:border-primary/40'}`}>
-              <div className={`p-2 rounded-lg flex-shrink-0 ${isRead ? 'bg-muted' : 'bg-primary/10'}`}>
-                {getNotificationIcon(notification.type)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  {!isRead && <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 animate-pulse" />}
-                  <span className={`font-medium truncate ${isRead ? 'text-muted-foreground' : ''}`}>
-                    {notification.title}
-                  </span>
-                  <span className="text-xs text-muted-foreground flex-shrink-0">
-                    {formatTime(notification.created_at)}
-                  </span>
+          {items.map(notification => {
+            const isPremium = isPremiumNotification(notification);
+            return (
+              <div 
+                key={notification.id} 
+                onClick={() => handleNotificationClick(notification)} 
+                className={`flex items-start gap-3 p-4 rounded-lg border transition-all cursor-pointer group ${isRead ? 'bg-muted/30 hover:bg-muted/50' : 'bg-card border-primary/20 shadow-sm hover:shadow-md hover:border-primary/40'} ${isPremium ? 'ring-1 ring-primary/10' : ''}`}
+              >
+                <div className={`p-2 rounded-lg flex-shrink-0 ${isRead ? 'bg-muted' : 'bg-primary/10'}`}>
+                  {getNotificationIcon(notification.type)}
                 </div>
-                <p className="text-sm text-muted-foreground line-clamp-2">{notification.message}</p>
-              </div>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                {!isRead && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
-              e.stopPropagation();
-              markNotificationRead.mutate(notification.id);
-            }} title="Marquer comme lu">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {!isRead && <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 animate-pulse" />}
+                    <span className={`font-medium truncate ${isRead ? 'text-muted-foreground' : ''}`}>
+                      {notification.title}
+                    </span>
+                    {/* Badge PRO pour notifications premium */}
+                    {isPremium && (
+                      <Badge 
+                        variant="outline" 
+                        className="text-[10px] gap-0.5 bg-primary/5 text-primary border-primary/20"
+                      >
+                        <Crown className="h-2.5 w-2.5" />
+                        PRO
+                      </Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      {formatTime(notification.created_at)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{notification.message}</p>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  {!isRead && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
+                    e.stopPropagation();
+                    markNotificationRead.mutate(notification.id);
+                  }} title="Marquer comme lu">
                     <CheckCircle2 className="h-4 w-4" />
                   </Button>}
-                {notification.link && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
-              e.stopPropagation();
-              navigate(notification.link!);
-            }} title="Voir le détail">
+                  {notification.link && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
+                    e.stopPropagation();
+                    navigate(notification.link!);
+                  }} title="Voir le détail">
                     <ExternalLink className="h-4 w-4" />
                   </Button>}
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={e => {
-              e.stopPropagation();
-              deleteNotification.mutate(notification.id);
-            }} title="Supprimer">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={e => {
+                    e.stopPropagation();
+                    deleteNotification.mutate(notification.id);
+                  }} title="Supprimer">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>)}
+            );
+          })}
         </div>
       </div>;
   };

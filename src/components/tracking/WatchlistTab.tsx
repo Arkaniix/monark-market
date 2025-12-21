@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Eye, Plus, Search, Filter, ChevronLeft, ChevronRight, Package, Tag, DollarSign, TrendingDown, TrendingUp, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { Eye, Plus, Search, Filter, ChevronLeft, ChevronRight, Package, Tag, DollarSign, TrendingDown, TrendingUp, ArrowDownRight, ArrowUpRight, Infinity } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -287,9 +287,16 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
                 <Eye className="h-5 w-5 text-blue-500" />
                 Ma Watchlist
                 <Badge variant="outline">{watchlist.length}</Badge>
+                <Badge 
+                  variant="secondary" 
+                  className="text-[10px] gap-1 bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
+                >
+                  <Infinity className="h-3 w-3" />
+                  Gratuit & Illimité
+                </Badge>
               </CardTitle>
               <CardDescription className="mt-1">
-                {models.length} modèle{models.length > 1 ? 's' : ''} • {ads.length} annonce{ads.length > 1 ? 's' : ''}
+                {models.length} modèle{models.length > 1 ? 's' : ''} • {ads.length} annonce{ads.length > 1 ? 's' : ''} — Ajoutez autant d'éléments que vous voulez !
               </CardDescription>
             </div>
             <Link to="/catalog">
