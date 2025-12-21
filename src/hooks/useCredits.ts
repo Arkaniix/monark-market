@@ -1,14 +1,24 @@
 // Centralized credit management hook
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEntitlements, CREDIT_COSTS, getActionCost, type CreditActionType } from "./useEntitlements";
 import { useDataProvider } from "@/providers/DataContext";
+import { differenceInDays, format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export interface CreditCheckResult {
   allowed: boolean;
   cost: number;
   currentCredits: number;
   deficit: number;
+}
+
+export interface CreditResetInfo {
+  resetDate: Date | null;
+  formattedResetDate: string | null;
+  daysUntilReset: number | null;
+  isResetSoon: boolean;
+  creditsWillExpire: number;
 }
 
 export interface UseCreditActionResult {
@@ -25,6 +35,9 @@ export interface UseCreditActionResult {
   creditsRemaining: number;
   isLoading: boolean;
   
+  // Reset info
+  resetInfo: CreditResetInfo;
+  
   // Modal state management
   showInsufficientModal: boolean;
   insufficientModalData: {
@@ -36,8 +49,14 @@ export interface UseCreditActionResult {
   closeInsufficientModal: () => void;
 }
 
+// Tooltip text explaining non-cumulative credits
+export const CREDIT_RESET_EXPLANATION = 
+  "Les crédits sont remis à zéro à chaque nouveau cycle mensuel. " +
+  "Les crédits non utilisés et ceux gagnés via le scrap communautaire " +
+  "ne sont pas reportés au mois suivant.";
+
 export function useCredits(): UseCreditActionResult {
-  const { creditsRemaining, plan, isLoading } = useEntitlements();
+  const { creditsRemaining, creditsResetDate, plan, isLoading } = useEntitlements();
   const provider = useDataProvider();
   const queryClient = useQueryClient();
   
@@ -48,6 +67,32 @@ export function useCredits(): UseCreditActionResult {
     requiredCredits: number;
     currentCredits: number;
   } | null>(null);
+
+  // Calculate reset info
+  const resetInfo = useMemo<CreditResetInfo>(() => {
+    if (!creditsResetDate) {
+      return {
+        resetDate: null,
+        formattedResetDate: null,
+        daysUntilReset: null,
+        isResetSoon: false,
+        creditsWillExpire: 0,
+      };
+    }
+
+    const resetDate = new Date(creditsResetDate);
+    const now = new Date();
+    const daysUntilReset = differenceInDays(resetDate, now);
+    const isResetSoon = daysUntilReset <= 7 && daysUntilReset >= 0;
+
+    return {
+      resetDate,
+      formattedResetDate: format(resetDate, "dd MMMM", { locale: fr }),
+      daysUntilReset,
+      isResetSoon,
+      creditsWillExpire: isResetSoon ? creditsRemaining : 0,
+    };
+  }, [creditsResetDate, creditsRemaining]);
 
   // Check if user has enough credits for an action
   const checkCredits = useCallback((action: CreditActionType): CreditCheckResult => {
@@ -122,6 +167,7 @@ export function useCredits(): UseCreditActionResult {
     executeWithCredits,
     creditsRemaining,
     isLoading,
+    resetInfo,
     showInsufficientModal,
     insufficientModalData,
     openInsufficientModal,

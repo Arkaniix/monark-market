@@ -8,6 +8,7 @@ export interface DashboardOverview {
   };
   stats: {
     credits_remaining: number;
+    credits_reset_date: string | null;
     plan_name: string;
     total_scraps: number;
     watchlist_count: number;

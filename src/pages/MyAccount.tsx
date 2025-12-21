@@ -16,6 +16,7 @@ import { fr } from "date-fns/locale";
 import { motion } from "framer-motion";
 import ScrapModal from "@/components/ScrapModal";
 import { useAuth } from "@/context/AuthContext";
+import { CreditResetInfo as CreditResetInfoComponent } from "@/components/credits/CreditResetInfo";
 import {
   useWatchlist,
   useRemoveFromWatchlist,
@@ -316,9 +317,11 @@ export default function MyAccount() {
                 </div>
                 <Progress value={creditPercentage} className="h-2" />
                 {currentSubscription?.credits_reset_date && (
-                  <p className="text-sm text-muted-foreground">
-                    Renouvellement le {format(new Date(currentSubscription.credits_reset_date), "dd MMMM yyyy", { locale: fr })}
-                  </p>
+                  <CreditResetInfoComponent
+                    resetDate={currentSubscription.credits_reset_date}
+                    creditsRemaining={userCredits}
+                    variant="default"
+                  />
                 )}
                 <Button className="w-full" onClick={() => setShowScrapModal(true)}>Lancer un scrap</Button>
               </CardContent>
@@ -386,9 +389,11 @@ export default function MyAccount() {
                       <span className="text-2xl font-bold">{currentSubscription.credits_remaining}</span>
                     </div>
                     {currentSubscription.credits_reset_date && (
-                      <p className="text-xs text-muted-foreground">
-                        Renouvellement le {format(new Date(currentSubscription.credits_reset_date), "dd MMMM yyyy", { locale: fr })}
-                      </p>
+                      <CreditResetInfoComponent
+                        resetDate={currentSubscription.credits_reset_date}
+                        creditsRemaining={currentSubscription.credits_remaining}
+                        variant="default"
+                      />
                     )}
                   </div>
                 )}

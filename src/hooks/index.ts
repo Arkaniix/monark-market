@@ -55,7 +55,9 @@ export {
 // Credits - centralized credit management
 export {
   useCredits,
+  CREDIT_RESET_EXPLANATION,
   type CreditCheckResult,
+  type CreditResetInfo,
   type UseCreditActionResult,
 } from "./useCredits";
 

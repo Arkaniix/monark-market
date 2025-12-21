@@ -264,6 +264,7 @@ export const mockProvider: DataProvider = {
       },
       stats: {
         credits_remaining: credits.credits_remaining,
+        credits_reset_date: credits.credits_reset_date ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         plan_name: credits.plan_name,
         total_scraps: 47,
         watchlist_count: watchlist.length,

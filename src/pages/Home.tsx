@@ -47,6 +47,7 @@ export default function Home() {
   
   const userStats = {
     creditsRemaining: data?.stats?.credits_remaining ?? 0,
+    creditsResetDate: data?.stats?.credits_reset_date ?? null,
     planName: data?.stats?.plan_name ?? "Free",
     totalScraps: data?.stats?.total_scraps ?? 0,
     watchlistCount: data?.stats?.watchlist_count ?? 0,
@@ -110,6 +111,7 @@ export default function Home() {
       <PersonalStats
         totalScraps={userStats.totalScraps}
         creditsRemaining={userStats.creditsRemaining}
+        creditsResetDate={userStats.creditsResetDate}
         watchlistCount={userStats.watchlistCount}
         estimatedGains={userStats.estimatedGains}
         recentActivity={recentActivity}
