@@ -17,6 +17,17 @@ export interface PlanLimits {
   canAccessAdvancedStats: boolean;
   canAccessPrioritySupport: boolean;
   canAccessApiAccess: boolean;
+  // Estimator-specific permissions
+  estimator: {
+    canSeeBuyPrice: boolean;
+    canSeeSellPrice: boolean;
+    canSeeMargin: boolean;
+    canSeeProbability: boolean;
+    canSeeScenarios: boolean;
+    canExportEstimation: boolean;
+    chartInteractive: boolean;
+    chartPeriods: ('7' | '30' | '90')[];
+  };
 }
 
 export interface EntitlementHelpers {
@@ -65,6 +76,16 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessAdvancedStats: false,
     canAccessPrioritySupport: false,
     canAccessApiAccess: false,
+    estimator: {
+      canSeeBuyPrice: false,
+      canSeeSellPrice: false,
+      canSeeMargin: false,
+      canSeeProbability: false,
+      canSeeScenarios: false,
+      canExportEstimation: false,
+      chartInteractive: false,
+      chartPeriods: [],
+    },
   },
   pro: {
     maxAlerts: 20,
@@ -77,6 +98,16 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessAdvancedStats: true,
     canAccessPrioritySupport: false,
     canAccessApiAccess: false,
+    estimator: {
+      canSeeBuyPrice: true,
+      canSeeSellPrice: true,
+      canSeeMargin: true,
+      canSeeProbability: true,
+      canSeeScenarios: false,
+      canExportEstimation: false,
+      chartInteractive: true,
+      chartPeriods: ['30', '90'],
+    },
   },
   elite: {
     maxAlerts: 100,
@@ -89,6 +120,16 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessAdvancedStats: true,
     canAccessPrioritySupport: true,
     canAccessApiAccess: true,
+    estimator: {
+      canSeeBuyPrice: true,
+      canSeeSellPrice: true,
+      canSeeMargin: true,
+      canSeeProbability: true,
+      canSeeScenarios: true,
+      canExportEstimation: true,
+      chartInteractive: true,
+      chartPeriods: ['7', '30', '90'],
+    },
   },
 };
 
