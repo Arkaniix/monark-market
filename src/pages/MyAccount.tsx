@@ -170,6 +170,49 @@ export default function MyAccount() {
     return null;
   };
 
+  // Render plan features with better labels for pricing cards
+  const renderPlanFeatures = (plan: SubscriptionPlan) => {
+    const featureLabels: Record<string, { label: string; icon?: React.ReactNode }> = {
+      scrap_faible: { label: "Scrap standard" },
+      scrap_fort: { label: "Scrap avancé" },
+      export: { label: "Export des données" },
+      stats_avancees: { label: "Statistiques avancées" },
+      support_prioritaire: { label: "Support prioritaire" },
+      api_access: { label: "Accès API" },
+      formation: { label: "Formation complète" },
+      alertes: { label: "Alertes personnalisées" },
+    };
+
+    if (!plan.features) return null;
+    
+    if (typeof plan.features === 'object' && !Array.isArray(plan.features)) {
+      const features = plan.features as Record<string, unknown>;
+      return Object.entries(features)
+        .filter(([key, value]) => key !== 'credits' && value === true)
+        .slice(0, 5) // Limit to 5 features for cleaner display
+        .map(([key]) => {
+          const config = featureLabels[key] || { label: key.replace(/_/g, ' ') };
+          return (
+            <div key={key} className="flex items-center gap-2 text-sm">
+              <Check className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="text-muted-foreground">{config.label}</span>
+            </div>
+          );
+        });
+    }
+    
+    if (Array.isArray(plan.features)) {
+      return plan.features.slice(0, 5).map((feature, index) => (
+        <div key={index} className="flex items-center gap-2 text-sm">
+          <Check className="h-4 w-4 text-primary flex-shrink-0" />
+          <span className="text-muted-foreground">{String(feature)}</span>
+        </div>
+      ));
+    }
+    
+    return null;
+  };
+
   // Watchlist handlers
   const handleRemoveFromWatchlist = (id: number) => {
     removeFromWatchlist.mutate(id, {
@@ -350,38 +393,75 @@ export default function MyAccount() {
             </Card>
           )}
 
-          <div>
-            <h2 className="text-2xl font-bold mb-6">Plans disponibles</h2>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Changer de plan</h2>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/pricing">Voir tous les détails</Link>
+              </Button>
+            </div>
+            
             <div className="grid gap-6 md:grid-cols-3">
               {(plans || []).map(plan => {
                 const isCurrentPlan = currentSubscription?.plan_id === plan.id;
                 const isPro = plan.name.toLowerCase() === "pro";
+                const isElite = plan.name.toLowerCase().includes("elite") || plan.name.toLowerCase().includes("élite");
+                
+                // Get credits from plan features
+                const planCredits = typeof plan.features === 'object' && plan.features !== null 
+                  ? (plan.features as Record<string, unknown>).credits 
+                  : null;
+                
                 return (
-                  <Card key={plan.id} className={`relative transition-all hover:shadow-lg ${isCurrentPlan ? "border-primary shadow-md" : ""} ${isPro ? "border-primary/50" : ""}`}>
-                    {isPro && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <Badge className="bg-primary">Populaire</Badge>
+                  <Card 
+                    key={plan.id} 
+                    className={`relative transition-all hover:shadow-lg ${
+                      isCurrentPlan ? "ring-2 ring-primary shadow-md" : ""
+                    } ${isPro ? "border-primary" : ""}`}
+                  >
+                    {isPro && !isCurrentPlan && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                        <Badge className="bg-primary text-primary-foreground px-3">Populaire</Badge>
                       </div>
                     )}
-                    <CardHeader className="space-y-4 pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${plan.name.toLowerCase() === "basic" ? "bg-muted" : plan.name.toLowerCase() === "pro" ? "bg-primary/10" : "bg-accent/10"}`}>
-                          {getPlanIcon(plan.name)}
-                        </div>
-                        <CardTitle className="text-xl">{plan.name}</CardTitle>
+                    {isCurrentPlan && (
+                      <div className="absolute -top-3 right-4 z-10">
+                        <Badge variant="secondary" className="px-3">Votre plan</Badge>
                       </div>
-                      <CardDescription className="min-h-[40px]">{plan.description}</CardDescription>
-                      <div className="pt-2">
-                        <div className="flex items-baseline gap-1">
+                    )}
+                    
+                    <CardHeader className="text-center pb-2 pt-6">
+                      <div className="mx-auto mb-3 p-3 rounded-full bg-primary/10 w-fit">
+                        {getPlanIcon(plan.name)}
+                      </div>
+                      <CardTitle className="text-xl">{plan.name}</CardTitle>
+                      <CardDescription className="text-sm">{plan.description}</CardDescription>
+                    </CardHeader>
+                    
+                    <CardContent className="text-center space-y-4 pb-4">
+                      <div>
+                        <div className="flex items-baseline justify-center gap-1">
                           <span className="text-4xl font-bold">{plan.price}€</span>
                           <span className="text-muted-foreground">/mois</span>
                         </div>
+                        {typeof planCredits === 'number' && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {planCredits} crédits/mois
+                          </p>
+                        )}
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3 pb-6">{renderFeatures(plan.features)}</CardContent>
-                    <CardFooter>
+                      
+                      <div className="pt-2 space-y-2 text-left">
+                        {renderPlanFeatures(plan)}
+                      </div>
+                    </CardContent>
+                    
+                    <CardFooter className="pt-0">
                       {isCurrentPlan ? (
-                        <Button disabled className="w-full" variant="secondary">Plan actuel</Button>
+                        <Button disabled className="w-full" variant="secondary">
+                          <Check className="h-4 w-4 mr-2" />
+                          Plan actuel
+                        </Button>
                       ) : (
                         <Button 
                           onClick={() => handleSubscribe(plan.id)} 
@@ -390,7 +470,7 @@ export default function MyAccount() {
                           disabled={subscribeMutation.isPending}
                         >
                           {subscribeMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                          Choisir ce plan
+                          {isElite ? "Passer à Elite" : isPro ? "Choisir Pro" : "Choisir ce plan"}
                         </Button>
                       )}
                     </CardFooter>
