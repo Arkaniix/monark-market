@@ -1,0 +1,134 @@
+// Centralized credit management hook
+import { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEntitlements, CREDIT_COSTS, getActionCost, type CreditActionType } from "./useEntitlements";
+import { useDataProvider } from "@/providers/DataContext";
+
+export interface CreditCheckResult {
+  allowed: boolean;
+  cost: number;
+  currentCredits: number;
+  deficit: number;
+}
+
+export interface UseCreditActionResult {
+  // Check if action is allowed
+  checkCredits: (action: CreditActionType) => CreditCheckResult;
+  
+  // Execute action with credit deduction
+  executeWithCredits: <T>(
+    action: CreditActionType,
+    executor: () => Promise<T>
+  ) => Promise<{ success: boolean; data?: T; error?: string }>;
+  
+  // Current state
+  creditsRemaining: number;
+  isLoading: boolean;
+  
+  // Modal state management
+  showInsufficientModal: boolean;
+  insufficientModalData: {
+    actionType: CreditActionType;
+    requiredCredits: number;
+    currentCredits: number;
+  } | null;
+  openInsufficientModal: (action: CreditActionType) => void;
+  closeInsufficientModal: () => void;
+}
+
+export function useCredits(): UseCreditActionResult {
+  const { creditsRemaining, plan, isLoading } = useEntitlements();
+  const provider = useDataProvider();
+  const queryClient = useQueryClient();
+  
+  // Modal state
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+  const [insufficientModalData, setInsufficientModalData] = useState<{
+    actionType: CreditActionType;
+    requiredCredits: number;
+    currentCredits: number;
+  } | null>(null);
+
+  // Check if user has enough credits for an action
+  const checkCredits = useCallback((action: CreditActionType): CreditCheckResult => {
+    const cost = getActionCost(action);
+    const allowed = creditsRemaining >= cost;
+    
+    return {
+      allowed,
+      cost,
+      currentCredits: creditsRemaining,
+      deficit: allowed ? 0 : cost - creditsRemaining,
+    };
+  }, [creditsRemaining]);
+
+  // Open insufficient credits modal
+  const openInsufficientModal = useCallback((action: CreditActionType) => {
+    const cost = getActionCost(action);
+    setInsufficientModalData({
+      actionType: action,
+      requiredCredits: cost,
+      currentCredits: creditsRemaining,
+    });
+    setShowInsufficientModal(true);
+  }, [creditsRemaining]);
+
+  // Close insufficient credits modal
+  const closeInsufficientModal = useCallback(() => {
+    setShowInsufficientModal(false);
+    setInsufficientModalData(null);
+  }, []);
+
+  // Execute an action with credit consumption
+  const executeWithCredits = useCallback(async <T>(
+    action: CreditActionType,
+    executor: () => Promise<T>
+  ): Promise<{ success: boolean; data?: T; error?: string }> => {
+    const check = checkCredits(action);
+    
+    // Check if user has enough credits
+    if (!check.allowed) {
+      openInsufficientModal(action);
+      return { 
+        success: false, 
+        error: `Crédits insuffisants. ${check.cost} requis, ${check.currentCredits} disponibles.` 
+      };
+    }
+    
+    try {
+      // Execute the action
+      const result = await executor();
+      
+      // Deduct credits after successful execution
+      const cost = getActionCost(action);
+      if (cost > 0) {
+        await provider.consumeCredits(cost, action);
+        
+        // Invalidate credits query to refresh UI
+        queryClient.invalidateQueries({ queryKey: ["user", "credits"] });
+      }
+      
+      return { success: true, data: result };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error?.message || "Une erreur est survenue" 
+      };
+    }
+  }, [checkCredits, openInsufficientModal, provider, queryClient]);
+
+  return {
+    checkCredits,
+    executeWithCredits,
+    creditsRemaining,
+    isLoading,
+    showInsufficientModal,
+    insufficientModalData,
+    openInsufficientModal,
+    closeInsufficientModal,
+  };
+}
+
+// Re-export types and constants for convenience
+export { CREDIT_COSTS, getActionCost };
+export type { CreditActionType };

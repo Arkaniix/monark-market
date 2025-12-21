@@ -1341,6 +1341,13 @@ export const mockProvider: DataProvider = {
     };
     setToStorage(STORAGE_KEYS.CREDITS, newCredits);
   },
+  async consumeCredits(amount: number, reason: string) {
+    await delay();
+    const credits = getFromStorage(STORAGE_KEYS.CREDITS, initialCredits);
+    credits.credits_remaining = Math.max(0, credits.credits_remaining - amount);
+    setToStorage(STORAGE_KEYS.CREDITS, credits);
+    console.log(`[MockProvider] Consumed ${amount} credits for: ${reason}. Remaining: ${credits.credits_remaining}`);
+  },
 
   // Admin
   async getUserRole() {

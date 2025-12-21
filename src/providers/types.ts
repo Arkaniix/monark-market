@@ -792,6 +792,7 @@ export interface DataProvider {
   getSubscriptionHistory(): Promise<UserSubscription[]>;
   getUserProfile(): Promise<UserProfile>;
   subscribe(planId: string): Promise<void>;
+  consumeCredits(amount: number, reason: string): Promise<void>;
   
   // Admin
   getUserRole(): Promise<{ user_id: string; role: string }>;

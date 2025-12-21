@@ -255,6 +255,9 @@ export const apiProvider: DataProvider = {
   async subscribe(planId) {
     return apiPost(ENDPOINTS.BILLING.CHECKOUT_SESSION, { plan_id: planId });
   },
+  async consumeCredits(amount: number, reason: string) {
+    return apiPost('/v1/credits/consume', { amount, reason });
+  },
 
   // Admin
   async getUserRole() {
