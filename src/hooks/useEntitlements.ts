@@ -44,6 +44,8 @@ export interface EntitlementHelpers {
   canUseEstimator: () => boolean;
   canScrap: (type: ScrapType) => boolean;
   canCreateAlert: () => boolean;
+  canActivateAlert: () => boolean;
+  getActiveAlertsCount: () => number;
   canAddToWatchlist: () => boolean;
   canExportData: () => boolean;
   canAccessAdvancedStats: () => boolean;
@@ -120,7 +122,7 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     },
   },
   elite: {
-    maxAlerts: 100,
+    maxAlerts: 500,
     maxWatchlistItems: 200,
     maxEstimationsPerDay: -1, // unlimited
     maxScrapPagesPerJob: 100,
@@ -205,6 +207,12 @@ export function useEntitlements(): Entitlements {
   const creditsResetDate = credits?.credits_reset_date ?? subscription?.credits_reset_date ?? null;
   
   // Create helper functions
+  // Count only active alerts
+  const activeAlertsCount = useMemo(() => {
+    return alertsData?.items?.filter(a => a.is_active)?.length ?? 0;
+  }, [alertsData]);
+
+  // Create helper functions
   const helpers = useMemo<EntitlementHelpers>(() => ({
     canUseEstimator: () => {
       // Everyone can use estimator if they have credits or it's within daily limit
@@ -221,9 +229,18 @@ export function useEntitlements(): Entitlements {
     },
     
     canCreateAlert: () => {
+      // Can create alert if under total alerts limit
       if (limits.maxAlerts === -1) return true;
       return currentAlerts < limits.maxAlerts;
     },
+
+    canActivateAlert: () => {
+      // Can activate if active alerts count is under limit
+      if (limits.maxAlerts === -1) return true;
+      return activeAlertsCount < limits.maxAlerts;
+    },
+
+    getActiveAlertsCount: () => activeAlertsCount,
     
     canAddToWatchlist: () => {
       if (limits.maxWatchlistItems === -1) return true;
@@ -240,7 +257,7 @@ export function useEntitlements(): Entitlements {
       const cost = SCRAP_COSTS[type];
       return cost.base + (cost.perPage * pages);
     },
-  }), [creditsRemaining, limits, currentAlerts, currentWatchlistItems]);
+  }), [creditsRemaining, limits, currentAlerts, currentWatchlistItems, activeAlertsCount]);
   
   return {
     plan,

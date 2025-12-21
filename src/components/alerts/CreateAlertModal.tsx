@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Bell, TrendingDown, TrendingUp, MapPin, Sparkles, Package, RefreshCw, AlertTriangle } from "lucide-react";
+import { Bell, TrendingDown, TrendingUp, MapPin, Sparkles, Package, RefreshCw, AlertTriangle, Lock, Crown } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateAlert } from "@/hooks/useProviderData";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import type { AlertType, CreateAlertPayload } from "@/providers/types";
 
 // Régions françaises
@@ -77,6 +81,12 @@ export function CreateAlertModal({
   onSuccess,
   defaultAlertType = 'deal_detected',
 }: CreateAlertModalProps) {
+  // Entitlements
+  const { plan, limits, helpers } = useEntitlements();
+  const activeAlertsCount = helpers.getActiveAlertsCount();
+  const maxAlerts = limits.maxAlerts;
+  const canActivate = helpers.canActivateAlert();
+
   // State
   const [alertType, setAlertType] = useState<AlertType>(defaultAlertType);
   const [priceThreshold, setPriceThreshold] = useState<string>('');
@@ -253,6 +263,38 @@ export function CreateAlertModal({
             <TabsTrigger value="type">Type d'alerte</TabsTrigger>
             <TabsTrigger value="options">Options</TabsTrigger>
           </TabsList>
+
+          {/* Alert limit warning */}
+          {!canActivate && (
+            <Alert className="mt-4 border-amber-500/50 bg-amber-500/5">
+              <Lock className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="flex items-center justify-between">
+                <span>
+                  Limite atteinte ({activeAlertsCount}/{maxAlerts}). L'alerte sera créée mais inactive.
+                </span>
+                {plan !== "elite" && (
+                  <Button asChild variant="link" size="sm" className="p-0 h-auto text-primary">
+                    <Link to="/account?tab=subscription">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Upgrade
+                    </Link>
+                  </Button>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Progress bar showing usage */}
+          <div className="mt-4 space-y-1">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Alertes actives</span>
+              <span>{activeAlertsCount} / {maxAlerts}</span>
+            </div>
+            <Progress 
+              value={(activeAlertsCount / maxAlerts) * 100} 
+              className={`h-1.5 ${activeAlertsCount >= maxAlerts ? '[&>div]:bg-amber-500' : ''}`}
+            />
+          </div>
 
           {/* Onglet Type d'alerte */}
           <TabsContent value="type" className="space-y-4 mt-4">
