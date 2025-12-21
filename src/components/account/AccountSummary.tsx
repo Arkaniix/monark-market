@@ -33,8 +33,9 @@ export function AccountSummary({ onLaunchScrap }: AccountSummaryProps) {
     isLoading 
   } = useEntitlements();
 
-  // Calculate credit percentage
-  const maxCreditsForPlan = plan === "starter" ? 50 : plan === "pro" ? 150 : 500;
+  // Calculate credit percentage based on plan credits
+  // Starter: 120, Pro: 500, Elite: 1500
+  const maxCreditsForPlan = plan === "starter" ? 120 : plan === "pro" ? 500 : 1500;
   const creditPercentage = Math.min((creditsRemaining / maxCreditsForPlan) * 100, 100);
   const isCreditsLow = creditPercentage < 20;
 

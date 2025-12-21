@@ -16,6 +16,26 @@ export const CREDIT_COSTS: Record<CreditActionType, number> = {
   export: 0, // Free but plan-gated
 };
 
+export interface EstimatorFeatures {
+  // Starter visible
+  canSeeMedianPrice: boolean;
+  canSeeVariation30d: boolean;
+  canSeeVolume: boolean;
+  canSeeOpportunityLabel: boolean;
+  // Pro+ visible
+  canSeeBuyPrice: boolean;
+  canSeeSellPrice: boolean;
+  canSeeMargin: boolean;
+  canSeeProbability: boolean;
+  // Elite only
+  canSeeScenarios: boolean;
+  canExportEstimation: boolean;
+  canSeeExtendedHistory: boolean;
+  canSeeAdvancedIndicators: boolean;
+  chartInteractive: boolean;
+  chartPeriods: ('7' | '30' | '90')[];
+}
+
 export interface PlanLimits {
   maxAlerts: number;
   maxWatchlistItems: number;
@@ -27,17 +47,9 @@ export interface PlanLimits {
   canAccessAdvancedStats: boolean;
   canAccessPrioritySupport: boolean;
   canAccessApiAccess: boolean;
+  canAccessTraining: boolean;
   // Estimator-specific permissions
-  estimator: {
-    canSeeBuyPrice: boolean;
-    canSeeSellPrice: boolean;
-    canSeeMargin: boolean;
-    canSeeProbability: boolean;
-    canSeeScenarios: boolean;
-    canExportEstimation: boolean;
-    chartInteractive: boolean;
-    chartPeriods: ('7' | '30' | '90')[];
-  };
+  estimator: EstimatorFeatures;
 }
 
 export interface EntitlementHelpers {
@@ -49,6 +61,7 @@ export interface EntitlementHelpers {
   canAddToWatchlist: () => boolean;
   canExportData: () => boolean;
   canAccessAdvancedStats: () => boolean;
+  canAccessTraining: () => boolean;
   hasEnoughCredits: (required: number) => boolean;
   getScrapCost: (type: ScrapType, pages: number) => number;
 }
@@ -76,25 +89,39 @@ export interface Entitlements {
 }
 
 // ============= Plan Configuration =============
+// Selon le modèle économique:
+// Starter: 9.90€/mois, 120 crédits, 3 alertes
+// Pro: 29€/mois, 500 crédits, 20 alertes
+// Elite: 79€/mois, 1500 crédits, 500 alertes
+
 const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   starter: {
     maxAlerts: 3,
     maxWatchlistItems: 10,
-    maxEstimationsPerDay: 5,
+    maxEstimationsPerDay: 40,
     maxScrapPagesPerJob: 10,
-    maxJobsPerDay: 3,
+    maxJobsPerDay: 24,
     canScrapStrong: false,
     canExport: false,
     canAccessAdvancedStats: false,
     canAccessPrioritySupport: false,
     canAccessApiAccess: false,
+    canAccessTraining: false,
     estimator: {
+      // Visible
+      canSeeMedianPrice: true,
+      canSeeVariation30d: true,
+      canSeeVolume: true,
+      canSeeOpportunityLabel: true,
+      // Masqué/flouté
       canSeeBuyPrice: false,
       canSeeSellPrice: false,
       canSeeMargin: false,
       canSeeProbability: false,
       canSeeScenarios: false,
       canExportEstimation: false,
+      canSeeExtendedHistory: false,
+      canSeeAdvancedIndicators: false,
       chartInteractive: false,
       chartPeriods: [],
     },
@@ -102,21 +129,30 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   pro: {
     maxAlerts: 20,
     maxWatchlistItems: 50,
-    maxEstimationsPerDay: 50,
+    maxEstimationsPerDay: 166,
     maxScrapPagesPerJob: 50,
-    maxJobsPerDay: 10,
+    maxJobsPerDay: 100,
     canScrapStrong: true,
-    canExport: true,
+    canExport: false,
     canAccessAdvancedStats: true,
     canAccessPrioritySupport: false,
     canAccessApiAccess: false,
+    canAccessTraining: true,
     estimator: {
+      // Tout visible
+      canSeeMedianPrice: true,
+      canSeeVariation30d: true,
+      canSeeVolume: true,
+      canSeeOpportunityLabel: true,
       canSeeBuyPrice: true,
       canSeeSellPrice: true,
       canSeeMargin: true,
       canSeeProbability: true,
+      // Limité
       canSeeScenarios: false,
       canExportEstimation: false,
+      canSeeExtendedHistory: false,
+      canSeeAdvancedIndicators: false,
       chartInteractive: true,
       chartPeriods: ['30', '90'],
     },
@@ -124,21 +160,29 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   elite: {
     maxAlerts: 500,
     maxWatchlistItems: 200,
-    maxEstimationsPerDay: -1, // unlimited
+    maxEstimationsPerDay: -1,
     maxScrapPagesPerJob: 100,
-    maxJobsPerDay: -1, // unlimited
+    maxJobsPerDay: -1,
     canScrapStrong: true,
     canExport: true,
     canAccessAdvancedStats: true,
     canAccessPrioritySupport: true,
     canAccessApiAccess: true,
+    canAccessTraining: true,
     estimator: {
+      // Tout visible
+      canSeeMedianPrice: true,
+      canSeeVariation30d: true,
+      canSeeVolume: true,
+      canSeeOpportunityLabel: true,
       canSeeBuyPrice: true,
       canSeeSellPrice: true,
       canSeeMargin: true,
       canSeeProbability: true,
       canSeeScenarios: true,
       canExportEstimation: true,
+      canSeeExtendedHistory: true,
+      canSeeAdvancedIndicators: true,
       chartInteractive: true,
       chartPeriods: ['7', '30', '90'],
     },
@@ -250,6 +294,8 @@ export function useEntitlements(): Entitlements {
     canExportData: () => limits.canExport,
     
     canAccessAdvancedStats: () => limits.canAccessAdvancedStats,
+    
+    canAccessTraining: () => limits.canAccessTraining,
     
     hasEnoughCredits: (required: number) => creditsRemaining >= required,
     
