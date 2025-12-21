@@ -7,6 +7,7 @@ import { Search, Target, BarChart3, Users, Zap, GraduationCap, TrendingUp, Check
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PricingSection } from "@/components/pricing/PricingTable";
 const containerVariants = {
   hidden: {
     opacity: 0
@@ -85,54 +86,8 @@ const testimonials = [{
   profit: "+3200€/mois"
 }];
 export default function Landing() {
-  const [plans, setPlans] = useState<any[]>([]);
-  const [mostPopularPlanId, setMostPopularPlanId] = useState<string | null>(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-
-  // Fonctionnalités par plan
-  const planFeaturesMap: Record<string, string[]> = {
-    'Basic': ['Accès au catalogue complet', 'Estimations de prix', 'Alertes de nouvelles annonces', 'Support par email'],
-    'Pro': ['Tout du plan Basic', 'Comparateur de modèles avancé', 'Statistiques de marché détaillées', 'Alertes personnalisées prioritaires', 'Support prioritaire', 'Historique des tendances'],
-    'Elite': ['Tout du plan Pro', 'Analyses prédictives IA', 'Conseils d\'investissement', 'Exports de données personnalisés', 'Support dédié 24/7', 'Rapports personnalisés mensuels']
-  };
   useEffect(() => {
-    const fetchPlans = async () => {
-      // Récupérer les plans
-      const {
-        data: plansData
-      } = await supabase.from("subscription_plans").select("*").eq("is_active", true).order("price", {
-        ascending: true
-      });
-      if (plansData) {
-        setPlans(plansData);
-
-        // Compter les utilisateurs actifs pour chaque plan
-        const {
-          data: subscriptionsData
-        } = await supabase.from("user_subscriptions").select("plan_id").eq("status", "active");
-        if (subscriptionsData) {
-          // Compter les abonnés par plan
-          const planCounts = subscriptionsData.reduce((acc: Record<string, number>, sub) => {
-            acc[sub.plan_id] = (acc[sub.plan_id] || 0) + 1;
-            return acc;
-          }, {});
-
-          // Trouver le plan avec le plus d'abonnés
-          let maxCount = 0;
-          let popularPlanId = null;
-          for (const [planId, count] of Object.entries(planCounts)) {
-            if (count > maxCount) {
-              maxCount = count;
-              popularPlanId = planId;
-            }
-          }
-          setMostPopularPlanId(popularPlanId);
-        }
-      }
-    };
-    fetchPlans();
-
-    // Check maintenance mode
     const checkMaintenance = async () => {
       const { data } = await supabase
         .from('system_settings')
@@ -468,84 +423,7 @@ export default function Landing() {
       {/* Pricing Section */}
       <section id="pricing" className="py-16">
         <div className="container">
-          <div className="text-center mb-12">
-            <Badge className="mb-4" variant="secondary">
-              Tarifs
-            </Badge>
-            <h2 className="text-3xl font-bold mb-4">
-              Choisissez le plan qui vous convient
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Tous les plans incluent la formation complète et l'accès à la communauté
-            </p>
-          </div>
-
-          <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
-          once: true
-        }} className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan, i) => {
-            const isPopular = plan.id === mostPopularPlanId;
-            const planFeatures = planFeaturesMap[plan.name] || [];
-
-            // Définir les icônes pour chaque plan
-            const planIcons: Record<string, any> = {
-              'Basic': Zap,
-              'Pro': Award,
-              'Elite': Rocket
-            };
-            const PlanIcon = planIcons[plan.name] || Zap;
-            return <motion.div key={plan.id} variants={itemVariants} className="relative">
-                  {isPopular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                      <Badge className="bg-primary text-primary-foreground px-4 py-1">
-                        Populaire
-                      </Badge>
-                    </div>}
-                  <Card className={`h-full flex flex-col ${isPopular ? 'border-primary border-2' : 'border-border'}`}>
-                    <CardHeader className="space-y-4">
-                      <div className="flex items-start gap-3">
-                        <div className="h-10 w-10 flex items-center justify-center">
-                          <PlanIcon className="h-8 w-8" />
-                        </div>
-                        <div className="flex-1">
-                          <CardTitle className="text-2xl mb-1">{plan.name}</CardTitle>
-                          <CardDescription className="text-sm">
-                            {plan.description}
-                          </CardDescription>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold">{plan.price}€</span>
-                          <span className="text-muted-foreground">/mois</span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="flex-1 flex flex-col space-y-6">
-                      <div className="flex-1">
-                        {planFeatures.length > 0 ? <ul className="space-y-3">
-                            {planFeatures.map((feature: string, idx: number) => <li key={idx} className="flex items-start gap-3">
-                                <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                                <span className="text-sm leading-relaxed">{feature}</span>
-                              </li>)}
-                          </ul> : <p className="text-sm text-muted-foreground">Fonctionnalités à venir</p>}
-                      </div>
-                      
-                      <Link to="/auth" className="block w-full mt-auto">
-                        <Button className="w-full" variant="outline" size="lg">
-                          Choisir ce plan
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                </motion.div>;
-          })}
-          </motion.div>
-
-          {plans.length === 0 && <div className="text-center text-muted-foreground">
-              Chargement des plans...
-            </div>}
+          <PricingSection showHeader={true} />
         </div>
       </section>
 

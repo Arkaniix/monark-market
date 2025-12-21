@@ -16,6 +16,7 @@ import Training from "./pages/Training";
 import Admin from "./pages/Admin";
 import MyAccount from "./pages/MyAccount";
 import Billing from "./pages/Billing";
+import Pricing from "./pages/Pricing";
 import Debug from "./pages/Debug";
 import CGU from "./pages/CGU";
 import RGPD from "./pages/RGPD";
@@ -148,6 +149,11 @@ export const routes: RouteConfig[] = [
     path: "/billing",
     component: Billing,
     requiresAuth: true,
+  },
+  {
+    path: "/pricing",
+    component: Pricing,
+    requiresAuth: false,
   },
 
   // Pages admin
