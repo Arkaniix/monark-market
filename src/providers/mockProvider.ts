@@ -95,12 +95,24 @@ import {
 // Centralized filter utilities
 import { isValidFilter, matchesSearch } from "./mockUtils";
 
+// Mock subscription management
+import {
+  getMockSubscriptionState,
+  setMockSubscriptionState,
+  MOCK_PLANS,
+  consumeMockCredits,
+  addMockCredits,
+  changeMockPlan,
+  getCurrentPlanLimits,
+  type MockSubscriptionState,
+} from "./mockSubscription";
+
 // ============= localStorage helpers =============
 const STORAGE_KEYS = {
   WATCHLIST: 'mock_watchlist',
   ALERTS: 'mock_alerts',
   NOTIFICATIONS: 'mock_notifications',
-  CREDITS: 'mock_credits',
+  CREDITS: 'mock_credits', // Deprecated - now using mockSubscription
   TRAINING_PROGRESS: 'mock_training_progress',
   ESTIMATION_HISTORY: 'mock_estimation_history',
 };
@@ -120,6 +132,17 @@ function setToStorage<T>(key: string, value: T): void {
   } catch (e) {
     console.warn('localStorage error:', e);
   }
+}
+
+// Get credits from new subscription system
+function getCreditsFromSubscription(): UserCredits {
+  const state = getMockSubscriptionState();
+  const plan = MOCK_PLANS[state.planName];
+  return {
+    credits_remaining: state.creditsRemaining,
+    plan_name: plan.displayName,
+    credits_reset_date: state.creditsResetDate,
+  };
 }
 
 // ============= Initialize mock data with localStorage persistence =============
@@ -252,9 +275,11 @@ export const mockProvider: DataProvider = {
     track('getDashboard');
     await delay();
     const watchlist = initializeWatchlist();
-    const credits = getFromStorage(STORAGE_KEYS.CREDITS, initialCredits);
+    const credits = getCreditsFromSubscription();
     const notifications = initializeNotifications();
     const trainingProgress = getFromStorage(STORAGE_KEYS.TRAINING_PROGRESS, mockUserProgress);
+    const subState = getMockSubscriptionState();
+    const planConfig = MOCK_PLANS[subState.planName];
 
     return {
       user: {
@@ -265,7 +290,7 @@ export const mockProvider: DataProvider = {
       stats: {
         credits_remaining: credits.credits_remaining,
         credits_reset_date: credits.credits_reset_date ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        plan_name: credits.plan_name,
+        plan_name: planConfig.displayName,
         total_scraps: 47,
         watchlist_count: watchlist.length,
         estimated_gains: 340,
@@ -1212,110 +1237,96 @@ export const mockProvider: DataProvider = {
     return { items: items.slice(0, limit), total: items.length };
   },
 
-  // User
+  // User - Now using centralized mock subscription system
   async getUserCredits() {
     await delay();
-    return getFromStorage(STORAGE_KEYS.CREDITS, initialCredits);
+    return getCreditsFromSubscription();
   },
   async getSubscriptionPlans() {
     await delay();
-    return [
-      {
-        id: 'basic',
-        name: 'Basic',
-        description: 'Pour débuter dans le hardware',
-        price: 0,
-        currency: 'EUR',
-        duration_months: 1,
-        features: { credits: 30, catalogue_complet: true, alertes_email: true },
-        is_active: true,
+    // Return plans from centralized config
+    return Object.values(MOCK_PLANS).map(plan => ({
+      id: plan.id,
+      name: plan.displayName,
+      description: plan.name === 'starter' 
+        ? 'Pour découvrir l\'outil' 
+        : plan.name === 'pro' 
+          ? 'Pour les utilisateurs réguliers'
+          : 'Pour les professionnels',
+      price: plan.price,
+      currency: 'EUR',
+      duration_months: 1,
+      features: {
+        credits: plan.creditsPerCycle,
+        max_alerts: plan.limits.maxAlerts,
+        max_watchlist: plan.limits.maxWatchlistItems,
+        scrap_fort: plan.limits.canScrapStrong,
+        export: plan.limits.canExport,
+        stats_avancees: plan.limits.canAccessAdvancedStats,
+        support_prioritaire: plan.limits.canAccessPrioritySupport,
+        api_access: plan.limits.canAccessApiAccess,
       },
-      {
-        id: 'pro',
-        name: 'Pro',
-        description: 'Pour les acheteurs réguliers',
-        price: 9.99,
-        currency: 'EUR',
-        duration_months: 1,
-        features: { credits: 150, catalogue_complet: true, alertes_email: true, alertes_temps_reel: true, acces_estimator: true, historique_prix: true },
-        is_active: true,
-      },
-      {
-        id: 'elite',
-        name: 'Elite',
-        description: 'Pour les professionnels du resell',
-        price: 24.99,
-        currency: 'EUR',
-        duration_months: 1,
-        features: { credits: 400, catalogue_complet: true, alertes_email: true, alertes_temps_reel: true, acces_estimator: true, historique_prix: true, scrap_personnel: true, support_prioritaire: true },
-        is_active: true,
-      },
-    ];
+      is_active: true,
+    }));
   },
   async getUserSubscription() {
     await delay();
-    const credits = getFromStorage(STORAGE_KEYS.CREDITS, initialCredits);
+    const state = getMockSubscriptionState();
+    const plan = MOCK_PLANS[state.planName];
+    
     return {
       id: 'mock-sub-1',
-      plan_id: 'pro',
-      status: 'active',
-      started_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-      expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
-      credits_remaining: credits.credits_remaining,
-      credits_reset_date: credits.credits_reset_date || null,
+      plan_id: plan.id,
+      status: state.status,
+      started_at: state.cycleStartDate,
+      expires_at: state.cycleEndDate,
+      credits_remaining: state.creditsRemaining,
+      credits_reset_date: state.creditsResetDate,
       billing_cycle: 'monthly',
       plan: {
-        id: 'pro',
-        name: 'Pro',
-        description: 'Pour les acheteurs réguliers',
-        price: 9.99,
+        id: plan.id,
+        name: plan.displayName,
+        description: plan.name === 'starter' 
+          ? 'Pour découvrir l\'outil' 
+          : plan.name === 'pro' 
+            ? 'Pour les utilisateurs réguliers'
+            : 'Pour les professionnels',
+        price: plan.price,
         currency: 'EUR',
         duration_months: 1,
-        features: { credits: 150, catalogue_complet: true, alertes_email: true, alertes_temps_reel: true, acces_estimator: true, historique_prix: true },
+        features: {
+          credits: plan.creditsPerCycle,
+          max_alerts: plan.limits.maxAlerts,
+          scrap_fort: plan.limits.canScrapStrong,
+          export: plan.limits.canExport,
+        },
         is_active: true,
       },
     };
   },
   async getSubscriptionHistory() {
     await delay();
+    const state = getMockSubscriptionState();
+    const plan = MOCK_PLANS[state.planName];
+    
     return [
       {
         id: 'mock-sub-1',
-        plan_id: 'pro',
-        status: 'active',
-        started_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-        expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
-        credits_remaining: 120,
-        credits_reset_date: new Date(Date.now() + 15 * 86400000).toISOString(),
+        plan_id: plan.id,
+        status: state.status,
+        started_at: state.cycleStartDate,
+        expires_at: state.cycleEndDate,
+        credits_remaining: state.creditsRemaining,
+        credits_reset_date: state.creditsResetDate,
         billing_cycle: 'monthly',
         plan: {
-          id: 'pro',
-          name: 'Pro',
-          description: 'Pour les acheteurs réguliers',
-          price: 9.99,
+          id: plan.id,
+          name: plan.displayName,
+          description: 'Plan actuel',
+          price: plan.price,
           currency: 'EUR',
           duration_months: 1,
-          features: { credits: 150 },
-          is_active: true,
-        },
-      },
-      {
-        id: 'mock-sub-0',
-        plan_id: 'basic',
-        status: 'expired',
-        started_at: new Date(Date.now() - 90 * 86400000).toISOString(),
-        expires_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-        credits_remaining: 0,
-        credits_reset_date: null,
-        billing_cycle: 'monthly',
-        plan: {
-          id: 'basic',
-          name: 'Basic',
-          description: 'Plan gratuit',
-          price: 0,
-          currency: 'EUR',
-          duration_months: 1,
-          features: { credits: 30 },
+          features: { credits: plan.creditsPerCycle },
           is_active: true,
         },
       },
@@ -1323,6 +1334,7 @@ export const mockProvider: DataProvider = {
   },
   async getUserProfile() {
     await delay();
+    const state = getMockSubscriptionState();
     return {
       id: 'mock-user-1',
       email: 'test@example.com',
@@ -1334,20 +1346,23 @@ export const mockProvider: DataProvider = {
   },
   async subscribe(planId) {
     await delay();
-    // In mock mode, just update the credits storage
-    const newCredits = {
-      credits_remaining: planId === 'elite' ? 400 : planId === 'pro' ? 150 : 30,
-      plan_name: planId === 'elite' ? 'Elite' : planId === 'pro' ? 'Pro' : 'Basic',
-      credits_reset_date: new Date(Date.now() + 30 * 86400000).toISOString(),
-    };
-    setToStorage(STORAGE_KEYS.CREDITS, newCredits);
+    // Use centralized plan change
+    const planName = planId === 'plan-elite' || planId === 'elite' 
+      ? 'elite' 
+      : planId === 'plan-pro' || planId === 'pro' 
+        ? 'pro' 
+        : 'starter';
+    changeMockPlan(planName);
+    console.log(`[MockProvider] Changed plan to: ${planName}`);
   },
   async consumeCredits(amount: number, reason: string) {
     await delay();
-    const credits = getFromStorage(STORAGE_KEYS.CREDITS, initialCredits);
-    credits.credits_remaining = Math.max(0, credits.credits_remaining - amount);
-    setToStorage(STORAGE_KEYS.CREDITS, credits);
-    console.log(`[MockProvider] Consumed ${amount} credits for: ${reason}. Remaining: ${credits.credits_remaining}`);
+    const result = consumeMockCredits(amount);
+    if (result.success) {
+      console.log(`[MockProvider] Consumed ${amount} credits for: ${reason}. Remaining: ${result.remaining}`);
+    } else {
+      console.warn(`[MockProvider] Failed to consume ${amount} credits: ${result.error}`);
+    }
   },
 
   // Admin
