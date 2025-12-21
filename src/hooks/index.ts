@@ -43,8 +43,18 @@ export {
   useCanScrap,
   useCanAddToWatchlist,
   useCanExport,
+  CREDIT_COSTS,
+  getActionCost,
   type PlanType,
   type ScrapType,
+  type CreditActionType,
   type PlanLimits,
   type Entitlements,
 } from "./useEntitlements";
+
+// Credits - centralized credit management
+export {
+  useCredits,
+  type CreditCheckResult,
+  type UseCreditActionResult,
+} from "./useCredits";

@@ -5,6 +5,16 @@ import { useUserCredits, useUserSubscription, useAlerts, useWatchlist } from "./
 // ============= Types =============
 export type PlanType = "starter" | "pro" | "elite";
 export type ScrapType = "faible" | "fort" | "communautaire";
+export type CreditActionType = "scrap_faible" | "scrap_fort" | "estimator" | "alert" | "export";
+
+// Credit costs per action type
+export const CREDIT_COSTS: Record<CreditActionType, number> = {
+  scrap_faible: 5,
+  scrap_fort: 20,
+  estimator: 3,
+  alert: 0, // Free
+  export: 0, // Free but plan-gated
+};
 
 export interface PlanLimits {
   maxAlerts: number;
@@ -139,12 +149,17 @@ const PLAN_DISPLAY_NAMES: Record<PlanType, string> = {
   elite: "Élite",
 };
 
-// ============= Scrap Cost Configuration =============
+// ============= Scrap Cost Configuration (legacy - kept for compatibility) =============
 const SCRAP_COSTS: Record<ScrapType, { base: number; perPage: number }> = {
-  faible: { base: 0, perPage: 1 },
-  fort: { base: 5, perPage: 2 },
+  faible: { base: CREDIT_COSTS.scrap_faible, perPage: 0 },
+  fort: { base: CREDIT_COSTS.scrap_fort, perPage: 0 },
   communautaire: { base: 0, perPage: 0 }, // Free but limited
 };
+
+// Helper to get action cost
+export function getActionCost(action: CreditActionType): number {
+  return CREDIT_COSTS[action];
+}
 
 // ============= Helper to normalize plan name =============
 function normalizePlanName(planName: string | undefined | null): PlanType {
