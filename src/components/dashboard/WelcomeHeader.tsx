@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Award, Search, TrendingUp, ShoppingBag, Users } from "lucide-react";
+import { Award, Search, TrendingUp, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -100,22 +100,13 @@ export function WelcomeHeader({
                 </div>
               </Button>
               <Link to="/tracking">
-                <Button variant="outline" size="lg" className="gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Mon suivi
-                </Button>
+                
               </Link>
               <Link to="/catalog">
-                <Button variant="outline" size="lg" className="gap-2">
-                  <ShoppingBag className="h-5 w-5" />
-                  Catalogue
-                </Button>
+                
               </Link>
               <Link to="/community">
-                <Button variant="outline" size="lg" className="gap-2">
-                  <Users className="h-5 w-5" />
-                  Communauté
-                </Button>
+                
               </Link>
             </div>
           </div>
