@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft } from "lucide-react";
+import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft, Check, Rocket, Award } from "lucide-react";
 import { z } from "zod";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const emailSchema = z.string().email("Email invalide");
 const passwordSchema = z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères");
@@ -21,12 +23,44 @@ const displayNameSchema = z.string()
   .regex(/^[a-zA-Z0-9\s\-_]+$/, "Seuls les lettres, chiffres, espaces, tirets et underscores sont autorisés");
 const discordSchema = z.string().max(100, "L'identifiant Discord doit contenir moins de 100 caractères").optional();
 
+// Plan configuration for signup
+const SIGNUP_PLANS = [
+  {
+    id: "starter",
+    name: "Starter",
+    price: 9.90,
+    credits: 120,
+    features: ["3 alertes", "Scrap standard", "Estimator basique"],
+    icon: Zap,
+    popular: false,
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: 29,
+    credits: 500,
+    features: ["20 alertes", "Scrap avancé", "Formation complète"],
+    icon: Award,
+    popular: true,
+  },
+  {
+    id: "elite",
+    name: "Élite",
+    price: 79,
+    credits: 1500,
+    features: ["500 alertes", "Export données", "Support prioritaire"],
+    icon: Rocket,
+    popular: false,
+  },
+];
+
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [discordId, setDiscordId] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("pro"); // Default to Pro
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -76,11 +110,12 @@ export default function Auth() {
         password,
         display_name: displayName,
         discord_id: discordId || undefined,
+        plan_id: selectedPlan,
       });
 
       toast({
         title: "Succès",
-        description: "Compte créé avec succès !",
+        description: `Compte créé avec le plan ${SIGNUP_PLANS.find(p => p.id === selectedPlan)?.name || selectedPlan} !`,
       });
       
       navigate("/");
@@ -427,6 +462,57 @@ export default function Auth() {
                         value={discordId}
                         onChange={(e) => setDiscordId(e.target.value)}
                       />
+                    </div>
+                    
+                    {/* Plan Selection */}
+                    <div className="space-y-3">
+                      <Label>Choisir votre plan</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {SIGNUP_PLANS.map((plan) => {
+                          const isSelected = selectedPlan === plan.id;
+                          const PlanIcon = plan.icon;
+                          return (
+                            <button
+                              key={plan.id}
+                              type="button"
+                              onClick={() => setSelectedPlan(plan.id)}
+                              className={cn(
+                                "relative flex flex-col items-center p-3 rounded-lg border-2 transition-all text-left",
+                                isSelected
+                                  ? "border-primary bg-primary/5 shadow-sm"
+                                  : "border-border hover:border-primary/50 hover:bg-muted/50"
+                              )}
+                            >
+                              {plan.popular && (
+                                <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] px-1.5 py-0">
+                                  Populaire
+                                </Badge>
+                              )}
+                              <PlanIcon className={cn(
+                                "h-5 w-5 mb-1",
+                                isSelected ? "text-primary" : "text-muted-foreground"
+                              )} />
+                              <span className={cn(
+                                "font-semibold text-sm",
+                                isSelected && "text-primary"
+                              )}>
+                                {plan.name}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {plan.price}€/mois
+                              </span>
+                              {isSelected && (
+                                <div className="absolute top-1 right-1">
+                                  <Check className="h-3.5 w-3.5 text-primary" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-muted-foreground text-center">
+                        {SIGNUP_PLANS.find(p => p.id === selectedPlan)?.credits} crédits/mois • {SIGNUP_PLANS.find(p => p.id === selectedPlan)?.features.join(" • ")}
+                      </p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-password">Mot de passe</Label>
