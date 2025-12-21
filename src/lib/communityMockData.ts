@@ -70,6 +70,7 @@ export interface LeaderboardEntry {
   badge?: "Top Contributeur" | "Élite" | "Régulier" | "Nouveau";
 }
 
+// Updated with new credit calculation: base 10 + bonus based on priority/freshness, capped at 20
 export const communityNeeds: CommunityNeeds = {
   active: true,
   summary: {
@@ -87,7 +88,7 @@ export const communityNeeds: CommunityNeeds = {
       priority: "high",
       context: "Besoin de nouvelles annonces des 4 derniers jours",
       estimated_time_min: 4,
-      credit_reward: 1,
+      credit_reward: 20, // Base 10 + priority high 10 = 20 (capped)
     },
     {
       model: "Ryzen 5 5600X",
@@ -97,7 +98,7 @@ export const communityNeeds: CommunityNeeds = {
       priority: "high",
       context: "Zone Île-de-France, scan approfondi nécessaire",
       estimated_time_min: 9,
-      credit_reward: 2,
+      credit_reward: 20, // Base 10 + priority high 10 + type 3 = 23 -> capped at 20
     },
     {
       model: "RTX 3070",
@@ -107,7 +108,7 @@ export const communityNeeds: CommunityNeeds = {
       priority: "medium",
       context: "Mise à jour hebdomadaire",
       estimated_time_min: 6,
-      credit_reward: 1,
+      credit_reward: 18, // Base 10 + priority medium 5 + freshness 3 = 18
     },
     {
       model: "Samsung 980 Pro 1TB",
@@ -117,7 +118,7 @@ export const communityNeeds: CommunityNeeds = {
       priority: "medium",
       context: "Couverture Auvergne-Rhône-Alpes",
       estimated_time_min: 5,
-      credit_reward: 1,
+      credit_reward: 15, // Base 10 + priority medium 5 = 15
     },
     {
       model: "Corsair Vengeance DDR5",
@@ -127,7 +128,7 @@ export const communityNeeds: CommunityNeeds = {
       priority: "low",
       context: "Scan périodique",
       estimated_time_min: 7,
-      credit_reward: 1,
+      credit_reward: 13, // Base 10 + type 3 = 13
     },
   ],
 };
@@ -142,34 +143,35 @@ export const userEligibility: UserEligibility = {
   },
 };
 
+// Updated history with new credit amounts
 export const mockHistory: HistoryItem[] = [
   {
     id: "hist_1",
-    date: "2025-11-06T14:30:00Z",
+    date: new Date(Date.now() - 86400000 * 1).toISOString(),
     model: "RTX 4060",
     type: "list_only",
     pages_scanned: 10,
     ads_new: 42,
     ads_changed: 15,
     status: "done",
-    credits_earned: 1,
+    credits_earned: 18, // High priority task
     duration_seconds: 420,
   },
   {
     id: "hist_2",
-    date: "2025-11-05T10:15:00Z",
+    date: new Date(Date.now() - 86400000 * 2).toISOString(),
     model: "Ryzen 7 5800X3D",
     type: "open_on_new",
     pages_scanned: 8,
     ads_new: 28,
     ads_changed: 8,
     status: "done",
-    credits_earned: 2,
+    credits_earned: 20, // High priority + open_on_new, capped
     duration_seconds: 510,
   },
   {
     id: "hist_3",
-    date: "2025-11-04T16:45:00Z",
+    date: new Date(Date.now() - 86400000 * 3).toISOString(),
     model: "RTX 3060 Ti",
     type: "list_only",
     pages_scanned: 0,
@@ -181,27 +183,51 @@ export const mockHistory: HistoryItem[] = [
   },
   {
     id: "hist_4",
-    date: "2025-11-03T11:20:00Z",
+    date: new Date(Date.now() - 86400000 * 4).toISOString(),
     model: "Samsung 980 Pro 1TB",
     type: "list_only",
     pages_scanned: 12,
     ads_new: 35,
     ads_changed: 10,
     status: "done",
-    credits_earned: 1,
+    credits_earned: 15, // Medium priority
     duration_seconds: 380,
   },
   {
     id: "hist_5",
-    date: "2025-11-02T09:00:00Z",
+    date: new Date(Date.now() - 86400000 * 5).toISOString(),
     model: "Corsair RM850x",
     type: "open_on_new",
     pages_scanned: 6,
     ads_new: 18,
     ads_changed: 5,
     status: "done",
-    credits_earned: 1,
+    credits_earned: 13, // Low priority + open_on_new
     duration_seconds: 340,
+  },
+  {
+    id: "hist_6",
+    date: new Date(Date.now() - 86400000 * 6).toISOString(),
+    model: "RTX 4070 Ti",
+    type: "list_only",
+    pages_scanned: 15,
+    ads_new: 52,
+    ads_changed: 20,
+    status: "done",
+    credits_earned: 20, // High priority, capped
+    duration_seconds: 550,
+  },
+  {
+    id: "hist_7",
+    date: new Date(Date.now() - 86400000 * 7).toISOString(),
+    model: "Intel i5-13600K",
+    type: "list_only",
+    pages_scanned: 8,
+    ads_new: 25,
+    ads_changed: 8,
+    status: "done",
+    credits_earned: 12, // Low priority + freshness bonus
+    duration_seconds: 290,
   },
 ];
 
@@ -323,6 +349,14 @@ export function generateAssignedShard(): AssignedShard {
   const models = ["RTX 4060", "Ryzen 5 5600X", "RTX 3070", "Samsung 980 Pro 1TB"];
   const model = models[Math.floor(Math.random() * models.length)];
   const type: "list_only" | "open_on_new" = Math.random() > 0.5 ? "list_only" : "open_on_new";
+  const priority: "high" | "medium" | "low" = Math.random() > 0.6 ? "high" : Math.random() > 0.3 ? "medium" : "low";
+  
+  // Calculate credit reward based on new formula
+  const baseReward = 10;
+  const priorityBonus = priority === "high" ? 10 : priority === "medium" ? 5 : 0;
+  const typeBonus = type === "open_on_new" ? 3 : 0;
+  const freshnessBonus = Math.floor(Math.random() * 8); // Random freshness
+  const totalReward = Math.min(20, baseReward + priorityBonus + typeBonus + freshnessBonus);
   
   return {
     shard_id: `sh_${Math.random().toString(36).substr(2, 6)}`,
@@ -338,6 +372,6 @@ export function generateAssignedShard(): AssignedShard {
     },
     expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     estimated_time_min: type === "list_only" ? 4 : 7,
-    credit_reward: type === "open_on_new" ? 2 : 1,
+    credit_reward: totalReward,
   };
 }

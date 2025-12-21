@@ -58,3 +58,18 @@ export {
   type CreditCheckResult,
   type UseCreditActionResult,
 } from "./useCredits";
+
+// Community Credits - gains from community scraps
+export {
+  useCommunityCredits,
+  calculateCreditGain,
+  getCreditGainDescription,
+  calculateFreshnessBonus,
+  BASE_REWARD,
+  MAX_CREDITS_PER_SCRAP,
+  PRIORITY_BONUS,
+  type CreditGainCalculation,
+  type CreditGainBreakdown,
+  type CommunityTaskWithReward,
+  type CreditEarnedEvent,
+} from "./useCommunityCredits";
