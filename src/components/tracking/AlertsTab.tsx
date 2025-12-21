@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Bell, Plus, Trash2, RefreshCw, AlertCircle, TrendingDown, TrendingUp, Power, Pencil, ChevronLeft, ChevronRight, Target, Package, Clock, BarChart3, X, Check, MapPin, Sparkles } from "lucide-react";
+import { Bell, Plus, Trash2, RefreshCw, AlertCircle, TrendingDown, TrendingUp, Power, Pencil, ChevronLeft, ChevronRight, Target, Package, Clock, BarChart3, X, Check, MapPin, Sparkles, Lock, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { formatDistanceToNow, subDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useUpdateAlert, useDeleteAlert } from "@/hooks/useProviderData";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { AlertLimitModal } from "@/components/alerts/AlertLimitModal";
 import type { Alert as AlertType } from "@/providers/types";
 
 interface AlertsTabProps {
@@ -66,6 +69,12 @@ const analyzeAlerts = (alerts: AlertType[]) => {
 };
 
 export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps) {
+  // Entitlements for plan-based limits
+  const { plan, limits, helpers } = useEntitlements();
+  const activeAlertsCount = helpers.getActiveAlertsCount();
+  const maxAlerts = limits.maxAlerts;
+  const canActivate = helpers.canActivateAlert();
+
   // Filtres
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -76,6 +85,9 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
   const [editingAlert, setEditingAlert] = useState<AlertType | null>(null);
   const [editAlertType, setEditAlertType] = useState<string>("");
   const [editThreshold, setEditThreshold] = useState<string>("");
+  
+  // Modal limite atteinte
+  const [showLimitModal, setShowLimitModal] = useState(false);
   
   // Mutations
   const updateAlert = useUpdateAlert();
@@ -164,6 +176,12 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
   };
 
   const handleToggleActive = async (alert: AlertType) => {
+    // If trying to activate and limit reached, show modal
+    if (!alert.is_active && !canActivate) {
+      setShowLimitModal(true);
+      return;
+    }
+    
     await updateAlert.mutateAsync({
       id: alert.id,
       data: { is_active: !alert.is_active }
@@ -259,23 +277,51 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
       {/* Dashboard alertes - Statistiques réelles */}
       <Card className="bg-gradient-to-br from-amber-500/5 via-transparent to-transparent border-amber-500/20">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-amber-500" />
-            Vue d'ensemble de vos alertes
+          <CardTitle className="text-base flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-amber-500" />
+              Vue d'ensemble de vos alertes
+            </span>
+            <Badge variant="outline" className="gap-1">
+              {plan === "starter" && <Bell className="h-3 w-3" />}
+              {plan === "pro" && <Crown className="h-3 w-3 text-primary" />}
+              {plan === "elite" && <Crown className="h-3 w-3 text-amber-500" />}
+              Plan {plan.charAt(0).toUpperCase() + plan.slice(1)}
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Alertes actives */}
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Alertes actives</p>
-              <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-bold text-green-500">{alertStats.active}</p>
-                <p className="text-sm text-muted-foreground">/ {alertStats.total}</p>
+            {/* Alertes actives avec jauge limite */}
+            <div className="space-y-2 md:col-span-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Alertes actives</p>
+                <p className="text-xs font-medium">
+                  {activeAlertsCount} / {maxAlerts}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {alertStats.inactive > 0 ? `${alertStats.inactive} inactive${alertStats.inactive > 1 ? 's' : ''}` : 'Toutes actives'}
-              </p>
+              <Progress 
+                value={(activeAlertsCount / maxAlerts) * 100} 
+                className={`h-2 ${activeAlertsCount >= maxAlerts ? '[&>div]:bg-amber-500' : ''}`}
+              />
+              <div className="flex items-center justify-between text-xs">
+                <span className={activeAlertsCount >= maxAlerts ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-muted-foreground'}>
+                  {activeAlertsCount >= maxAlerts ? (
+                    <span className="flex items-center gap-1">
+                      <Lock className="h-3 w-3" />
+                      Limite atteinte
+                    </span>
+                  ) : (
+                    `${maxAlerts - activeAlertsCount} disponibles`
+                  )}
+                </span>
+                {activeAlertsCount >= maxAlerts && plan !== "elite" && (
+                  <Link to="/account?tab=subscription" className="text-primary hover:underline flex items-center gap-1">
+                    <Crown className="h-3 w-3" />
+                    Augmenter
+                  </Link>
+                )}
+              </div>
             </div>
 
             {/* Répartition cibles */}
@@ -504,14 +550,25 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
                     
                     {/* Actions */}
                     <div className="flex items-center gap-1 ml-4">
+                      {/* Bouton Activer/Désactiver avec gestion limite */}
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className={`h-8 w-8 ${!alert.is_active && !canActivate ? 'opacity-50' : ''}`}
                         onClick={() => handleToggleActive(alert)}
-                        title={alert.is_active ? "Désactiver" : "Activer"}
+                        title={
+                          alert.is_active 
+                            ? "Désactiver" 
+                            : canActivate 
+                              ? "Activer" 
+                              : `Limite atteinte (${activeAlertsCount}/${maxAlerts})`
+                        }
                       >
-                        <Power className={`h-4 w-4 ${alert.is_active ? 'text-green-500' : 'text-muted-foreground'}`} />
+                        {!alert.is_active && !canActivate ? (
+                          <Lock className="h-4 w-4 text-amber-500" />
+                        ) : (
+                          <Power className={`h-4 w-4 ${alert.is_active ? 'text-green-500' : 'text-muted-foreground'}`} />
+                        )}
                       </Button>
                       <Button
                         variant="ghost"
@@ -590,6 +647,15 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal limite atteinte */}
+      <AlertLimitModal
+        open={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        currentPlan={plan}
+        activeAlerts={activeAlertsCount}
+        maxAlerts={maxAlerts}
+      />
     </div>
   );
 }
