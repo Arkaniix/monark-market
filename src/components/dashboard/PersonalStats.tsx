@@ -18,10 +18,12 @@ import {
 import { motion } from "framer-motion";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { useState } from "react";
+import { CreditResetInfo } from "@/components/credits/CreditResetInfo";
 
 interface PersonalStatsProps {
   totalScraps: number;
   creditsRemaining: number;
+  creditsResetDate?: string | null;
   watchlistCount: number;
   estimatedGains: number;
   recentActivity: Array<{
@@ -53,7 +55,8 @@ const itemVariants = {
 
 export function PersonalStats({ 
   totalScraps, 
-  creditsRemaining, 
+  creditsRemaining,
+  creditsResetDate,
   watchlistCount, 
   estimatedGains,
   recentActivity,
@@ -147,15 +150,20 @@ export function PersonalStats({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-end justify-between">
-                  <div>
-                    <div className="text-3xl font-bold text-success">{creditsRemaining}</div>
-                    <Link to="/community">
-                      <Button variant="link" size="sm" className="p-0 h-auto text-xs">
-                        Gagner des crédits
-                      </Button>
-                    </Link>
-                  </div>
+                <div className="space-y-2">
+                  <div className="text-3xl font-bold text-success">{creditsRemaining}</div>
+                  {creditsResetDate && (
+                    <CreditResetInfo
+                      resetDate={creditsResetDate}
+                      creditsRemaining={creditsRemaining}
+                      variant="compact"
+                    />
+                  )}
+                  <Link to="/community">
+                    <Button variant="link" size="sm" className="p-0 h-auto text-xs">
+                      Gagner des crédits
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
