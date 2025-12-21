@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +15,7 @@ import { fr } from "date-fns/locale";
 import { motion } from "framer-motion";
 import ScrapModal from "@/components/ScrapModal";
 import { useAuth } from "@/context/AuthContext";
+import { AccountSummary } from "@/components/account/AccountSummary";
 import { CreditResetInfo as CreditResetInfoComponent } from "@/components/credits/CreditResetInfo";
 import {
   useWatchlist,
@@ -95,9 +95,6 @@ export default function MyAccount() {
     return null;
   }
 
-  const userCredits = currentSubscription?.credits_remaining ?? 0;
-  const maxCredits = 200;
-  const creditPercentage = Math.min((userCredits / maxCredits) * 100, 100);
 
   const handleSubscribe = async (planId: string) => {
     subscribeMutation.mutate(planId, {
@@ -302,56 +299,7 @@ export default function MyAccount() {
 
         {/* Dashboard Tab */}
         <TabsContent value="dashboard" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-primary" />
-                  Crédits disponibles
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">{userCredits}</span>
-                  <span className="text-muted-foreground">/ {maxCredits}</span>
-                </div>
-                <Progress value={creditPercentage} className="h-2" />
-                {currentSubscription?.credits_reset_date && (
-                  <CreditResetInfoComponent
-                    resetDate={currentSubscription.credits_reset_date}
-                    creditsRemaining={userCredits}
-                    variant="default"
-                  />
-                )}
-                <Button className="w-full" onClick={() => setShowScrapModal(true)}>Lancer un scrap</Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-primary" />
-                  Activité
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Watchlist</span>
-                    <span className="font-bold">{watchlistItems.length} éléments</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Alertes actives</span>
-                    <span className="font-bold">{alerts.filter(a => a.is_active).length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Notifications non lues</span>
-                    <span className="font-bold">{unreadCount}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <AccountSummary onLaunchScrap={() => setShowScrapModal(true)} />
         </TabsContent>
 
         {/* Subscription Tab */}
