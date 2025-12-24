@@ -265,17 +265,7 @@ export default function Auth() {
               </div>
             </div>
 
-            <div className="flex gap-4 items-start group hover:translate-x-2 transition-transform">
-              <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
-                <Star className="h-6 w-6 text-accent" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Deals exclusifs</h3>
-                <p className="text-muted-foreground text-sm">
-                  Découvrez les meilleures offres avant tout le monde avec notre système d'alerte
-                </p>
-              </div>
-            </div>
+            
 
             <div className="flex gap-4 items-start group hover:translate-x-2 transition-transform">
               <div className="h-12 w-12 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0 group-hover:bg-warning/20 transition-colors">
