@@ -3,23 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { 
-  Search, 
-  CreditCard, 
-  Eye, 
-  TrendingUp, 
-  Clock, 
-  CheckCircle,
-  AlertCircle,
-  DollarSign,
-  Download,
-  Filter
-} from "lucide-react";
+import { Search, CreditCard, Eye, TrendingUp, Clock, CheckCircle, AlertCircle, DollarSign, Download, Filter } from "lucide-react";
 import { motion } from "framer-motion";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { useState } from "react";
 import { CreditResetInfo } from "@/components/credits/CreditResetInfo";
-
 interface PersonalStatsProps {
   totalScraps: number;
   creditsRemaining: number;
@@ -39,56 +27,70 @@ interface PersonalStatsProps {
     credits?: number;
   }>;
 }
-
 const containerVariants = {
-  hidden: { opacity: 0 },
+  hidden: {
+    opacity: 0
+  },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }
+    transition: {
+      staggerChildren: 0.1
+    }
   }
 };
-
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+  hidden: {
+    opacity: 0,
+    y: 20
+  },
+  visible: {
+    opacity: 1,
+    y: 0
+  }
 };
-
-export function PersonalStats({ 
-  totalScraps, 
+export function PersonalStats({
+  totalScraps,
   creditsRemaining,
   creditsResetDate,
-  watchlistCount, 
+  watchlistCount,
   estimatedGains,
   recentActivity,
   performanceData
 }: PersonalStatsProps) {
   const [timeFilter, setTimeFilter] = useState<'7j' | '30j' | '90j'>('30j');
-
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case "scrap": return <Search className="h-4 w-4 text-primary" />;
-      case "credit": return <CreditCard className="h-4 w-4 text-success" />;
-      case "alert": return <AlertCircle className="h-4 w-4 text-warning" />;
-      default: return <CheckCircle className="h-4 w-4 text-muted-foreground" />;
+      case "scrap":
+        return <Search className="h-4 w-4 text-primary" />;
+      case "credit":
+        return <CreditCard className="h-4 w-4 text-success" />;
+      case "alert":
+        return <AlertCircle className="h-4 w-4 text-warning" />;
+      default:
+        return <CheckCircle className="h-4 w-4 text-muted-foreground" />;
     }
   };
-
   const getActivityBgColor = (type: string) => {
     switch (type) {
-      case "credit": return "bg-success/5 border-success/10";
-      default: return "bg-muted/50";
+      case "credit":
+        return "bg-success/5 border-success/10";
+      default:
+        return "bg-muted/50";
     }
   };
 
   // Mini sparkline data pour gains estimés
-  const sparklineData = [
-    { value: estimatedGains * 0.7 },
-    { value: estimatedGains * 0.8 },
-    { value: estimatedGains * 0.75 },
-    { value: estimatedGains * 0.9 },
-    { value: estimatedGains }
-  ];
-
+  const sparklineData = [{
+    value: estimatedGains * 0.7
+  }, {
+    value: estimatedGains * 0.8
+  }, {
+    value: estimatedGains * 0.75
+  }, {
+    value: estimatedGains * 0.9
+  }, {
+    value: estimatedGains
+  }];
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -96,27 +98,22 @@ export function PersonalStats({
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-
     if (diffMins < 60) return `Il y a ${diffMins} min`;
     if (diffHours < 24) return `Il y a ${diffHours}h`;
     if (diffDays < 7) return `Il y a ${diffDays}j`;
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short'
+    });
   };
-
-  return (
-    <section className="py-8">
+  return <section className="py-8">
       <div className="container">
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-2">Vue d'ensemble personnelle</h2>
           <p className="text-muted-foreground">Synthèse de tes performances et activités</p>
         </div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-6"
-        >
+        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
           {/* Statistiques principales */}
           <motion.div variants={itemVariants} className="grid md:grid-cols-4 gap-4">
             <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background h-full">
@@ -152,13 +149,7 @@ export function PersonalStats({
               <CardContent>
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-success">{creditsRemaining}</div>
-                  {creditsResetDate && (
-                    <CreditResetInfo
-                      resetDate={creditsResetDate}
-                      creditsRemaining={creditsRemaining}
-                      variant="compact"
-                    />
-                  )}
+                  {creditsResetDate && <CreditResetInfo resetDate={creditsResetDate} creditsRemaining={creditsRemaining} variant="compact" />}
                   <Link to="/community">
                     <Button variant="link" size="sm" className="p-0 h-auto text-xs">
                       Gagner des crédits
@@ -204,13 +195,7 @@ export function PersonalStats({
                   <div className="h-8">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={sparklineData}>
-                        <Line 
-                          type="monotone" 
-                          dataKey="value" 
-                          stroke="hsl(var(--warning))" 
-                          strokeWidth={2}
-                          dot={false}
-                        />
+                        <Line type="monotone" dataKey="value" stroke="hsl(var(--warning))" strokeWidth={2} dot={false} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
@@ -234,18 +219,13 @@ export function PersonalStats({
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {recentActivity.slice(0, 5).map((activity) => (
-                    <div 
-                      key={activity.id} 
-                      className={`flex items-start gap-3 p-3 rounded-lg border ${getActivityBgColor(activity.type)}`}
-                    >
+                  {recentActivity.slice(0, 5).map(activity => <div key={activity.id} className={`flex items-start gap-3 p-3 rounded-lg border ${getActivityBgColor(activity.type)}`}>
                       <div className="mt-0.5">{getActivityIcon(activity.type)}</div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium leading-tight">{activity.description}</p>
                         <p className="text-xs text-muted-foreground mt-1">{formatDate(activity.date)}</p>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
                 <Button variant="outline" className="w-full mt-4" size="sm">
                   Voir l'historique complet
@@ -263,35 +243,17 @@ export function PersonalStats({
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 p-1 rounded-md bg-muted">
-                      <Button
-                        variant={timeFilter === '7j' ? 'default' : 'ghost'}
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={() => setTimeFilter('7j')}
-                      >
+                      <Button variant={timeFilter === '7j' ? 'default' : 'ghost'} size="sm" className="h-7 px-2" onClick={() => setTimeFilter('7j')}>
                         7j
                       </Button>
-                      <Button
-                        variant={timeFilter === '30j' ? 'default' : 'ghost'}
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={() => setTimeFilter('30j')}
-                      >
+                      <Button variant={timeFilter === '30j' ? 'default' : 'ghost'} size="sm" className="h-7 px-2" onClick={() => setTimeFilter('30j')}>
                         30j
                       </Button>
-                      <Button
-                        variant={timeFilter === '90j' ? 'default' : 'ghost'}
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={() => setTimeFilter('90j')}
-                      >
+                      <Button variant={timeFilter === '90j' ? 'default' : 'ghost'} size="sm" className="h-7 px-2" onClick={() => setTimeFilter('90j')}>
                         90j
                       </Button>
                     </div>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Download className="h-4 w-4" />
-                      CSV
-                    </Button>
+                    
                   </div>
                 </div>
               </CardHeader>
@@ -299,33 +261,14 @@ export function PersonalStats({
                 <div className="h-[200px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={performanceData}>
-                      <XAxis 
-                        dataKey="day" 
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis 
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--background))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "var(--radius)",
-                        }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="scraps" 
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth={2}
-                        dot={false}
-                      />
+                      <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                      <Tooltip contentStyle={{
+                      backgroundColor: "hsl(var(--background))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)"
+                    }} />
+                      <Line type="monotone" dataKey="scraps" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -340,6 +283,5 @@ export function PersonalStats({
           </motion.div>
         </motion.div>
       </div>
-    </section>
-  );
+    </section>;
 }
