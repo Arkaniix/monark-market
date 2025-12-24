@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft, Check, Rocket, Award } from "lucide-react";
+import { Zap, Crown, Star, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft, Check, Rocket, Award } from "lucide-react";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -255,7 +255,7 @@ export default function Auth() {
           <div className="space-y-6">
             <div className="flex gap-4 items-start group hover:translate-x-2 transition-transform">
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                <TrendingUp className="h-6 w-6 text-primary" />
+                
               </div>
               <div>
                 <h3 className="font-semibold text-lg mb-1">Analyse de tendances</h3>
@@ -265,17 +265,7 @@ export default function Auth() {
               </div>
             </div>
 
-            <div className="flex gap-4 items-start group hover:translate-x-2 transition-transform">
-              <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
-                <Star className="h-6 w-6 text-accent" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Deals exclusifs</h3>
-                <p className="text-muted-foreground text-sm">
-                  Découvrez les meilleures offres avant tout le monde avec notre système d'alerte
-                </p>
-              </div>
-            </div>
+            
 
             <div className="flex gap-4 items-start group hover:translate-x-2 transition-transform">
               <div className="h-12 w-12 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0 group-hover:bg-warning/20 transition-colors">
