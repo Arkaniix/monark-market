@@ -9,11 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Flame, MapPin, Calendar, TrendingDown, Package, Truck, ExternalLink, 
-  RotateCcw, DollarSign, BarChart3, Sparkles, Star, Bell, Cpu, HardDrive, 
-  CircuitBoard, Monitor, TrendingUp
-} from "lucide-react";
+import { Flame, MapPin, Calendar, TrendingDown, Package, Truck, ExternalLink, RotateCcw, DollarSign, BarChart3, Sparkles, Star, Bell, Cpu, HardDrive, CircuitBoard, Monitor, TrendingUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { formatDistanceToNow } from "date-fns";
@@ -22,22 +18,28 @@ import { useDeals, useMarketSummary, useAddToWatchlist, type DealsFilters } from
 import { DealsSkeleton, MarketSummarySkeleton } from "@/components/deals/DealsSkeleton";
 import { toast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
-
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
-
 const containerVariants = {
-  hidden: { opacity: 0 },
+  hidden: {
+    opacity: 0
+  },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.03 }
+    transition: {
+      staggerChildren: 0.03
+    }
   }
 };
-
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+  hidden: {
+    opacity: 0,
+    y: 20
+  },
+  visible: {
+    opacity: 1,
+    y: 0
+  }
 };
-
 export default function Deals() {
   // Filters state
   const [platform, setPlatform] = useState("all");
@@ -63,24 +65,33 @@ export default function Deals() {
     price_max: priceRange[1],
     sort_by: sortBy,
     page: currentPage,
-    limit: itemsPerPage,
+    limit: itemsPerPage
   };
 
   // API queries
-  const { data: dealsData, isLoading: dealsLoading, error: dealsError } = useDeals(filters);
-  const { data: summary, isLoading: summaryLoading } = useMarketSummary();
+  const {
+    data: dealsData,
+    isLoading: dealsLoading,
+    error: dealsError
+  } = useDeals(filters);
+  const {
+    data: summary,
+    isLoading: summaryLoading
+  } = useMarketSummary();
   const addToWatchlist = useAddToWatchlist();
-
-  const openAlertModal = (deal: { id: number; title: string; price: number }) => {
+  const openAlertModal = (deal: {
+    id: number;
+    title: string;
+    price: number;
+  }) => {
     setAlertTarget({
       type: "ad",
       id: deal.id,
       name: deal.title,
-      currentPrice: deal.price,
+      currentPrice: deal.price
     });
     setAlertModalOpen(true);
   };
-
   const resetFilters = () => {
     setPlatform("all");
     setRegion("all");
@@ -90,54 +101,58 @@ export default function Deals() {
     setSortBy("score");
     setCurrentPage(1);
   };
-
   const handleAddToWatchlist = async (adId: number, title: string) => {
     try {
       await addToWatchlist.mutateAsync(adId);
       toast({
         title: "Ajouté à la watchlist",
-        description: `"${title}" a été ajouté à votre watchlist.`,
+        description: `"${title}" a été ajouté à votre watchlist.`
       });
     } catch {
       toast({
         title: "Erreur",
         description: "Impossible d'ajouter à la watchlist.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const getScoreColor = (score: number) => {
     if (score >= 80) return "default";
     if (score >= 60) return "secondary";
     return "outline";
   };
-
   const getScoreLabel = (score: number) => {
     if (score >= 80) return "Excellent";
     if (score >= 60) return "Correct";
     return "Standard";
   };
-
   const getPerformanceBadge = (score: number) => {
-    if (score >= 85) return { label: "Top deal", variant: "default" as const };
-    if (score >= 70) return { label: "Bon plan", variant: "secondary" as const };
-    return { label: "À surveiller", variant: "outline" as const };
+    if (score >= 85) return {
+      label: "Top deal",
+      variant: "default" as const
+    };
+    if (score >= 70) return {
+      label: "Bon plan",
+      variant: "secondary" as const
+    };
+    return {
+      label: "À surveiller",
+      variant: "outline" as const
+    };
   };
-
   const getItemTypeIcon = (type: string) => {
     switch (type) {
-      case "pc": return Monitor;
-      case "lot": return Package;
-      default: return Cpu;
+      case "pc":
+        return Monitor;
+      case "lot":
+        return Package;
+      default:
+        return Cpu;
     }
   };
-
   const totalPages = dealsData?.total_pages || 1;
   const totalItems = dealsData?.total || 0;
-
-  return (
-    <div className="min-h-screen py-8">
+  return <div className="min-h-screen py-8">
       <div className="container max-w-7xl">
         {/* Header */}
         <div className="mb-8">
@@ -149,54 +164,12 @@ export default function Deals() {
           </p>
 
           {/* Market Summary */}
-          {summaryLoading ? (
-            <MarketSummarySkeleton />
-          ) : summary ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className="h-4 w-4 text-primary" />
-                    <p className="text-xs text-muted-foreground">Prix médian 7j</p>
-                  </div>
-                  <div className="text-2xl font-bold">{summary.median_price_7d}€</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    {summary.price_variation < 0 ? (
-                      <TrendingDown className="h-4 w-4 text-success" />
-                    ) : (
-                      <TrendingUp className="h-4 w-4 text-destructive" />
-                    )}
-                    <p className="text-xs text-muted-foreground">Variation</p>
-                  </div>
-                  <div className={`text-2xl font-bold ${summary.price_variation < 0 ? 'text-success' : 'text-destructive'}`}>
-                    {summary.price_variation}%
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="h-4 w-4 text-accent" />
-                    <p className="text-xs text-muted-foreground">Annonces actives</p>
-                  </div>
-                  <div className="text-2xl font-bold">{summary.total_active_ads}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <p className="text-xs text-muted-foreground">Nouveaux deals</p>
-                  </div>
-                  <div className="text-2xl font-bold">{summary.new_deals_today}</div>
-                </CardContent>
-              </Card>
-            </div>
-          ) : null}
+          {summaryLoading ? <MarketSummarySkeleton /> : summary ? <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              
+              
+              
+              
+            </div> : null}
         </div>
 
         <Separator className="my-8" />
@@ -212,7 +185,10 @@ export default function Deals() {
             <div className="grid md:grid-cols-4 gap-4 mb-4">
               <div className="space-y-2">
                 <Label>Plateforme</Label>
-                <Select value={platform} onValueChange={(v) => { setPlatform(v); setCurrentPage(1); }}>
+                <Select value={platform} onValueChange={v => {
+                setPlatform(v);
+                setCurrentPage(1);
+              }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Plateforme" />
                   </SelectTrigger>
@@ -227,7 +203,10 @@ export default function Deals() {
 
               <div className="space-y-2">
                 <Label>Région</Label>
-                <Select value={region} onValueChange={(v) => { setRegion(v); setCurrentPage(1); }}>
+                <Select value={region} onValueChange={v => {
+                setRegion(v);
+                setCurrentPage(1);
+              }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Région" />
                   </SelectTrigger>
@@ -249,7 +228,10 @@ export default function Deals() {
 
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={itemType} onValueChange={(v) => { setItemType(v); setCurrentPage(1); }}>
+                <Select value={itemType} onValueChange={v => {
+                setItemType(v);
+                setCurrentPage(1);
+              }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
@@ -264,7 +246,10 @@ export default function Deals() {
 
               <div className="space-y-2">
                 <Label>État</Label>
-                <Select value={condition} onValueChange={(v) => { setCondition(v); setCurrentPage(1); }}>
+                <Select value={condition} onValueChange={v => {
+                setCondition(v);
+                setCurrentPage(1);
+              }}>
                   <SelectTrigger>
                     <SelectValue placeholder="État" />
                   </SelectTrigger>
@@ -291,47 +276,34 @@ export default function Deals() {
                     <span className="text-sm font-medium text-primary">{priceRange[1]}€</span>
                   </div>
                 </div>
-                <Slider
-                  value={priceRange}
-                  onValueChange={(v) => { setPriceRange(v); setCurrentPage(1); }}
-                  min={0}
-                  max={5000}
-                  step={50}
-                  className="w-full"
-                />
+                <Slider value={priceRange} onValueChange={v => {
+                setPriceRange(v);
+                setCurrentPage(1);
+              }} min={0} max={5000} step={50} className="w-full" />
                 <div className="grid grid-cols-2 gap-4 mt-2">
-                  <Input
-                    type="number"
-                    value={priceRange[0]}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      if (val >= 0 && val <= priceRange[1]) {
-                        setPriceRange([val, priceRange[1]]);
-                        setCurrentPage(1);
-                      }
-                    }}
-                    min={0}
-                    max={priceRange[1]}
-                  />
-                  <Input
-                    type="number"
-                    value={priceRange[1]}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      if (val >= priceRange[0] && val <= 5000) {
-                        setPriceRange([priceRange[0], val]);
-                        setCurrentPage(1);
-                      }
-                    }}
-                    min={priceRange[0]}
-                    max={5000}
-                  />
+                  <Input type="number" value={priceRange[0]} onChange={e => {
+                  const val = Number(e.target.value);
+                  if (val >= 0 && val <= priceRange[1]) {
+                    setPriceRange([val, priceRange[1]]);
+                    setCurrentPage(1);
+                  }
+                }} min={0} max={priceRange[1]} />
+                  <Input type="number" value={priceRange[1]} onChange={e => {
+                  const val = Number(e.target.value);
+                  if (val >= priceRange[0] && val <= 5000) {
+                    setPriceRange([priceRange[0], val]);
+                    setCurrentPage(1);
+                  }
+                }} min={priceRange[0]} max={5000} />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Trier par</Label>
-                <Select value={sortBy} onValueChange={(v) => { setSortBy(v as DealsFilters['sort_by']); setCurrentPage(1); }}>
+                <Select value={sortBy} onValueChange={v => {
+                setSortBy(v as DealsFilters['sort_by']);
+                setCurrentPage(1);
+              }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Trier par" />
                   </SelectTrigger>
@@ -362,63 +334,44 @@ export default function Deals() {
             </h2>
             <div className="flex items-center gap-2">
               <Label className="text-sm">Par page:</Label>
-              <Select
-                value={itemsPerPage.toString()}
-                onValueChange={(v) => {
-                  setItemsPerPage(Number(v));
-                  setCurrentPage(1);
-                }}
-              >
+              <Select value={itemsPerPage.toString()} onValueChange={v => {
+              setItemsPerPage(Number(v));
+              setCurrentPage(1);
+            }}>
                 <SelectTrigger className="w-20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ITEMS_PER_PAGE_OPTIONS.map((option) => (
-                    <SelectItem key={option} value={option.toString()}>
+                  {ITEMS_PER_PAGE_OPTIONS.map(option => <SelectItem key={option} value={option.toString()}>
                       {option}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {dealsLoading ? (
-            <DealsSkeleton />
-          ) : dealsError ? (
-            <Card className="p-12">
+          {dealsLoading ? <DealsSkeleton /> : dealsError ? <Card className="p-12">
               <div className="text-center text-muted-foreground">
                 <p className="mb-4">Erreur lors du chargement des deals.</p>
                 <Button variant="outline" onClick={() => window.location.reload()}>
                   Réessayer
                 </Button>
               </div>
-            </Card>
-          ) : !dealsData?.items.length ? (
-            <Card className="p-12">
+            </Card> : !dealsData?.items.length ? <Card className="p-12">
               <div className="text-center text-muted-foreground">
                 <p className="mb-4">Aucun deal trouvé avec ces critères.</p>
                 <Button variant="outline" onClick={resetFilters}>
                   Réinitialiser les filtres
                 </Button>
               </div>
-            </Card>
-          ) : (
-            <>
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {dealsData.items.map((deal) => {
-                  const discount = Math.abs(deal.deviation_pct);
-                  const perfBadge = getPerformanceBadge(deal.score);
-                  const isHighValue = discount >= 15;
-                  const ItemTypeIcon = getItemTypeIcon(deal.item_type);
-
-                  return (
-                    <motion.div key={deal.id} variants={itemVariants}>
+            </Card> : <>
+              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {dealsData.items.map(deal => {
+              const discount = Math.abs(deal.deviation_pct);
+              const perfBadge = getPerformanceBadge(deal.score);
+              const isHighValue = discount >= 15;
+              const ItemTypeIcon = getItemTypeIcon(deal.item_type);
+              return <motion.div key={deal.id} variants={itemVariants}>
                       <Card className="hover:border-primary transition-all hover:shadow-xl group h-full flex flex-col">
                         <CardHeader>
                           <div className="flex items-start justify-between mb-3">
@@ -444,9 +397,9 @@ export default function Deals() {
                             <div className="text-right flex-shrink-0">
                               <Badge variant="secondary" className="mb-2 text-xs">
                                 {formatDistanceToNow(new Date(deal.publication_date), {
-                                  addSuffix: true,
-                                  locale: fr
-                                })}
+                            addSuffix: true,
+                            locale: fr
+                          })}
                               </Badge>
                               <div className="flex items-center gap-1">
                                 {isHighValue && <span className="text-lg">⚡</span>}
@@ -483,12 +436,10 @@ export default function Deals() {
                                 <Calendar className="h-4 w-4 flex-shrink-0" />
                                 {new Date(deal.publication_date).toLocaleDateString('fr-FR')}
                               </div>
-                              {deal.delivery_possible && (
-                                <div className="flex items-center gap-2 text-success">
+                              {deal.delivery_possible && <div className="flex items-center gap-2 text-success">
                                   <Truck className="h-4 w-4 flex-shrink-0" />
                                   Livraison disponible
-                                </div>
-                              )}
+                                </div>}
                             </div>
 
                             <div className="pt-3 border-t flex items-center justify-between">
@@ -503,24 +454,15 @@ export default function Deals() {
                             </div>
 
                             <div className="flex gap-2">
-                              {deal.id ? (
-                                <Button className="flex-1" variant="default" size="sm" asChild>
+                              {deal.id ? <Button className="flex-1" variant="default" size="sm" asChild>
                                   <Link to={`/ads/${deal.id}`}>Voir annonce</Link>
-                                </Button>
-                              ) : (
-                                <Button className="flex-1" variant="default" size="sm" disabled>
+                                </Button> : <Button className="flex-1" variant="default" size="sm" disabled>
                                   Voir annonce
-                                </Button>
-                              )}
+                                </Button>}
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleAddToWatchlist(deal.id, deal.title)}
-                                      disabled={addToWatchlist.isPending || !deal.id}
-                                    >
+                                    <Button variant="outline" size="sm" onClick={() => handleAddToWatchlist(deal.id, deal.title)} disabled={addToWatchlist.isPending || !deal.id}>
                                       <Star className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
@@ -530,95 +472,68 @@ export default function Deals() {
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => openAlertModal(deal)}
-                                      disabled={!deal.id}
-                                    >
+                                    <Button variant="outline" size="sm" onClick={() => openAlertModal(deal)} disabled={!deal.id}>
                                       <Bell className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>Alerter</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                              {deal.url && (
-                                <Button variant="outline" size="sm" asChild>
+                              {deal.url && <Button variant="outline" size="sm" asChild>
                                   <a href={deal.url} target="_blank" rel="noopener noreferrer">
                                     <ExternalLink className="h-4 w-4" />
                                   </a>
-                                </Button>
-                              )}
+                                </Button>}
                             </div>
                           </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
-                  );
-                })}
+                    </motion.div>;
+            })}
               </motion.div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="mt-8 flex justify-center">
+              {totalPages > 1 && <div className="mt-8 flex justify-center">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
+                        <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
                       </PaginationItem>
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let page: number;
-                        if (totalPages <= 5) {
-                          page = i + 1;
-                        } else if (currentPage <= 3) {
-                          page = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          page = totalPages - 4 + i;
-                        } else {
-                          page = currentPage - 2 + i;
-                        }
-                        return (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              onClick={() => setCurrentPage(page)}
-                              isActive={currentPage === page}
-                              className="cursor-pointer"
-                            >
+                      {Array.from({
+                  length: Math.min(5, totalPages)
+                }, (_, i) => {
+                  let page: number;
+                  if (totalPages <= 5) {
+                    page = i + 1;
+                  } else if (currentPage <= 3) {
+                    page = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    page = totalPages - 4 + i;
+                  } else {
+                    page = currentPage - 2 + i;
+                  }
+                  return <PaginationItem key={page}>
+                            <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer">
                               {page}
                             </PaginationLink>
-                          </PaginationItem>
-                        );
-                      })}
+                          </PaginationItem>;
+                })}
                       <PaginationItem>
-                        <PaginationNext
-                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
+                        <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>
-                </div>
-              )}
+                </div>}
 
               <p className="text-center text-sm text-muted-foreground mt-4">
                 Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
                 {Math.min(currentPage * itemsPerPage, totalItems)} sur {totalItems}
               </p>
-            </>
-          )}
+            </>}
         </div>
       </div>
 
       {/* Alert Modal */}
-      <CreateAlertModal
-        open={alertModalOpen}
-        onClose={() => setAlertModalOpen(false)}
-        target={alertTarget}
-        onSuccess={() => setAlertModalOpen(false)}
-      />
-    </div>
-  );
+      <CreateAlertModal open={alertModalOpen} onClose={() => setAlertModalOpen(false)} target={alertTarget} onSuccess={() => setAlertModalOpen(false)} />
+    </div>;
 }
