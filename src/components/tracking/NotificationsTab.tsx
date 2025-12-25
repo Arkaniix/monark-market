@@ -18,10 +18,7 @@ const PREMIUM_NOTIFICATION_TYPES = ['deal_detected', 'price_analysis', 'market_i
 
 // Helper pour déterminer si une notification est premium
 const isPremiumNotification = (notification: Notification): boolean => {
-  return PREMIUM_NOTIFICATION_TYPES.includes(notification.type) || 
-         notification.title?.toLowerCase().includes('exclusi') ||
-         notification.title?.toLowerCase().includes('analyse') ||
-         notification.message?.toLowerCase().includes('opportunité rare');
+  return PREMIUM_NOTIFICATION_TYPES.includes(notification.type) || notification.title?.toLowerCase().includes('exclusi') || notification.title?.toLowerCase().includes('analyse') || notification.message?.toLowerCase().includes('opportunité rare');
 };
 interface NotificationsTabProps {
   notifications: Notification[];
@@ -34,31 +31,38 @@ interface NotificationsTabProps {
 const analyzeNotifications = (notifications: Notification[]) => {
   const now = new Date();
   const weekAgo = subDays(now, 7);
-  
+
   // Notifications des 7 derniers jours par jour
-  const last7Days: Record<string, { date: string; fullDate: string; deals: number; alerts: number; community: number; total: number }> = {};
+  const last7Days: Record<string, {
+    date: string;
+    fullDate: string;
+    deals: number;
+    alerts: number;
+    community: number;
+    total: number;
+  }> = {};
   for (let i = 6; i >= 0; i--) {
     const date = subDays(now, i);
     const key = format(date, 'yyyy-MM-dd');
     last7Days[key] = {
-      date: format(date, 'EEE', { locale: fr }),
+      date: format(date, 'EEE', {
+        locale: fr
+      }),
       fullDate: format(date, 'dd/MM'),
       deals: 0,
       alerts: 0,
       community: 0,
-      total: 0,
+      total: 0
     };
   }
-  
+
   // Compter les notifications par type et par jour
   let totalDeals = 0;
   let totalAlerts = 0;
   let totalCommunity = 0;
-  
   notifications.forEach(notif => {
     const createdAt = new Date(notif.created_at);
     const key = format(createdAt, 'yyyy-MM-dd');
-    
     if (last7Days[key]) {
       last7Days[key].total++;
       if (notif.type === 'deal' || notif.type === 'deal_detected') {
@@ -72,15 +76,12 @@ const analyzeNotifications = (notifications: Notification[]) => {
         totalCommunity++;
       }
     }
-    
+
     // Compter même si hors graphique
     if (createdAt >= weekAgo) {
-      if (notif.type === 'deal' || notif.type === 'deal_detected') totalDeals++;
-      else if (notif.type === 'price_alert' || notif.type === 'alert') totalAlerts++;
-      else if (notif.type === 'community' || notif.type === 'community_reward') totalCommunity++;
+      if (notif.type === 'deal' || notif.type === 'deal_detected') totalDeals++;else if (notif.type === 'price_alert' || notif.type === 'alert') totalAlerts++;else if (notif.type === 'community' || notif.type === 'community_reward') totalCommunity++;
     }
   });
-  
   return {
     chartData: Object.values(last7Days),
     totalDeals,
@@ -88,9 +89,7 @@ const analyzeNotifications = (notifications: Notification[]) => {
     totalCommunity,
     total7Days: Object.values(last7Days).reduce((sum, d) => sum + d.total, 0),
     unreadCount: notifications.filter(n => !n.is_read).length,
-    readRate: notifications.length > 0 
-      ? ((notifications.filter(n => n.is_read).length / notifications.length) * 100).toFixed(0)
-      : '0',
+    readRate: notifications.length > 0 ? (notifications.filter(n => n.is_read).length / notifications.length * 100).toFixed(0) : '0'
   };
 };
 type DateGroup = 'today' | 'yesterday' | 'thisWeek' | 'older';
@@ -107,7 +106,9 @@ export function NotificationsTab({
   refetch
 }: NotificationsTabProps) {
   const navigate = useNavigate();
-  const { plan } = useEntitlements();
+  const {
+    plan
+  } = useEntitlements();
   const isPro = plan === 'pro' || plan === 'elite';
 
   // Mutations
@@ -208,13 +209,8 @@ export function NotificationsTab({
         </div>
         <div className="space-y-2">
           {items.map(notification => {
-            const isPremium = isPremiumNotification(notification);
-            return (
-              <div 
-                key={notification.id} 
-                onClick={() => handleNotificationClick(notification)} 
-                className={`flex items-start gap-3 p-4 rounded-lg border transition-all cursor-pointer group ${isRead ? 'bg-muted/30 hover:bg-muted/50' : 'bg-card border-primary/20 shadow-sm hover:shadow-md hover:border-primary/40'} ${isPremium ? 'ring-1 ring-primary/10' : ''}`}
-              >
+          const isPremium = isPremiumNotification(notification);
+          return <div key={notification.id} onClick={() => handleNotificationClick(notification)} className={`flex items-start gap-3 p-4 rounded-lg border transition-all cursor-pointer group ${isRead ? 'bg-muted/30 hover:bg-muted/50' : 'bg-card border-primary/20 shadow-sm hover:shadow-md hover:border-primary/40'} ${isPremium ? 'ring-1 ring-primary/10' : ''}`}>
                 <div className={`p-2 rounded-lg flex-shrink-0 ${isRead ? 'bg-muted' : 'bg-primary/10'}`}>
                   {getNotificationIcon(notification.type)}
                 </div>
@@ -225,15 +221,10 @@ export function NotificationsTab({
                       {notification.title}
                     </span>
                     {/* Badge PRO pour notifications premium */}
-                    {isPremium && (
-                      <Badge 
-                        variant="outline" 
-                        className="text-[10px] gap-0.5 bg-primary/5 text-primary border-primary/20"
-                      >
+                    {isPremium && <Badge variant="outline" className="text-[10px] gap-0.5 bg-primary/5 text-primary border-primary/20">
                         <Crown className="h-2.5 w-2.5" />
                         PRO
-                      </Badge>
-                    )}
+                      </Badge>}
                     <span className="text-xs text-muted-foreground flex-shrink-0">
                       {formatTime(notification.created_at)}
                     </span>
@@ -242,27 +233,26 @@ export function NotificationsTab({
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                   {!isRead && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
-                    e.stopPropagation();
-                    markNotificationRead.mutate(notification.id);
-                  }} title="Marquer comme lu">
+                e.stopPropagation();
+                markNotificationRead.mutate(notification.id);
+              }} title="Marquer comme lu">
                     <CheckCircle2 className="h-4 w-4" />
                   </Button>}
                   {notification.link && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
-                    e.stopPropagation();
-                    navigate(notification.link!);
-                  }} title="Voir le détail">
+                e.stopPropagation();
+                navigate(notification.link!);
+              }} title="Voir le détail">
                     <ExternalLink className="h-4 w-4" />
                   </Button>}
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={e => {
-                    e.stopPropagation();
-                    deleteNotification.mutate(notification.id);
-                  }} title="Supprimer">
+                e.stopPropagation();
+                deleteNotification.mutate(notification.id);
+              }} title="Supprimer">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-            );
-          })}
+              </div>;
+        })}
         </div>
       </div>;
   };
@@ -280,104 +270,7 @@ export function NotificationsTab({
   };
   return <div className="space-y-6">
       {/* Dashboard notifications - Stats réelles */}
-      <Card className="bg-gradient-to-br from-green-500/5 via-transparent to-transparent border-green-500/20">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-green-500" />
-            Activité des 7 derniers jours
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-            {/* Total 7j */}
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Total reçues</p>
-              <p className="text-2xl font-bold">{notifStats.total7Days}</p>
-              <p className="text-xs text-muted-foreground">notifications</p>
-            </div>
-
-            {/* Deals détectés */}
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Bonnes affaires</p>
-              <div className="flex items-center gap-2">
-                <TrendingDown className="h-4 w-4 text-green-500" />
-                <p className="text-2xl font-bold text-green-500">{notifStats.totalDeals}</p>
-              </div>
-              <p className="text-xs text-muted-foreground">deals détectés</p>
-            </div>
-
-            {/* Alertes prix */}
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Alertes prix</p>
-              <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-amber-500" />
-                <p className="text-2xl font-bold text-amber-500">{notifStats.totalAlerts}</p>
-              </div>
-              <p className="text-xs text-muted-foreground">seuils atteints</p>
-            </div>
-
-            {/* Communauté */}
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Communauté</p>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-blue-500" />
-                <p className="text-2xl font-bold text-blue-500">{notifStats.totalCommunity}</p>
-              </div>
-              <p className="text-xs text-muted-foreground">récompenses</p>
-            </div>
-
-            {/* Taux de lecture */}
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Taux de lecture</p>
-              <p className="text-2xl font-bold">{notifStats.readRate}%</p>
-              <p className="text-xs text-muted-foreground">{notifStats.unreadCount} non lues</p>
-            </div>
-          </div>
-
-          {/* Mini graphique activité */}
-          {notifStats.total7Days > 0 && (
-            <div className="h-[80px] mt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={notifStats.chartData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 10 }} 
-                    tickLine={false}
-                    axisLine={false}
-                    className="text-muted-foreground"
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--popover))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                    }}
-                    labelFormatter={(label) => `${label}`}
-                    formatter={(value: number, name: string) => {
-                      const labels: Record<string, string> = {
-                        deals: 'Deals',
-                        alerts: 'Alertes',
-                        community: 'Communauté',
-                        total: 'Total',
-                      };
-                      return [value, labels[name] || name];
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="total" 
-                    stroke="hsl(var(--primary))" 
-                    fill="hsl(var(--primary) / 0.2)" 
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      
 
       {/* Liste notifications */}
       <Card>
