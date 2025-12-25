@@ -40,9 +40,10 @@ const benefits = [{
   title: "Gagnez du temps",
   description: "Notre scanner automatique fait le travail à votre place. Plus besoin de parcourir des centaines d'annonces manuellement."
 }, {
-  icon: Shield,
-  title: "Réduisez les risques",
-  description: "Évitez les mauvais achats grâce à notre système de scoring et nos alertes sur les prix anormaux."
+  icon: GraduationCap,
+  title: "Apprenez à acheter et revendre intelligemment",
+  description: "La plateforme inclut une formation progressive pour maîtriser les fondamentaux et devenir autonome rapidement.",
+  cta: { label: "Découvrir la formation", href: "/training" }
 }, {
   icon: Award,
   title: "Devenez expert",
@@ -294,8 +295,16 @@ export default function Landing() {
                     </div>
                     <CardTitle>{benefit.title}</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <p className="text-muted-foreground">{benefit.description}</p>
+                    {'cta' in benefit && benefit.cta && (
+                      <Link to={benefit.cta.href}>
+                        <Button variant="outline" size="sm" className="gap-2">
+                          {benefit.cta.label}
+                          <Rocket className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>)}
