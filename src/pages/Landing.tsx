@@ -40,9 +40,10 @@ const benefits = [{
   title: "Gagnez du temps",
   description: "Notre scanner automatique fait le travail à votre place. Plus besoin de parcourir des centaines d'annonces manuellement."
 }, {
-  icon: Shield,
-  title: "Réduisez les risques",
-  description: "Évitez les mauvais achats grâce à notre système de scoring et nos alertes sur les prix anormaux."
+  icon: GraduationCap,
+  title: "Apprenez à acheter et revendre intelligemment",
+  description: "La plateforme inclut une formation progressive pour maîtriser les fondamentaux et devenir autonome rapidement.",
+  cta: { label: "Découvrir la formation", href: "/training" }
 }, {
   icon: Award,
   title: "Devenez expert",
@@ -87,6 +88,15 @@ const testimonials = [{
 }];
 export default function Landing() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+
+  const scrollToPricing = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   useEffect(() => {
     const checkMaintenance = async () => {
       const {
@@ -144,7 +154,7 @@ export default function Landing() {
                 </Button>
               </Link>
               <Button size="lg" variant="outline" asChild>
-                <a href="#pricing">Voir les tarifs</a>
+                <a href="#pricing" onClick={scrollToPricing}>Voir les tarifs</a>
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-4"> ✓ Sans engagement • ✓ Support 7j/7</p>
@@ -156,28 +166,12 @@ export default function Landing() {
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
       </section>
 
-      {/* Stats teaser - chiffres génériques pour l'engagement */}
+      {/* Stats teaser - chiffres techniques uniquement (pas de preuve sociale) */}
       <section className="py-12 border-b">
         <div className="container">
           <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
           once: true
-        }} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            <motion.div variants={itemVariants}>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm text-muted-foreground font-normal">
-                    Utilisateurs actifs
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">2,500+</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Et en croissance
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
+        }} className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader className="pb-3">
@@ -189,22 +183,6 @@ export default function Landing() {
                   <div className="text-3xl font-bold">50K+</div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Chaque semaine
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm text-muted-foreground font-normal">
-                    Taux de satisfaction
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-accent">98%</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    D'utilisateurs satisfaits
                   </p>
                 </CardContent>
               </Card>
@@ -298,7 +276,9 @@ export default function Landing() {
             <Badge className="mb-4" variant="secondary">
               Pourquoi nous choisir
             </Badge>
-            
+            <h2 className="text-3xl font-bold mb-4">
+              Transformez votre façon d'acheter et revendre
+            </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Des résultats concrets et mesurables dès les premières semaines
             </p>
@@ -315,8 +295,16 @@ export default function Landing() {
                     </div>
                     <CardTitle>{benefit.title}</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <p className="text-muted-foreground">{benefit.description}</p>
+                    {'cta' in benefit && benefit.cta && (
+                      <Link to={benefit.cta.href}>
+                        <Button variant="outline" size="sm" className="gap-2">
+                          {benefit.cta.label}
+                          <Rocket className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>)}
@@ -362,7 +350,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Testimonials - HIDDEN until official launch 
       <section className="py-16 bg-muted/50">
         <div className="container">
           <div className="text-center mb-12">
@@ -401,6 +389,7 @@ export default function Landing() {
           </motion.div>
         </div>
       </section>
+      */}
 
       {/* Pricing Section */}
       <section id="pricing" className="py-16">
