@@ -87,6 +87,15 @@ const testimonials = [{
 }];
 export default function Landing() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+
+  const scrollToPricing = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   useEffect(() => {
     const checkMaintenance = async () => {
       const {
@@ -144,7 +153,7 @@ export default function Landing() {
                 </Button>
               </Link>
               <Button size="lg" variant="outline" asChild>
-                <a href="#pricing">Voir les tarifs</a>
+                <a href="#pricing" onClick={scrollToPricing}>Voir les tarifs</a>
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-4"> ✓ Sans engagement • ✓ Support 7j/7</p>
