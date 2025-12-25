@@ -387,12 +387,15 @@ export function CreateAlertModal({
           <TabsContent value="options" className="space-y-4 mt-4">
             <div className="space-y-2">
               <Label>Filtrer par état</Label>
-              <Select value={condition} onValueChange={setCondition}>
+              <Select
+                value={condition}
+                onValueChange={(v) => setCondition(v === "__all__" ? "" : v)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Tous les états" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les états</SelectItem>
+                  <SelectItem value="__all__">Tous les états</SelectItem>
                   {CONDITIONS.map((c) => (
                     <SelectItem key={c.value} value={c.value}>
                       {c.label}
@@ -404,12 +407,15 @@ export function CreateAlertModal({
 
             <div className="space-y-2">
               <Label>Filtrer par plateforme</Label>
-              <Select value={platform} onValueChange={setPlatform}>
+              <Select
+                value={platform}
+                onValueChange={(v) => setPlatform(v === "__all__" ? "" : v)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Toutes les plateformes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toutes les plateformes</SelectItem>
+                  <SelectItem value="__all__">Toutes les plateformes</SelectItem>
                   {PLATFORMS.map((p) => (
                     <SelectItem key={p.value} value={p.value}>
                       {p.label}
@@ -422,12 +428,15 @@ export function CreateAlertModal({
             {alertType !== 'location' && (
               <div className="space-y-2">
                 <Label>Filtrer par région</Label>
-                <Select value={region} onValueChange={setRegion}>
+                <Select
+                  value={region}
+                  onValueChange={(v) => setRegion(v === "__all__" ? "" : v)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Toutes les régions" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Toutes les régions</SelectItem>
+                    <SelectItem value="__all__">Toutes les régions</SelectItem>
                     {REGIONS.map((r) => (
                       <SelectItem key={r.value} value={r.value}>
                         {r.label}
