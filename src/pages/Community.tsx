@@ -516,24 +516,9 @@ export default function Community() {
 
         {/* CTA Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button variant="outline" className="h-auto py-4" onClick={() => navigate('/training')}>
-            <div className="text-left">
-              <p className="font-semibold">Formation</p>
-              <p className="text-xs text-muted-foreground">Tutos & pas-à-pas</p>
-            </div>
-          </Button>
-          <Button variant="outline" className="h-auto py-4" onClick={() => navigate('/deals')}>
-            <div className="text-left">
-              <p className="font-semibold">Deals</p>
-              <p className="text-xs text-muted-foreground">Meilleures offres</p>
-            </div>
-          </Button>
-          <Button variant="outline" className="h-auto py-4" onClick={() => navigate('/catalog')}>
-            <div className="text-left">
-              <p className="font-semibold">Catalogue</p>
-              <p className="text-xs text-muted-foreground">Explorer les modèles</p>
-            </div>
-          </Button>
+          
+          
+          
         </div>
       </div>
     </div>;
