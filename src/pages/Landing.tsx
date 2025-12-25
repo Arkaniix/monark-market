@@ -43,7 +43,10 @@ const benefits = [{
   icon: GraduationCap,
   title: "Apprenez à acheter et revendre intelligemment",
   description: "La plateforme inclut une formation progressive pour maîtriser les fondamentaux et devenir autonome rapidement.",
-  cta: { label: "Découvrir la formation", href: "/training" }
+  cta: {
+    label: "Découvrir la formation",
+    href: "/training"
+  }
 }, {
   icon: Award,
   title: "Devenez expert",
@@ -88,15 +91,16 @@ const testimonials = [{
 }];
 export default function Landing() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-
   const scrollToPricing = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     const pricingSection = document.getElementById('pricing');
     if (pricingSection) {
-      pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      pricingSection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
     }
   };
-
   useEffect(() => {
     const checkMaintenance = async () => {
       const {
@@ -297,14 +301,9 @@ export default function Landing() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p className="text-muted-foreground">{benefit.description}</p>
-                    {'cta' in benefit && benefit.cta && (
-                      <Link to={benefit.cta.href}>
-                        <Button variant="outline" size="sm" className="gap-2">
-                          {benefit.cta.label}
-                          <Rocket className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    )}
+                    {'cta' in benefit && benefit.cta && <Link to={benefit.cta.href}>
+                        
+                      </Link>}
                   </CardContent>
                 </Card>
               </motion.div>)}
@@ -351,7 +350,7 @@ export default function Landing() {
       </section>
 
       {/* Testimonials - HIDDEN until official launch 
-      <section className="py-16 bg-muted/50">
+       <section className="py-16 bg-muted/50">
         <div className="container">
           <div className="text-center mb-12">
             <Badge className="mb-4" variant="secondary">
@@ -364,8 +363,7 @@ export default function Landing() {
               Rejoignez des centaines de membres qui génèrent des revenus réguliers
             </p>
           </div>
-
-          <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
+           <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
           once: true
         }} className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, i) => <motion.div key={i} variants={itemVariants}>
@@ -388,8 +386,8 @@ export default function Landing() {
               </motion.div>)}
           </motion.div>
         </div>
-      </section>
-      */}
+       </section>
+       */}
 
       {/* Pricing Section */}
       <section id="pricing" className="py-16">
