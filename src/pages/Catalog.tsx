@@ -211,7 +211,7 @@ export default function Catalog() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toutes marques</SelectItem>
-                      {brands?.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                      {brands?.filter(b => b && b.trim() !== "").map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -227,7 +227,7 @@ export default function Catalog() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toutes familles</SelectItem>
-                      {families?.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                      {families?.filter(f => f && f.trim() !== "").map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
