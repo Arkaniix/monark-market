@@ -165,28 +165,12 @@ export default function Landing() {
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
       </section>
 
-      {/* Stats teaser - chiffres génériques pour l'engagement */}
+      {/* Stats teaser - chiffres techniques uniquement (pas de preuve sociale) */}
       <section className="py-12 border-b">
         <div className="container">
           <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
           once: true
-        }} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            <motion.div variants={itemVariants}>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm text-muted-foreground font-normal">
-                    Utilisateurs actifs
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">2,500+</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Et en croissance
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
+        }} className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader className="pb-3">
@@ -198,22 +182,6 @@ export default function Landing() {
                   <div className="text-3xl font-bold">50K+</div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Chaque semaine
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm text-muted-foreground font-normal">
-                    Taux de satisfaction
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-accent">98%</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    D'utilisateurs satisfaits
                   </p>
                 </CardContent>
               </Card>
@@ -373,7 +341,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Testimonials - HIDDEN until official launch 
       <section className="py-16 bg-muted/50">
         <div className="container">
           <div className="text-center mb-12">
@@ -412,6 +380,7 @@ export default function Landing() {
           </motion.div>
         </div>
       </section>
+      */}
 
       {/* Pricing Section */}
       <section id="pricing" className="py-16">
