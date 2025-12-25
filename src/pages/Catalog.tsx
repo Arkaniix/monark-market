@@ -196,7 +196,7 @@ export default function Catalog() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toutes catégories</SelectItem>
-                      {categories?.map(cat => <SelectItem key={cat.id} value={cat.name}>
+                      {categories?.filter(cat => cat.name && cat.name.trim() !== "").map(cat => <SelectItem key={cat.id} value={cat.name}>
                           {cat.name} ({cat.count})
                         </SelectItem>)}
                     </SelectContent>
