@@ -232,7 +232,19 @@ export default function Community() {
         {loadingStats && loadingAvailable ? <div className="mb-8">
             <CommunityStatsSkeleton />
           </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {statsCards.map((stat, index) => {})}
+            {statsCards.map((stat, index) => (
+              <Card key={index} className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-muted">
+                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{stat.title}</p>
+                    <p className="text-xl font-bold">{stat.value}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>}
 
         {/* Progress Bar */}

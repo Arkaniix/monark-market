@@ -10,6 +10,7 @@ import { DataProviderComponent } from "@/providers";
 import { ApiUnavailableBanner } from "@/components/ApiUnavailableBanner";
 import { DevModeBadge } from "@/components/DevModeBadge";
 import Layout from "./components/Layout";
+import ScrollToTop from "./components/ScrollToTop";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { routes } from "./routes";
 
@@ -28,6 +29,7 @@ const App = () => {
               <ApiUnavailableBanner />
               <DevModeBadge />
               <BrowserRouter>
+                <ScrollToTop />
                 <Layout>
                   <Routes>
                     {routes.map((route) => {
