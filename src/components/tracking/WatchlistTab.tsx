@@ -14,9 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
 import { WatchlistItemCard } from "./WatchlistItemCard";
 import type { WatchlistEntry, PriceHistoryPoint } from "@/providers/types";
-
 const ITEMS_PER_PAGE = 6;
-
 interface WatchlistTabProps {
   watchlist: WatchlistEntry[];
   isLoading: boolean;
@@ -25,98 +23,44 @@ interface WatchlistTabProps {
 }
 
 // Portfolio Overview Card - Valeur totale et économies potentielles
-function WatchlistPortfolioCard({ watchlist }: { watchlist: WatchlistEntry[] }) {
+function WatchlistPortfolioCard({
+  watchlist
+}: {
+  watchlist: WatchlistEntry[];
+}) {
   const models = watchlist.filter(item => item.target_type === 'model');
-  
+
   // Calculer les métriques réelles
   const totalCurrentValue = models.reduce((sum, item) => sum + (item.current_price || 0), 0);
   const totalFairValue = models.reduce((sum, item) => sum + (item.fair_value || item.current_price || 0), 0);
   const potentialSavings = totalFairValue - totalCurrentValue;
-  
   const itemsWithDrops = models.filter(item => (item.price_change_7d || 0) < 0);
   const itemsWithRises = models.filter(item => (item.price_change_7d || 0) > 0);
-  const avgVariation = models.length > 0 
-    ? models.reduce((sum, item) => sum + (item.price_change_7d || 0), 0) / models.length 
-    : 0;
-
-  const formatPrice = (price: number) => 
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(price);
-
+  const avgVariation = models.length > 0 ? models.reduce((sum, item) => sum + (item.price_change_7d || 0), 0) / models.length : 0;
+  const formatPrice = (price: number) => new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0
+  }).format(price);
   if (models.length === 0) return null;
-
-  return (
-    <Card className="mb-6 bg-gradient-to-br from-primary/5 via-transparent to-transparent border-primary/20">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
-          <DollarSign className="h-4 w-4 text-primary" />
-          Résumé de votre watchlist
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Valeur totale surveillée */}
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Valeur totale surveillée</p>
-            <p className="text-xl font-bold">{formatPrice(totalCurrentValue)}</p>
-            <p className="text-xs text-muted-foreground">{models.length} modèle{models.length > 1 ? 's' : ''}</p>
-          </div>
-
-          {/* Économies potentielles */}
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Économies potentielles</p>
-            <p className={`text-xl font-bold ${potentialSavings > 0 ? 'text-green-500' : potentialSavings < 0 ? 'text-red-500' : ''}`}>
-              {potentialSavings > 0 ? '+' : ''}{formatPrice(potentialSavings)}
-            </p>
-            <p className="text-xs text-muted-foreground">vs juste prix estimé</p>
-          </div>
-
-          {/* Tendance 7j */}
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Tendance 7 jours</p>
-            <div className="flex items-center gap-2">
-              {avgVariation < 0 ? (
-                <ArrowDownRight className="h-5 w-5 text-green-500" />
-              ) : avgVariation > 0 ? (
-                <ArrowUpRight className="h-5 w-5 text-red-500" />
-              ) : null}
-              <p className={`text-xl font-bold ${avgVariation < 0 ? 'text-green-500' : avgVariation > 0 ? 'text-red-500' : ''}`}>
-                {avgVariation > 0 ? '+' : ''}{avgVariation.toFixed(1)}%
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground">variation moyenne</p>
-          </div>
-
-          {/* Mouvements */}
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Mouvements 7j</p>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 text-green-500">
-                <TrendingDown className="h-4 w-4" />
-                <span className="font-bold">{itemsWithDrops.length}</span>
-              </div>
-              <div className="flex items-center gap-1 text-red-500">
-                <TrendingUp className="h-4 w-4" />
-                <span className="font-bold">{itemsWithRises.length}</span>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">baisses / hausses</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  return;
 }
-
-
-export function WatchlistTab({ watchlist, isLoading, error, refetch }: WatchlistTabProps) {
+export function WatchlistTab({
+  watchlist,
+  isLoading,
+  error,
+  refetch
+}: WatchlistTabProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertTarget, setAlertTarget] = useState<AlertTarget | null>(null);
-  const [priceHistories, setPriceHistories] = useState<Record<number, { price: number; date?: string }[]>>({});
+  const [priceHistories, setPriceHistories] = useState<Record<number, {
+    price: number;
+    date?: string;
+  }[]>>({});
   const [loadingHistories, setLoadingHistories] = useState<Set<number>>(new Set());
-
   const removeFromWatchlist = useRemoveFromWatchlist();
   const provider = useDataProvider();
 
@@ -127,19 +71,14 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
   // Filtrer
   const filteredModels = useMemo(() => {
     return models.filter(item => {
-      const matchesSearch = !search || 
-        (item.name?.toLowerCase().includes(search.toLowerCase())) ||
-        (item.brand?.toLowerCase().includes(search.toLowerCase()));
+      const matchesSearch = !search || item.name?.toLowerCase().includes(search.toLowerCase()) || item.brand?.toLowerCase().includes(search.toLowerCase());
       const matchesCategory = category === "all" || item.category === category;
       return matchesSearch && matchesCategory;
     });
   }, [models, search, category]);
-
   const filteredAds = useMemo(() => {
     return ads.filter(item => {
-      const matchesSearch = !search || 
-        (item.name?.toLowerCase().includes(search.toLowerCase())) ||
-        (item.brand?.toLowerCase().includes(search.toLowerCase()));
+      const matchesSearch = !search || item.name?.toLowerCase().includes(search.toLowerCase()) || item.brand?.toLowerCase().includes(search.toLowerCase());
       const matchesCategory = category === "all" || item.category === category;
       return matchesSearch && matchesCategory;
     });
@@ -157,30 +96,34 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
 
   // Charger les historiques de prix pour les modèles
   useEffect(() => {
-    models.forEach(async (item) => {
+    models.forEach(async item => {
       if (priceHistories[item.target_id] || loadingHistories.has(item.target_id)) return;
-      
       setLoadingHistories(prev => new Set(prev).add(item.target_id));
-      
       try {
         const history = await provider.getModelPriceHistory(item.target_id.toString(), "30");
         if (history && history.length > 0) {
           setPriceHistories(prev => ({
             ...prev,
-            [item.target_id]: history.slice(-20).map((p: PriceHistoryPoint) => ({ 
+            [item.target_id]: history.slice(-20).map((p: PriceHistoryPoint) => ({
               price: p.price_median,
-              date: p.date 
-            })),
+              date: p.date
+            }))
           }));
         } else {
           // Générer mock si pas de données
           const mockHistory = generateMockSparkline(item.current_price || 300);
-          setPriceHistories(prev => ({ ...prev, [item.target_id]: mockHistory }));
+          setPriceHistories(prev => ({
+            ...prev,
+            [item.target_id]: mockHistory
+          }));
         }
       } catch {
         // Générer mock en cas d'erreur
         const mockHistory = generateMockSparkline(item.current_price || 300);
-        setPriceHistories(prev => ({ ...prev, [item.target_id]: mockHistory }));
+        setPriceHistories(prev => ({
+          ...prev,
+          [item.target_id]: mockHistory
+        }));
       } finally {
         setLoadingHistories(prev => {
           const next = new Set(prev);
@@ -190,39 +133,37 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
       }
     });
   }, [models, provider, priceHistories, loadingHistories]);
-
-  const formatPrice = (price: number) => 
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(price);
-
+  const formatPrice = (price: number) => new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR'
+  }).format(price);
   const openAlertModal = (item: WatchlistEntry) => {
     setAlertTarget({
       type: item.target_type,
       id: item.target_id,
       name: item.name || `${item.target_type === 'model' ? 'Modèle' : 'Annonce'} #${item.target_id}`,
       category: item.category,
-      currentPrice: item.current_price,
+      currentPrice: item.current_price
     });
     setAlertModalOpen(true);
   };
-
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
   const handleRemove = (item: WatchlistEntry) => {
     removeFromWatchlist.mutate(item.id, {
       onSuccess: () => {
         toast({
           title: "Retiré de la watchlist",
-          description: `${item.name || 'Élément'} a été retiré de votre watchlist.`,
+          description: `${item.name || 'Élément'} a été retiré de votre watchlist.`
         });
       }
     });
   };
 
   // Skeleton
-  const ListSkeleton = () => (
-    <div className="space-y-3">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="flex items-center justify-between p-4 rounded-lg border">
+  const ListSkeleton = () => <div className="space-y-3">
+      {[1, 2, 3].map(i => <div key={i} className="flex items-center justify-between p-4 rounded-lg border">
           <div className="flex items-center gap-4 flex-1">
             <Skeleton className="h-10 w-10 rounded-lg" />
             <div className="flex-1">
@@ -235,14 +176,10 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
             <Skeleton className="h-8 w-8" />
             <Skeleton className="h-8 w-8" />
           </div>
-        </div>
-      ))}
-    </div>
-  );
-
+        </div>)}
+    </div>;
   if (isLoading) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-64 mt-2" />
@@ -254,13 +191,10 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
           </div>
           <ListSkeleton />
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
   if (error) {
-    return (
-      <Card>
+    return <Card>
         <CardContent className="pt-6">
           <Alert variant="destructive">
             <AlertTitle>Erreur</AlertTitle>
@@ -270,12 +204,9 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
             </AlertDescription>
           </Alert>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <>
+  return <>
       {/* Dashboard résumé */}
       <WatchlistPortfolioCard watchlist={watchlist} />
 
@@ -287,10 +218,7 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
                 <Eye className="h-5 w-5 text-blue-500" />
                 Ma Watchlist
                 <Badge variant="outline">{watchlist.length}</Badge>
-                <Badge 
-                  variant="secondary" 
-                  className="text-[10px] gap-1 bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
-                >
+                <Badge variant="secondary" className="text-[10px] gap-1 bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
                   <Infinity className="h-3 w-3" />
                   Gratuit & Illimité
                 </Badge>
@@ -312,128 +240,79 @@ export function WatchlistTab({ watchlist, isLoading, error, refetch }: Watchlist
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher..."
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="pl-9"
-              />
+              <Input placeholder="Rechercher..." value={search} onChange={e => {
+              setSearch(e.target.value);
+              setPage(1);
+            }} className="pl-9" />
             </div>
-            <Select value={category} onValueChange={(v) => { setCategory(v); setPage(1); }}>
+            <Select value={category} onValueChange={v => {
+            setCategory(v);
+            setPage(1);
+          }}>
               <SelectTrigger className="w-full sm:w-[160px]">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Catégorie" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes</SelectItem>
-                {categories.map(cat => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
+                {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
-          {watchlist.length === 0 ? (
-            <EmptyState />
-          ) : allFiltered.length === 0 ? (
-            <NoResults onReset={() => { setSearch(""); setCategory("all"); }} />
-          ) : (
-            <div className="space-y-6">
+          {watchlist.length === 0 ? <EmptyState /> : allFiltered.length === 0 ? <NoResults onReset={() => {
+          setSearch("");
+          setCategory("all");
+        }} /> : <div className="space-y-6">
               {/* Section Modèles */}
-              {filteredModels.length > 0 && (
-                <div>
+              {filteredModels.length > 0 && <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Package className="h-4 w-4 text-blue-500" />
                     <h3 className="font-semibold">Modèles suivis</h3>
                     <Badge variant="secondary">{filteredModels.length}</Badge>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    {filteredModels.map(item => (
-                      <WatchlistItemCard 
-                        key={item.id} 
-                        item={item} 
-                        isModel={true}
-                        priceHistory={priceHistories[item.target_id] || []}
-                        isLoadingHistory={loadingHistories.has(item.target_id)}
-                        onCreateAlert={() => openAlertModal(item)}
-                        onRemove={() => handleRemove(item)}
-                        isRemoving={removeFromWatchlist.isPending}
-                      />
-                    ))}
+                    {filteredModels.map(item => <WatchlistItemCard key={item.id} item={item} isModel={true} priceHistory={priceHistories[item.target_id] || []} isLoadingHistory={loadingHistories.has(item.target_id)} onCreateAlert={() => openAlertModal(item)} onRemove={() => handleRemove(item)} isRemoving={removeFromWatchlist.isPending} />)}
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Section Annonces */}
-              {filteredAds.length > 0 && (
-                <div>
+              {filteredAds.length > 0 && <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Tag className="h-4 w-4 text-purple-500" />
                     <h3 className="font-semibold">Annonces suivies</h3>
                     <Badge variant="secondary">{filteredAds.length}</Badge>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    {filteredAds.map(item => (
-                      <WatchlistItemCard 
-                        key={item.id} 
-                        item={item} 
-                        isModel={false}
-                        priceHistory={[]}
-                        isLoadingHistory={false}
-                        onCreateAlert={() => openAlertModal(item)}
-                        onRemove={() => handleRemove(item)}
-                        isRemoving={removeFromWatchlist.isPending}
-                      />
-                    ))}
+                    {filteredAds.map(item => <WatchlistItemCard key={item.id} item={item} isModel={false} priceHistory={[]} isLoadingHistory={false} onCreateAlert={() => openAlertModal(item)} onRemove={() => handleRemove(item)} isRemoving={removeFromWatchlist.isPending} />)}
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Pagination (si beaucoup d'éléments) */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4 border-t">
+              {totalPages > 1 && <div className="flex items-center justify-between pt-4 border-t">
                   <p className="text-sm text-muted-foreground">
                     {allFiltered.length} élément{allFiltered.length > 1 ? 's' : ''}
                   </p>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage(p => p - 1)}
-                      disabled={page === 1}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 1}>
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage(p => p + 1)}
-                      disabled={page === totalPages}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
         </CardContent>
       </Card>
 
-      <CreateAlertModal
-        open={alertModalOpen}
-        onClose={() => setAlertModalOpen(false)}
-        target={alertTarget}
-        onSuccess={refetch}
-      />
-    </>
-  );
+      <CreateAlertModal open={alertModalOpen} onClose={() => setAlertModalOpen(false)} target={alertTarget} onSuccess={refetch} />
+    </>;
 }
 
 // Empty state component
 function EmptyState() {
-  return (
-    <div className="text-center py-16">
+  return <div className="text-center py-16">
       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 mb-4">
         <Eye className="h-8 w-8 text-blue-500" />
       </div>
@@ -455,14 +334,16 @@ function EmptyState() {
           </Button>
         </Link>
       </div>
-    </div>
-  );
+    </div>;
 }
 
 // No results component
-function NoResults({ onReset }: { onReset: () => void }) {
-  return (
-    <div className="text-center py-12">
+function NoResults({
+  onReset
+}: {
+  onReset: () => void;
+}) {
+  return <div className="text-center py-12">
       <Search className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
       <h3 className="text-lg font-semibold mb-2">Aucun résultat</h3>
       <p className="text-muted-foreground mb-4">
@@ -471,26 +352,29 @@ function NoResults({ onReset }: { onReset: () => void }) {
       <Button variant="outline" onClick={onReset}>
         Réinitialiser les filtres
       </Button>
-    </div>
-  );
+    </div>;
 }
 
 // Mock sparkline generator with dates
-function generateMockSparkline(basePrice: number): { price: number; date: string }[] {
-  const points: { price: number; date: string }[] = [];
+function generateMockSparkline(basePrice: number): {
+  price: number;
+  date: string;
+}[] {
+  const points: {
+    price: number;
+    date: string;
+  }[] = [];
   let price = basePrice * (0.9 + Math.random() * 0.2);
   const now = new Date();
-  
   for (let i = 19; i >= 0; i--) {
     const change = (Math.random() - 0.5) * 0.04;
     price = price * (1 + change);
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    points.push({ 
+    points.push({
       price: Math.round(price),
       date: date.toISOString().split('T')[0]
     });
   }
-  
   return points;
 }
