@@ -51,7 +51,7 @@ export const MOCK_PLANS: Record<PlanType, MockPlanConfig> = {
     id: "plan-starter",
     name: "starter",
     displayName: "Starter",
-    price: 9.90,
+    price: 9.99,
     creditsPerCycle: 120,
     limits: {
       maxAlerts: 3,
