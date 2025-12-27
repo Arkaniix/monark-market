@@ -85,15 +85,15 @@ export const PLAN_FEATURES: PlanFeature[] = [
     elite: true,
   },
   {
-    name: "Scrap faible",
-    tooltip: "Scan rapide des premières pages (5 crédits)",
+    name: "Scan rapide",
+    tooltip: "Analyse rapide des premières pages (5 crédits)",
     starter: true,
     pro: true,
     elite: true,
   },
   {
     name: "Accès communauté",
-    tooltip: "Participer au scrap communautaire pour gagner des crédits",
+    tooltip: "Participer à la collecte communautaire pour gagner des crédits",
     starter: true,
     pro: true,
     elite: true,
@@ -113,8 +113,8 @@ export const PLAN_FEATURES: PlanFeature[] = [
     elite: "500",
   },
   {
-    name: "Scrap fort",
-    tooltip: "Scan approfondi avec plus de données (20 crédits)",
+    name: "Scan approfondi",
+    tooltip: "Analyse complète avec plus de données (20 crédits)",
     starter: false,
     pro: true,
     elite: true,
@@ -176,7 +176,7 @@ export const PLAN_FEATURES: PlanFeature[] = [
     elite: true,
   },
   {
-    name: "Priorité scraping",
+    name: "Priorité d'analyse",
     tooltip: "Vos scans sont traités en priorité",
     starter: false,
     pro: false,
@@ -402,7 +402,7 @@ function getHighlightedFeatures(planId: string): string[] {
         "Accès base annonces",
         "Accès catalogue composants",
         "3 alertes actives",
-        "Scrap faible (5 cr)",
+        "Scan rapide (5 cr)",
         "Prix médian & variation",
         "Accès communauté",
       ];
@@ -410,7 +410,7 @@ function getHighlightedFeatures(planId: string): string[] {
       return [
         "500 crédits/mois",
         "20 alertes actives",
-        "Scrap fort (20 cr)",
+        "Scan approfondi (20 cr)",
         "Prix achat/vente conseillés",
         "Marge & probabilité",
         "Graphiques 30j/90j",
@@ -420,7 +420,7 @@ function getHighlightedFeatures(planId: string): string[] {
       return [
         "1500 crédits/mois",
         "500 alertes actives",
-        "Priorité scraping",
+        "Priorité d'analyse",
         "Historique étendu",
         "Indicateurs avancés",
         "Export des données",
