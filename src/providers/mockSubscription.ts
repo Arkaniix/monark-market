@@ -24,6 +24,8 @@ export interface MockPlanConfig {
     canAccessPrioritySupport: boolean;
     canAccessApiAccess: boolean;
     canAccessTraining: boolean;
+    canAccessAdsDatabase: boolean;
+    canAccessCatalog: boolean;
   };
   estimatorFeatures: {
     // Starter visible
@@ -66,6 +68,8 @@ export const MOCK_PLANS: Record<PlanType, MockPlanConfig> = {
       canAccessPrioritySupport: false,
       canAccessApiAccess: false,
       canAccessTraining: false,
+      canAccessAdsDatabase: true,
+      canAccessCatalog: true,
     },
     estimatorFeatures: {
       // Visible
@@ -105,6 +109,8 @@ export const MOCK_PLANS: Record<PlanType, MockPlanConfig> = {
       canAccessPrioritySupport: false,
       canAccessApiAccess: false,
       canAccessTraining: true,
+      canAccessAdsDatabase: true,
+      canAccessCatalog: true,
     },
     estimatorFeatures: {
       // Tout visible
@@ -144,6 +150,8 @@ export const MOCK_PLANS: Record<PlanType, MockPlanConfig> = {
       canAccessPrioritySupport: true,
       canAccessApiAccess: true,
       canAccessTraining: true,
+      canAccessAdsDatabase: true,
+      canAccessCatalog: true,
     },
     estimatorFeatures: {
       // Tout visible

@@ -48,6 +48,9 @@ export interface PlanLimits {
   canAccessPrioritySupport: boolean;
   canAccessApiAccess: boolean;
   canAccessTraining: boolean;
+  // Data access permissions
+  canAccessAdsDatabase: boolean;
+  canAccessCatalog: boolean;
   // Estimator-specific permissions
   estimator: EstimatorFeatures;
 }
@@ -62,6 +65,8 @@ export interface EntitlementHelpers {
   canExportData: () => boolean;
   canAccessAdvancedStats: () => boolean;
   canAccessTraining: () => boolean;
+  canAccessAdsDatabase: () => boolean;
+  canAccessCatalog: () => boolean;
   hasEnoughCredits: (required: number) => boolean;
   getScrapCost: (type: ScrapType, pages: number) => number;
 }
@@ -107,6 +112,9 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessPrioritySupport: false,
     canAccessApiAccess: false,
     canAccessTraining: false,
+    // Starter has access to databases
+    canAccessAdsDatabase: true,
+    canAccessCatalog: true,
     estimator: {
       // Visible
       canSeeMedianPrice: true,
@@ -138,6 +146,8 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessPrioritySupport: false,
     canAccessApiAccess: false,
     canAccessTraining: true,
+    canAccessAdsDatabase: true,
+    canAccessCatalog: true,
     estimator: {
       // Tout visible
       canSeeMedianPrice: true,
@@ -169,6 +179,8 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessPrioritySupport: true,
     canAccessApiAccess: true,
     canAccessTraining: true,
+    canAccessAdsDatabase: true,
+    canAccessCatalog: true,
     estimator: {
       // Tout visible
       canSeeMedianPrice: true,
@@ -296,6 +308,10 @@ export function useEntitlements(): Entitlements {
     canAccessAdvancedStats: () => limits.canAccessAdvancedStats,
     
     canAccessTraining: () => limits.canAccessTraining,
+    
+    canAccessAdsDatabase: () => limits.canAccessAdsDatabase,
+    
+    canAccessCatalog: () => limits.canAccessCatalog,
     
     hasEnoughCredits: (required: number) => creditsRemaining >= required,
     
