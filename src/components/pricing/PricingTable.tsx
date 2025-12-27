@@ -28,7 +28,7 @@ export const PLANS: PlanConfig[] = [
     id: "starter",
     name: "Starter",
     displayName: "Starter",
-    price: 9.90,
+    price: 9.99,
     creditsPerMonth: 120,
     description: "Pour découvrir le marché",
     icon: Zap,
