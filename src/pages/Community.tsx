@@ -70,7 +70,7 @@ export default function Community() {
     }
     return {
       disabled: false,
-      label: "🔥 Lancer un scrap communautaire",
+      label: "🔥 Lancer une collecte communautaire",
       reason: "Prêt à contribuer !"
     };
   };
@@ -258,7 +258,7 @@ export default function Community() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Flame className="w-6 h-6 text-orange-500" />
-              Scrap communautaire
+              Collecte communautaire
             </CardTitle>
             <CardDescription>
               Lance une mission pour contribuer aux données du marché

@@ -22,7 +22,7 @@ interface PersonalStatsProps {
   }>;
   performanceData: Array<{
     day: number;
-    scraps?: number;
+    scans?: number;
     margin?: number;
     credits?: number;
   }>;
@@ -61,6 +61,7 @@ export function PersonalStats({
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "scrap":
+      case "scan":
         return <Search className="h-4 w-4 text-primary" />;
       case "credit":
         return <CreditCard className="h-4 w-4 text-success" />;
@@ -121,7 +122,7 @@ export function PersonalStats({
                 <div className="flex items-center gap-2">
                   <Search className="h-5 w-5 text-primary" />
                   <CardTitle className="text-sm font-normal text-muted-foreground">
-                    Total Scraps
+                    Total Scans
                   </CardTitle>
                 </div>
               </CardHeader>
@@ -130,7 +131,7 @@ export function PersonalStats({
                   <div>
                     <div className="text-3xl font-bold">{totalScraps}</div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Faibles · Forts · Communautaires
+                      Rapides · Approfondis · Communautaires
                     </p>
                   </div>
                 </div>

@@ -29,10 +29,10 @@ export function WelcomeHeader({
     return d.toLocaleDateString('fr-FR');
   };
 
-  // Statut du scrap (peut être récupéré via API)
-  const scrapStatus = 'available' as 'available' | 'waiting' | 'paused';
+  // Statut du scan (peut être récupéré via API)
+  const scanStatus = 'available' as 'available' | 'waiting' | 'paused';
   const getStatusConfig = () => {
-    switch (scrapStatus) {
+    switch (scanStatus) {
       case 'available':
         return {
           color: 'bg-success',
@@ -75,7 +75,7 @@ export function WelcomeHeader({
                 </h1>
               </div>
               <p className="text-muted-foreground text-lg">
-                Ton dernier scrap remonte à <span className="font-semibold text-foreground">{formatDate(lastScrapDate)}</span>
+                Ta dernière analyse remonte à <span className="font-semibold text-foreground">{formatDate(lastScrapDate)}</span>
               </p>
               <div className="flex items-center gap-3 flex-wrap">
                 
@@ -96,7 +96,7 @@ export function WelcomeHeader({
                     <div className={`h-2 w-2 rounded-full ${statusConfig.color} ${statusConfig.pulse ? 'animate-pulse' : ''}`} />
                   </div>
                   <Search className="h-5 w-5" />
-                  Lancer un scrap
+                  Lancer un scan
                 </div>
               </Button>
               <Link to="/tracking">

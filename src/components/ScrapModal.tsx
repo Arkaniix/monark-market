@@ -42,7 +42,7 @@ interface ScrapModalProps {
   preselectedModel?: string;
 }
 
-// Scrap type configuration
+// Scan type configuration
 const SCRAP_TYPES = {
   faible: {
     credits: 3,
@@ -50,8 +50,8 @@ const SCRAP_TYPES = {
     minTime: 2,
     maxTime: 4,
     icon: Target,
-    label: "Scan faible",
-    description: "Scan basique d'un modèle précis sans filtres avancés. Rapide et économique.",
+    label: "Scan rapide",
+    description: "Analyse basique d'un modèle précis sans filtres avancés. Rapide et économique.",
   },
   fort: {
     credits: 8,
@@ -59,8 +59,8 @@ const SCRAP_TYPES = {
     minTime: 5,
     maxTime: 8,
     icon: Sparkles,
-    label: "Scan fort",
-    description: "Scan approfondi avec filtres personnalisés (prix, région, état). Plus précis.",
+    label: "Scan approfondi",
+    description: "Analyse complète avec filtres personnalisés (prix, région, état). Plus précis.",
   },
   communautaire: {
     credits: -12,
@@ -68,8 +68,8 @@ const SCRAP_TYPES = {
     minTime: 7,
     maxTime: 12,
     icon: Users,
-    label: "Scan communautaire",
-    description: "Contribuez en scannant une portion définie par la plateforme. Gagnez des crédits !",
+    label: "Collecte communautaire",
+    description: "Contribuez en analysant une portion définie par la plateforme. Gagnez des crédits !",
   },
 };
 
@@ -181,7 +181,7 @@ export default function ScrapModal({ open, onOpenChange, preselectedModel }: Scr
             Lancer un scan
           </DialogTitle>
           <DialogDescription>
-            Configurez et lancez un scan d'annonces. L'extension navigateur se chargera du scraping.
+            Configurez et lancez une analyse d'annonces. L'extension navigateur se chargera de la collecte.
           </DialogDescription>
         </DialogHeader>
 
@@ -386,7 +386,7 @@ export default function ScrapModal({ open, onOpenChange, preselectedModel }: Scr
               <div className="text-sm">
                 <p className="font-medium text-warning mb-1">Important</p>
                 <p className="text-muted-foreground">
-                  Le scraping est manuel via l'extension navigateur. Restez présent pour gérer les éventuels captchas.
+                  La collecte est manuelle via l'extension navigateur. Restez présent pour gérer les éventuels captchas.
                 </p>
               </div>
             </div>

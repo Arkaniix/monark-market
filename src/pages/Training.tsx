@@ -321,7 +321,7 @@ export default function Training() {
             <CardHeader>
               <Users className="h-8 w-8 text-primary mb-2" />
               <CardTitle className="text-lg">Rejoindre la Communauté</CardTitle>
-              <CardDescription>Contribue au scrap communautaire</CardDescription>
+              <CardDescription>Contribue à la collecte communautaire</CardDescription>
             </CardHeader>
             <CardContent>
               <Button variant="ghost" size="sm" className="w-full" asChild>
@@ -352,7 +352,7 @@ export default function Training() {
           <Card className="hover-scale cursor-pointer">
             <CardHeader>
               <BookOpen className="h-8 w-8 text-primary mb-2" />
-              <CardTitle className="text-lg">Essayer un Scrap</CardTitle>
+              <CardTitle className="text-lg">Lancer un Scan</CardTitle>
               <CardDescription>Découvre le catalogue de modèles</CardDescription>
             </CardHeader>
             <CardContent>
