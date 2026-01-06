@@ -384,18 +384,29 @@ export default function Deals() {
               const isHighValue = discount >= 15;
               const ItemTypeIcon = getItemTypeIcon(deal.item_type);
               return <motion.div key={deal.id} variants={itemVariants}>
-                      <Card className="hover:border-primary transition-all hover:shadow-xl group h-full flex flex-col overflow-hidden">
-                        {/* Image slot */}
-                        <DealCardImage
-                          imageUrl={null}
-                          modelName={deal.model_name}
-                          category={deal.category}
-                          alt={deal.title}
-                          className="rounded-t-lg"
-                        />
-                        <CardHeader className="pt-3">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex gap-2 flex-wrap">
+                      <Card className="deal-card hover:border-primary transition-all hover:shadow-xl group h-full flex flex-col overflow-hidden">
+                        {/* Image slot with overlay zone for future badges */}
+                        <div className="deal-card__image-container relative">
+                          <DealCardImage
+                            imageUrl={null}
+                            modelName={deal.model_name}
+                            category={deal.category}
+                            alt={deal.title}
+                            className="rounded-t-lg"
+                          />
+                          {/* Future: Image overlay badges (AI image, verified, etc.) */}
+                          <div className="deal-card__image-badges absolute top-2 left-2 flex gap-1">
+                            {/* Placeholder for: hasAiImage && <Badge>Image IA</Badge> */}
+                          </div>
+                          <div className="deal-card__image-indicators absolute bottom-2 right-2 flex gap-1">
+                            {/* Placeholder for: hasPriceHistory && <HistoryIcon /> */}
+                          </div>
+                        </div>
+
+                        <CardHeader className="deal-card__header pt-3">
+                          {/* Primary badges row */}
+                          <div className="deal-card__badges flex items-start justify-between mb-3">
+                            <div className="deal-card__badges-left flex gap-2 flex-wrap">
                               <Badge variant={perfBadge.variant} className="gap-1">
                                 {perfBadge.label}
                               </Badge>
@@ -413,8 +424,10 @@ export default function Deals() {
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                              {/* Future: Additional feature badges slot */}
+                              <span className="deal-card__feature-badges" />
                             </div>
-                            <div className="text-right flex-shrink-0">
+                            <div className="deal-card__price-block text-right flex-shrink-0">
                               <Badge variant="secondary" className="mb-2 text-xs">
                                 {formatDistanceToNow(new Date(deal.publication_date), {
                             addSuffix: true,
@@ -430,22 +443,27 @@ export default function Deals() {
                               </div>
                             </div>
                           </div>
-                          <CardTitle className="text-base leading-tight line-clamp-2">
+                          <CardTitle className="deal-card__title text-base leading-tight line-clamp-2">
                             {deal.title}
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="flex-1 flex flex-col">
-                          <div className="space-y-3 flex-1">
-                            <div className="flex items-center gap-2 text-sm flex-wrap">
+
+                        <CardContent className="deal-card__content flex-1 flex flex-col">
+                          <div className="deal-card__body space-y-3 flex-1">
+                            {/* Category & platform tags */}
+                            <div className="deal-card__tags flex items-center gap-2 text-sm flex-wrap">
                               <Badge variant="secondary" className="gap-1">
                                 <ItemTypeIcon className="h-3 w-3" />
                                 {deal.category}
                               </Badge>
                               <Badge variant="outline">{deal.condition}</Badge>
                               <PlatformBadge platform={deal.platform} />
+                              {/* Future: Additional tags slot */}
+                              <span className="deal-card__extra-tags" />
                             </div>
 
-                            <div className="space-y-2 text-sm text-muted-foreground">
+                            {/* Location & meta info */}
+                            <div className="deal-card__meta space-y-2 text-sm text-muted-foreground">
                               <div className="flex items-center gap-2">
                                 <MapPin className="h-4 w-4 flex-shrink-0" />
                                 {deal.city}, {deal.region}
@@ -458,9 +476,12 @@ export default function Deals() {
                                   <Truck className="h-4 w-4 flex-shrink-0" />
                                   Livraison disponible
                                 </div>}
+                              {/* Future: Additional meta indicators */}
+                              <span className="deal-card__meta-extra" />
                             </div>
 
-                            <div className="pt-3 border-t flex items-center justify-between">
+                            {/* Price comparison strip */}
+                            <div className="deal-card__savings pt-3 border-t flex items-center justify-between">
                               <div className="flex items-center gap-1 text-sm">
                                 <TrendingDown className="h-4 w-4 text-success" />
                                 <span className="font-medium text-success">-{discount}%</span>
@@ -471,7 +492,8 @@ export default function Deals() {
                               </span>
                             </div>
 
-                            <div className="flex gap-2">
+                            {/* Actions row */}
+                            <div className="deal-card__actions flex gap-2">
                               {deal.id ? <Button className="flex-1" variant="default" size="sm" asChild>
                                   <Link to={`/ads/${deal.id}`}>Voir annonce</Link>
                                 </Button> : <Button className="flex-1" variant="default" size="sm" disabled>
