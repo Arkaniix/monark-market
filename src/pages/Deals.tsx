@@ -192,7 +192,6 @@ export default function Deals() {
                     <SelectItem value="all">Toutes</SelectItem>
                     <SelectItem value="leboncoin">Leboncoin</SelectItem>
                     <SelectItem value="ebay">eBay</SelectItem>
-                    <SelectItem value="amazon">Amazon</SelectItem>
                     <SelectItem value="ldlc">LDLC</SelectItem>
                     <SelectItem value="facebook">FB Marketplace</SelectItem>
                     <SelectItem value="vinted">Vinted</SelectItem>
