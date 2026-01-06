@@ -293,12 +293,6 @@ export default function Auth() {
               </div>
             </div>
           </div>
-
-          <div className="mt-auto pt-8 border-t border-border/50">
-            <p className="text-sm text-muted-foreground">
-              Déjà <span className="font-semibold text-primary">10,000+</span> utilisateurs nous font confiance
-            </p>
-          </div>
         </div>
 
         {/* Right Panel - Auth Card */}
