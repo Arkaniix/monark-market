@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { useAdDetail, useAdPriceHistory, useAddAdToWatchlist, useCreateAdAlert } from "@/hooks/useAdDetail";
 import { AdDetailSkeleton } from "@/components/ad/AdDetailSkeleton";
+import { DealCardImage } from "@/components/deals/DealCardImage";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -202,8 +203,21 @@ export default function AdDetail() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Header Card */}
+            {/* Image Section */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <Card className="overflow-hidden">
+                <DealCardImage
+                  imageUrl={(ad as any).image_url}
+                  modelName={ad.model_name}
+                  category={ad.category || 'Composant'}
+                  alt={ad.title}
+                  className="aspect-video"
+                />
+              </Card>
+            </motion.div>
+
+            {/* Header Card */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
               <Card>
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
