@@ -61,22 +61,24 @@ export function WatchlistItemRow({
       {/* Prix actuel */}
       <div className="text-right shrink-0 hidden sm:block">
         <p className="text-sm font-semibold">{formatPrice(currentPrice)}</p>
-        <p className="text-xs text-muted-foreground">{formatPrice(fairValue)}</p>
+        {!isModel && <p className="text-xs text-muted-foreground">{formatPrice(fairValue)}</p>}
       </div>
 
-      {/* Écart */}
-      <div className="shrink-0 hidden md:block w-20 text-center">
-        <Badge 
-          variant="outline" 
-          className={`text-xs ${
-            deviation < -5 ? "border-green-500/50 text-green-600 bg-green-500/5" : 
-            deviation > 5 ? "border-red-500/50 text-red-500 bg-red-500/5" : 
-            "border-border text-muted-foreground"
-          }`}
-        >
-          {deviation > 0 ? "+" : ""}{deviation.toFixed(0)}%
-        </Badge>
-      </div>
+      {/* Écart - uniquement pour les annonces */}
+      {!isModel && (
+        <div className="shrink-0 hidden md:block w-20 text-center">
+          <Badge 
+            variant="outline" 
+            className={`text-xs ${
+              deviation < -5 ? "border-green-500/50 text-green-600 bg-green-500/5" : 
+              deviation > 5 ? "border-red-500/50 text-red-500 bg-red-500/5" : 
+              "border-border text-muted-foreground"
+            }`}
+          >
+            {deviation > 0 ? "+" : ""}{deviation.toFixed(0)}%
+          </Badge>
+        </div>
+      )}
 
       {/* Tendance 7j */}
       <div className="shrink-0 hidden lg:flex items-center gap-1 w-20 justify-center">
