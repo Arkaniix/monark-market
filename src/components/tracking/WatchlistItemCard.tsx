@@ -205,7 +205,18 @@ export function WatchlistItemCard({
                 {trendData.length > 1 && (
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="text-muted-foreground font-medium">Position dans la fourchette 30j</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-muted-foreground font-medium cursor-help underline decoration-dotted underline-offset-2">
+                              Position dans la fourchette 30j
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[220px]">
+                            <p>Position du prix actuel entre le minimum et le maximum observés sur les 30 derniers jours.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       <span className="text-xs">
                         {formatPrice(priceMin)} → {formatPrice(priceMax)}
                       </span>
