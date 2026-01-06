@@ -225,9 +225,9 @@ export default function Landing() {
         <div className="container">
           <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
           once: true
-        }} className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
+        }} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             <motion.div variants={itemVariants}>
-              <Card>
+              <Card className="h-full">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm text-muted-foreground font-normal">
                     Annonces scannées
@@ -241,7 +241,7 @@ export default function Landing() {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <Card>
+              <Card className="h-full">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm text-muted-foreground font-normal">
                     Économies moyennes
@@ -255,21 +255,21 @@ export default function Landing() {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <Card>
+              <Card className="h-full">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm text-muted-foreground font-normal">
-                    Utilisateurs actifs
+                    Modèles référencés
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold">10K+</div>
-                  <p className="text-xs text-muted-foreground mt-1">Communauté</p>
+                  <div className="text-3xl font-bold">2K+</div>
+                  <p className="text-xs text-muted-foreground mt-1">GPU, CPU, RAM...</p>
                 </CardContent>
               </Card>
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <Card>
+              <Card className="h-full">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm text-muted-foreground font-normal">
                     Temps économisé
