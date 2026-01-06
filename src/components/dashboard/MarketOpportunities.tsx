@@ -48,14 +48,9 @@ export function MarketOpportunities({
   fallingTrends,
   dailyVolume
 }: MarketOpportunitiesProps) {
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "GPU": return "bg-primary/10 text-primary";
-      case "CPU": return "bg-accent/10 text-accent";
-      case "RAM": return "bg-success/10 text-success";
-      case "SSD": return "bg-warning/10 text-warning";
-      default: return "bg-muted text-muted-foreground";
-    }
+  // Couleurs neutres pour les catégories (pas de connotation positive/négative)
+  const getCategoryColor = () => {
+    return "bg-secondary text-secondary-foreground";
   };
 
   const lastUpdate = "il y a 3h";
@@ -100,14 +95,14 @@ export function MarketOpportunities({
                             {/* En-tête */}
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-center gap-2">
-                                <Badge className={getCategoryColor(deal.category)}>
+                                <Badge className={getCategoryColor()}>
                                   {deal.category}
                                 </Badge>
                                 {isHotDeal(deal.deviationPct) && (
-                                  <span className="text-warning animate-pulse">⚡</span>
+                                  <span className="text-success animate-pulse">🔥</span>
                                 )}
                               </div>
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-xs text-muted-foreground">
                                 Score: {Math.round((1 + deal.deviationPct / 100) * 100)}
                               </Badge>
                             </div>
@@ -176,7 +171,7 @@ export function MarketOpportunities({
                       <div className="h-full w-1 bg-success rounded-full" />
                       <div className="flex-1">
                         <p className="font-medium text-sm">{trend.name}</p>
-                        <Badge className={getCategoryColor(trend.category)} variant="outline">
+                        <Badge className={getCategoryColor()} variant="outline">
                           {trend.category}
                         </Badge>
                       </div>
@@ -190,26 +185,26 @@ export function MarketOpportunities({
               </CardContent>
             </Card>
 
-            {/* Top baisses */}
-            <Card className="border-primary/20">
+            {/* Top baisses - Rouge pour signaler la baisse (opportunité d'achat) */}
+            <Card className="border-destructive/20">
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <TrendingDown className="h-5 w-5 text-primary" />
+                  <TrendingDown className="h-5 w-5 text-destructive" />
                   <CardTitle className="text-lg">Top baisses</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {fallingTrends.map((trend, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 group cursor-pointer hover:bg-primary/10 transition-colors">
-                      <div className="h-full w-1 bg-primary rounded-full" />
+                    <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/20 group cursor-pointer hover:bg-destructive/10 transition-colors">
+                      <div className="h-full w-1 bg-destructive rounded-full" />
                       <div className="flex-1">
                         <p className="font-medium text-sm">{trend.name}</p>
-                        <Badge className={getCategoryColor(trend.category)} variant="outline">
+                        <Badge className={getCategoryColor()} variant="outline">
                           {trend.category}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-1 text-primary font-bold" title={`${trend.change}% sur les 7 derniers jours`}>
+                      <div className="flex items-center gap-1 text-destructive font-bold" title={`${trend.change}% sur les 7 derniers jours`}>
                         <TrendingDown className="h-4 w-4" />
                         {trend.change}%
                       </div>
@@ -219,11 +214,11 @@ export function MarketOpportunities({
               </CardContent>
             </Card>
 
-            {/* Volume du jour */}
-            <Card className="border-accent/20">
+            {/* Volume du jour - Couleur neutre (information) */}
+            <Card className="border-border">
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-accent" />
+                  <BarChart3 className="h-5 w-5 text-muted-foreground" />
                   <CardTitle className="text-lg">Activité marché</CardTitle>
                 </div>
               </CardHeader>
@@ -231,21 +226,21 @@ export function MarketOpportunities({
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-muted-foreground mb-2">Volume d'annonces</p>
-                    <div className="text-4xl font-bold text-accent">{dailyVolume.toLocaleString()}</div>
+                    <div className="text-4xl font-bold text-foreground">{dailyVolume.toLocaleString()}</div>
                     <p className="text-xs text-muted-foreground mt-1">annonces aujourd'hui</p>
                   </div>
                   <div className="pt-4 border-t space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">GPU</span>
-                      <span className="font-medium">45%</span>
+                      <span className="font-medium text-foreground">45%</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">CPU</span>
-                      <span className="font-medium">28%</span>
+                      <span className="font-medium text-foreground">28%</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Autres</span>
-                      <span className="font-medium">27%</span>
+                      <span className="font-medium text-foreground">27%</span>
                     </div>
                   </div>
                   <Link to="/catalog">
