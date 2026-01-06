@@ -36,12 +36,12 @@ interface MarketTrendsProps {
 }
 
 const CATEGORY_OPTIONS = [
-  { value: "all", label: "Tous" },
-  { value: "GPU", label: "GPU" },
-  { value: "CPU", label: "CPU" },
-  { value: "RAM", label: "RAM" },
-  { value: "SSD", label: "SSD" },
-  { value: "Autres", label: "Autres" },
+  { value: "all", label: "Tous", dataKey: "global" },
+  { value: "GPU", label: "GPU", dataKey: "gpu" },
+  { value: "CPU", label: "CPU", dataKey: "cpu" },
+  { value: "RAM", label: "RAM", dataKey: "ram" },
+  { value: "SSD", label: "SSD", dataKey: "ssd" },
+  { value: "Autres", label: "Autres", dataKey: "cm" },
 ];
 
 const itemVariants = {
@@ -81,16 +81,26 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
   const filteredTopDrops = topDrops.filter((m: TopModel) => matchesCategory(m.category));
   const filteredCategoryVariations = categoryVariations.filter((c) => matchesCategory(c.category));
 
+  // Get the dataKey for the selected category
+  const selectedOption = CATEGORY_OPTIONS.find(opt => opt.value === categoryFilter) || CATEGORY_OPTIONS[0];
+  const chartDataKey = selectedOption.dataKey;
+  const chartLabel = categoryFilter === "all" ? "Global" : selectedOption.label;
+
   const formatPrice = (value: number) => 
     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
 
   const formatPercent = (value: number) => 
     `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
 
-  // Prendre les 7 derniers points pour le graphique compact
+  // Prendre les 14 derniers points pour le graphique compact avec toutes les catégories
   const chartData = marketTrends.slice(-14).map((point: MarketTrendPoint) => ({
     date: new Date(point.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
     global: point.global,
+    gpu: (point as any).gpu || point.global,
+    cpu: (point as any).cpu || point.global,
+    ram: (point as any).ram || point.global,
+    ssd: (point as any).ssd || point.global,
+    cm: (point as any).cm || point.global,
   }));
 
   const getCategoryColor = (category: string) => {
@@ -115,25 +125,11 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
             </h2>
             <p className="text-muted-foreground">Vue globale du marché hardware d'occasion</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Link to="/deals">
-              <Button variant="outline" size="sm">
-                Explorer le marché
-              </Button>
-            </Link>
-          </div>
+          <Link to="/deals">
+            <Button variant="outline" size="sm">
+              Explorer le marché
+            </Button>
+          </Link>
         </div>
 
         {/* KPI Cards */}
@@ -217,17 +213,32 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
           {/* Graphique évolution prix */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                Évolution des prix (14 derniers jours)
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  Évolution des prix (14 derniers jours)
+                </CardTitle>
+                <div className="flex items-center gap-1 p-1 rounded-md bg-muted">
+                  {CATEGORY_OPTIONS.map((opt) => (
+                    <Button
+                      key={opt.value}
+                      variant={categoryFilter === opt.value ? 'default' : 'ghost'}
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => setCategoryFilter(opt.value)}
+                    >
+                      {opt.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
                     <defs>
-                      <linearGradient id="colorGlobal" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="colorCategory" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                       </linearGradient>
@@ -247,7 +258,7 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
                       domain={['dataMin - 10', 'dataMax + 10']}
                     />
                     <Tooltip 
-                      formatter={(value: number) => [`${value.toFixed(0)} €`, 'Prix médian']}
+                      formatter={(value: number) => [`${value.toFixed(0)} €`, `Prix ${chartLabel}`]}
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))', 
                         border: '1px solid hsl(var(--border))',
@@ -256,10 +267,10 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
                     />
                     <Area 
                       type="monotone" 
-                      dataKey="global" 
+                      dataKey={chartDataKey}
                       stroke="hsl(var(--primary))" 
                       fillOpacity={1} 
-                      fill="url(#colorGlobal)" 
+                      fill="url(#colorCategory)" 
                       strokeWidth={2}
                     />
                   </AreaChart>
