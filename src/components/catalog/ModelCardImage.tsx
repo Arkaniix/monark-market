@@ -47,9 +47,11 @@ interface ModelCardImageProps {
   /** Category for fallback icon */
   category: string;
   /** Aspect ratio */
-  aspectRatio?: "16/9" | "4/3" | "3/2";
+  aspectRatio?: "16/9" | "4/3" | "3/2" | "1/1";
   /** Additional classes */
   className?: string;
+  /** Size variant for placeholder content */
+  size?: "sm" | "md" | "lg";
 }
 
 export function ModelCardImage({ 
@@ -58,7 +60,8 @@ export function ModelCardImage({
   brand,
   category, 
   aspectRatio = "4/3",
-  className 
+  className,
+  size = "md"
 }: ModelCardImageProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -67,7 +70,15 @@ export function ModelCardImage({
     ? "aspect-[16/9]" 
     : aspectRatio === "3/2" 
       ? "aspect-[3/2]" 
-      : "aspect-[4/3]";
+      : aspectRatio === "1/1"
+        ? "aspect-square"
+        : "aspect-[4/3]";
+
+  const sizeClasses = {
+    sm: { icon: "h-5 w-5", name: "text-[8px]", brand: "text-[7px]" },
+    md: { icon: "h-8 w-8", name: "text-xs", brand: "text-[10px]" },
+    lg: { icon: "h-10 w-10", name: "text-sm", brand: "text-xs" }
+  };
 
   // Try to load an image if available
   if (imageUrl && !imageError) {
@@ -103,9 +114,10 @@ export function ModelCardImage({
   const IconComponent = CATEGORY_ICONS[category] || Package;
   const gradientConfig = CATEGORY_GRADIENTS[category] || DEFAULT_GRADIENT;
 
-  // Extract short model name for display
-  const displayModelName = modelName.length > 18 
-    ? modelName.substring(0, 18) + "…" 
+  // Extract short model name for display based on size
+  const maxLength = size === "sm" ? 14 : size === "md" ? 24 : 32;
+  const displayModelName = modelName.length > maxLength 
+    ? modelName.substring(0, maxLength) + "…" 
     : modelName;
 
   return (
@@ -126,14 +138,17 @@ export function ModelCardImage({
       }} />
       
       {/* Content */}
-      <div className="relative h-full flex flex-col items-center justify-center gap-1 p-2">
-        <IconComponent className={cn("h-6 w-6", gradientConfig.icon)} />
+      <div className="relative h-full flex flex-col items-center justify-center gap-1.5 p-3">
+        <IconComponent className={cn(sizeClasses[size].icon, gradientConfig.icon)} />
         
-        <span className="text-[9px] font-medium text-muted-foreground/80 text-center leading-tight max-w-full line-clamp-1">
+        <span className={cn(
+          "font-medium text-muted-foreground/80 text-center leading-tight max-w-full line-clamp-2",
+          sizeClasses[size].name
+        )}>
           {displayModelName}
         </span>
         
-        <span className="text-[8px] text-muted-foreground/50">
+        <span className={cn("text-muted-foreground/50", sizeClasses[size].brand)}>
           {brand}
         </span>
       </div>
@@ -144,16 +159,18 @@ export function ModelCardImage({
 // Skeleton version for loading states
 export function ModelCardImageSkeleton({ 
   aspectRatio = "4/3",
-  className 
+  className
 }: { 
-  aspectRatio?: "16/9" | "4/3" | "3/2";
+  aspectRatio?: "16/9" | "4/3" | "3/2" | "1/1";
   className?: string;
 }) {
   const aspectClass = aspectRatio === "16/9" 
     ? "aspect-[16/9]" 
     : aspectRatio === "3/2" 
       ? "aspect-[3/2]" 
-      : "aspect-[4/3]";
+      : aspectRatio === "1/1"
+        ? "aspect-square"
+        : "aspect-[4/3]";
 
   return (
     <Skeleton className={cn("w-full", aspectClass, className)} />

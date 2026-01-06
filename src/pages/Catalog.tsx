@@ -182,15 +182,28 @@ export default function Catalog() {
     }
   };
   const getLiquidityLabel = (liquidity: number) => {
-    if (liquidity >= 0.75) return "Très liquide";
-    if (liquidity >= 0.5) return "Liquide";
-    if (liquidity >= 0.25) return "Peu liquide";
-    return "Rare";
+    if (liquidity >= 0.75) return "Se vend vite";
+    if (liquidity >= 0.5) return "Demande correcte";
+    if (liquidity >= 0.25) return "Vente lente";
+    return "Rare sur le marché";
   };
   const getLiquidityColor = (liquidity: number) => {
     if (liquidity >= 0.75) return "default";
     if (liquidity >= 0.5) return "secondary";
     return "outline";
+  };
+  const getLiquidityTooltip = (liquidity: number) => {
+    const percentage = Math.round(liquidity * 100);
+    if (liquidity >= 0.75) {
+      return `Liquidité ${percentage}% — Ce modèle se vend rapidement. Fort volume d'annonces et rotation élevée.`;
+    }
+    if (liquidity >= 0.5) {
+      return `Liquidité ${percentage}% — Demande modérée. Délai de vente raisonnable.`;
+    }
+    if (liquidity >= 0.25) {
+      return `Liquidité ${percentage}% — Peu de demande. La vente peut prendre du temps.`;
+    }
+    return `Liquidité ${percentage}% — Très peu d'annonces. Modèle rare ou peu recherché.`;
   };
   const totalPages = modelsData?.total_pages || 1;
   const totalItems = modelsData?.total || 0;
@@ -345,115 +358,142 @@ export default function Catalog() {
           </Card> : <>
             {/* Grid View */}
             {viewMode === "grid" ? (
-              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {modelsData.items.map(model => <motion.div key={model.id} variants={itemVariants}>
-                    <Card className="hover:border-primary/50 transition-all hover:shadow-md group h-full overflow-hidden">
-                      {/* Model Image */}
-                      <ModelCardImage
-                        imageUrl={model.image_url}
-                        modelName={model.name}
-                        brand={model.brand}
-                        category={model.category}
-                        aspectRatio="4/3"
-                      />
-                      <CardHeader className="p-4 pb-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <CardTitle className="text-base leading-snug group-hover:text-primary transition-colors line-clamp-2">
-                              {model.name}
-                            </CardTitle>
-                            <p className="text-sm text-muted-foreground mt-1">{model.brand}</p>
-                          </div>
-                          <Badge variant="secondary" className="text-xs px-2 py-0.5 shrink-0">{model.category}</Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <div className="space-y-3">
-                          {/* Price & Variation */}
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-xl font-bold">
-                                {model.fair_value_30d || model.price_median_30d || "N/A"}€
-                              </p>
-                              <p className="text-xs text-muted-foreground">Fair Value 30j</p>
+              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {modelsData.items.map(model => {
+                  const isInWatchlist = watchlistModelIds.has(model.id);
+                  const hasAlert = alertedModelIds.has(model.id);
+                  return (
+                    <motion.div key={model.id} variants={itemVariants}>
+                      <Card className="hover:border-primary/50 transition-all hover:shadow-md group h-full overflow-hidden flex flex-col min-h-[380px]">
+                        {/* Model Image */}
+                        <ModelCardImage
+                          imageUrl={model.image_url}
+                          modelName={model.name}
+                          brand={model.brand}
+                          category={model.category}
+                          aspectRatio="16/9"
+                        />
+                        <CardHeader className="p-4 pb-2 flex-shrink-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <CardTitle className="text-base font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem]">
+                                {model.name}
+                              </CardTitle>
+                              <p className="text-sm text-muted-foreground mt-1">{model.brand}</p>
                             </div>
-                            {model.var_30d_pct !== null && <TooltipProvider>
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5 shrink-0">{model.category}</Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0 flex flex-col flex-1">
+                          <div className="space-y-3 flex-1">
+                            {/* Price & Variation */}
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xl font-bold">
+                                  {model.fair_value_30d || model.price_median_30d || "N/A"}€
+                                </p>
+                                <p className="text-xs text-muted-foreground">Fair Value 30j</p>
+                              </div>
+                              {model.var_30d_pct !== null && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <div className={`flex items-center gap-1 text-sm ${model.var_30d_pct < 0 ? "text-success" : "text-destructive"}`}>
+                                        {model.var_30d_pct < 0 ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
+                                        <span className="font-semibold">
+                                          {model.var_30d_pct > 0 ? "+" : ""}{model.var_30d_pct.toFixed(1)}%
+                                        </span>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="text-sm">Variation sur 30 jours</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
+
+                            {/* Badges with Liquidity Tooltip */}
+                            <div className="flex gap-1.5 flex-wrap items-center">
+                              <TooltipProvider>
                                 <Tooltip>
-                                  <TooltipTrigger>
-                                    <div className={`flex items-center gap-1 text-sm ${model.var_30d_pct < 0 ? "text-success" : "text-destructive"}`}>
-                                      {model.var_30d_pct < 0 ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
-                                      <span className="font-semibold">
-                                        {model.var_30d_pct > 0 ? "+" : ""}{model.var_30d_pct.toFixed(1)}%
-                                      </span>
+                                  <TooltipTrigger asChild>
+                                    <div className="inline-flex items-center gap-1.5 cursor-help">
+                                      <Badge variant={getLiquidityColor(model.liquidity)} className="text-xs px-2 py-0.5">
+                                        {getLiquidityLabel(model.liquidity)}
+                                      </Badge>
+                                      <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                                        <div 
+                                          className="h-full bg-primary rounded-full"
+                                          style={{ width: `${Math.round(model.liquidity * 100)}%` }}
+                                        />
+                                      </div>
                                     </div>
                                   </TooltipTrigger>
-                                  <TooltipContent className="text-sm">Variation sur 30 jours</TooltipContent>
+                                  <TooltipContent className="max-w-[220px] text-sm">
+                                    {getLiquidityTooltip(model.liquidity)}
+                                  </TooltipContent>
                                 </Tooltip>
-                              </TooltipProvider>}
+                              </TooltipProvider>
+                              <Badge variant="outline" className="text-xs px-2 py-0.5">{model.ads_count} ann.</Badge>
+                            </div>
                           </div>
 
-                          {/* Badges */}
-                          <div className="flex gap-1.5 flex-wrap">
-                            <Badge variant={getLiquidityColor(model.liquidity)} className="text-xs px-2 py-0.5">
-                              {getLiquidityLabel(model.liquidity)}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs px-2 py-0.5">{model.ads_count} ann.</Badge>
+                          {/* Actions - always at bottom */}
+                          <div className="flex gap-2 pt-3 mt-auto border-t border-border/30">
+                            {model.id ? (
+                              <Button className="flex-1 h-9 text-sm" size="default" asChild>
+                                <Link to={`/models/${model.id}`}>Détails</Link>
+                              </Button>
+                            ) : (
+                              <Button className="flex-1 h-9 text-sm" size="default" disabled>
+                                Détails
+                              </Button>
+                            )}
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant={isInWatchlist ? "default" : "outline"} 
+                                    size="default" 
+                                    className={cn("h-9 w-9 p-0", isInWatchlist && "bg-primary text-primary-foreground")}
+                                    onClick={() => handleToggleWatchlist(model.id, model.name, isInWatchlist)} 
+                                    disabled={addToWatchlist.isPending || removeFromWatchlist.isPending || !model.id}
+                                  >
+                                    <Star className={cn("h-4 w-4", isInWatchlist && "fill-current")} />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-sm">
+                                  {isInWatchlist ? "Déjà dans ta watchlist" : "Ajouter à la watchlist"}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant={hasAlert ? "default" : "outline"} 
+                                    size="default" 
+                                    className={cn("h-9 w-9 p-0", hasAlert && "bg-primary text-primary-foreground")}
+                                    onClick={() => openAlertModal(model)} 
+                                    disabled={!model.id}
+                                  >
+                                    <Bell className={cn("h-4 w-4", hasAlert && "fill-current")} />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-sm">
+                                  {hasAlert ? "Alerte active — Cliquer pour gérer" : "Créer une alerte"}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
-
-                          {/* Actions - compact */}
-                          {(() => {
-                            const isInWatchlist = watchlistModelIds.has(model.id);
-                            const hasAlert = alertedModelIds.has(model.id);
-                            return (
-                              <div className="flex gap-2 pt-1">
-                                {model.id ? <Button className="flex-1 h-9 text-sm" size="default" asChild>
-                                    <Link to={`/models/${model.id}`}>Détails</Link>
-                                  </Button> : <Button className="flex-1 h-9 text-sm" size="default" disabled>
-                                    Détails
-                                  </Button>}
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button 
-                                        variant={isInWatchlist ? "default" : "outline"} 
-                                        size="default" 
-                                        className={cn("h-9 w-9 p-0", isInWatchlist && "bg-primary text-primary-foreground")}
-                                        onClick={() => handleToggleWatchlist(model.id, model.name, isInWatchlist)} 
-                                        disabled={addToWatchlist.isPending || removeFromWatchlist.isPending || !model.id}
-                                      >
-                                        <Star className={cn("h-4 w-4", isInWatchlist && "fill-current")} />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="text-sm">{isInWatchlist ? "Dans la watchlist" : "Ajouter à la watchlist"}</TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button 
-                                        variant={hasAlert ? "default" : "outline"} 
-                                        size="default" 
-                                        className={cn("h-9 w-9 p-0", hasAlert && "bg-primary text-primary-foreground")}
-                                        onClick={() => openAlertModal(model)} 
-                                        disabled={!model.id}
-                                      >
-                                        <Bell className={cn("h-4 w-4", hasAlert && "fill-current")} />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="text-sm">{hasAlert ? "Alerte active" : "Créer une alerte"}</TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>)}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
               </motion.div>
             ) : (
-              /* List View */
-              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-2">
+              /* List View - compact spacing */
+              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-3">
                 {modelsData.items.map(model => (
                   <motion.div key={model.id} variants={itemVariants}>
                     <ModelListRow
