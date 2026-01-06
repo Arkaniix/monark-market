@@ -20,6 +20,14 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
 import type { TrendsData, TopModel, MarketTrendPoint } from "@/providers/types";
 
 interface MarketTrendsProps {
@@ -27,12 +35,23 @@ interface MarketTrendsProps {
   isLoading: boolean;
 }
 
+const CATEGORY_OPTIONS = [
+  { value: "all", label: "Tous" },
+  { value: "GPU", label: "GPU" },
+  { value: "CPU", label: "CPU" },
+  { value: "RAM", label: "RAM" },
+  { value: "SSD", label: "SSD" },
+  { value: "Autres", label: "Autres" },
+];
+
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 }
 };
 
 export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+
   if (isLoading || !data) {
     return (
       <section className="py-8">
@@ -47,6 +66,20 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
   }
 
   const { summary, marketTrends, topIncreases, topDrops, categoryVariations } = data;
+
+  // Filter helper
+  const matchesCategory = (category: string) => {
+    if (categoryFilter === "all") return true;
+    if (categoryFilter === "Autres") {
+      return !["GPU", "CPU", "RAM", "SSD"].includes(category);
+    }
+    return category === categoryFilter;
+  };
+
+  // Filter data based on selected category
+  const filteredTopIncreases = topIncreases.filter((m: TopModel) => matchesCategory(m.category));
+  const filteredTopDrops = topDrops.filter((m: TopModel) => matchesCategory(m.category));
+  const filteredCategoryVariations = categoryVariations.filter((c) => matchesCategory(c.category));
 
   const formatPrice = (value: number) => 
     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
@@ -74,7 +107,7 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
   return (
     <section className="py-8 bg-gradient-to-b from-muted/20 to-background">
       <div className="container">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
               <Activity className="h-6 w-6 text-primary" />
@@ -82,11 +115,25 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
             </h2>
             <p className="text-muted-foreground">Vue globale du marché hardware d'occasion</p>
           </div>
-          <Link to="/deals">
-            <Button variant="outline" size="sm">
-              Explorer le marché
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Link to="/deals">
+              <Button variant="outline" size="sm">
+                Explorer le marché
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* KPI Cards */}
@@ -223,7 +270,7 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
               <div className="mt-4 pt-4 border-t">
                 <p className="text-sm font-medium mb-3">Variation 30j par catégorie</p>
                 <div className="flex flex-wrap gap-3">
-                  {categoryVariations.map((cat) => (
+                  {filteredCategoryVariations.length > 0 ? filteredCategoryVariations.map((cat) => (
                     <div key={cat.category} className="flex items-center gap-2">
                       <Badge variant="outline" className={getCategoryColor(cat.category)}>
                         {cat.category}
@@ -232,7 +279,9 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
                         {formatPercent(cat.variation)}
                       </span>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-sm text-muted-foreground">Aucune donnée pour cette catégorie</p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -251,7 +300,7 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
                   <span className="text-sm font-medium">Hausses</span>
                 </div>
                 <div className="space-y-2">
-                  {topIncreases.slice(0, 3).map((model: TopModel, idx: number) => (
+                  {filteredTopIncreases.length > 0 ? filteredTopIncreases.slice(0, 3).map((model: TopModel, idx: number) => (
                     <div key={idx} className="flex items-center justify-between text-sm p-2 rounded bg-red-500/5 border border-red-500/10">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{model.model}</p>
@@ -261,7 +310,9 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
                         +{model.var_30d_pct.toFixed(1)}%
                       </span>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-sm text-muted-foreground py-2">Aucune hausse</p>
+                  )}
                 </div>
               </div>
 
@@ -272,7 +323,7 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
                   <span className="text-sm font-medium">Baisses</span>
                 </div>
                 <div className="space-y-2">
-                  {topDrops.slice(0, 3).map((model: TopModel, idx: number) => (
+                  {filteredTopDrops.length > 0 ? filteredTopDrops.slice(0, 3).map((model: TopModel, idx: number) => (
                     <div key={idx} className="flex items-center justify-between text-sm p-2 rounded bg-green-500/5 border border-green-500/10">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{model.model}</p>
@@ -282,7 +333,9 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
                         {model.var_30d_pct.toFixed(1)}%
                       </span>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-sm text-muted-foreground py-2">Aucune baisse</p>
+                  )}
                 </div>
               </div>
             </CardContent>
