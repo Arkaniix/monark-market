@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { 
   ArrowLeft, TrendingUp, TrendingDown, Bell, Heart, Clock, 
-  ExternalLink, Activity, BarChart3, MapPin, Sparkles
+  ExternalLink, Activity, BarChart3, MapPin, Sparkles, ImageOff
 } from "lucide-react";
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
@@ -28,6 +28,7 @@ import {
   useCreatePriceAlert 
 } from "@/hooks/useModelDetail";
 import { ModelDetailSkeleton } from "@/components/model/ModelDetailSkeleton";
+import { ModelCardImage } from "@/components/catalog/ModelCardImage";
 import { toast } from "@/hooks/use-toast";
 
 export default function ModelDetail() {
@@ -173,10 +174,28 @@ export default function ModelDetail() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
+          className="flex gap-6 items-start"
         >
-          <div>
-            <h1 className="text-4xl font-bold mb-3">{model.brand} {model.name}</h1>
+          {/* Generic Image */}
+          <div className="hidden sm:block flex-shrink-0 w-32 lg:w-40 rounded-xl overflow-hidden border border-border/50 shadow-sm">
+            <ModelCardImage
+              imageUrl={null}
+              modelName={model.name}
+              brand={model.brand}
+              category={model.category}
+              aspectRatio="1/1"
+              size="lg"
+            />
+            <div className="bg-muted/50 text-center py-1 border-t border-border/30">
+              <span className="text-[9px] text-muted-foreground/60 italic">
+                Image non contractuelle
+              </span>
+            </div>
+          </div>
+
+          {/* Title & Badges */}
+          <div className="flex-1 space-y-3">
+            <h1 className="text-3xl lg:text-4xl font-bold">{model.brand} {model.name}</h1>
             <div className="flex gap-2 flex-wrap">
               <Badge variant="secondary">{model.category}</Badge>
               {model.family && <Badge variant="outline">{model.family}</Badge>}
