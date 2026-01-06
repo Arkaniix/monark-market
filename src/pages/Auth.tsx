@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft, Check, Rocket, Award, Users } from "lucide-react";
+import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft, Check, Rocket, Award, Users, ExternalLink } from "lucide-react";
+import { PlanComparisonModal } from "@/components/auth/PlanComparisonModal";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -409,7 +410,22 @@ export default function Auth() {
                     
                     {/* Plan Selection */}
                     <div className="space-y-3">
-                      <Label>Choisir votre plan</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Choisir votre plan</Label>
+                        <PlanComparisonModal
+                          trigger={
+                            <button
+                              type="button"
+                              className="text-xs text-primary hover:underline flex items-center gap-1"
+                            >
+                              Comparer les plans
+                              <ExternalLink className="h-3 w-3" />
+                            </button>
+                          }
+                          selectedPlan={selectedPlan}
+                          onSelectPlan={setSelectedPlan}
+                        />
+                      </div>
                       <div className="grid grid-cols-3 gap-2">
                         {SIGNUP_PLANS.map(plan => {
                         const isSelected = selectedPlan === plan.id;
