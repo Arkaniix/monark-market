@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -84,6 +85,7 @@ import {
 
 export default function Estimator() {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<"estimator" | "history">("estimator");
   
   // Entitlements - single source of truth
@@ -98,6 +100,7 @@ export default function Estimator() {
   const [buyPriceInput, setBuyPriceInput] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
+  const [prefillApplied, setPrefillApplied] = useState(false);
   
   // Result state
   const [result, setResult] = useState<EstimationResult | null>(null);
@@ -110,6 +113,54 @@ export default function Estimator() {
   const { data: stats } = useEstimatorStats();
   const { data: historyData, isLoading: isLoadingHistory } = useEstimationHistory(historyPage);
   const runEstimation = useRunEstimation();
+
+  // Pre-fill from URL params (e.g., coming from ad detail page)
+  useEffect(() => {
+    if (prefillApplied) return;
+
+    const modelId = searchParams.get('model_id');
+    const modelName = searchParams.get('model_name');
+    const category = searchParams.get('category');
+    const price = searchParams.get('price');
+    const conditionParam = searchParams.get('condition');
+    const regionParam = searchParams.get('region');
+
+    // Pre-fill model if available
+    if (modelId && modelName) {
+      setSelectedModel({
+        id: parseInt(modelId, 10),
+        name: modelName,
+        brand: '',
+        category: category || '',
+        family: null,
+      });
+      setModelSearch(modelName);
+    }
+
+    // Pre-fill price
+    if (price) {
+      setBuyPriceInput(price);
+    }
+
+    // Pre-fill condition (normalize to estimator format)
+    if (conditionParam) {
+      const conditionMap: Record<string, string> = {
+        'neuf': 'neuf',
+        'comme_neuf': 'comme-neuf',
+        'bon': 'bon',
+        'correct': 'bon',
+        'à_réparer': 'a-reparer',
+      };
+      setCondition(conditionMap[conditionParam] || conditionParam);
+    }
+
+    // Pre-fill region
+    if (regionParam) {
+      setRegion(regionParam);
+    }
+
+    setPrefillApplied(true);
+  }, [searchParams, prefillApplied]);
 
   const handleCalculate = async () => {
     if (!selectedModel || !condition || !buyPriceInput) {
