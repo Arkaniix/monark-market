@@ -214,12 +214,30 @@ export interface CatalogSummary {
 
 // ============= Model Detail =============
 export interface ModelSpecs {
+  // Architecture
+  chip?: string;
+  architecture?: string;
+  process_nm?: number;
+  cuda_cores?: number;
+  rt_cores?: number;
+  tensor_cores?: number;
+  // Mémoire
   vram_gb?: number;
   memory_type?: string;
-  tdp_w?: number;
-  release_date?: string;
-  chip?: string;
   bus_width_bit?: number;
+  memory_bandwidth_gbs?: number;
+  // Fréquences
+  base_clock_mhz?: number;
+  boost_clock_mhz?: number;
+  // Alimentation & Interface
+  tdp_w?: number;
+  pcie_interface?: string;
+  power_connectors?: string;
+  outputs_count?: number;
+  // Technologies
+  technologies?: string[];
+  // Dates
+  release_date?: string;
 }
 
 export interface ModelDetail {
