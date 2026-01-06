@@ -18,16 +18,30 @@ interface ModelListRowProps {
 }
 
 const getLiquidityLabel = (liquidity: number) => {
-  if (liquidity >= 0.75) return "Très liquide";
-  if (liquidity >= 0.5) return "Liquide";
-  if (liquidity >= 0.25) return "Peu liquide";
-  return "Rare";
+  if (liquidity >= 0.75) return "Se vend vite";
+  if (liquidity >= 0.5) return "Demande correcte";
+  if (liquidity >= 0.25) return "Vente lente";
+  return "Rare sur le marché";
 };
 
 const getLiquidityColor = (liquidity: number) => {
   if (liquidity >= 0.75) return "default";
   if (liquidity >= 0.5) return "secondary";
   return "outline";
+};
+
+const getLiquidityTooltip = (liquidity: number) => {
+  const percentage = Math.round(liquidity * 100);
+  if (liquidity >= 0.75) {
+    return `Liquidité ${percentage}% — Ce modèle se vend rapidement. Fort volume d'annonces et rotation élevée.`;
+  }
+  if (liquidity >= 0.5) {
+    return `Liquidité ${percentage}% — Demande modérée. Délai de vente raisonnable.`;
+  }
+  if (liquidity >= 0.25) {
+    return `Liquidité ${percentage}% — Peu de demande. La vente peut prendre du temps.`;
+  }
+  return `Liquidité ${percentage}% — Très peu d'annonces. Modèle rare ou peu recherché.`;
 };
 
 export function ModelListRow({ 
@@ -102,10 +116,27 @@ export function ModelListRow({
           
           {/* Liquidity */}
           <div className="text-center sm:text-left">
-            <Badge variant={getLiquidityColor(model.liquidity)} className="text-[10px] px-1.5 py-0">
-              {getLiquidityLabel(model.liquidity)}
-            </Badge>
-            <p className="text-[10px] text-muted-foreground mt-1">Liquidité</p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-flex flex-col items-center sm:items-start cursor-help">
+                    <Badge variant={getLiquidityColor(model.liquidity)} className="text-[10px] px-1.5 py-0">
+                      {getLiquidityLabel(model.liquidity)}
+                    </Badge>
+                    <div className="w-full max-w-[60px] h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
+                      <div 
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${Math.round(model.liquidity * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[200px] text-xs">
+                  {getLiquidityTooltip(model.liquidity)}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Liquidité</p>
           </div>
           
           {/* Ads count */}
