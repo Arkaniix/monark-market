@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Search, CreditCard, Eye, TrendingUp, Clock, CheckCircle, AlertCircle, DollarSign, Download, Filter } from "lucide-react";
+import { Search, CreditCard, Target, Bell, TrendingUp, Clock, CheckCircle, AlertCircle, PiggyBank, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { useState } from "react";
@@ -12,8 +12,9 @@ interface PersonalStatsProps {
   totalScraps: number;
   creditsRemaining: number;
   creditsResetDate?: string | null;
-  watchlistCount: number;
-  estimatedGains: number;
+  opportunitiesDetected?: number;
+  alertsTriggered?: number;
+  potentialSavings?: number;
   recentActivity: Array<{
     id: number;
     type: string;
@@ -52,8 +53,9 @@ export function PersonalStats({
   totalScraps,
   creditsRemaining,
   creditsResetDate,
-  watchlistCount,
-  estimatedGains,
+  opportunitiesDetected = 0,
+  alertsTriggered = 0,
+  potentialSavings = 0,
   recentActivity,
   performanceData
 }: PersonalStatsProps) {
@@ -80,18 +82,6 @@ export function PersonalStats({
     }
   };
 
-  // Mini sparkline data pour gains estimés
-  const sparklineData = [{
-    value: estimatedGains * 0.7
-  }, {
-    value: estimatedGains * 0.8
-  }, {
-    value: estimatedGains * 0.75
-  }, {
-    value: estimatedGains * 0.9
-  }, {
-    value: estimatedGains
-  }];
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -151,11 +141,20 @@ export function PersonalStats({
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-success">{creditsRemaining}</div>
                   {creditsResetDate && <CreditResetInfo resetDate={creditsResetDate} creditsRemaining={creditsRemaining} variant="compact" />}
-                  <Link to="/community">
-                    <Button variant="link" size="sm" className="p-0 h-auto text-xs">
-                      Gagner des crédits
-                    </Button>
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link to="/community">
+                      <Button variant="link" size="sm" className="p-0 h-auto text-xs">
+                        Gagner des crédits
+                      </Button>
+                    </Link>
+                    <span className="text-muted-foreground">·</span>
+                    <Link to="/billing">
+                      <Button variant="link" size="sm" className="p-0 h-auto text-xs">
+                        <ShoppingCart className="h-3 w-3 mr-1" />
+                        Acheter
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -163,45 +162,69 @@ export function PersonalStats({
             <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-background h-full">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <Eye className="h-5 w-5 text-accent" />
+                  <Target className="h-5 w-5 text-primary" />
                   <CardTitle className="text-sm font-normal text-muted-foreground">
-                    Composants suivis
+                    Opportunités détectées
                   </CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex items-end justify-between">
                   <div>
-                    <div className="text-3xl font-bold">{watchlistCount}</div>
+                    <div className="text-3xl font-bold">{opportunitiesDetected}</div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Dans la watchlist
+                      Deals sous le prix du marché
                     </p>
                   </div>
                 </div>
+                <Link to="/deals">
+                  <Button variant="link" size="sm" className="p-0 h-auto text-xs mt-2">
+                    Voir les opportunités
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
             <Card className="border-warning/20 bg-gradient-to-br from-warning/5 to-background h-full">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-warning" />
+                  <Bell className="h-5 w-5 text-warning" />
                   <CardTitle className="text-sm font-normal text-muted-foreground">
-                    Gains estimés
+                    Alertes déclenchées
                   </CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="text-3xl font-bold text-warning">{estimatedGains} €</div>
-                  <div className="h-8">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={sparklineData}>
-                        <Line type="monotone" dataKey="value" stroke="hsl(var(--warning))" strokeWidth={2} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-warning">{alertsTriggered}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Ces 30 derniers jours
+                    </p>
                   </div>
+                </div>
+                <Link to="/tracking?tab=alerts">
+                  <Button variant="link" size="sm" className="p-0 h-auto text-xs mt-2">
+                    Gérer les alertes
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="border-success/20 bg-gradient-to-br from-success/5 to-background h-full">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <PiggyBank className="h-5 w-5 text-success" />
+                  <CardTitle className="text-sm font-normal text-muted-foreground">
+                    Économies potentielles
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="text-3xl font-bold text-success">{potentialSavings} €</div>
                   <p className="text-xs text-muted-foreground">
-                    Basé sur historique
+                    Sur vos articles suivis
                   </p>
                 </div>
               </CardContent>
