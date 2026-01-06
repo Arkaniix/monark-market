@@ -56,9 +56,9 @@ export function ModelListRow({
     <Card className="hover:border-primary/50 transition-all hover:shadow-md group overflow-hidden">
       <div className="flex flex-col sm:flex-row">
         {/* Left: Image + Identity */}
-        <div className="flex items-center gap-3 p-3 sm:w-[280px] sm:min-w-[280px]">
+        <div className="flex items-center gap-4 p-4 sm:w-[320px] sm:min-w-[320px]">
           {/* Thumbnail */}
-          <div className="w-16 h-12 shrink-0 rounded overflow-hidden">
+          <div className="w-20 h-16 shrink-0 rounded-md overflow-hidden">
             <ModelCardImage
               imageUrl={model.image_url}
               modelName={model.name}
@@ -71,47 +71,47 @@ export function ModelListRow({
           
           {/* Identity */}
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium leading-tight group-hover:text-primary transition-colors line-clamp-1">
+            <p className="text-base font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-2">
               {model.name}
             </p>
-            <p className="text-xs text-muted-foreground">{model.brand}</p>
-            <Badge variant="secondary" className="text-[9px] px-1 py-0 mt-1">{model.category}</Badge>
+            <p className="text-sm text-muted-foreground mt-0.5">{model.brand}</p>
+            <Badge variant="secondary" className="text-xs px-2 py-0.5 mt-1.5">{model.category}</Badge>
           </div>
         </div>
 
         {/* Center: Metrics */}
-        <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 p-3 sm:py-3 sm:px-4 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
+        <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5 p-4 sm:py-4 sm:px-5 border-t sm:border-t-0 sm:border-l border-border/50 bg-muted/20">
           {/* Fair Value */}
           <div className="text-center sm:text-left">
-            <p className="text-lg font-bold">
+            <p className="text-xl font-bold">
               {model.fair_value_30d || model.price_median_30d || "N/A"}€
             </p>
-            <p className="text-[10px] text-muted-foreground">Fair Value 30j</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Fair Value 30j</p>
           </div>
           
           {/* Variations */}
           <div className="text-center sm:text-left">
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-1">
               {model.var_7d_pct !== undefined && (
-                <div className={`flex items-center justify-center sm:justify-start gap-0.5 text-xs ${model.var_7d_pct < 0 ? "text-success" : model.var_7d_pct > 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                  {model.var_7d_pct < 0 ? <TrendingDown className="h-3 w-3" /> : model.var_7d_pct > 0 ? <TrendingUp className="h-3 w-3" /> : null}
-                  <span className="font-medium">
+                <div className={`flex items-center justify-center sm:justify-start gap-1 text-sm ${model.var_7d_pct < 0 ? "text-success" : model.var_7d_pct > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {model.var_7d_pct < 0 ? <TrendingDown className="h-4 w-4" /> : model.var_7d_pct > 0 ? <TrendingUp className="h-4 w-4" /> : null}
+                  <span className="font-semibold">
                     {model.var_7d_pct > 0 ? "+" : ""}{model.var_7d_pct.toFixed(1)}%
                   </span>
-                  <span className="text-muted-foreground text-[10px]">7j</span>
+                  <span className="text-muted-foreground text-xs">7j</span>
                 </div>
               )}
               {model.var_30d_pct !== null && (
-                <div className={`flex items-center justify-center sm:justify-start gap-0.5 text-xs ${model.var_30d_pct < 0 ? "text-success" : model.var_30d_pct > 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                  {model.var_30d_pct < 0 ? <TrendingDown className="h-3 w-3" /> : model.var_30d_pct > 0 ? <TrendingUp className="h-3 w-3" /> : null}
-                  <span className="font-medium">
+                <div className={`flex items-center justify-center sm:justify-start gap-1 text-sm ${model.var_30d_pct < 0 ? "text-success" : model.var_30d_pct > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {model.var_30d_pct < 0 ? <TrendingDown className="h-4 w-4" /> : model.var_30d_pct > 0 ? <TrendingUp className="h-4 w-4" /> : null}
+                  <span className="font-semibold">
                     {model.var_30d_pct > 0 ? "+" : ""}{model.var_30d_pct.toFixed(1)}%
                   </span>
-                  <span className="text-muted-foreground text-[10px]">30j</span>
+                  <span className="text-muted-foreground text-xs">30j</span>
                 </div>
               )}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Variations</p>
+            <p className="text-xs text-muted-foreground mt-1">Variations</p>
           </div>
           
           {/* Liquidity */}
@@ -120,10 +120,10 @@ export function ModelListRow({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="inline-flex flex-col items-center sm:items-start cursor-help">
-                    <Badge variant={getLiquidityColor(model.liquidity)} className="text-[10px] px-1.5 py-0">
+                    <Badge variant={getLiquidityColor(model.liquidity)} className="text-xs px-2 py-0.5">
                       {getLiquidityLabel(model.liquidity)}
                     </Badge>
-                    <div className="w-full max-w-[60px] h-1.5 bg-muted rounded-full mt-1 overflow-hidden">
+                    <div className="w-full max-w-[70px] h-2 bg-muted rounded-full mt-1.5 overflow-hidden">
                       <div 
                         className="h-full bg-primary rounded-full transition-all"
                         style={{ width: `${Math.round(model.liquidity * 100)}%` }}
@@ -131,50 +131,50 @@ export function ModelListRow({
                     </div>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent className="max-w-[200px] text-xs">
+                <TooltipContent className="max-w-[220px] text-sm">
                   {getLiquidityTooltip(model.liquidity)}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Liquidité</p>
+            <p className="text-xs text-muted-foreground mt-1">Liquidité</p>
           </div>
           
           {/* Ads count */}
           <div className="text-center sm:text-left">
-            <div className="flex items-center justify-center sm:justify-start gap-1">
-              <Package className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-sm font-medium">{model.ads_count}</span>
+            <div className="flex items-center justify-center sm:justify-start gap-1.5">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              <span className="text-base font-semibold">{model.ads_count}</span>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Annonces</p>
+            <p className="text-xs text-muted-foreground mt-1">Annonces</p>
           </div>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex sm:flex-col items-center justify-center gap-2 p-3 border-t sm:border-t-0 sm:border-l border-border/50 sm:w-[120px]">
+        <div className="flex sm:flex-col items-center justify-center gap-3 p-4 border-t sm:border-t-0 sm:border-l border-border/50 sm:w-[140px]">
           {model.id ? (
-            <Button className="flex-1 sm:flex-none sm:w-full h-8 text-xs" size="sm" asChild>
+            <Button className="flex-1 sm:flex-none sm:w-full h-10 text-sm" size="default" asChild>
               <Link to={`/models/${model.id}`}>Voir détails</Link>
             </Button>
           ) : (
-            <Button className="flex-1 sm:flex-none sm:w-full h-8 text-xs" size="sm" disabled>
+            <Button className="flex-1 sm:flex-none sm:w-full h-10 text-sm" size="default" disabled>
               Voir détails
             </Button>
           )}
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
                     variant={isInWatchlist ? "default" : "outline"} 
-                    size="sm" 
-                    className={cn("h-8 w-8 p-0", isInWatchlist && "bg-primary text-primary-foreground")}
+                    size="default" 
+                    className={cn("h-10 w-10 p-0", isInWatchlist && "bg-primary text-primary-foreground")}
                     onClick={() => onToggleWatchlist(model.id, model.name, isInWatchlist)} 
                     disabled={isWatchlistPending || !model.id}
                   >
-                    <Star className={cn("h-3.5 w-3.5", isInWatchlist && "fill-current")} />
+                    <Star className={cn("h-5 w-5", isInWatchlist && "fill-current")} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{isInWatchlist ? "Dans la watchlist" : "Ajouter à la watchlist"}</TooltipContent>
+                <TooltipContent className="text-sm">{isInWatchlist ? "Dans la watchlist" : "Ajouter à la watchlist"}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <TooltipProvider>
@@ -182,15 +182,15 @@ export function ModelListRow({
                 <TooltipTrigger asChild>
                   <Button 
                     variant={hasAlert ? "default" : "outline"} 
-                    size="sm" 
-                    className={cn("h-8 w-8 p-0", hasAlert && "bg-primary text-primary-foreground")}
+                    size="default" 
+                    className={cn("h-10 w-10 p-0", hasAlert && "bg-primary text-primary-foreground")}
                     onClick={() => onOpenAlert(model)} 
                     disabled={!model.id}
                   >
-                    <Bell className={cn("h-3.5 w-3.5", hasAlert && "fill-current")} />
+                    <Bell className={cn("h-5 w-5", hasAlert && "fill-current")} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{hasAlert ? "Alerte active" : "Créer une alerte"}</TooltipContent>
+                <TooltipContent className="text-sm">{hasAlert ? "Alerte active" : "Créer une alerte"}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
