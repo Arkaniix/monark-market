@@ -290,6 +290,16 @@ export interface ModelAdsResponse {
   page_size: number;
 }
 
+export interface SimilarModel {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  median_price: number;
+  var_30d_pct: number;
+  similarity_reason: 'generation' | 'performance' | 'price_range';
+}
+
 // ============= Ad Detail =============
 export interface AdComponent {
   type: string;
@@ -775,6 +785,7 @@ export interface DataProvider {
   getModelDetail(modelId: string): Promise<ModelDetail>;
   getModelPriceHistory(modelId: string, period?: '7' | '30' | '90'): Promise<PriceHistoryPoint[]>;
   getModelAds(modelId: string, page?: number, limit?: number): Promise<ModelAdsResponse>;
+  getSimilarModels(modelId: string, limit?: number): Promise<SimilarModel[]>;
   toggleModelWatchlist(modelId: number, add: boolean): Promise<void>;
   createPriceAlert(modelId: number, threshold: number): Promise<void>;
   

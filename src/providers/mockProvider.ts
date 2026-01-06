@@ -819,6 +819,64 @@ export const mockProvider: DataProvider = {
     
     return { items: paged, total: modelAds.length, page, page_size: limit };
   },
+  async getSimilarModels(modelId, limit = 6) {
+    track('getSimilarModels');
+    await delay();
+    const id = parseInt(modelId, 10);
+    const currentModel = MOCK_MODELS.find(m => m.id === id);
+    
+    if (!currentModel) return [];
+    
+    // Find similar models based on: same category, similar price range, same brand/family
+    const similar = MOCK_MODELS
+      .filter(m => m.id !== id)
+      .map(m => {
+        let score = 0;
+        let reason: 'generation' | 'performance' | 'price_range' = 'price_range';
+        
+        // Same category = strong match
+        if (m.category === currentModel.category) score += 3;
+        
+        // Same brand = generation/family match
+        if (m.brand === currentModel.brand) {
+          score += 2;
+          reason = 'generation';
+        }
+        
+        // Same family = very strong match
+        if (m.family && m.family === currentModel.family) {
+          score += 3;
+          reason = 'generation';
+        }
+        
+        // Similar price range (within 30%)
+        const priceDiff = Math.abs(m.median_price - currentModel.median_price) / currentModel.median_price;
+        if (priceDiff < 0.3) {
+          score += 2;
+          if (reason !== 'generation') reason = 'price_range';
+        }
+        if (priceDiff < 0.15) {
+          score += 1;
+          reason = 'performance';
+        }
+        
+        return { model: m, score, reason };
+      })
+      .filter(item => item.score >= 3)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map(item => ({
+        id: item.model.id,
+        name: item.model.name,
+        brand: item.model.brand,
+        category: item.model.category,
+        median_price: item.model.median_price,
+        var_30d_pct: item.model.var_30d_pct ?? 0,
+        similarity_reason: item.reason,
+      }));
+    
+    return similar;
+  },
   async toggleModelWatchlist(modelId, add) {
     await delay();
     const items = initializeWatchlist();

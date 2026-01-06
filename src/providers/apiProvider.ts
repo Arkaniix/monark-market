@@ -154,6 +154,9 @@ export const apiProvider: DataProvider = {
   async getModelAds(modelId, page = 1, limit = 10) {
     throw new ApiFeatureUnavailableError('Model Ads', 'La liste des annonces par modèle n\'est pas encore disponible via l\'API.');
   },
+  async getSimilarModels(modelId, limit = 6) {
+    throw new ApiFeatureUnavailableError('Similar Models', 'Les modèles similaires ne sont pas encore disponibles via l\'API.');
+  },
   async toggleModelWatchlist(modelId, add) {
     if (add) {
       return apiPost(ENDPOINTS.WATCHLIST.ADD, { target_type: 'model', target_id: modelId });
