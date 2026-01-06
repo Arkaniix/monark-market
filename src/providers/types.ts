@@ -180,6 +180,7 @@ export interface CatalogModel {
   ads_count: number;
   last_scan_at?: string | null;
   aliases?: string[];
+  image_url?: string | null;
 }
 
 export interface CatalogResponse {
