@@ -7,18 +7,19 @@ export {
 } from "./useProviderData";
 
 // Types
-export type Platform = 'leboncoin' | 'ebay' | 'amazon' | 'ldlc' | 'fbmarket';
-export type ScrapType = 'faible' | 'fort' | 'communautaire';
+export type Platform = 'leboncoin' | 'ebay' | 'amazon' | 'ldlc' | 'fbmarket' | 'vinted';
+export type ScrapType = 'faible' | 'fort';
 
 export type { ScrapStartRequest, ScrapStartResponse, JobStatus } from "@/providers/types";
 
-// Platform configuration
+// Platform configuration with Vinted
 export const PLATFORMS: { value: Platform; label: string; icon: string }[] = [
   { value: 'leboncoin', label: 'Leboncoin', icon: '🟠' },
   { value: 'ebay', label: 'eBay', icon: '🔵' },
   { value: 'amazon', label: 'Amazon', icon: '📦' },
   { value: 'ldlc', label: 'LDLC', icon: '💻' },
   { value: 'fbmarket', label: 'FB Marketplace', icon: '📱' },
+  { value: 'vinted', label: 'Vinted', icon: '👗' },
 ];
 
 // Region options
