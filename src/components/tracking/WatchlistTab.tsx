@@ -211,20 +211,20 @@ export function WatchlistTab({
       <WatchlistPortfolioCard watchlist={watchlist} />
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <Eye className="h-5 w-5 text-blue-500" />
                 Ma Watchlist
                 <Badge variant="outline">{watchlist.length}</Badge>
                 <Badge variant="secondary" className="text-[10px] gap-1 bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
                   <Infinity className="h-3 w-3" />
-                  Gratuit & Illimité
+                  Gratuit
                 </Badge>
               </CardTitle>
-              <CardDescription className="mt-1">
-                {models.length} modèle{models.length > 1 ? 's' : ''} • {ads.length} annonce{ads.length > 1 ? 's' : ''} — Ajoutez autant d'éléments que vous voulez !
+              <CardDescription className="mt-1 text-xs">
+                {models.length} modèle{models.length > 1 ? 's' : ''} • {ads.length} annonce{ads.length > 1 ? 's' : ''}
               </CardDescription>
             </div>
             <Link to="/catalog">
@@ -235,15 +235,15 @@ export function WatchlistTab({
             </Link>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           {/* Filtres */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Rechercher..." value={search} onChange={e => {
               setSearch(e.target.value);
               setPage(1);
-            }} className="pl-9" />
+            }} className="pl-9 h-9" />
             </div>
             <Select value={category} onValueChange={v => {
             setCategory(v);
@@ -312,13 +312,13 @@ export function WatchlistTab({
 
 // Empty state component
 function EmptyState() {
-  return <div className="text-center py-16">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 mb-4">
-        <Eye className="h-8 w-8 text-blue-500" />
+  return <div className="text-center py-12">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-500/10 mb-3">
+        <Eye className="h-7 w-7 text-blue-500" />
       </div>
-      <h3 className="text-lg font-semibold mb-2">Votre watchlist est vide</h3>
-      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-        Ajoutez des modèles ou annonces à surveiller pour suivre leur évolution de prix et créer des alertes.
+      <h3 className="text-base font-semibold mb-1">Votre watchlist est vide</h3>
+      <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+        Ajoutez des modèles ou annonces pour suivre leur évolution.
       </p>
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Link to="/catalog">
@@ -343,13 +343,13 @@ function NoResults({
 }: {
   onReset: () => void;
 }) {
-  return <div className="text-center py-12">
-      <Search className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-      <h3 className="text-lg font-semibold mb-2">Aucun résultat</h3>
-      <p className="text-muted-foreground mb-4">
-        Aucun élément ne correspond à vos critères de recherche.
+  return <div className="text-center py-10">
+      <Search className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+      <h3 className="text-base font-semibold mb-1">Aucun résultat</h3>
+      <p className="text-sm text-muted-foreground mb-3">
+        Aucun élément ne correspond à vos critères.
       </p>
-      <Button variant="outline" onClick={onReset}>
+      <Button variant="outline" size="sm" onClick={onReset}>
         Réinitialiser les filtres
       </Button>
     </div>;
