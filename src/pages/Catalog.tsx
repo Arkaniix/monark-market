@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +10,14 @@ import { Search, TrendingUp, TrendingDown, LayoutGrid, List, Star, Bell, RotateC
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCategories, useBrands, useFamilies, useCatalogModels, useAddModelToWatchlist, type CatalogFilters } from "@/hooks/useCatalog";
+import { useWatchlist, useRemoveFromWatchlist } from "@/hooks/useWatchlist";
+import { useAlerts } from "@/hooks/useProviderData";
 import { CatalogSkeleton } from "@/components/catalog/CatalogSkeleton";
 import { ModelCardImage } from "@/components/catalog/ModelCardImage";
 import { ModelListRow } from "@/components/catalog/ModelListRow";
 import { toast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
+import { cn } from "@/lib/utils";
 const ITEMS_PER_PAGE = 24;
 const containerVariants = {
   hidden: {
@@ -84,6 +87,31 @@ export default function Catalog() {
     error: modelsError
   } = useCatalogModels(filters);
   const addToWatchlist = useAddModelToWatchlist();
+  const removeFromWatchlist = useRemoveFromWatchlist();
+  
+  // Get watchlist and alerts to check if models are tracked
+  const { data: watchlistData } = useWatchlist();
+  const { data: alertsData } = useAlerts();
+  
+  // Create lookup sets for fast checking
+  const watchlistModelIds = useMemo(() => {
+    if (!watchlistData?.items) return new Set<number>();
+    return new Set(
+      watchlistData.items
+        .filter(item => item.target_type === 'model')
+        .map(item => item.target_id)
+    );
+  }, [watchlistData]);
+  
+  const alertedModelIds = useMemo(() => {
+    if (!alertsData?.items) return new Set<number>();
+    return new Set(
+      alertsData.items
+        .filter(item => item.target_type === 'model' && item.is_active)
+        .map(item => item.target_id)
+    );
+  }, [alertsData]);
+  
   const openAlertModal = (model: {
     id: number;
     name: string;
@@ -123,17 +151,32 @@ export default function Catalog() {
     setFamily("all");
     setCurrentPage(1);
   };
-  const handleAddToWatchlist = async (modelId: number, name: string) => {
+  
+  const handleToggleWatchlist = async (modelId: number, name: string, isInWatchlist: boolean) => {
     try {
-      await addToWatchlist.mutateAsync(modelId);
-      toast({
-        title: "Ajouté à la watchlist",
-        description: `"${name}" a été ajouté à votre watchlist.`
-      });
+      if (isInWatchlist) {
+        // Find the watchlist entry to remove
+        const entry = watchlistData?.items.find(
+          item => item.target_type === 'model' && item.target_id === modelId
+        );
+        if (entry) {
+          await removeFromWatchlist.mutateAsync(entry.id);
+          toast({
+            title: "Retiré de la watchlist",
+            description: `"${name}" a été retiré de votre watchlist.`
+          });
+        }
+      } else {
+        await addToWatchlist.mutateAsync(modelId);
+        toast({
+          title: "Ajouté à la watchlist",
+          description: `"${name}" a été ajouté à votre watchlist.`
+        });
+      }
     } catch {
       toast({
         title: "Erreur",
-        description: "Impossible d'ajouter à la watchlist.",
+        description: "Impossible de modifier la watchlist.",
         variant: "destructive"
       });
     }
@@ -358,33 +401,51 @@ export default function Catalog() {
                           </div>
 
                           {/* Actions - compact */}
-                          <div className="flex gap-1.5 pt-1">
-                            {model.id ? <Button className="flex-1 h-7 text-xs" size="sm" asChild>
-                                <Link to={`/models/${model.id}`}>Détails</Link>
-                              </Button> : <Button className="flex-1 h-7 text-xs" size="sm" disabled>
-                                Détails
-                              </Button>}
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => handleAddToWatchlist(model.id, model.name)} disabled={addToWatchlist.isPending || !model.id}>
-                                    <Star className="h-3 w-3" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Suivre</TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => openAlertModal(model)} disabled={!model.id}>
-                                    <Bell className="h-3 w-3" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Alerter</TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
+                          {(() => {
+                            const isInWatchlist = watchlistModelIds.has(model.id);
+                            const hasAlert = alertedModelIds.has(model.id);
+                            return (
+                              <div className="flex gap-1.5 pt-1">
+                                {model.id ? <Button className="flex-1 h-7 text-xs" size="sm" asChild>
+                                    <Link to={`/models/${model.id}`}>Détails</Link>
+                                  </Button> : <Button className="flex-1 h-7 text-xs" size="sm" disabled>
+                                    Détails
+                                  </Button>}
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant={isInWatchlist ? "default" : "outline"} 
+                                        size="sm" 
+                                        className={cn("h-7 w-7 p-0", isInWatchlist && "bg-primary text-primary-foreground")}
+                                        onClick={() => handleToggleWatchlist(model.id, model.name, isInWatchlist)} 
+                                        disabled={addToWatchlist.isPending || removeFromWatchlist.isPending || !model.id}
+                                      >
+                                        <Star className={cn("h-3 w-3", isInWatchlist && "fill-current")} />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{isInWatchlist ? "Dans la watchlist" : "Ajouter à la watchlist"}</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant={hasAlert ? "default" : "outline"} 
+                                        size="sm" 
+                                        className={cn("h-7 w-7 p-0", hasAlert && "bg-primary text-primary-foreground")}
+                                        onClick={() => openAlertModal(model)} 
+                                        disabled={!model.id}
+                                      >
+                                        <Bell className={cn("h-3 w-3", hasAlert && "fill-current")} />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{hasAlert ? "Alerte active" : "Créer une alerte"}</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </CardContent>
                     </Card>
@@ -397,9 +458,11 @@ export default function Catalog() {
                   <motion.div key={model.id} variants={itemVariants}>
                     <ModelListRow
                       model={model}
-                      onAddToWatchlist={handleAddToWatchlist}
+                      onToggleWatchlist={handleToggleWatchlist}
                       onOpenAlert={openAlertModal}
-                      isWatchlistPending={addToWatchlist.isPending}
+                      isWatchlistPending={addToWatchlist.isPending || removeFromWatchlist.isPending}
+                      isInWatchlist={watchlistModelIds.has(model.id)}
+                      hasAlert={alertedModelIds.has(model.id)}
                     />
                   </motion.div>
                 ))}
