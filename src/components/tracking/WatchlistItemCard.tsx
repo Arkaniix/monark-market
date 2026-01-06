@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Package,
@@ -50,7 +49,7 @@ export function WatchlistItemCard({
   onRemove,
   isRemoving,
 }: WatchlistItemCardProps) {
-  const [showChart, setShowChart] = useState(true);
+  
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(price);
@@ -253,24 +252,18 @@ export function WatchlistItemCard({
             </div>
           </div>
 
-          {/* Graphique (visible par défaut sur les modèles) */}
+          {/* Graphique d'historique des prix */}
           {isModel && (
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setShowChart(!showChart)}
-                >
-                  <BarChart3 className="h-3 w-3 mr-1" />
-                  {showChart ? "Masquer" : "Afficher"} le graphique 30j
-                </Button>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  Historique des prix (30 jours)
+                </div>
                 {isLoadingHistory && <Skeleton className="h-4 w-28" />}
               </div>
 
-              {showChart && trendData.length > 1 ? (
+              {trendData.length > 1 ? (
                 <div className="h-32">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData}>
