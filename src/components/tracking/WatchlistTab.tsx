@@ -57,6 +57,7 @@ export function WatchlistTab({
 }: WatchlistTabProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "models" | "ads">("all");
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<"cards" | "list">(() => {
     const saved = localStorage.getItem(WATCHLIST_VIEW_KEY);
@@ -244,7 +245,34 @@ export function WatchlistTab({
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          {/* Filtres */}
+          {/* Filtre par type */}
+          <div className="flex items-center gap-2 mb-3">
+            <ToggleGroup 
+              type="single" 
+              value={typeFilter} 
+              onValueChange={(v) => {
+                if (v) {
+                  setTypeFilter(v as "all" | "models" | "ads");
+                  setPage(1);
+                }
+              }}
+              className="border rounded-md bg-muted/30"
+            >
+              <ToggleGroupItem value="all" className="h-8 px-3 text-xs data-[state=on]:bg-background">
+                Tous
+              </ToggleGroupItem>
+              <ToggleGroupItem value="models" className="h-8 px-3 text-xs gap-1.5 data-[state=on]:bg-background">
+                <Package className="h-3.5 w-3.5" />
+                Modèles
+              </ToggleGroupItem>
+              <ToggleGroupItem value="ads" className="h-8 px-3 text-xs gap-1.5 data-[state=on]:bg-background">
+                <Tag className="h-3.5 w-3.5" />
+                Annonces
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+
+          {/* Filtres recherche et catégorie */}
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -289,9 +317,10 @@ export function WatchlistTab({
           {watchlist.length === 0 ? <EmptyState /> : allFiltered.length === 0 ? <NoResults onReset={() => {
           setSearch("");
           setCategory("all");
+          setTypeFilter("all");
         }} /> : <div className="space-y-6">
               {/* Section Modèles */}
-              {filteredModels.length > 0 && <div>
+              {(typeFilter === "all" || typeFilter === "models") && filteredModels.length > 0 && <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Package className="h-4 w-4 text-blue-500" />
                     <h3 className="font-semibold">Modèles suivis</h3>
@@ -309,7 +338,7 @@ export function WatchlistTab({
                 </div>}
 
               {/* Section Annonces */}
-              {filteredAds.length > 0 && <div>
+              {(typeFilter === "all" || typeFilter === "ads") && filteredAds.length > 0 && <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Tag className="h-4 w-4 text-purple-500" />
                     <h3 className="font-semibold">Annonces suivies</h3>
@@ -325,6 +354,20 @@ export function WatchlistTab({
                     </div>
                   )}
                 </div>}
+
+              {/* Message si aucun résultat pour le type sélectionné */}
+              {typeFilter === "models" && filteredModels.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Aucun modèle dans votre watchlist</p>
+                </div>
+              )}
+              {typeFilter === "ads" && filteredAds.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Tag className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Aucune annonce dans votre watchlist</p>
+                </div>
+              )}
 
               {/* Pagination (si beaucoup d'éléments) */}
               {totalPages > 1 && <div className="flex items-center justify-between pt-4 border-t">
