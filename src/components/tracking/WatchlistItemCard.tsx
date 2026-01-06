@@ -144,59 +144,63 @@ export function WatchlistItemCard({
               </div>
 
               {/* Prix et comparaison */}
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className={`grid ${isModel ? "grid-cols-1" : "grid-cols-2"} gap-3 mb-3`}>
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">Prix actuel</p>
                   <p className="text-lg font-bold">{formatPrice(currentPrice)}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Juste prix</p>
-                  <p className="text-lg font-medium text-muted-foreground">{formatPrice(fairValue)}</p>
-                </div>
+                {!isModel && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Juste prix</p>
+                    <p className="text-lg font-medium text-muted-foreground">{formatPrice(fairValue)}</p>
+                  </div>
+                )}
               </div>
 
               {/* Indicateurs visuels */}
               <div className="space-y-3 pt-2 border-t">
-                {/* Écart au juste prix - avec barre visuelle améliorée */}
-                <div>
-                  <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="text-muted-foreground font-medium">Écart au juste prix</span>
-                    <span className={`font-semibold ${deviation < -5 ? "text-green-500" : deviation > 5 ? "text-red-500" : "text-muted-foreground"}`}>
-                      {deviation > 0 ? "+" : ""}{deviation.toFixed(1)}%
-                      {deviation < -10 && " 🎯"}
-                    </span>
-                  </div>
-                  <div className="h-3 bg-muted rounded-full overflow-hidden relative">
-                    {/* Ligne centrale (juste prix) */}
-                    <div 
-                      className="absolute top-0 left-1/2 h-full w-0.5 bg-foreground/40 z-10"
-                      style={{ transform: 'translateX(-50%)' }}
-                    />
-                    {/* Barre de déviation */}
-                    {Math.abs(deviation) > 0.5 ? (
+                {/* Écart au juste prix - uniquement pour les annonces */}
+                {!isModel && (
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="text-muted-foreground font-medium">Écart au juste prix</span>
+                      <span className={`font-semibold ${deviation < -5 ? "text-green-500" : deviation > 5 ? "text-red-500" : "text-muted-foreground"}`}>
+                        {deviation > 0 ? "+" : ""}{deviation.toFixed(1)}%
+                        {deviation < -10 && " 🎯"}
+                      </span>
+                    </div>
+                    <div className="h-3 bg-muted rounded-full overflow-hidden relative">
+                      {/* Ligne centrale (juste prix) */}
                       <div 
-                        className={`absolute top-0 h-full transition-all rounded-full ${
-                          deviation < 0 ? "bg-green-500" : "bg-red-500"
-                        }`}
-                        style={{ 
-                          width: `${Math.max(4, Math.min(50, Math.abs(deviation) * 1.5))}%`,
-                          left: deviation < 0 
-                            ? `${50 - Math.min(50, Math.abs(deviation) * 1.5)}%` 
-                            : '50%'
-                        }}
+                        className="absolute top-0 left-1/2 h-full w-0.5 bg-foreground/40 z-10"
+                        style={{ transform: 'translateX(-50%)' }}
                       />
-                    ) : (
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-4 bg-primary/50 rounded-full" />
-                    )}
-                    {/* Labels visuels */}
-                    <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[9px] text-green-600 font-medium">−</span>
-                    <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] text-red-500 font-medium">+</span>
+                      {/* Barre de déviation */}
+                      {Math.abs(deviation) > 0.5 ? (
+                        <div 
+                          className={`absolute top-0 h-full transition-all rounded-full ${
+                            deviation < 0 ? "bg-green-500" : "bg-red-500"
+                          }`}
+                          style={{ 
+                            width: `${Math.max(4, Math.min(50, Math.abs(deviation) * 1.5))}%`,
+                            left: deviation < 0 
+                              ? `${50 - Math.min(50, Math.abs(deviation) * 1.5)}%` 
+                              : '50%'
+                          }}
+                        />
+                      ) : (
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-4 bg-primary/50 rounded-full" />
+                      )}
+                      {/* Labels visuels */}
+                      <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[9px] text-green-600 font-medium">−</span>
+                      <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] text-red-500 font-medium">+</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+                      <span>Sous-évalué</span>
+                      <span>Surévalué</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                    <span>Sous-évalué</span>
-                    <span>Surévalué</span>
-                  </div>
-                </div>
+                )}
 
                 {/* Position dans la fourchette de prix 30j */}
                 {trendData.length > 1 && (
