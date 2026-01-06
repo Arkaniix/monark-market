@@ -32,10 +32,14 @@ import {
   Sparkles,
   Calendar,
   X,
+  Ban,
+  CreditCard,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useStartScrap, REGIONS } from "@/hooks/useScrapJob";
 import { useScrapJobContext } from "@/context/ScrapJobContext";
+import { useCredits } from "@/hooks/useCredits";
+import { differenceInDays } from "date-fns";
 
 interface ScrapModalProps {
   open: boolean;
@@ -58,24 +62,36 @@ const PLATFORMS: { value: Platform; label: string; icon: string }[] = [
 // Scan types without communautaire
 type ScrapType = 'faible' | 'fort';
 
+// Base costs
+const BASE_COSTS = {
+  faible: { credits: 3, timePerPage: 0.3 }, // 0.3 min per page
+  fort: { credits: 5, timePerPage: 0.4 },    // 0.4 min per page, per platform
+};
+
+// Date age multipliers (more historical = more expensive)
+const getDateMultiplier = (fromDate: string | null): number => {
+  if (!fromDate) return 1.0;
+  const daysAgo = differenceInDays(new Date(), new Date(fromDate));
+  if (daysAgo <= 7) return 1.0;
+  if (daysAgo <= 30) return 1.2;
+  if (daysAgo <= 90) return 1.5;
+  return 2.0;
+};
+
 const SCRAP_TYPES = {
   faible: {
-    credits: 3,
+    baseCost: BASE_COSTS.faible.credits,
     pagesDefault: 5,
-    minTime: 2,
-    maxTime: 4,
     icon: Target,
     label: "Scan rapide",
-    description: "Analyse basique d'un modèle précis sans filtres avancés. Rapide et économique.",
+    description: "Analyse basique d'un modèle précis. Une seule plateforme.",
   },
   fort: {
-    credits: 8,
+    baseCost: BASE_COSTS.fort.credits,
     pagesDefault: 15,
-    minTime: 5,
-    maxTime: 8,
     icon: Sparkles,
     label: "Scan approfondi",
-    description: "Analyse complète multi-plateformes avec filtres personnalisés par plateforme.",
+    description: "Analyse complète multi-plateformes avec filtres personnalisés.",
   },
 };
 
@@ -140,26 +156,100 @@ export default function ScrapModal({ open, onOpenChange, preselectedModel }: Scr
     }));
   };
 
-  // Calculate total credits and time for deep scan
-  const deepScanSummary = useMemo(() => {
-    if (scrapType !== "fort") return null;
+  // Dynamic calculation for scan summary
+  const scanSummary = useMemo(() => {
+    if (scrapType === "fort") {
+      // Deep scan: cumulative across platforms
+      let totalCredits = 0;
+      let totalTime = 0;
+      let totalPages = 0;
+
+      selectedPlatforms.forEach((p) => {
+        const params = platformParams[p];
+        const pages = params.pagesTarget;
+        const dateMultiplier = getDateMultiplier(params.fromDate || null);
+        
+        // Credits per platform = base + pages factor * date multiplier
+        const platformCredits = Math.ceil(
+          (BASE_COSTS.fort.credits + Math.floor(pages / 5)) * dateMultiplier
+        );
+        const platformTime = pages * BASE_COSTS.fort.timePerPage;
+        
+        totalCredits += platformCredits;
+        totalTime += platformTime;
+        totalPages += pages;
+      });
+
+      return {
+        totalPages,
+        totalCredits,
+        estimatedTimeMin: Math.ceil(totalTime),
+        estimatedTimeMax: Math.ceil(totalTime * 1.5),
+        platformCount: selectedPlatforms.length,
+      };
+    } else {
+      // Quick scan: single platform
+      const pages = pagesTarget[0];
+      const dateMultiplier = getDateMultiplier(globalFromDate || null);
+      
+      // Credits = base + pages factor * date multiplier
+      const totalCredits = Math.ceil(
+        (BASE_COSTS.faible.credits + Math.floor(pages / 10)) * dateMultiplier
+      );
+      const estimatedTimeMin = Math.ceil(pages * BASE_COSTS.faible.timePerPage);
+      const estimatedTimeMax = Math.ceil(estimatedTimeMin * 1.5);
+
+      return {
+        totalPages: pages,
+        totalCredits,
+        estimatedTimeMin,
+        estimatedTimeMax,
+        platformCount: 1,
+      };
+    }
+  }, [scrapType, selectedPlatforms, platformParams, pagesTarget, globalFromDate]);
+
+  // Get credits from hook
+  const { creditsRemaining, checkCredits } = useCredits();
+  
+  // Check if can launch
+  const canLaunch = useMemo(() => {
+    const hasKeyword = keyword.trim().length > 0;
+    const hasPlatform = scrapType === "fort" ? selectedPlatforms.length > 0 : true;
+    const hasEnoughCredits = creditsRemaining >= scanSummary.totalCredits;
     
-    const totalPages = selectedPlatforms.reduce((sum, p) => sum + platformParams[p].pagesTarget, 0);
-    const creditsPerPlatform = SCRAP_TYPES.fort.credits;
-    const totalCredits = selectedPlatforms.length * creditsPerPlatform;
-    const minTime = selectedPlatforms.length * SCRAP_TYPES.fort.minTime;
-    const maxTime = selectedPlatforms.length * SCRAP_TYPES.fort.maxTime;
-    
-    return { totalPages, totalCredits, minTime, maxTime };
-  }, [scrapType, selectedPlatforms, platformParams]);
+    return {
+      allowed: hasKeyword && hasPlatform && hasEnoughCredits,
+      missingKeyword: !hasKeyword,
+      missingPlatform: !hasPlatform,
+      insufficientCredits: !hasEnoughCredits,
+      creditsNeeded: scanSummary.totalCredits,
+      creditsAvailable: creditsRemaining,
+    };
+  }, [keyword, scrapType, selectedPlatforms, creditsRemaining, scanSummary]);
 
   const handleStartScan = async () => {
-    if (!keyword.trim()) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez entrer un mot-clé à rechercher.",
-        variant: "destructive",
-      });
+    // Validation checks
+    if (!canLaunch.allowed) {
+      if (canLaunch.missingKeyword) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez entrer un mot-clé à rechercher.",
+          variant: "destructive",
+        });
+      } else if (canLaunch.missingPlatform) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez sélectionner au moins une plateforme.",
+          variant: "destructive",
+        });
+      } else if (canLaunch.insufficientCredits) {
+        toast({
+          title: "Crédits insuffisants",
+          description: `Ce scan nécessite ${canLaunch.creditsNeeded} crédits. Vous en avez ${canLaunch.creditsAvailable}.`,
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -317,15 +407,13 @@ export default function ScrapModal({ open, onOpenChange, preselectedModel }: Scr
                               <Icon className="h-4 w-4 text-primary" />
                               <span className="font-semibold">{config.label}</span>
                               <Badge variant="secondary">
-                                {config.credits} crédits{type === "fort" ? "/plateforme" : ""}
+                                ~{config.baseCost}+ crédits{type === "fort" ? "/plateforme" : ""}
                               </Badge>
                             </Label>
                             <p className="text-sm text-muted-foreground mt-1">{config.description}</p>
-                            {type === "faible" && (
-                              <p className="text-xs text-muted-foreground mt-2">
-                                📄 ~{config.pagesDefault} pages • ⏱️ {config.minTime}-{config.maxTime} minutes
-                              </p>
-                            )}
+                            <p className="text-xs text-muted-foreground mt-2">
+                              📄 ~{config.pagesDefault} pages par défaut
+                            </p>
                           </div>
                         </div>
                       </CardContent>
@@ -556,55 +644,54 @@ export default function ScrapModal({ open, onOpenChange, preselectedModel }: Scr
             )}
 
             {/* Summary Card */}
-            <Card className="bg-muted/50">
+            <Card className={`${!canLaunch.allowed && !canLaunch.missingKeyword ? 'border-destructive/50' : 'bg-muted/50'}`}>
               <CardContent className="pt-4">
                 <div className="space-y-2 text-sm">
-                  {scrapType === "fort" && deepScanSummary ? (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Plateformes</span>
-                        <span className="font-semibold">{selectedPlatforms.length} sélectionnée(s)</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Total pages</span>
-                        <span className="font-semibold">≈ {deepScanSummary.totalPages} pages</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Temps estimé</span>
-                        <span className="font-semibold flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {deepScanSummary.minTime}-{deepScanSummary.maxTime} minutes
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <span className="text-muted-foreground">Coût total</span>
-                        <span className="font-bold text-lg text-primary">
-                          -{deepScanSummary.totalCredits} crédits
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Pages à scanner</span>
-                        <span className="font-semibold">≈ {pagesTarget[0]} pages</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Temps estimé</span>
-                        <span className="font-semibold flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {typeConfig.minTime}-{typeConfig.maxTime} minutes
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <span className="text-muted-foreground">Coût en crédits</span>
-                        <span className="font-bold text-lg text-primary">
-                          -{typeConfig.credits}
-                        </span>
-                      </div>
-                    </>
+                  {scrapType === "fort" && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Plateformes</span>
+                      <span className="font-semibold">{scanSummary.platformCount} sélectionnée(s)</span>
+                    </div>
                   )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Total pages</span>
+                    <span className="font-semibold">≈ {scanSummary.totalPages} pages</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Temps estimé</span>
+                    <span className="font-semibold flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {scanSummary.estimatedTimeMin}-{scanSummary.estimatedTimeMax} min
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="text-muted-foreground">Coût total</span>
+                    <span className={`font-bold text-lg ${canLaunch.insufficientCredits ? 'text-destructive' : 'text-primary'}`}>
+                      -{scanSummary.totalCredits} crédits
+                    </span>
+                  </div>
+                  
+                  {/* Credits available indicator */}
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <CreditCard className="h-3 w-3" />
+                      Crédits disponibles
+                    </span>
+                    <span className={`font-semibold ${canLaunch.insufficientCredits ? 'text-destructive' : 'text-muted-foreground'}`}>
+                      {creditsRemaining}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Insufficient credits warning */}
+                {canLaunch.insufficientCredits && (
+                  <div className="mt-3 p-2 bg-destructive/10 border border-destructive/20 rounded flex items-center gap-2 text-xs">
+                    <Ban className="h-4 w-4 text-destructive flex-shrink-0" />
+                    <span className="text-destructive">
+                      Crédits insuffisants. Il manque {scanSummary.totalCredits - creditsRemaining} crédit(s).
+                    </span>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -623,7 +710,7 @@ export default function ScrapModal({ open, onOpenChange, preselectedModel }: Scr
             <div className="flex gap-3 pt-4">
               <Button
                 onClick={handleStartScan}
-                disabled={!keyword.trim() || startScrap.isPending}
+                disabled={!canLaunch.allowed || startScrap.isPending}
                 className="flex-1 gap-2"
                 size="lg"
               >
@@ -632,10 +719,15 @@ export default function ScrapModal({ open, onOpenChange, preselectedModel }: Scr
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Création du job...
                   </>
+                ) : canLaunch.insufficientCredits ? (
+                  <>
+                    <Ban className="h-4 w-4" />
+                    Crédits insuffisants
+                  </>
                 ) : (
                   <>
                     <Zap className="h-4 w-4" />
-                    Lancer le scan
+                    Lancer le scan (-{scanSummary.totalCredits} cr)
                   </>
                 )}
               </Button>
