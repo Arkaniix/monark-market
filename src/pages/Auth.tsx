@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft, Check, Rocket, Award } from "lucide-react";
+import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft, Check, Rocket, Award, Users } from "lucide-react";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -396,9 +396,15 @@ export default function Auth() {
                       <Label htmlFor="signup-email">Email</Label>
                       <Input id="signup-email" type="email" placeholder="votre@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-discord">Discord (optionnel)</Label>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="signup-discord" className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        Discord — Communauté (optionnel)
+                      </Label>
                       <Input id="signup-discord" type="text" placeholder="username#1234" value={discordId} onChange={e => setDiscordId(e.target.value)} />
+                      <p className="text-xs text-muted-foreground">
+                        Optionnel — sert à lier ton compte pour accéder aux espaces communauté et avantages associés.
+                      </p>
                     </div>
                     
                     {/* Plan Selection */}
