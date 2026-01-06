@@ -752,46 +752,163 @@ export default function ModelDetail() {
               <Card>
                 <CardHeader>
                   <CardTitle>Spécifications techniques</CardTitle>
+                  <CardDescription>Caractéristiques du {model.brand} {model.name}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {model.specs.vram_gb && (
-                      <div className="p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">VRAM</p>
-                        <p className="text-xl font-bold">{model.specs.vram_gb} Go</p>
+                <CardContent className="space-y-6">
+                  {/* Architecture */}
+                  {(model.specs.chip || model.specs.architecture || model.specs.process_nm) && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Architecture</h3>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {model.specs.chip && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Puce (GPU)</p>
+                            <p className="font-semibold">{model.specs.chip}</p>
+                          </div>
+                        )}
+                        {model.specs.architecture && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Architecture</p>
+                            <p className="font-semibold">{model.specs.architecture}</p>
+                          </div>
+                        )}
+                        {model.specs.process_nm && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Gravure</p>
+                            <p className="font-semibold">{model.specs.process_nm} nm</p>
+                          </div>
+                        )}
+                        {model.specs.cuda_cores && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Cœurs CUDA</p>
+                            <p className="font-semibold">{model.specs.cuda_cores.toLocaleString('fr-FR')}</p>
+                          </div>
+                        )}
+                        {model.specs.rt_cores && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">RT Cores</p>
+                            <p className="font-semibold">{model.specs.rt_cores}</p>
+                          </div>
+                        )}
+                        {model.specs.tensor_cores && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Tensor Cores</p>
+                            <p className="font-semibold">{model.specs.tensor_cores}</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {model.specs.memory_type && (
-                      <div className="p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">Type de mémoire</p>
-                        <p className="text-xl font-bold">{model.specs.memory_type}</p>
+                    </div>
+                  )}
+
+                  {/* Mémoire */}
+                  {(model.specs.vram_gb || model.specs.memory_type || model.specs.bus_width_bit || model.specs.memory_bandwidth_gbs) && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Mémoire</h3>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {model.specs.vram_gb && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">VRAM</p>
+                            <p className="font-semibold">{model.specs.vram_gb} Go</p>
+                          </div>
+                        )}
+                        {model.specs.memory_type && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Type</p>
+                            <p className="font-semibold">{model.specs.memory_type}</p>
+                          </div>
+                        )}
+                        {model.specs.bus_width_bit && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Bus</p>
+                            <p className="font-semibold">{model.specs.bus_width_bit} bits</p>
+                          </div>
+                        )}
+                        {model.specs.memory_bandwidth_gbs && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Bande passante</p>
+                            <p className="font-semibold">{model.specs.memory_bandwidth_gbs} Go/s</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {model.specs.tdp_w && (
-                      <div className="p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">TDP</p>
-                        <p className="text-xl font-bold">{model.specs.tdp_w} W</p>
+                    </div>
+                  )}
+
+                  {/* Fréquences */}
+                  {(model.specs.base_clock_mhz || model.specs.boost_clock_mhz) && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Fréquences</h3>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {model.specs.base_clock_mhz && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Fréquence de base</p>
+                            <p className="font-semibold">{model.specs.base_clock_mhz} MHz</p>
+                          </div>
+                        )}
+                        {model.specs.boost_clock_mhz && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Fréquence boost</p>
+                            <p className="font-semibold">{model.specs.boost_clock_mhz} MHz</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {model.specs.bus_width_bit && (
-                      <div className="p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">Bus mémoire</p>
-                        <p className="text-xl font-bold">{model.specs.bus_width_bit} bits</p>
+                    </div>
+                  )}
+
+                  {/* Alimentation & Interface */}
+                  {(model.specs.tdp_w || model.specs.pcie_interface || model.specs.power_connectors || model.specs.outputs_count) && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Alimentation & Interface</h3>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {model.specs.tdp_w && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">TDP</p>
+                            <p className="font-semibold">{model.specs.tdp_w} W</p>
+                          </div>
+                        )}
+                        {model.specs.pcie_interface && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Interface PCIe</p>
+                            <p className="font-semibold">{model.specs.pcie_interface}</p>
+                          </div>
+                        )}
+                        {model.specs.power_connectors && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Connecteurs</p>
+                            <p className="font-semibold">{model.specs.power_connectors}</p>
+                          </div>
+                        )}
+                        {model.specs.outputs_count && (
+                          <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                            <p className="text-xs text-muted-foreground mb-1">Sorties vidéo</p>
+                            <p className="font-semibold">{model.specs.outputs_count}</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {model.specs.chip && (
-                      <div className="p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">Puce</p>
-                        <p className="text-xl font-bold">{model.specs.chip}</p>
+                    </div>
+                  )}
+
+                  {/* Technologies */}
+                  {model.specs.technologies && model.specs.technologies.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Technologies</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {model.specs.technologies.map((tech: string) => (
+                          <Badge key={tech} variant="secondary" className="text-xs">
+                            {tech}
+                          </Badge>
+                        ))}
                       </div>
-                    )}
-                    {model.specs.release_date && (
-                      <div className="p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">Date de sortie</p>
-                        <p className="text-xl font-bold">{formatDate(model.specs.release_date)}</p>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Date de sortie */}
+                  {model.specs.release_date && (
+                    <div className="pt-4 border-t border-border/50">
+                      <p className="text-xs text-muted-foreground">
+                        Date de sortie : <span className="text-foreground">{formatDate(model.specs.release_date)}</span>
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

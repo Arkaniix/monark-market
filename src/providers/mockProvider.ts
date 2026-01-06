@@ -726,10 +726,51 @@ export const mockProvider: DataProvider = {
       family: model.family,
       category: model.category,
       aliases: model.aliases || [],
-      specs: { 
-        vram_gb: model.category === 'GPU' ? 8 + Math.floor(model.id % 4) * 4 : undefined, 
-        memory_type: model.category === 'GPU' ? 'GDDR6X' : undefined, 
-        tdp_w: model.category === 'GPU' ? 150 + (model.id % 10) * 20 : undefined 
+      specs: model.category === 'GPU' ? {
+        // Architecture
+        chip: ['AD104', 'AD103', 'AD102', 'GA106', 'GA104', 'GA102'][model.id % 6],
+        architecture: model.name.includes('RTX 40') ? 'Ada Lovelace' : model.name.includes('RTX 30') ? 'Ampere' : 'Turing',
+        process_nm: model.name.includes('RTX 40') ? 4 : model.name.includes('RTX 30') ? 8 : 12,
+        cuda_cores: 3000 + (model.id % 10) * 500,
+        rt_cores: 20 + (model.id % 10) * 4,
+        tensor_cores: 80 + (model.id % 10) * 16,
+        // Mémoire
+        vram_gb: 8 + Math.floor(model.id % 4) * 4,
+        memory_type: model.name.includes('RTX 40') ? 'GDDR6X' : 'GDDR6',
+        bus_width_bit: [128, 192, 256, 320][model.id % 4],
+        memory_bandwidth_gbs: 300 + (model.id % 8) * 50,
+        // Fréquences
+        base_clock_mhz: 1500 + (model.id % 10) * 50,
+        boost_clock_mhz: 2200 + (model.id % 10) * 100,
+        // Alimentation & Interface
+        tdp_w: 150 + (model.id % 10) * 20,
+        pcie_interface: 'PCIe 4.0 x16',
+        power_connectors: ['1x 8-pin', '2x 8-pin', '1x 12VHPWR', '1x 16-pin'][model.id % 4],
+        outputs_count: 3 + (model.id % 2),
+        // Technologies
+        technologies: [
+          'DLSS 3', 
+          'Ray Tracing', 
+          'NVIDIA Reflex',
+          model.name.includes('RTX 40') ? 'Frame Generation' : null,
+          'HDMI 2.1',
+          'DisplayPort 1.4a'
+        ].filter(Boolean) as string[],
+        // Date
+        release_date: model.name.includes('RTX 40') ? '2022-10-12' : model.name.includes('RTX 30') ? '2020-09-17' : '2018-09-20',
+      } : model.category === 'CPU' ? {
+        chip: ['Raptor Lake', 'Alder Lake', 'Zen 4', 'Zen 3'][model.id % 4],
+        architecture: model.brand === 'Intel' ? 'Intel 7' : 'TSMC 5nm',
+        process_nm: model.brand === 'Intel' ? 10 : 5,
+        base_clock_mhz: 3000 + (model.id % 10) * 100,
+        boost_clock_mhz: 5000 + (model.id % 10) * 200,
+        tdp_w: 65 + (model.id % 4) * 40,
+        technologies: ['Hyper-Threading', 'Turbo Boost', model.brand === 'AMD' ? 'Precision Boost' : 'P-Core/E-Core'].filter(Boolean) as string[],
+        release_date: '2022-10-20',
+      } : {
+        // Autres catégories - specs basiques
+        tdp_w: model.category === 'RAM' ? undefined : 50 + (model.id % 10) * 10,
+        release_date: '2022-01-15',
       },
       market: {
         median_price: model.median_price,
