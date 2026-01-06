@@ -42,6 +42,12 @@ export function RecommendedActions({
   userPercentile = 10
 }: RecommendedActionsProps) {
   const [scrapModalOpen, setScrapModalOpen] = useState(false);
+  const [preselectedModel, setPreselectedModel] = useState<string | undefined>(undefined);
+
+  const handleComponentClick = (componentName: string) => {
+    setPreselectedModel(componentName);
+    setScrapModalOpen(true);
+  };
   const progressPercentage = trainingProgress.completed / trainingProgress.total * 100;
   const communityScrapAvailable = true; // À récupérer via API
   const userScrapCount = 24; // Stats du mois en cours
@@ -82,46 +88,52 @@ export function RecommendedActions({
                     </div>}
                 </div>
 
-                {/* Analyser watchlist */}
-                <Card className="bg-muted/50">
-                  <CardContent className="p-4">
+                {/* Analyser watchlist - agrandi */}
+                <Card className="bg-muted/50 flex-1">
+                  <CardContent className="p-5">
                     <div className="flex items-start gap-3">
-                      <Eye className="h-5 w-5 text-accent mt-0.5" />
+                      <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-accent/10">
+                        <Eye className="h-5 w-5 text-accent" />
+                      </div>
                       <div className="flex-1">
-                        <h4 className="font-medium mb-2">Analyser mes composants</h4>
-                {watchlistItems.length > 0 ? <div className="space-y-2">
-                            {watchlistItems.slice(0, 2).map((item, idx) => <Link key={idx} to={`/catalog?search=${item.name}`}>
-                                <div className="flex items-center justify-between text-sm p-2 rounded hover:bg-muted/50 transition-colors cursor-pointer">
-                                  <span className="text-muted-foreground">{item.name}</span>
-                                  <Badge variant="outline">{item.category}</Badge>
+                        <h4 className="font-semibold mb-1">Analyser mes composants</h4>
+                        <p className="text-xs text-muted-foreground mb-3">Clique sur un composant pour lancer un scan</p>
+                        {watchlistItems.length > 0 ? (
+                          <div className="space-y-2">
+                            {watchlistItems.slice(0, 4).map((item, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => handleComponentClick(item.name)}
+                                className="w-full flex items-center justify-between text-sm p-3 rounded-lg bg-background hover:bg-primary/5 hover:border-primary/30 border border-transparent transition-all cursor-pointer group"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Search className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                  <span className="font-medium group-hover:text-primary transition-colors">{item.name}</span>
                                 </div>
-                              </Link>)}
-                            <Link to="/catalog">
+                                <Badge variant="outline" className="group-hover:border-primary/50">{item.category}</Badge>
+                              </button>
+                            ))}
+                            {watchlistItems.length > 4 && (
+                              <p className="text-xs text-muted-foreground text-center pt-1">
+                                +{watchlistItems.length - 4} autres composants
+                              </p>
+                            )}
+                            <Link to="/tracking?tab=watchlist">
                               <Button variant="outline" size="sm" className="w-full mt-2">
-                                Voir ma watchlist
+                                Voir toute ma watchlist
                               </Button>
                             </Link>
-                          </div> : <p className="text-sm text-muted-foreground">Aucun composant suivi</p>}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Voir les alertes */}
-                <Card className="bg-muted/50">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Bell className="h-5 w-5 text-warning mt-0.5" />
-                      <div className="flex-1">
-                        <h4 className="font-medium mb-2">Mes alertes</h4>
-                        {alerts.length > 0 ? <div className="space-y-2">
-                            {alerts.slice(0, 2).map((alert, idx) => <div key={idx} className="text-sm p-2 rounded bg-warning/10 border border-warning/20">
-                                {alert.message}
-                              </div>)}
-                            {alerts.length > 2 && <p className="text-xs text-muted-foreground">
-                                +{alerts.length - 2} autres alertes
-                              </p>}
-                          </div> : <p className="text-sm text-muted-foreground">Aucune alerte active</p>}
+                          </div>
+                        ) : (
+                          <div className="text-center py-4">
+                            <p className="text-sm text-muted-foreground mb-3">Aucun composant suivi</p>
+                            <Link to="/catalog">
+                              <Button variant="outline" size="sm">
+                                Explorer le catalogue
+                              </Button>
+                            </Link>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -263,6 +275,6 @@ export function RecommendedActions({
         </div>
       </div>
       
-      <ScrapModal open={scrapModalOpen} onOpenChange={setScrapModalOpen} />
+      <ScrapModal open={scrapModalOpen} onOpenChange={setScrapModalOpen} preselectedModel={preselectedModel} />
     </section>;
 }
