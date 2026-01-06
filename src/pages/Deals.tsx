@@ -404,35 +404,37 @@ export default function Deals() {
 
                         <CardHeader className="deal-card__header pt-3">
                           {/* Primary badges row */}
-                          <div className="deal-card__badges flex items-start justify-between mb-3">
-                            <div className="deal-card__badges-left flex gap-2 flex-wrap">
-                              <Badge variant={perfBadge.variant} className="gap-1">
-                                {perfBadge.label}
-                              </Badge>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Badge variant={getScoreColor(deal.score)} className="gap-1">
-                                      {deal.score >= 85 && <Flame className="h-3 w-3" />}
-                                      {deal.score}
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{getScoreLabel(deal.score)}</p>
-                                    <p className="text-xs">-{discount}% vs prix marché</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              {/* Future: Additional feature badges slot */}
-                              <span className="deal-card__feature-badges" />
-                            </div>
+                          <div className="deal-card__badges flex gap-2 flex-wrap mb-2">
+                            <Badge variant={perfBadge.variant} className="gap-1">
+                              {perfBadge.label}
+                            </Badge>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant={getScoreColor(deal.score)} className="gap-1">
+                                    {deal.score >= 85 && <Flame className="h-3 w-3" />}
+                                    {deal.score}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{getScoreLabel(deal.score)}</p>
+                                  <p className="text-xs">-{discount}% vs prix marché</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <Badge variant="secondary" className="text-xs">
+                              {formatDistanceToNow(new Date(deal.publication_date), {
+                                addSuffix: true,
+                                locale: fr
+                              })}
+                            </Badge>
+                          </div>
+                          {/* Title and price on same row */}
+                          <div className="deal-card__title-price flex items-start justify-between gap-3">
+                            <CardTitle className="deal-card__title text-base leading-tight line-clamp-2 flex-1">
+                              {deal.title}
+                            </CardTitle>
                             <div className="deal-card__price-block text-right flex-shrink-0">
-                              <Badge variant="secondary" className="mb-2 text-xs">
-                                {formatDistanceToNow(new Date(deal.publication_date), {
-                            addSuffix: true,
-                            locale: fr
-                          })}
-                              </Badge>
                               <div className="flex items-center gap-1">
                                 {isHighValue && <span className="text-lg">⚡</span>}
                                 <div className="text-2xl font-bold">{deal.price}€</div>
@@ -442,9 +444,6 @@ export default function Deals() {
                               </div>
                             </div>
                           </div>
-                          <CardTitle className="deal-card__title text-base leading-tight line-clamp-2">
-                            {deal.title}
-                          </CardTitle>
                         </CardHeader>
 
                         <CardContent className="deal-card__content flex-1 flex flex-col">
