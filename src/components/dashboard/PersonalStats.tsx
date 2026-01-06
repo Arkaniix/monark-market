@@ -97,6 +97,13 @@ export function PersonalStats({
       month: 'short'
     });
   };
+
+  const formatChartDate = (dayNumber: number) => {
+    const periodDays = timeFilter === '7j' ? 7 : timeFilter === '30j' ? 30 : 90;
+    const date = new Date();
+    date.setDate(date.getDate() - (periodDays - dayNumber));
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  };
   return <section className="py-8">
       <div className="container">
         <div className="mb-6">
@@ -226,9 +233,11 @@ export function PersonalStats({
                       </div>
                     </div>)}
                 </div>
-                <Button variant="outline" className="w-full mt-4" size="sm">
-                  Voir l'historique complet
-                </Button>
+                <Link to="/tracking?tab=notifications">
+                  <Button variant="outline" className="w-full mt-4" size="sm">
+                    Voir l'historique complet
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -260,7 +269,7 @@ export function PersonalStats({
                 <div className="h-[200px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={performanceData}>
-                      <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                      <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} tickFormatter={formatChartDate} interval="preserveStartEnd" />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                       <Tooltip contentStyle={{
                       backgroundColor: "hsl(var(--background))",
