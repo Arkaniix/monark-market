@@ -36,6 +36,13 @@ export {
   useUserCredits,
 } from "./useProviderData";
 
+// Models Search - autocomplete with debounce, abort, timeout
+export {
+  useModelsSearch,
+  type SearchState,
+  type UseModelsSearchResult,
+} from "./useModelsSearch";
+
 // Entitlements - single source of truth for user permissions
 export {
   useEntitlements,

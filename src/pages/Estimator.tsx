@@ -48,16 +48,22 @@ import {
   Minus,
   Download,
   Lock,
+  Loader2,
+  AlertCircle,
+  Cpu,
+  HardDrive,
+  MemoryStick,
+  Monitor,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useModelsSearch, type SearchState } from "@/hooks/useModelsSearch";
 import {
-  useModelsAutocomplete,
   useRunEstimation,
   useEstimationHistory,
   useEstimatorStats,
   type EstimationResult,
-  type ModelAutocomplete,
 } from "@/hooks/useEstimator";
+import type { ModelAutocomplete } from "@/providers/types";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import LockedFeatureOverlay, { LockedValue, PlanBadge } from "@/components/LockedFeatureOverlay";
 import {
@@ -108,11 +114,28 @@ export default function Estimator() {
   // History pagination
   const [historyPage, setHistoryPage] = useState(1);
 
-  // API hooks
-  const { data: models, isLoading: isLoadingModels } = useModelsAutocomplete(modelSearch);
+  // API hooks - using new search hook with debounce/abort/timeout
+  const { models, state: searchState, error: searchError, retry: retrySearch } = useModelsSearch(modelSearch);
   const { data: stats } = useEstimatorStats();
   const { data: historyData, isLoading: isLoadingHistory } = useEstimationHistory(historyPage);
   const runEstimation = useRunEstimation();
+
+  // Helper to get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category?.toUpperCase()) {
+      case "GPU":
+        return <Monitor className="h-4 w-4 text-primary" />;
+      case "CPU":
+        return <Cpu className="h-4 w-4 text-accent" />;
+      case "RAM":
+        return <MemoryStick className="h-4 w-4 text-green-500" />;
+      case "SSD":
+      case "STOCKAGE":
+        return <HardDrive className="h-4 w-4 text-orange-500" />;
+      default:
+        return <Cpu className="h-4 w-4 text-muted-foreground" />;
+    }
+  };
 
   // Pre-fill from URL params (e.g., coming from ad detail page)
   useEffect(() => {
@@ -435,39 +458,67 @@ Conseil,${result.advice}`;
                                 onValueChange={setModelSearch}
                               />
                               <CommandList>
-                                {isLoadingModels && (
-                                  <div className="p-4 text-center">
-                                    <RefreshCw className="h-4 w-4 animate-spin mx-auto" />
+                                {/* State: Loading */}
+                                {searchState === "loading" && (
+                                  <div className="p-4 flex items-center justify-center gap-2 text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <span className="text-sm">Recherche…</span>
                                   </div>
                                 )}
-                                {!isLoadingModels && modelSearch.length >= 2 && (!models || models.length === 0) && (
-                                  <CommandEmpty>Aucun modèle trouvé</CommandEmpty>
-                                )}
-                                {!isLoadingModels && modelSearch.length < 2 && (
+
+                                {/* State: Idle (not enough characters) */}
+                                {searchState === "idle" && modelSearch.length < 2 && (
                                   <div className="p-4 text-sm text-muted-foreground text-center">
                                     Tapez au moins 2 caractères
                                   </div>
                                 )}
-                                <CommandGroup>
-                                  {models?.map((model) => (
-                                    <CommandItem
-                                      key={model.id}
-                                      value={model.id.toString()}
-                                      onSelect={() => {
-                                        setSelectedModel(model);
-                                        setModelPopoverOpen(false);
-                                      }}
-                                    >
-                                      <div className="flex flex-col">
-                                        <span className="font-medium">{model.name}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                          {model.brand} • {model.category}
-                                          {model.family && ` • ${model.family}`}
-                                        </span>
-                                      </div>
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
+
+                                {/* State: Empty (no results) */}
+                                {searchState === "empty" && (
+                                  <CommandEmpty>Aucun modèle trouvé</CommandEmpty>
+                                )}
+
+                                {/* State: Error */}
+                                {searchState === "error" && (
+                                  <div className="p-4 text-center">
+                                    <div className="flex items-center justify-center gap-2 text-destructive mb-2">
+                                      <AlertCircle className="h-4 w-4" />
+                                      <span className="text-sm">{searchError || "Impossible de charger les modèles"}</span>
+                                    </div>
+                                    <Button variant="outline" size="sm" onClick={retrySearch}>
+                                      <RefreshCw className="h-3 w-3 mr-1" />
+                                      Réessayer
+                                    </Button>
+                                  </div>
+                                )}
+
+                                {/* State: Success (show results) */}
+                                {searchState === "success" && models.length > 0 && (
+                                  <CommandGroup>
+                                    {models.map((model) => (
+                                      <CommandItem
+                                        key={model.id}
+                                        value={model.id.toString()}
+                                        onSelect={() => {
+                                          setSelectedModel(model);
+                                          setModelPopoverOpen(false);
+                                        }}
+                                        className="flex items-center gap-3 cursor-pointer"
+                                      >
+                                        <div className="flex-shrink-0 w-8 h-8 rounded bg-muted flex items-center justify-center">
+                                          {getCategoryIcon(model.category)}
+                                        </div>
+                                        <div className="flex flex-col flex-1 min-w-0">
+                                          <span className="font-medium truncate">{model.name}</span>
+                                          <span className="text-xs text-muted-foreground truncate">
+                                            {model.brand} • {model.category}
+                                            {model.family && ` • ${model.family}`}
+                                          </span>
+                                        </div>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                )}
                               </CommandList>
                             </Command>
                           </PopoverContent>

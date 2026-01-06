@@ -370,7 +370,8 @@ export interface ModelAutocomplete {
   name: string;
   brand: string;
   category: string;
-  full_name: string;
+  full_name?: string;
+  family?: string | null;
 }
 
 export interface EstimationRequest {
