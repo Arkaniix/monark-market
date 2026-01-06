@@ -383,6 +383,10 @@ export interface InternalDeal {
   published_at: string;
   publication_date: string;
   url: string;
+  /** Ad-specific image URL (from the listing) */
+  image_url: string | null;
+  /** Generic model image URL (from our database) */
+  model_image_url: string | null;
 }
 
 // ============= Price History Point =============
@@ -636,6 +640,10 @@ function generateDeals(ads: InternalAd[]): InternalDeal[] {
       published_at: ad.published_at,
       publication_date: ad.published_at,
       url: ad.url,
+      // Image fields - null for now to test placeholder rendering
+      // In production: image_url comes from ad scraping, model_image_url from our database
+      image_url: null,
+      model_image_url: null,
     }));
 }
 

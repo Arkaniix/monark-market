@@ -469,6 +469,8 @@ export const mockProvider: DataProvider = {
       score: deal.score,
       item_type: deal.item_type,
       delivery_possible: deal.delivery_possible,
+      image_url: deal.image_url,
+      model_image_url: deal.model_image_url,
     }));
 
     // Apply filters only if they have meaningful values (use centralized isValidFilter)

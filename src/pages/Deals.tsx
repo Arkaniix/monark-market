@@ -332,23 +332,16 @@ export default function Deals() {
               const ItemTypeIcon = getItemTypeIcon(deal.item_type);
               return <motion.div key={deal.id} variants={itemVariants}>
                       <Card className="deal-card hover:border-primary/50 transition-all hover:shadow-lg group h-full flex flex-col overflow-hidden">
-                        {/* Image slot with overlay zone for future badges */}
-                        <div className="deal-card__image-container relative">
-                          <DealCardImage
-                            imageUrl={null}
-                            modelName={deal.model_name}
-                            category={deal.category}
-                            alt={deal.title}
-                            className="rounded-t-lg"
-                          />
-                          {/* Future: Image overlay badges (AI image, verified, etc.) */}
-                          <div className="deal-card__image-badges absolute top-2 left-2 flex gap-1">
-                            {/* Placeholder for: hasAiImage && <Badge>Image IA</Badge> */}
-                          </div>
-                          <div className="deal-card__image-indicators absolute bottom-2 right-2 flex gap-1">
-                            {/* Placeholder for: hasPriceHistory && <HistoryIcon /> */}
-                          </div>
-                        </div>
+                        {/* Image zone - fixed aspect ratio */}
+                        <DealCardImage
+                          imageUrl={deal.image_url}
+                          modelImageUrl={deal.model_image_url}
+                          modelName={deal.model_name}
+                          category={deal.category}
+                          alt={deal.title}
+                          aspectRatio="4/3"
+                          className="rounded-t-lg"
+                        />
                         <CardHeader className="deal-card__header p-3 pb-2 space-y-2">
                           {/* Title and price */}
                           <div className="deal-card__title-price flex items-start justify-between gap-2">
