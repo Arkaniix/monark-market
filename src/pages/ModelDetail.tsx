@@ -418,112 +418,149 @@ export default function ModelDetail() {
                     <p className="text-muted-foreground">Chargement...</p>
                   </div>
                 ) : priceHistory?.length ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={priceHistory}>
-                      <defs>
-                        <linearGradient id="colorMedian" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
-                        </linearGradient>
-                        <linearGradient id="colorDispersion" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.15} />
-                          <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.05} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis
-                        dataKey="date"
-                        tickFormatter={(v) => new Date(v).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
-                        className="text-xs"
-                      />
-                      <YAxis className="text-xs" domain={['auto', 'auto']} />
-                      <Tooltip
-                        labelFormatter={(v) => formatDate(v)}
-                        content={({ active, payload, label }) => {
-                          if (!active || !payload?.length) return null;
-                          const data = payload[0]?.payload;
-                          return (
-                            <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
-                              <p className="font-medium text-sm mb-2">{formatDate(String(label))}</p>
-                              <div className="space-y-1 text-sm">
-                                <div className="flex justify-between gap-4">
-                                  <span className="text-muted-foreground">Médiane</span>
-                                  <span className="font-semibold text-primary">{data?.price_median} €</span>
+                  (() => {
+                    // Calculate Y-axis domain to always include P25, median, and P75 with padding
+                    const allP25 = priceHistory.map((d: any) => d.price_p25).filter(Boolean);
+                    const allP75 = priceHistory.map((d: any) => d.price_p75).filter(Boolean);
+                    const minPrice = Math.min(...allP25);
+                    const maxPrice = Math.max(...allP75);
+                    const padding = (maxPrice - minPrice) * 0.1;
+                    const yMin = Math.floor((minPrice - padding) / 10) * 10;
+                    const yMax = Math.ceil((maxPrice + padding) / 10) * 10;
+
+                    return (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <AreaChart data={priceHistory}>
+                          <defs>
+                            {/* Gradient médiane - couleur principale douce */}
+                            <linearGradient id="colorMedian" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                            </linearGradient>
+                            {/* Gradient dispersion P25-P75 - très subtil */}
+                            <linearGradient id="colorDispersion" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.08} />
+                              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                          <XAxis
+                            dataKey="date"
+                            tickFormatter={(v) => new Date(v).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                            axisLine={{ stroke: 'hsl(var(--border))' }}
+                            tickLine={{ stroke: 'hsl(var(--border))' }}
+                          />
+                          <YAxis 
+                            domain={[yMin, yMax]}
+                            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                            axisLine={{ stroke: 'hsl(var(--border))' }}
+                            tickLine={{ stroke: 'hsl(var(--border))' }}
+                            tickFormatter={(v) => `${v} €`}
+                            width={65}
+                          />
+                          <Tooltip
+                            content={({ active, payload, label }) => {
+                              if (!active || !payload?.length) return null;
+                              const data = payload[0]?.payload;
+                              return (
+                                <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-xl min-w-[200px]">
+                                  <p className="font-semibold text-sm mb-3 pb-2 border-b border-border/50">
+                                    {formatDate(String(label))}
+                                  </p>
+                                  <div className="space-y-2">
+                                    {/* Médiane - mise en avant */}
+                                    <div className="flex justify-between items-center gap-4 bg-primary/5 -mx-2 px-2 py-1 rounded">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                        <span className="text-sm font-medium">Médiane</span>
+                                      </div>
+                                      <span className="font-bold text-primary">{data?.price_median} €</span>
+                                    </div>
+                                    {/* P25 */}
+                                    <div className="flex justify-between items-center gap-4">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-0.5 bg-primary/40" />
+                                        <span className="text-xs text-muted-foreground">P25 (bas)</span>
+                                      </div>
+                                      <span className="text-sm text-muted-foreground">{data?.price_p25} €</span>
+                                    </div>
+                                    {/* P75 */}
+                                    <div className="flex justify-between items-center gap-4">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-0.5 bg-primary/40" />
+                                        <span className="text-xs text-muted-foreground">P75 (haut)</span>
+                                      </div>
+                                      <span className="text-sm text-muted-foreground">{data?.price_p75} €</span>
+                                    </div>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground/70 mt-3 pt-2 border-t border-border/50 leading-relaxed">
+                                    💡 Un prix proche de P25 = bonne affaire
+                                  </p>
                                 </div>
-                                <div className="flex justify-between gap-4">
-                                  <span className="text-muted-foreground">P25 (25e percentile)</span>
-                                  <span className="text-muted-foreground">{data?.price_p25} €</span>
-                                </div>
-                                <div className="flex justify-between gap-4">
-                                  <span className="text-muted-foreground">P75 (75e percentile)</span>
-                                  <span className="text-muted-foreground">{data?.price_p75} €</span>
-                                </div>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
-                                50% des prix sont entre P25 et P75
-                              </p>
-                            </div>
-                          );
-                        }}
-                      />
-                      <Legend 
-                        formatter={(value) => {
-                          const labels: Record<string, string> = {
-                            'price_p75': 'P75',
-                            'price_p25': 'P25',
-                            'price_median': 'Médiane',
-                          };
-                          return labels[value] || value;
-                        }}
-                      />
-                      {/* Bande de dispersion P25-P75 */}
-                      <Area
-                        type="monotone"
-                        dataKey="price_p75"
-                        stroke="none"
-                        fill="url(#colorDispersion)"
-                        name="price_p75"
-                        legendType="none"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="price_p25"
-                        stroke="none"
-                        fill="hsl(var(--background))"
-                        name="price_p25"
-                        legendType="none"
-                      />
-                      {/* Lignes P25/P75 en pointillés */}
-                      <Line
-                        type="monotone"
-                        dataKey="price_p25"
-                        stroke="hsl(var(--muted-foreground))"
-                        strokeDasharray="4 4"
-                        strokeWidth={1}
-                        name="price_p25"
-                        dot={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="price_p75"
-                        stroke="hsl(var(--muted-foreground))"
-                        strokeDasharray="4 4"
-                        strokeWidth={1}
-                        name="price_p75"
-                        dot={false}
-                      />
-                      {/* Médiane - ligne principale plus visible */}
-                      <Area
-                        type="monotone"
-                        dataKey="price_median"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2.5}
-                        fill="url(#colorMedian)"
-                        name="price_median"
-                        dot={false}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                              );
+                            }}
+                          />
+                          <Legend 
+                            formatter={(value) => {
+                              const labels: Record<string, string> = {
+                                'price_p75': 'P75',
+                                'price_p25': 'P25',
+                                'price_median': 'Médiane',
+                              };
+                              return labels[value] || value;
+                            }}
+                          />
+                          {/* Bande de dispersion P25-P75 - teinte primaire subtile */}
+                          <Area
+                            type="monotone"
+                            dataKey="price_p75"
+                            stroke="none"
+                            fill="url(#colorDispersion)"
+                            name="price_p75"
+                            legendType="none"
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="price_p25"
+                            stroke="none"
+                            fill="hsl(var(--background))"
+                            name="price_p25"
+                            legendType="none"
+                          />
+                          {/* Lignes P25/P75 - teinte primaire légère, pas de contrastes forts */}
+                          <Line
+                            type="monotone"
+                            dataKey="price_p25"
+                            stroke="hsl(var(--primary) / 0.35)"
+                            strokeDasharray="4 3"
+                            strokeWidth={1.5}
+                            name="price_p25"
+                            dot={false}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="price_p75"
+                            stroke="hsl(var(--primary) / 0.35)"
+                            strokeDasharray="4 3"
+                            strokeWidth={1.5}
+                            name="price_p75"
+                            dot={false}
+                          />
+                          {/* Médiane - ligne principale plus visible */}
+                          <Area
+                            type="monotone"
+                            dataKey="price_median"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2.5}
+                            fill="url(#colorMedian)"
+                            name="price_median"
+                            dot={false}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    );
+                  })()
                 ) : (
                   <div className="h-[300px] flex items-center justify-center">
                     <p className="text-muted-foreground">Aucune donnée disponible</p>
