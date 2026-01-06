@@ -528,20 +528,20 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
                         </div>
 
                         {/* Infos secondaires */}
-                        <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
                           {alert.current_price && (
                             <span>Prix actuel: {formatPrice(alert.current_price)}</span>
                           )}
+                          {/* Date de création - toujours affichée */}
+                          <span className="flex items-center gap-1">
+                            <Plus className="h-3 w-3" />
+                            Créée {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true, locale: fr })}
+                          </span>
+                          {/* Date de déclenchement - uniquement si déclenchée */}
                           {alert.last_triggered_at && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              Déclenché {formatDistanceToNow(new Date(alert.last_triggered_at), { addSuffix: true, locale: fr })}
-                            </span>
-                          )}
-                          {!alert.last_triggered_at && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              Créé {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true, locale: fr })}
+                            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                              <Bell className="h-3 w-3" />
+                              Déclenchée {formatDistanceToNow(new Date(alert.last_triggered_at), { addSuffix: true, locale: fr })}
                             </span>
                           )}
                         </div>
