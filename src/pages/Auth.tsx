@@ -66,6 +66,11 @@ export default function Auth() {
     isLoading,
     isMockMode
   } = useAuth();
+  // Force scroll to top on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');

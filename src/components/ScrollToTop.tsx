@@ -7,11 +7,12 @@ import { useLocation } from "react-router-dom";
  * Doit être placé à l'intérieur du BrowserRouter.
  */
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
 
   useEffect(() => {
+    // Force scroll to top on any route change (including query params)
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-  }, [pathname]);
+  }, [pathname, search]);
 
   return null;
 };
