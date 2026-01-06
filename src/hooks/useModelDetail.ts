@@ -74,6 +74,19 @@ export function useModelAds(modelId: string | undefined, page: number = 1, limit
   });
 }
 
+export function useSimilarModels(modelId: string | undefined, limit: number = 6) {
+  const provider = useDataProvider();
+  
+  return useQuery({
+    queryKey: ['similar-models', modelId, limit],
+    queryFn: async () => {
+      if (!modelId) throw new Error('No modelId provided');
+      return provider.getSimilarModels(modelId, limit);
+    },
+    enabled: !!modelId,
+  });
+}
+
 export function useToggleModelWatchlist() {
   const provider = useDataProvider();
   const queryClient = useQueryClient();

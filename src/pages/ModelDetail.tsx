@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { 
@@ -25,6 +26,7 @@ import {
   useModelDetail, 
   useModelPriceHistory, 
   useModelAds, 
+  useSimilarModels,
   useToggleModelWatchlist,
   useCreatePriceAlert 
 } from "@/hooks/useModelDetail";
@@ -48,6 +50,7 @@ export default function ModelDetail() {
   const { data: model, isLoading: modelLoading, error: modelError } = useModelDetail(id);
   const { data: priceHistory, isLoading: historyLoading } = useModelPriceHistory(id, selectedPeriod);
   const { data: adsData, isLoading: adsLoading } = useModelAds(id, adsPage, 10);
+  const { data: similarModels, isLoading: similarLoading } = useSimilarModels(id, 6);
   
   const toggleWatchlist = useToggleModelWatchlist();
   const createAlert = useCreatePriceAlert();
@@ -914,6 +917,97 @@ export default function ModelDetail() {
             </TabsContent>
           )}
         </Tabs>
+
+        {/* Modèles similaires */}
+        {similarModels && similarModels.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Modèles similaires
+                </CardTitle>
+                <CardDescription>
+                  Modèles comparables par génération, performances ou gamme de prix
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                  {similarModels.map((similar) => (
+                    <Link
+                      key={similar.id}
+                      to={`/models/${similar.id}`}
+                      className="group block"
+                    >
+                      <div className="p-3 rounded-lg border border-border/50 bg-muted/20 hover:bg-muted/40 hover:border-primary/30 transition-all">
+                        {/* Raison de similarité */}
+                        <Badge 
+                          variant="outline" 
+                          className="text-[9px] mb-2 w-full justify-center"
+                        >
+                          {similar.similarity_reason === 'generation' && 'Même génération'}
+                          {similar.similarity_reason === 'performance' && 'Perfs proches'}
+                          {similar.similarity_reason === 'price_range' && 'Prix comparable'}
+                        </Badge>
+                        
+                        {/* Nom */}
+                        <p className="font-medium text-sm line-clamp-2 mb-1 group-hover:text-primary transition-colors">
+                          {similar.brand} {similar.name}
+                        </p>
+                        
+                        {/* Prix & Tendance */}
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="font-bold text-sm">{similar.median_price} €</span>
+                          <span className={`text-xs flex items-center gap-0.5 ${
+                            similar.var_30d_pct < 0 ? 'text-green-500' : 
+                            similar.var_30d_pct > 0 ? 'text-red-500' : 'text-muted-foreground'
+                          }`}>
+                            {similar.var_30d_pct < 0 ? (
+                              <TrendingDown className="h-3 w-3" />
+                            ) : similar.var_30d_pct > 0 ? (
+                              <TrendingUp className="h-3 w-3" />
+                            ) : null}
+                            {formatPercent(similar.var_30d_pct)}
+                          </span>
+                        </div>
+                        
+                        {/* Bouton */}
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full mt-2 h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          Voir le modèle
+                        </Button>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Skeleton pour modèles similaires */}
+        {similarLoading && (
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-72 mt-2" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-32 rounded-lg" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
