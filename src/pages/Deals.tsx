@@ -401,10 +401,9 @@ export default function Deals() {
                             {/* Placeholder for: hasPriceHistory && <HistoryIcon /> */}
                           </div>
                         </div>
-
-                        <CardHeader className="deal-card__header pt-3">
+                        <CardHeader className="deal-card__header pt-3 pb-2 space-y-2">
                           {/* Primary badges row */}
-                          <div className="deal-card__badges flex gap-2 flex-wrap mb-2">
+                          <div className="deal-card__badges flex gap-2 flex-wrap">
                             <Badge variant={perfBadge.variant} className="gap-1">
                               {perfBadge.label}
                             </Badge>
@@ -439,14 +438,14 @@ export default function Deals() {
                                 {isHighValue && <span className="text-lg">⚡</span>}
                                 <div className="text-2xl font-bold">{deal.price}€</div>
                               </div>
-                              <div className="text-xs text-muted-foreground line-through">
-                                {deal.fair_value}€
-                              </div>
+                              {deal.fair_value && (
+                                <div className="text-sm text-muted-foreground line-through">{deal.fair_value}€</div>
+                              )}
                             </div>
                           </div>
                         </CardHeader>
 
-                        <CardContent className="deal-card__content flex-1 flex flex-col">
+                        <CardContent className="deal-card__content flex-1 flex flex-col pt-0">
                           <div className="deal-card__body space-y-3 flex-1">
                             {/* Category & platform tags */}
                             <div className="deal-card__tags flex items-center gap-2 text-sm flex-wrap">
