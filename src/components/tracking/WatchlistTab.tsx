@@ -13,6 +13,7 @@ import { useRemoveFromWatchlist } from "@/hooks/useWatchlist";
 import { useDataProvider } from "@/providers";
 import { useToast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
+import { AddToWatchlistModal } from "./AddToWatchlistModal";
 import { WatchlistItemCard } from "./WatchlistItemCard";
 import { WatchlistItemRow } from "./WatchlistItemRow";
 import type { WatchlistEntry, PriceHistoryPoint } from "@/providers/types";
@@ -65,6 +66,7 @@ export function WatchlistTab({
   });
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertTarget, setAlertTarget] = useState<AlertTarget | null>(null);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [priceHistories, setPriceHistories] = useState<Record<number, {
     price: number;
     date?: string;
@@ -236,12 +238,10 @@ export function WatchlistTab({
                 {models.length} modèle{models.length > 1 ? 's' : ''} • {ads.length} annonce{ads.length > 1 ? 's' : ''}
               </CardDescription>
             </div>
-            <Link to="/catalog">
-              <Button size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Ajouter
-              </Button>
-            </Link>
+            <Button size="sm" className="gap-2" onClick={() => setAddModalOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Ajouter
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
@@ -388,6 +388,7 @@ export function WatchlistTab({
       </Card>
 
       <CreateAlertModal open={alertModalOpen} onClose={() => setAlertModalOpen(false)} target={alertTarget} onSuccess={refetch} />
+      <AddToWatchlistModal open={addModalOpen} onClose={() => setAddModalOpen(false)} onSuccess={refetch} />
     </>;
 }
 
