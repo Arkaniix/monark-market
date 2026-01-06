@@ -89,8 +89,8 @@ export function NotificationsWidget() {
                       )}
                     </div>
                   ))}
-                  <Link to="/account?tab=notifications">
-                    <Button variant="ghost" size="sm" className="w-full gap-2 mt-2">
+                  <Link to="/tracking?tab=notifications">
+                    <Button variant="outline" size="sm" className="w-full gap-2 mt-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/50 dark:hover:bg-primary/20">
                       Voir toutes
                       <ArrowRight className="h-3 w-3" />
                     </Button>
@@ -146,8 +146,8 @@ export function NotificationsWidget() {
                       </Badge>
                     </div>
                   ))}
-                  <Link to="/account?tab=watchlist">
-                    <Button variant="ghost" size="sm" className="w-full gap-2 mt-2">
+                  <Link to="/tracking?tab=alerts">
+                    <Button variant="outline" size="sm" className="w-full gap-2 mt-2 border-warning/30 text-warning hover:bg-warning/10 hover:text-warning dark:border-warning/50 dark:hover:bg-warning/20">
                       Gérer mes alertes
                       <ArrowRight className="h-3 w-3" />
                     </Button>
@@ -202,8 +202,8 @@ export function NotificationsWidget() {
                       </div>
                     </Link>
                   ))}
-                  <Link to="/account?tab=watchlist">
-                    <Button variant="ghost" size="sm" className="w-full gap-2 mt-2">
+                  <Link to="/tracking?tab=watchlist">
+                    <Button variant="outline" size="sm" className="w-full gap-2 mt-2 border-accent/30 text-accent-foreground hover:bg-accent/10 dark:border-accent/50 dark:hover:bg-accent/20">
                       Voir ma watchlist
                       <ArrowRight className="h-3 w-3" />
                     </Button>
