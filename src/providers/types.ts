@@ -117,6 +117,10 @@ export interface DealItem {
   score: number;
   item_type: 'component' | 'pc' | 'lot';
   delivery_possible: boolean;
+  /** Ad-specific image URL (from the listing) */
+  image_url?: string | null;
+  /** Generic model image URL (from our database) */
+  model_image_url?: string | null;
 }
 
 export interface DealsResponse {
