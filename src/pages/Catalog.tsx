@@ -419,18 +419,18 @@ export default function Catalog() {
                                     <div className="inline-flex items-center gap-2 cursor-help">
                                       <div className="flex items-center gap-1.5">
                                         <span className="text-xs text-muted-foreground">Liquidité:</span>
-                                        <span className={`text-xs font-medium ${
+                                        <span className={`text-xs font-semibold ${
                                           model.liquidity >= 0.7 ? 'text-green-500' : 
                                           model.liquidity >= 0.4 ? 'text-amber-500' : 'text-red-500'
                                         }`}>
-                                          {getLiquidityLabel(model.liquidity)}
+                                          {Math.round(model.liquidity * 100)}%
                                         </span>
                                       </div>
-                                      <div className="w-16 h-2 bg-muted rounded-full overflow-hidden border border-border/50">
+                                      <div className="w-20 h-2.5 bg-muted rounded-full overflow-hidden border border-border/50 relative">
                                         <div 
                                           className={`h-full rounded-full transition-all ${
-                                            model.liquidity >= 0.7 ? 'bg-green-500' : 
-                                            model.liquidity >= 0.4 ? 'bg-amber-500' : 'bg-red-500'
+                                            model.liquidity >= 0.7 ? 'bg-gradient-to-r from-green-500 to-green-400' : 
+                                            model.liquidity >= 0.4 ? 'bg-gradient-to-r from-amber-500 to-amber-400' : 'bg-gradient-to-r from-red-500 to-red-400'
                                           }`}
                                           style={{ width: `${Math.round(model.liquidity * 100)}%` }}
                                         />
