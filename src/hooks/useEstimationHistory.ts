@@ -17,6 +17,7 @@ export interface EstimationHistoryItem {
   sell_price_1m: number;
   margin_pct: number;
   trend: "up" | "down" | "stable";
+  photos?: string[]; // URLs to photos attached to this estimation
 }
 
 export interface EstimationHistoryResponse {
@@ -47,6 +48,11 @@ const mockHistoryItems: EstimationHistoryItem[] = [
     sell_price_1m: 295,
     margin_pct: 13.5,
     trend: "up",
+    photos: [
+      "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400",
+      "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400",
+      "https://images.unsplash.com/photo-1555618254-5e4dc4e3c0a3?w=400",
+    ],
   },
   {
     id: "mock-2",
@@ -75,6 +81,9 @@ const mockHistoryItems: EstimationHistoryItem[] = [
     sell_price_1m: 125,
     margin_pct: 15.7,
     trend: "up",
+    photos: [
+      "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400",
+    ],
   },
   {
     id: "mock-4",
