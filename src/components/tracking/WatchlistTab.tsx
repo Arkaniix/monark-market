@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Eye, Plus, Search, Filter, ChevronLeft, ChevronRight, Package, Tag, DollarSign, TrendingDown, TrendingUp, ArrowDownRight, ArrowUpRight, Infinity } from "lucide-react";
+import { Eye, Plus, Search, Filter, ChevronLeft, ChevronRight, Package, Tag, DollarSign, TrendingDown, TrendingUp, ArrowDownRight, ArrowUpRight, Infinity, LayoutGrid, List } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useRemoveFromWatchlist } from "@/hooks/useWatchlist";
 import { useDataProvider } from "@/providers";
 import { useToast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
 import { WatchlistItemCard } from "./WatchlistItemCard";
+import { WatchlistItemRow } from "./WatchlistItemRow";
 import type { WatchlistEntry, PriceHistoryPoint } from "@/providers/types";
+
 const ITEMS_PER_PAGE = 6;
+const WATCHLIST_VIEW_KEY = "watchlist_view_mode";
 interface WatchlistTabProps {
   watchlist: WatchlistEntry[];
   isLoading: boolean;
@@ -54,6 +58,10 @@ export function WatchlistTab({
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<"cards" | "list">(() => {
+    const saved = localStorage.getItem(WATCHLIST_VIEW_KEY);
+    return saved === "list" ? "list" : "cards";
+  });
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertTarget, setAlertTarget] = useState<AlertTarget | null>(null);
   const [priceHistories, setPriceHistories] = useState<Record<number, {
@@ -258,6 +266,24 @@ export function WatchlistTab({
                 {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
               </SelectContent>
             </Select>
+            <ToggleGroup 
+              type="single" 
+              value={viewMode} 
+              onValueChange={(v) => {
+                if (v) {
+                  setViewMode(v as "cards" | "list");
+                  localStorage.setItem(WATCHLIST_VIEW_KEY, v);
+                }
+              }}
+              className="border rounded-md"
+            >
+              <ToggleGroupItem value="cards" aria-label="Vue cartes" className="h-9 px-3">
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="list" aria-label="Vue liste" className="h-9 px-3">
+                <List className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           {watchlist.length === 0 ? <EmptyState /> : allFiltered.length === 0 ? <NoResults onReset={() => {
@@ -271,9 +297,15 @@ export function WatchlistTab({
                     <h3 className="font-semibold">Modèles suivis</h3>
                     <Badge variant="secondary">{filteredModels.length}</Badge>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {filteredModels.map(item => <WatchlistItemCard key={item.id} item={item} isModel={true} priceHistory={priceHistories[item.target_id] || []} isLoadingHistory={loadingHistories.has(item.target_id)} onCreateAlert={() => openAlertModal(item)} onRemove={() => handleRemove(item)} isRemoving={removeFromWatchlist.isPending} />)}
-                  </div>
+                  {viewMode === "cards" ? (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {filteredModels.map(item => <WatchlistItemCard key={item.id} item={item} isModel={true} priceHistory={priceHistories[item.target_id] || []} isLoadingHistory={loadingHistories.has(item.target_id)} onCreateAlert={() => openAlertModal(item)} onRemove={() => handleRemove(item)} isRemoving={removeFromWatchlist.isPending} />)}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {filteredModels.map(item => <WatchlistItemRow key={item.id} item={item} isModel={true} onCreateAlert={() => openAlertModal(item)} onRemove={() => handleRemove(item)} isRemoving={removeFromWatchlist.isPending} />)}
+                    </div>
+                  )}
                 </div>}
 
               {/* Section Annonces */}
@@ -283,9 +315,15 @@ export function WatchlistTab({
                     <h3 className="font-semibold">Annonces suivies</h3>
                     <Badge variant="secondary">{filteredAds.length}</Badge>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {filteredAds.map(item => <WatchlistItemCard key={item.id} item={item} isModel={false} priceHistory={[]} isLoadingHistory={false} onCreateAlert={() => openAlertModal(item)} onRemove={() => handleRemove(item)} isRemoving={removeFromWatchlist.isPending} />)}
-                  </div>
+                  {viewMode === "cards" ? (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {filteredAds.map(item => <WatchlistItemCard key={item.id} item={item} isModel={false} priceHistory={[]} isLoadingHistory={false} onCreateAlert={() => openAlertModal(item)} onRemove={() => handleRemove(item)} isRemoving={removeFromWatchlist.isPending} />)}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {filteredAds.map(item => <WatchlistItemRow key={item.id} item={item} isModel={false} onCreateAlert={() => openAlertModal(item)} onRemove={() => handleRemove(item)} isRemoving={removeFromWatchlist.isPending} />)}
+                    </div>
+                  )}
                 </div>}
 
               {/* Pagination (si beaucoup d'éléments) */}
