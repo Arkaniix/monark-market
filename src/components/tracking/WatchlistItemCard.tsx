@@ -368,7 +368,7 @@ export function WatchlistItemCard({
               size="sm"
               onClick={onRemove}
               disabled={isRemoving}
-              className="text-destructive hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             >
               <Trash2 className="h-4 w-4 mr-1" />
               Retirer
