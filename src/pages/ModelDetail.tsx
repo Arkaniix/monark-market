@@ -401,9 +401,13 @@ export default function ModelDetail() {
                   <ResponsiveContainer width="100%" height={300}>
                     <AreaChart data={priceHistory}>
                       <defs>
-                        <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        <linearGradient id="colorMedian" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
+                        </linearGradient>
+                        <linearGradient id="colorDispersion" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.15} />
+                          <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.05} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -412,33 +416,90 @@ export default function ModelDetail() {
                         tickFormatter={(v) => new Date(v).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
                         className="text-xs"
                       />
-                      <YAxis className="text-xs" />
+                      <YAxis className="text-xs" domain={['auto', 'auto']} />
                       <Tooltip
                         labelFormatter={(v) => formatDate(v)}
-                        formatter={(value: number) => [`${value} €`, "Prix médian"]}
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload?.length) return null;
+                          const data = payload[0]?.payload;
+                          return (
+                            <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+                              <p className="font-medium text-sm mb-2">{formatDate(String(label))}</p>
+                              <div className="space-y-1 text-sm">
+                                <div className="flex justify-between gap-4">
+                                  <span className="text-muted-foreground">Médiane</span>
+                                  <span className="font-semibold text-primary">{data?.price_median} €</span>
+                                </div>
+                                <div className="flex justify-between gap-4">
+                                  <span className="text-muted-foreground">P25 (25e percentile)</span>
+                                  <span className="text-muted-foreground">{data?.price_p25} €</span>
+                                </div>
+                                <div className="flex justify-between gap-4">
+                                  <span className="text-muted-foreground">P75 (75e percentile)</span>
+                                  <span className="text-muted-foreground">{data?.price_p75} €</span>
+                                </div>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
+                                50% des prix sont entre P25 et P75
+                              </p>
+                            </div>
+                          );
+                        }}
                       />
-                      <Legend />
+                      <Legend 
+                        formatter={(value) => {
+                          const labels: Record<string, string> = {
+                            'price_p75': 'P75 (75e percentile)',
+                            'price_p25': 'P25 (25e percentile)',
+                            'price_median': 'Médiane',
+                          };
+                          return labels[value] || value;
+                        }}
+                      />
+                      {/* Bande de dispersion P25-P75 */}
                       <Area
                         type="monotone"
-                        dataKey="price_median"
-                        stroke="hsl(var(--primary))"
-                        fill="url(#colorPrice)"
-                        name="Prix médian"
+                        dataKey="price_p75"
+                        stroke="none"
+                        fill="url(#colorDispersion)"
+                        name="price_p75"
+                        legendType="none"
                       />
+                      <Area
+                        type="monotone"
+                        dataKey="price_p25"
+                        stroke="none"
+                        fill="hsl(var(--background))"
+                        name="price_p25"
+                        legendType="none"
+                      />
+                      {/* Lignes P25/P75 en pointillés */}
                       <Line
                         type="monotone"
                         dataKey="price_p25"
                         stroke="hsl(var(--muted-foreground))"
-                        strokeDasharray="3 3"
-                        name="P25"
+                        strokeDasharray="4 4"
+                        strokeWidth={1}
+                        name="price_p25"
                         dot={false}
                       />
                       <Line
                         type="monotone"
                         dataKey="price_p75"
                         stroke="hsl(var(--muted-foreground))"
-                        strokeDasharray="3 3"
-                        name="P75"
+                        strokeDasharray="4 4"
+                        strokeWidth={1}
+                        name="price_p75"
+                        dot={false}
+                      />
+                      {/* Médiane - ligne principale plus visible */}
+                      <Area
+                        type="monotone"
+                        dataKey="price_median"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2.5}
+                        fill="url(#colorMedian)"
+                        name="price_median"
                         dot={false}
                       />
                     </AreaChart>
