@@ -18,7 +18,7 @@ export function WelcomeHeader({
   creditsRemaining
 }: WelcomeHeaderProps) {
   const [scrapModalOpen, setScrapModalOpen] = useState(false);
-  
+
   // Mock extension detection state - can be toggled for demo
   const [extensionDetected] = useState(false);
   const formatDate = (date?: string) => {
@@ -104,25 +104,18 @@ export function WelcomeHeader({
               </Button>
               
               {/* Extension indicator - mock state */}
-              {extensionDetected ? (
-                <Button size="lg" variant="outline" className="gap-2 text-success border-success/30 bg-success/10 hover:bg-success/20 cursor-default">
+              {extensionDetected ? <Button size="lg" variant="outline" className="gap-2 text-success border-success/30 bg-success/10 hover:bg-success/20 cursor-default">
                   <Check className="h-5 w-5" />
                   Extension OK
-                </Button>
-              ) : (
-                <Button size="lg" variant="outline" className="gap-2" asChild>
+                </Button> : <Button size="lg" variant="outline" className="gap-2" asChild>
                   <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer">
                     <Download className="h-5 w-5" />
                     Télécharger l'extension
                   </a>
-                </Button>
-              )}
+                </Button>}
               
               <Button size="lg" variant="secondary" className="gap-2" asChild>
-                <Link to="/training">
-                  <GraduationCap className="h-5 w-5" />
-                  Formation
-                </Link>
+                
               </Button>
             </div>
           </div>
