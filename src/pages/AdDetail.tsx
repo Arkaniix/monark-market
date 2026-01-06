@@ -202,10 +202,10 @@ export default function AdDetail() {
           </Link>
         </Button>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Image Section */}
+          <div className="lg:col-span-2 space-y-5">
+            {/* Image + Header Combined */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <Card className="overflow-hidden">
                 <DealCardImage
@@ -213,71 +213,44 @@ export default function AdDetail() {
                   modelName={ad.model_name}
                   category={ad.category || 'Composant'}
                   alt={ad.title}
-                  className="aspect-video"
+                  className="aspect-[16/9]"
                 />
-              </Card>
-            </motion.div>
-
-            {/* Header Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-2 mb-3">
-                        {ad.category && <Badge variant="outline">{ad.category}</Badge>}
-                        <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                        {ad.score && (
-                          <Badge variant={ad.score >= 80 ? "default" : "secondary"}>
-                            {ad.score >= 85 && <Flame className="h-3 w-3 mr-1" />}
-                            Score: {ad.score}/100
-                          </Badge>
-                        )}
-                        {ad.item_type !== 'component' && (
-                          <Badge variant="secondary" className="gap-1">
-                            {ad.item_type === 'pc' ? <Monitor className="h-3 w-3" /> : <Package className="h-3 w-3" />}
-                            {ad.item_type === 'pc' ? 'PC complet' : 'Lot'}
-                          </Badge>
-                        )}
-                      </div>
-                      <h1 className="text-2xl font-bold mb-2">{ad.title}</h1>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>Plateforme: {ad.platform}</span>
-                        <span>•</span>
-                        <span>Réf: #{ad.platform_ad_id}</span>
-                      </div>
-                      {ad.model_name && (
-                        <Link
-                          to={`/models/${ad.model_id}`}
-                          className="text-primary hover:underline flex items-center gap-1 text-sm mt-2"
-                        >
-                          Voir fiche modèle: {ad.model_name}
-                          <ExternalLink className="h-3 w-3" />
-                        </Link>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className="text-4xl font-bold text-primary">{ad.price} €</div>
-                      {ad.fair_value && (
-                        <div className="text-sm text-muted-foreground mt-1">
-                          Fair Value: {ad.fair_value} €
-                        </div>
-                      )}
-                      {priceDiff && (
-                        <Badge variant={priceDiff.isGoodDeal ? "default" : "destructive"} className="mt-2">
-                          {priceDiff.isGoodDeal ? (
-                            <TrendingDown className="h-3 w-3 mr-1" />
-                          ) : (
-                            <TrendingUp className="h-3 w-3 mr-1" />
-                          )}
-                          {priceDiff.percent > 0 ? '+' : ''}{priceDiff.percent.toFixed(1)}%
-                        </Badge>
-                      )}
-                    </div>
+                <CardHeader className="pb-4">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {ad.category && <Badge variant="outline">{ad.category}</Badge>}
+                    <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                    {ad.score && (
+                      <Badge variant={ad.score >= 80 ? "default" : "secondary"}>
+                        {ad.score >= 85 && <Flame className="h-3 w-3 mr-1" />}
+                        Score: {ad.score}/100
+                      </Badge>
+                    )}
+                    {ad.item_type !== 'component' && (
+                      <Badge variant="secondary" className="gap-1">
+                        {ad.item_type === 'pc' ? <Monitor className="h-3 w-3" /> : <Package className="h-3 w-3" />}
+                        {ad.item_type === 'pc' ? 'PC complet' : 'Lot'}
+                      </Badge>
+                    )}
                   </div>
+                  <h1 className="text-xl md:text-2xl font-bold">{ad.title}</h1>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                    <span>{ad.platform}</span>
+                    <span>•</span>
+                    <span>#{ad.platform_ad_id}</span>
+                  </div>
+                  {ad.model_name && (
+                    <Link
+                      to={`/models/${ad.model_id}`}
+                      className="text-primary hover:underline flex items-center gap-1 text-sm mt-2"
+                    >
+                      Voir fiche modèle: {ad.model_name}
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  )}
                 </CardHeader>
               </Card>
             </motion.div>
+
 
             {/* Description */}
             {ad.description && (
@@ -482,14 +455,52 @@ export default function AdDetail() {
             </motion.div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+          {/* Sidebar - Sticky */}
+          <div className="lg:sticky lg:top-8 space-y-5 self-start">
+            {/* Price & Deal Card */}
+            <Card className="border-primary/20">
+              <CardContent className="pt-6">
+                <div className="text-center mb-4">
+                  <div className="text-4xl font-bold text-primary">{ad.price} €</div>
+                  {ad.fair_value && (
+                    <div className="text-sm text-muted-foreground mt-1">
+                      Fair value: <span className="line-through">{ad.fair_value} €</span>
+                    </div>
+                  )}
+                  {priceDiff && (
+                    <Badge 
+                      variant={priceDiff.isGoodDeal ? "default" : "destructive"} 
+                      className="mt-3"
+                    >
+                      {priceDiff.isGoodDeal ? (
+                        <TrendingDown className="h-3 w-3 mr-1" />
+                      ) : (
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                      )}
+                      {priceDiff.percent > 0 ? '+' : ''}{priceDiff.percent.toFixed(1)}% vs marché
+                    </Badge>
+                  )}
+                </div>
+                <Separator className="my-4" />
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">État</span>
+                    <span className="font-medium">{getConditionLabel(ad.condition)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Localisation</span>
+                    <span className="font-medium">{ad.city || ad.region || 'Non spécifié'}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Actions */}
             <Card>
-              <CardHeader>
-                <CardTitle>Actions</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2">
                 <Button className="w-full gap-2" asChild>
                   <a href={ad.url} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" />
@@ -565,47 +576,12 @@ export default function AdDetail() {
                   </DialogContent>
                 </Dialog>
 
-                <Separator />
-
-                <Button variant="ghost" className="w-full gap-2" onClick={handleShare}>
-                  <Share2 className="h-4 w-4" />
-                  Partager
-                </Button>
-
-                <ReportAdModal adId={id!} adTitle={ad.title} />
-              </CardContent>
-            </Card>
-
-            {/* Quick Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Informations rapides</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Plateforme</span>
-                  <span className="font-medium">{ad.platform}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Statut</span>
-                  <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type</span>
-                  <span className="font-medium capitalize">{ad.item_type}</span>
-                </div>
-                {ad.category && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Catégorie</span>
-                    <span className="font-medium">{ad.category}</span>
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Première vue</span>
-                  <span className="font-medium">
-                    {formatDistanceToNow(new Date(ad.first_seen_at), { addSuffix: true, locale: fr })}
-                  </span>
+                <div className="flex gap-2 pt-2">
+                  <Button variant="ghost" size="sm" className="flex-1 gap-1" onClick={handleShare}>
+                    <Share2 className="h-3 w-3" />
+                    Partager
+                  </Button>
+                  <ReportAdModal adId={id!} adTitle={ad.title} />
                 </div>
               </CardContent>
             </Card>
