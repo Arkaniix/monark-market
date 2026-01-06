@@ -62,6 +62,7 @@ export interface ApiFetchOptions {
   body?: unknown;
   auth?: boolean;
   headers?: Record<string, string>;
+  signal?: AbortSignal;
 }
 
 // ============= Token Refresh Logic =============
@@ -118,7 +119,7 @@ export async function apiFetch<T>(
   path: string,
   options: ApiFetchOptions = {}
 ): Promise<T> {
-  const { method = 'GET', body, auth = true, headers: customHeaders = {} } = options;
+  const { method = 'GET', body, auth = true, headers: customHeaders = {}, signal } = options;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -137,6 +138,7 @@ export async function apiFetch<T>(
   const fetchOptions: RequestInit = {
     method,
     headers,
+    signal,
   };
 
   if (body && method !== 'GET') {
