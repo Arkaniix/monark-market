@@ -308,8 +308,13 @@ function generateModels(): InternalModel[] {
     const var7d = -8 + random() * 16;
     const var30d = -15 + random() * 30;
     const volume = Math.floor(15 + random() * 250);
-    const liquidity = volume > 150 ? 3 : volume > 70 ? 2 : 1;
     const daysAgo = Math.floor(random() * 7);
+    
+    // Calculate realistic liquidity (0-1) based on volume + random factor for variety
+    // High volume = tends to high liquidity, but with some variance
+    const volumeFactor = Math.min(1, volume / 200); // 0-1 based on volume (max at 200)
+    const randomVariance = -0.2 + random() * 0.4; // -0.2 to +0.2
+    const liquidity = Math.max(0.05, Math.min(0.98, volumeFactor * 0.7 + random() * 0.3 + randomVariance));
 
     models.push({
       id: id++,
@@ -323,7 +328,7 @@ function generateModels(): InternalModel[] {
       var_7d_pct: Math.round(var7d * 10) / 10,
       var_30d_pct: Math.round(var30d * 10) / 10,
       volume,
-      liquidity,
+      liquidity: Math.round(liquidity * 100) / 100, // Round to 2 decimals (0.05 to 0.98)
       ads_count: Math.floor(volume * (1.2 + random() * 0.8)),
       last_scan_at: new Date(Date.now() - daysAgo * 86400000).toISOString(),
       aliases: [],
