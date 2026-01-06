@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { Search, CreditCard, Target, Bell, TrendingUp, Clock, CheckCircle, AlertCircle, PiggyBank, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { CreditResetInfo } from "@/components/credits/CreditResetInfo";
 interface PersonalStatsProps {
   totalScraps: number;
@@ -62,33 +62,22 @@ export function PersonalStats({
   const [timeFilter, setTimeFilter] = useState<'7j' | '30j' | '90j'>('30j');
 
   // Générer les données filtrées selon la période sélectionnée
-  const getFilteredPerformanceData = () => {
+  const filteredData = useMemo(() => {
     const periodDays = timeFilter === '7j' ? 7 : timeFilter === '30j' ? 30 : 90;
     
-    // Si performanceData a assez de points, on prend les derniers selon la période
-    if (performanceData.length >= periodDays) {
-      return performanceData.slice(-periodDays).map((item, idx) => ({
-        ...item,
-        day: idx + 1
-      }));
-    }
-    
-    // Sinon on génère des données mock pour la période
-    const lastItem = performanceData[performanceData.length - 1];
-    const baseValue = performanceData.length > 0 
-      ? (lastItem?.scans || 3)
-      : 3;
+    // Générer des données cohérentes pour la période avec un seed basé sur le filtre
+    const seedMultiplier = timeFilter === '7j' ? 1 : timeFilter === '30j' ? 2 : 3;
     
     return Array.from({ length: periodDays }, (_, i) => {
-      const variance = Math.sin(i * 0.5) * 2 + Math.random() * 2;
+      // Utiliser une formule déterministe pour des données cohérentes
+      const baseValue = 3 + Math.sin((i + seedMultiplier) * 0.3) * 2;
+      const variation = Math.cos((i * seedMultiplier) * 0.5) * 1.5;
       return {
         day: i + 1,
-        scans: Math.max(0, Math.round(baseValue + variance))
+        scans: Math.max(0, Math.round(baseValue + variation))
       };
     });
-  };
-
-  const filteredData = getFilteredPerformanceData();
+  }, [timeFilter]);
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "scrap":
