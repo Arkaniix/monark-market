@@ -350,7 +350,7 @@ export default function Deals() {
                 </Button>
               </div>
             </Card> : <>
-              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
                 {dealsData.items.map(deal => {
               const discount = Math.abs(deal.deviation_pct);
               const perfBadge = getPerformanceBadge(deal.score);
@@ -368,32 +368,32 @@ export default function Deals() {
                           aspectRatio="4/3"
                           className="rounded-t-lg"
                         />
-                        <CardHeader className="deal-card__header p-3 pb-2 space-y-2">
+                        <CardHeader className="deal-card__header p-4 pb-3 space-y-3">
                           {/* Title and price */}
-                          <div className="deal-card__title-price flex items-start justify-between gap-2">
-                            <CardTitle className="deal-card__title text-sm font-semibold leading-tight line-clamp-2 flex-1">
+                          <div className="deal-card__title-price flex items-start justify-between gap-3">
+                            <CardTitle className="deal-card__title text-base font-semibold leading-tight line-clamp-2 flex-1">
                               {deal.title}
                             </CardTitle>
                             <div className="deal-card__price-block text-right flex-shrink-0">
-                              <div className="flex items-center gap-0.5">
-                                {isHighValue && <span className="text-sm">⚡</span>}
-                                <div className="text-xl font-bold">{deal.price}€</div>
+                              <div className="flex items-center gap-1">
+                                {isHighValue && <span className="text-lg">⚡</span>}
+                                <div className="text-2xl font-bold">{deal.price}€</div>
                               </div>
                               {deal.fair_value && (
-                                <div className="text-xs text-muted-foreground line-through">{deal.fair_value}€</div>
+                                <div className="text-sm text-muted-foreground line-through">{deal.fair_value}€</div>
                               )}
                             </div>
                           </div>
-                          {/* Badges - compact */}
-                          <div className="deal-card__badges flex gap-1 flex-wrap">
-                            <Badge variant={perfBadge.variant} className="text-[10px] px-1.5 py-0 h-5">
+                          {/* Badges */}
+                          <div className="deal-card__badges flex gap-1.5 flex-wrap">
+                            <Badge variant={perfBadge.variant} className="text-xs px-2 py-0.5 h-6">
                               {perfBadge.label}
                             </Badge>
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Badge variant={getScoreColor(deal.score)} className="text-[10px] px-1.5 py-0 h-5 gap-0.5">
-                                    {deal.score >= 85 && <Flame className="h-2.5 w-2.5" />}
+                                  <Badge variant={getScoreColor(deal.score)} className="text-xs px-2 py-0.5 h-6 gap-1">
+                                    {deal.score >= 85 && <Flame className="h-3.5 w-3.5" />}
                                     {deal.score}
                                   </Badge>
                                 </TooltipTrigger>
@@ -403,58 +403,58 @@ export default function Deals() {
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">
+                            <Badge variant="outline" className="text-xs px-2 py-0.5 h-6">
                               {formatDistanceToNow(new Date(deal.publication_date), { addSuffix: true, locale: fr })}
                             </Badge>
                           </div>
                         </CardHeader>
 
-                        <CardContent className="deal-card__content flex-1 flex flex-col p-3 pt-0">
-                          <div className="deal-card__body space-y-2 flex-1">
-                            {/* Category & platform tags - compact */}
-                            <div className="deal-card__tags flex items-center gap-1 flex-wrap">
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 gap-0.5">
-                                <ItemTypeIcon className="h-2.5 w-2.5" />
+                        <CardContent className="deal-card__content flex-1 flex flex-col p-4 pt-0">
+                          <div className="deal-card__body space-y-3 flex-1">
+                            {/* Category & platform tags */}
+                            <div className="deal-card__tags flex items-center gap-1.5 flex-wrap">
+                              <Badge variant="secondary" className="text-xs px-2 py-0.5 h-6 gap-1">
+                                <ItemTypeIcon className="h-3.5 w-3.5" />
                                 {deal.category}
                               </Badge>
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">{deal.condition}</Badge>
-                              <PlatformBadge platform={deal.platform} size="xs" />
+                              <Badge variant="outline" className="text-xs px-2 py-0.5 h-6">{deal.condition}</Badge>
+                              <PlatformBadge platform={deal.platform} size="sm" />
                             </div>
 
-                            {/* Location - single line */}
-                            <div className="deal-card__meta text-xs text-muted-foreground flex items-center gap-1.5">
-                              <MapPin className="h-3 w-3 flex-shrink-0" />
+                            {/* Location */}
+                            <div className="deal-card__meta text-sm text-muted-foreground flex items-center gap-2">
+                              <MapPin className="h-4 w-4 flex-shrink-0" />
                               <span className="truncate">{deal.city}</span>
                               {deal.delivery_possible && (
-                                <span className="flex items-center gap-0.5 text-success ml-auto">
-                                  <Truck className="h-3 w-3" />
+                                <span className="flex items-center gap-1 text-success ml-auto">
+                                  <Truck className="h-4 w-4" />
                                 </span>
                               )}
                             </div>
 
-                            {/* Price comparison strip - compact */}
-                            <div className="deal-card__savings pt-2 mt-auto border-t border-border/50 flex items-center justify-between">
-                              <div className="flex items-center gap-1">
-                                <TrendingDown className="h-3 w-3 text-success" />
-                                <span className="text-xs font-semibold text-success">-{discount}%</span>
+                            {/* Price comparison strip */}
+                            <div className="deal-card__savings pt-3 mt-auto border-t border-border/50 flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <TrendingDown className="h-4 w-4 text-success" />
+                                <span className="text-sm font-semibold text-success">-{discount}%</span>
                               </div>
-                              <span className="text-[10px] text-muted-foreground">
+                              <span className="text-xs text-muted-foreground">
                                 -{deal.fair_value - deal.price}€
                               </span>
                             </div>
 
-                            {/* Actions row - compact */}
-                            <div className="deal-card__actions flex gap-1.5 mt-2">
-                              {deal.id ? <Button className="flex-1 h-7 text-xs" variant="default" size="sm" asChild>
+                            {/* Actions row */}
+                            <div className="deal-card__actions flex gap-2 mt-3">
+                              {deal.id ? <Button className="flex-1 h-9 text-sm" variant="default" size="sm" asChild>
                                   <Link to={`/ads/${deal.id}`}>Voir</Link>
-                                </Button> : <Button className="flex-1 h-7 text-xs" variant="default" size="sm" disabled>
+                                </Button> : <Button className="flex-1 h-9 text-sm" variant="default" size="sm" disabled>
                                   Voir
                                 </Button>}
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => handleAddToWatchlist(deal.id, deal.title)} disabled={addToWatchlist.isPending || !deal.id}>
-                                      <Star className="h-3 w-3" />
+                                    <Button variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => handleAddToWatchlist(deal.id, deal.title)} disabled={addToWatchlist.isPending || !deal.id}>
+                                      <Star className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>Suivre</TooltipContent>
@@ -463,16 +463,16 @@ export default function Deals() {
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => openAlertModal(deal)} disabled={!deal.id}>
-                                      <Bell className="h-3 w-3" />
+                                    <Button variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => openAlertModal(deal)} disabled={!deal.id}>
+                                      <Bell className="h-4 w-4" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>Alerter</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                              {deal.url && <Button variant="outline" size="sm" className="h-7 w-7 p-0" asChild>
+                              {deal.url && <Button variant="outline" size="sm" className="h-9 w-9 p-0" asChild>
                                   <a href={deal.url} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-3 w-3" />
+                                    <ExternalLink className="h-4 w-4" />
                                   </a>
                                 </Button>}
                             </div>
