@@ -6,12 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Search, TrendingUp, TrendingDown, LayoutGrid, List, Package, Activity, Star, Bell, BarChart3, RotateCcw } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, LayoutGrid, List, Star, Bell, RotateCcw } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useCategories, useBrands, useFamilies, useCatalogModels, useCatalogSummary, useAddModelToWatchlist, type CatalogFilters } from "@/hooks/useCatalog";
-import { CatalogSkeleton, CatalogSummarySkeleton } from "@/components/catalog/CatalogSkeleton";
+import { useCategories, useBrands, useFamilies, useCatalogModels, useAddModelToWatchlist, type CatalogFilters } from "@/hooks/useCatalog";
+import { CatalogSkeleton } from "@/components/catalog/CatalogSkeleton";
 import { toast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
 const ITEMS_PER_PAGE = 24;
@@ -82,10 +81,6 @@ export default function Catalog() {
     isLoading: modelsLoading,
     error: modelsError
   } = useCatalogModels(filters);
-  const {
-    data: summary,
-    isLoading: summaryLoading
-  } = useCatalogSummary();
   const addToWatchlist = useAddModelToWatchlist();
   const openAlertModal = (model: {
     id: number;
@@ -154,177 +149,184 @@ export default function Catalog() {
   };
   const totalPages = modelsData?.total_pages || 1;
   const totalItems = modelsData?.total || 0;
-  return <div className="min-h-screen py-8">
+  return <div className="min-h-screen py-6">
       <div className="container max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Catalogue des composants</h1>
-          <p className="text-muted-foreground mb-6">
-            Explore, filtre et compare les composants d'occasion : prix médian, tendances et disponibilité.
-          </p>
-
-          {/* Summary */}
-          {summaryLoading ? <CatalogSummarySkeleton /> : summary ? <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              
-              
-              
-              
-            </div> : null}
+        {/* Header - Compact */}
+        <div className="mb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                <span className="text-xl md:text-2xl">📦</span>
+                Catalogue des modèles
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Explore et compare les composants d'occasion : prix, tendances et disponibilité
+              </p>
+            </div>
+          </div>
         </div>
 
-        <Separator className="my-8" />
-
-        {/* Filters */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg">Filtres & Recherche</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher un modèle (nom, marque, alias...)" value={searchQuery} onChange={e => handleSearch(e.target.value)} className="pl-10" />
+        {/* Filters - Compact single card */}
+        <Card className="mb-4 border-border/50 bg-card/50">
+          <CardContent className="py-3 px-4">
+            {/* Search + Filters in one row on desktop */}
+            <div className="flex flex-wrap items-end gap-2">
+              {/* Search field */}
+              <div className="w-full sm:w-auto sm:flex-1 sm:max-w-[280px]">
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Recherche</label>
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input 
+                    placeholder="Nom, marque, alias..." 
+                    value={searchQuery} 
+                    onChange={e => handleSearch(e.target.value)} 
+                    className="h-8 pl-8 text-xs"
+                  />
+                </div>
               </div>
 
-              <div className="grid md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Catégorie</label>
-                  <Select value={category} onValueChange={handleCategoryChange} disabled={categoriesLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Catégorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes catégories</SelectItem>
-                      {categories?.filter(cat => cat.name && cat.name.trim() !== "").map(cat => <SelectItem key={cat.id} value={cat.name}>
-                          {cat.name} ({cat.count})
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Category filter */}
+              <div className="w-[120px]">
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Catégorie</label>
+                <Select value={category} onValueChange={handleCategoryChange} disabled={categoriesLoading}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Toutes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes</SelectItem>
+                    {categories?.filter(cat => cat.name && cat.name.trim() !== "").map(cat => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name} ({cat.count})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Marque</label>
-                  <Select value={brand} onValueChange={handleBrandChange} disabled={brandsLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Marque" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes marques</SelectItem>
-                      {brands?.filter(b => b && b.trim() !== "").map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Brand filter */}
+              <div className="w-[120px]">
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Marque</label>
+                <Select value={brand} onValueChange={handleBrandChange} disabled={brandsLoading}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Toutes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes</SelectItem>
+                    {brands?.filter(b => b && b.trim() !== "").map(b => (
+                      <SelectItem key={b} value={b}>{b}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Famille</label>
-                  <Select value={family} onValueChange={v => {
-                  setFamily(v);
-                  setCurrentPage(1);
-                }} disabled={!families?.length}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Famille" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes familles</SelectItem>
-                      {families?.filter(f => f && f.trim() !== "").map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Family filter */}
+              <div className="w-[120px]">
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Famille</label>
+                <Select value={family} onValueChange={v => { setFamily(v); setCurrentPage(1); }} disabled={!families?.length}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Toutes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes</SelectItem>
+                    {families?.filter(f => f && f.trim() !== "").map(f => (
+                      <SelectItem key={f} value={f}>{f}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Trier par</label>
-                  <Select value={`${sortBy}_${sortOrder}`} onValueChange={v => {
+              {/* Sort */}
+              <div className="w-[150px]">
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Trier par</label>
+                <Select value={`${sortBy}_${sortOrder}`} onValueChange={v => {
                   const [sort, order] = v.split('_') as [CatalogFilters['sort_by'], 'asc' | 'desc'];
                   setSortBy(sort);
                   setSortOrder(order);
                   setCurrentPage(1);
                 }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Trier par" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fair_value_30d_desc">Fair Value (décroissant)</SelectItem>
-                      <SelectItem value="fair_value_30d_asc">Fair Value (croissant)</SelectItem>
-                      <SelectItem value="var_30d_asc">Variation 30j (meilleure)</SelectItem>
-                      <SelectItem value="var_30d_desc">Variation 30j (pire)</SelectItem>
-                      <SelectItem value="liquidity_desc">Liquidité (haute)</SelectItem>
-                      <SelectItem value="liquidity_asc">Liquidité (basse)</SelectItem>
-                      <SelectItem value="name_asc">Nom (A-Z)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Trier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fair_value_30d_desc">Fair Value ↓</SelectItem>
+                    <SelectItem value="fair_value_30d_asc">Fair Value ↑</SelectItem>
+                    <SelectItem value="var_30d_asc">Variation 30j ↑</SelectItem>
+                    <SelectItem value="var_30d_desc">Variation 30j ↓</SelectItem>
+                    <SelectItem value="liquidity_desc">Liquidité ↓</SelectItem>
+                    <SelectItem value="liquidity_asc">Liquidité ↑</SelectItem>
+                    <SelectItem value="name_asc">Nom A-Z</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t">
-                <div className="flex items-center gap-2">
-                  <Button variant={viewMode === "grid" ? "default" : "outline"} size="sm" onClick={() => setViewMode("grid")}>
-                    <LayoutGrid className="h-4 w-4" />
-                  </Button>
-                  <Button variant={viewMode === "list" ? "default" : "outline"} size="sm" onClick={() => setViewMode("list")}>
-                    <List className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button variant="outline" size="sm" onClick={resetFilters} className="gap-2">
-                  <RotateCcw className="h-4 w-4" />
-                  Réinitialiser
+              {/* View mode + Reset */}
+              <div className="flex items-center gap-1 ml-auto">
+                <Button variant={viewMode === "grid" ? "default" : "outline"} size="sm" className="h-8 w-8 p-0" onClick={() => setViewMode("grid")}>
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant={viewMode === "list" ? "default" : "outline"} size="sm" className="h-8 w-8 p-0" onClick={() => setViewMode("list")}>
+                  <List className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-muted-foreground" onClick={resetFilters}>
+                  <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                  Reset
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Results */}
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
-            <span className="text-primary">{totalItems}</span> modèle{totalItems > 1 ? "s" : ""}
-          </h2>
+        {/* Results count - compact */}
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            <span className="text-foreground font-medium">{totalItems}</span> modèle{totalItems > 1 ? "s" : ""} trouvé{totalItems > 1 ? "s" : ""}
+          </p>
         </div>
 
-        {modelsLoading ? <CatalogSkeleton /> : modelsError ? <Card className="p-12">
+        {modelsLoading ? <CatalogSkeleton /> : modelsError ? <Card className="p-8">
             <div className="text-center text-muted-foreground">
-              <p className="mb-4">Erreur lors du chargement du catalogue.</p>
-              <Button variant="outline" onClick={() => window.location.reload()}>
+              <p className="mb-3 text-sm">Erreur lors du chargement du catalogue.</p>
+              <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
                 Réessayer
               </Button>
             </div>
-          </Card> : !modelsData?.items.length ? <Card className="p-12">
+          </Card> : !modelsData?.items.length ? <Card className="p-8">
             <div className="text-center text-muted-foreground">
-              <p className="mb-4">Aucun modèle trouvé avec ces critères.</p>
-              <Button variant="outline" onClick={resetFilters}>
+              <p className="mb-3 text-sm">Aucun modèle trouvé avec ces critères.</p>
+              <Button variant="outline" size="sm" onClick={resetFilters}>
                 Réinitialiser les filtres
               </Button>
             </div>
           </Card> : <>
-            <motion.div variants={containerVariants} initial="hidden" animate="visible" className={viewMode === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "space-y-4"}>
+            <motion.div variants={containerVariants} initial="hidden" animate="visible" className={viewMode === "grid" ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3" : "space-y-2"}>
               {modelsData.items.map(model => <motion.div key={model.id} variants={itemVariants}>
-                  <Card className="hover:border-primary transition-all hover:shadow-lg group h-full">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-base leading-tight group-hover:text-primary transition-colors">
+                  <Card className="hover:border-primary/50 transition-all hover:shadow-md group h-full">
+                    <CardHeader className="p-3 pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <CardTitle className="text-sm leading-tight group-hover:text-primary transition-colors line-clamp-2">
                             {model.name}
                           </CardTitle>
-                          <p className="text-sm text-muted-foreground">{model.brand}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{model.brand}</p>
                         </div>
-                        <Badge variant="secondary">{model.category}</Badge>
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">{model.category}</Badge>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
+                    <CardContent className="p-3 pt-0">
+                      <div className="space-y-2">
                         {/* Price & Variation */}
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-2xl font-bold">
+                            <p className="text-lg font-bold">
                               {model.fair_value_30d || model.price_median_30d || "N/A"}€
                             </p>
-                            <p className="text-xs text-muted-foreground">Fair Value 30j</p>
+                            <p className="text-[10px] text-muted-foreground">Fair Value 30j</p>
                           </div>
                           {model.var_30d_pct !== null && <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger>
-                                  <div className={`flex items-center gap-1 ${model.var_30d_pct < 0 ? "text-success" : "text-destructive"}`}>
-                                    {model.var_30d_pct < 0 ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
+                                  <div className={`flex items-center gap-0.5 text-xs ${model.var_30d_pct < 0 ? "text-success" : "text-destructive"}`}>
+                                    {model.var_30d_pct < 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
                                     <span className="font-medium">
                                       {model.var_30d_pct > 0 ? "+" : ""}{model.var_30d_pct.toFixed(1)}%
                                     </span>
@@ -336,25 +338,25 @@ export default function Catalog() {
                         </div>
 
                         {/* Badges */}
-                        <div className="flex gap-2 flex-wrap">
-                          <Badge variant={getLiquidityColor(model.liquidity)}>
+                        <div className="flex gap-1 flex-wrap">
+                          <Badge variant={getLiquidityColor(model.liquidity)} className="text-[10px] px-1.5 py-0">
                             {getLiquidityLabel(model.liquidity)}
                           </Badge>
-                          <Badge variant="outline">{model.ads_count} annonces</Badge>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{model.ads_count} ann.</Badge>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex gap-2 pt-2">
-                          {model.id ? <Button className="flex-1" size="sm" asChild>
-                              <Link to={`/models/${model.id}`}>Voir détails</Link>
-                            </Button> : <Button className="flex-1" size="sm" disabled>
-                              Voir détails
+                        {/* Actions - compact */}
+                        <div className="flex gap-1.5 pt-1">
+                          {model.id ? <Button className="flex-1 h-7 text-xs" size="sm" asChild>
+                              <Link to={`/models/${model.id}`}>Détails</Link>
+                            </Button> : <Button className="flex-1 h-7 text-xs" size="sm" disabled>
+                              Détails
                             </Button>}
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => handleAddToWatchlist(model.id, model.name)} disabled={addToWatchlist.isPending || !model.id}>
-                                  <Star className="h-4 w-4" />
+                                <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => handleAddToWatchlist(model.id, model.name)} disabled={addToWatchlist.isPending || !model.id}>
+                                  <Star className="h-3 w-3" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>Suivre</TooltipContent>
@@ -363,8 +365,8 @@ export default function Catalog() {
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => openAlertModal(model)} disabled={!model.id}>
-                                  <Bell className="h-4 w-4" />
+                                <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => openAlertModal(model)} disabled={!model.id}>
+                                  <Bell className="h-3 w-3" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>Alerter</TooltipContent>
@@ -377,12 +379,12 @@ export default function Catalog() {
                 </motion.div>)}
             </motion.div>
 
-            {/* Pagination */}
-            {totalPages > 1 && <div className="mt-8 flex justify-center">
+            {/* Pagination - compact */}
+            {totalPages > 1 && <div className="mt-6 flex justify-center">
                 <Pagination>
-                  <PaginationContent>
+                  <PaginationContent className="gap-1">
                     <PaginationItem>
-                      <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                      <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className={`h-8 ${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}`} />
                     </PaginationItem>
                     {Array.from({
                 length: Math.min(5, totalPages)
@@ -398,21 +400,20 @@ export default function Catalog() {
                   page = currentPage - 2 + i;
                 }
                 return <PaginationItem key={page}>
-                          <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer">
+                          <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page} className="cursor-pointer h-8 w-8 text-xs">
                             {page}
                           </PaginationLink>
                         </PaginationItem>;
               })}
                     <PaginationItem>
-                      <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                      <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className={`h-8 ${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}`} />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
               </div>}
 
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Affichage de {(currentPage - 1) * ITEMS_PER_PAGE + 1} à{" "}
-              {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} sur {totalItems}
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} sur {totalItems}
             </p>
           </>}
       </div>
