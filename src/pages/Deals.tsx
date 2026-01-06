@@ -404,7 +404,7 @@ export default function Deals() {
                         <CardHeader className="deal-card__header pt-3 pb-1 space-y-1">
                           {/* Title and price on same row - at the top */}
                           <div className="deal-card__title-price flex items-start justify-between gap-3">
-                            <CardTitle className="deal-card__title text-sm leading-snug line-clamp-2 flex-1">
+                            <CardTitle className="deal-card__title text-base leading-tight line-clamp-2 flex-1 mt-1">
                               {deal.title}
                             </CardTitle>
                             <div className="deal-card__price-block text-right flex-shrink-0">
