@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useCategories, useBrands, useFamilies, useCatalogModels, useAddModelToWatchlist, type CatalogFilters } from "@/hooks/useCatalog";
 import { CatalogSkeleton } from "@/components/catalog/CatalogSkeleton";
 import { ModelCardImage } from "@/components/catalog/ModelCardImage";
+import { ModelListRow } from "@/components/catalog/ModelListRow";
 import { toast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
 const ITEMS_PER_PAGE = 24;
@@ -299,94 +300,111 @@ export default function Catalog() {
               </Button>
             </div>
           </Card> : <>
-            <motion.div variants={containerVariants} initial="hidden" animate="visible" className={viewMode === "grid" ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3" : "space-y-2"}>
-              {modelsData.items.map(model => <motion.div key={model.id} variants={itemVariants}>
-                  <Card className="hover:border-primary/50 transition-all hover:shadow-md group h-full overflow-hidden">
-                    {/* Model Image */}
-                    <ModelCardImage
-                      imageUrl={model.image_url}
-                      modelName={model.name}
-                      brand={model.brand}
-                      category={model.category}
-                      aspectRatio="4/3"
-                    />
-                    <CardHeader className="p-3 pb-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <CardTitle className="text-sm leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                            {model.name}
-                          </CardTitle>
-                          <p className="text-xs text-muted-foreground mt-0.5">{model.brand}</p>
-                        </div>
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">{model.category}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0">
-                      <div className="space-y-2">
-                        {/* Price & Variation */}
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-lg font-bold">
-                              {model.fair_value_30d || model.price_median_30d || "N/A"}€
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">Fair Value 30j</p>
+            {/* Grid View */}
+            {viewMode === "grid" ? (
+              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {modelsData.items.map(model => <motion.div key={model.id} variants={itemVariants}>
+                    <Card className="hover:border-primary/50 transition-all hover:shadow-md group h-full overflow-hidden">
+                      {/* Model Image */}
+                      <ModelCardImage
+                        imageUrl={model.image_url}
+                        modelName={model.name}
+                        brand={model.brand}
+                        category={model.category}
+                        aspectRatio="4/3"
+                      />
+                      <CardHeader className="p-3 pb-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <CardTitle className="text-sm leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                              {model.name}
+                            </CardTitle>
+                            <p className="text-xs text-muted-foreground mt-0.5">{model.brand}</p>
                           </div>
-                          {model.var_30d_pct !== null && <TooltipProvider>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">{model.category}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-3 pt-0">
+                        <div className="space-y-2">
+                          {/* Price & Variation */}
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-lg font-bold">
+                                {model.fair_value_30d || model.price_median_30d || "N/A"}€
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">Fair Value 30j</p>
+                            </div>
+                            {model.var_30d_pct !== null && <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <div className={`flex items-center gap-0.5 text-xs ${model.var_30d_pct < 0 ? "text-success" : "text-destructive"}`}>
+                                      {model.var_30d_pct < 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
+                                      <span className="font-medium">
+                                        {model.var_30d_pct > 0 ? "+" : ""}{model.var_30d_pct.toFixed(1)}%
+                                      </span>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Variation sur 30 jours</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>}
+                          </div>
+
+                          {/* Badges */}
+                          <div className="flex gap-1 flex-wrap">
+                            <Badge variant={getLiquidityColor(model.liquidity)} className="text-[10px] px-1.5 py-0">
+                              {getLiquidityLabel(model.liquidity)}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">{model.ads_count} ann.</Badge>
+                          </div>
+
+                          {/* Actions - compact */}
+                          <div className="flex gap-1.5 pt-1">
+                            {model.id ? <Button className="flex-1 h-7 text-xs" size="sm" asChild>
+                                <Link to={`/models/${model.id}`}>Détails</Link>
+                              </Button> : <Button className="flex-1 h-7 text-xs" size="sm" disabled>
+                                Détails
+                              </Button>}
+                            <TooltipProvider>
                               <Tooltip>
-                                <TooltipTrigger>
-                                  <div className={`flex items-center gap-0.5 text-xs ${model.var_30d_pct < 0 ? "text-success" : "text-destructive"}`}>
-                                    {model.var_30d_pct < 0 ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                                    <span className="font-medium">
-                                      {model.var_30d_pct > 0 ? "+" : ""}{model.var_30d_pct.toFixed(1)}%
-                                    </span>
-                                  </div>
+                                <TooltipTrigger asChild>
+                                  <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => handleAddToWatchlist(model.id, model.name)} disabled={addToWatchlist.isPending || !model.id}>
+                                    <Star className="h-3 w-3" />
+                                  </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Variation sur 30 jours</TooltipContent>
+                                <TooltipContent>Suivre</TooltipContent>
                               </Tooltip>
-                            </TooltipProvider>}
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => openAlertModal(model)} disabled={!model.id}>
+                                    <Bell className="h-3 w-3" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Alerter</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
                         </div>
-
-                        {/* Badges */}
-                        <div className="flex gap-1 flex-wrap">
-                          <Badge variant={getLiquidityColor(model.liquidity)} className="text-[10px] px-1.5 py-0">
-                            {getLiquidityLabel(model.liquidity)}
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{model.ads_count} ann.</Badge>
-                        </div>
-
-                        {/* Actions - compact */}
-                        <div className="flex gap-1.5 pt-1">
-                          {model.id ? <Button className="flex-1 h-7 text-xs" size="sm" asChild>
-                              <Link to={`/models/${model.id}`}>Détails</Link>
-                            </Button> : <Button className="flex-1 h-7 text-xs" size="sm" disabled>
-                              Détails
-                            </Button>}
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => handleAddToWatchlist(model.id, model.name)} disabled={addToWatchlist.isPending || !model.id}>
-                                  <Star className="h-3 w-3" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Suivre</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-7 w-7 p-0" onClick={() => openAlertModal(model)} disabled={!model.id}>
-                                  <Bell className="h-3 w-3" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Alerter</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>)}
-            </motion.div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>)}
+              </motion.div>
+            ) : (
+              /* List View */
+              <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-2">
+                {modelsData.items.map(model => (
+                  <motion.div key={model.id} variants={itemVariants}>
+                    <ModelListRow
+                      model={model}
+                      onAddToWatchlist={handleAddToWatchlist}
+                      onOpenAlert={openAlertModal}
+                      isWatchlistPending={addToWatchlist.isPending}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
 
             {/* Pagination - compact */}
             {totalPages > 1 && <div className="mt-6 flex justify-center">
