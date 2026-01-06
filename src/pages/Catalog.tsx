@@ -416,13 +416,22 @@ export default function Catalog() {
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <div className="inline-flex items-center gap-1.5 cursor-help">
-                                      <Badge variant={getLiquidityColor(model.liquidity)} className="text-xs px-2 py-0.5">
-                                        {getLiquidityLabel(model.liquidity)}
-                                      </Badge>
-                                      <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div className="inline-flex items-center gap-2 cursor-help">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-xs text-muted-foreground">Liquidité:</span>
+                                        <span className={`text-xs font-medium ${
+                                          model.liquidity >= 0.7 ? 'text-green-500' : 
+                                          model.liquidity >= 0.4 ? 'text-amber-500' : 'text-red-500'
+                                        }`}>
+                                          {getLiquidityLabel(model.liquidity)}
+                                        </span>
+                                      </div>
+                                      <div className="w-16 h-2 bg-muted rounded-full overflow-hidden border border-border/50">
                                         <div 
-                                          className="h-full bg-primary rounded-full"
+                                          className={`h-full rounded-full transition-all ${
+                                            model.liquidity >= 0.7 ? 'bg-green-500' : 
+                                            model.liquidity >= 0.4 ? 'bg-amber-500' : 'bg-red-500'
+                                          }`}
                                           style={{ width: `${Math.round(model.liquidity * 100)}%` }}
                                         />
                                       </div>
