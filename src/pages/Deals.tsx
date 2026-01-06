@@ -17,7 +17,7 @@ import { fr } from "date-fns/locale";
 import { useDeals, useMarketSummary, useAddToWatchlist, type DealsFilters } from "@/hooks/useDeals";
 import { DealsSkeleton, MarketSummarySkeleton } from "@/components/deals/DealsSkeleton";
 import { DealCardImage } from "@/components/deals/DealCardImage";
-import { PlatformBadge } from "@/components/deals/PlatformBadge";
+import { PlatformBadge, AVAILABLE_PLATFORMS } from "@/components/deals/PlatformBadge";
 import { toast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
@@ -186,11 +186,9 @@ export default function Deals() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toutes</SelectItem>
-                      <SelectItem value="leboncoin">Leboncoin</SelectItem>
-                      <SelectItem value="ebay">eBay</SelectItem>
-                      <SelectItem value="ldlc">LDLC</SelectItem>
-                      <SelectItem value="facebook">FB Marketplace</SelectItem>
-                      <SelectItem value="vinted">Vinted</SelectItem>
+                      {AVAILABLE_PLATFORMS.map(p => (
+                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -392,7 +390,7 @@ export default function Deals() {
                                 {deal.category}
                               </Badge>
                               <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">{deal.condition}</Badge>
-                              <PlatformBadge platform={deal.platform} size="sm" />
+                              <PlatformBadge platform={deal.platform} size="xs" />
                             </div>
 
                             {/* Location - single line */}
