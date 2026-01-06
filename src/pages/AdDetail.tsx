@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { useAdDetail, useAdPriceHistory, useAddAdToWatchlist, useCreateAdAlert } from "@/hooks/useAdDetail";
 import { AdDetailSkeleton } from "@/components/ad/AdDetailSkeleton";
+import { ReportAdModal } from "@/components/ad/ReportAdModal";
 import { DealCardImage } from "@/components/deals/DealCardImage";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -580,6 +581,8 @@ export default function AdDetail() {
                   <Share2 className="h-4 w-4" />
                   Partager
                 </Button>
+
+                <ReportAdModal adId={id!} adTitle={ad.title} />
               </CardContent>
             </Card>
 
