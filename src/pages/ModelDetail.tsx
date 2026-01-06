@@ -133,42 +133,45 @@ export default function ModelDetail() {
   }
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-8 scroll-smooth">
       <div className="container max-w-7xl space-y-8">
-        {/* Breadcrumb */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/">Accueil</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/catalog">Catalogue</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={`/catalog?category=${model.category}`}>{model.category}</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{model.name}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        {/* Breadcrumb - navigation context */}
+        <nav aria-label="Fil d'Ariane">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">Accueil</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/catalog">Catalogue</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to={`/catalog?category=${model.category}`}>{model.category}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{model.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </nav>
 
-        {/* Header */}
-        <motion.div
+        {/* Header - H1 principal */}
+        <motion.header
+          id="model-header"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex gap-6 items-start"
         >
-          {/* Generic Image */}
+          {/* Image générique */}
           <div className="hidden sm:block flex-shrink-0 w-32 lg:w-40 rounded-xl overflow-hidden border border-border/50 shadow-sm">
             <ModelCardImage
               imageUrl={null}
@@ -185,115 +188,176 @@ export default function ModelDetail() {
             </div>
           </div>
 
-          {/* Title & Badges */}
+          {/* Titre & Badges */}
           <div className="flex-1 space-y-3">
-            <h1 className="text-3xl lg:text-4xl font-bold">{model.brand} {model.name}</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">{model.brand} {model.name}</h1>
             <div className="flex gap-2 flex-wrap">
               <Badge variant="secondary">{model.category}</Badge>
               {model.family && <Badge variant="outline">{model.family}</Badge>}
               {model.aliases.length > 0 && (
-                <Badge variant="outline" className="text-xs">
-                  Alias: {model.aliases.slice(0, 2).join(", ")}
-                </Badge>
+                <TooltipProvider>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="text-xs cursor-help">
+                        Alias: {model.aliases.slice(0, 2).join(", ")}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">Autres noms commerciaux pour ce modèle</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </TooltipProvider>
               )}
             </div>
           </div>
-        </motion.div>
+        </motion.header>
 
-        {/* KPI Cards */}
-        <motion.div
+        {/* KPI Cards - Section indicateurs clés */}
+        <motion.section
+          id="market-indicators"
+          aria-labelledby="kpi-heading"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
         >
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Prix médian 30j
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatPrice(model.kpi.median_30d)}</div>
-              <div className="flex items-center gap-1 mt-1">
-                {getTrendIcon(model.kpi.var_30d_pct)}
-                <span className={model.kpi.var_30d_pct < 0 ? "text-success" : "text-destructive"}>
-                  {formatPercent(model.kpi.var_30d_pct)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+          <h2 id="kpi-heading" className="sr-only">Indicateurs de marché</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {/* Prix médian */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Prix médian 30j
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{formatPrice(model.kpi.median_30d)}</div>
+                <div className="flex items-center gap-1 mt-1">
+                  {getTrendIcon(model.kpi.var_30d_pct)}
+                  <span className={model.kpi.var_30d_pct < 0 ? "text-success" : "text-destructive"}>
+                    {formatPercent(model.kpi.var_30d_pct)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Fair Value</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatPrice(model.kpi.fair_value_30d)}</div>
-              <p className="text-xs text-muted-foreground mt-1">30j hors outliers</p>
-            </CardContent>
-          </Card>
+            {/* Fair Value avec tooltip explicatif */}
+            <Card>
+              <CardHeader className="pb-2">
+                <TooltipProvider>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5 cursor-help">
+                        Juste prix
+                        <Info className="h-3 w-3" />
+                      </CardTitle>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p className="text-xs">
+                        Prix estimé raisonnable basé sur la médiane des 30 derniers jours, 
+                        excluant les annonces anormalement chères ou bon marché.
+                      </p>
+                    </TooltipContent>
+                  </UITooltip>
+                </TooltipProvider>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{formatPrice(model.kpi.fair_value_30d)}</div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Volume actif</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{model.kpi.volume_active}</div>
-              <p className="text-xs text-muted-foreground mt-1">annonces</p>
-            </CardContent>
-          </Card>
+            {/* Volume actif */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Annonces actives</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{model.kpi.volume_active}</div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Rareté</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(model.kpi.rarity_index * 100).toFixed(0)}%</div>
-              <div className="w-full bg-muted rounded-full h-2 mt-2">
-                <div
-                  className="bg-primary h-2 rounded-full transition-all"
-                  style={{ width: `${model.kpi.rarity_index * 100}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
+            {/* Rareté avec tooltip */}
+            <Card>
+              <CardHeader className="pb-2">
+                <TooltipProvider>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5 cursor-help">
+                        Rareté
+                        <Info className="h-3 w-3" />
+                      </CardTitle>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p className="text-xs">
+                        Indicateur de disponibilité sur le marché. 
+                        Plus le pourcentage est élevé, moins il y a d'annonces disponibles.
+                      </p>
+                    </TooltipContent>
+                  </UITooltip>
+                </TooltipProvider>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{(model.kpi.rarity_index * 100).toFixed(0)}%</div>
+                <div className="w-full bg-muted rounded-full h-2 mt-2">
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all"
+                    style={{ width: `${model.kpi.rarity_index * 100}%` }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Délai de vente</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{model.kpi.median_days_to_sell}j</div>
-              <p className="text-xs text-muted-foreground mt-1">médian</p>
-            </CardContent>
-          </Card>
+            {/* Délai de vente */}
+            <Card>
+              <CardHeader className="pb-2">
+                <TooltipProvider>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5 cursor-help">
+                        Délai de vente
+                        <Info className="h-3 w-3" />
+                      </CardTitle>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p className="text-xs">
+                        Temps médian entre la publication d'une annonce et sa disparition (vente présumée).
+                      </p>
+                    </TooltipContent>
+                  </UITooltip>
+                </TooltipProvider>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{model.kpi.median_days_to_sell} jours</div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Dernier scan</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{formatDate(model.kpi.last_scan_at)}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+            {/* Dernier scan */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Mis à jour</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{formatDate(model.kpi.last_scan_at)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.section>
 
-        {/* Quick Tools */}
-        <motion.div
+        {/* Quick Tools - Actions rapides */}
+        <motion.section
+          id="quick-actions"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                Outils rapides
-              </CardTitle>
+            <CardHeader className="pb-3">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Actions rapides
+              </h2>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-3">
@@ -336,42 +400,43 @@ export default function ModelDetail() {
               />
             </CardContent>
           </Card>
-        </motion.div>
+        </motion.section>
 
-        {/* Tabs */}
-        <Tabs defaultValue="price" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="price">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Évolution des prix
-            </TabsTrigger>
-            <TabsTrigger value="ads">
-              <Activity className="h-4 w-4 mr-2" />
-              Annonces récentes
-            </TabsTrigger>
-            {model.specs && (
-              <TabsTrigger value="specs">Spécifications</TabsTrigger>
-            )}
-          </TabsList>
+        {/* Tabs - Analyses détaillées */}
+        <section id="detailed-analysis" className="scroll-mt-8">
+          <Tabs defaultValue="price" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="price">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Historique des prix
+              </TabsTrigger>
+              <TabsTrigger value="ads">
+                <Activity className="h-4 w-4 mr-2" />
+                Annonces en cours
+              </TabsTrigger>
+              {model.specs && (
+                <TabsTrigger value="specs">Fiche technique</TabsTrigger>
+              )}
+            </TabsList>
 
-          {/* Price Chart Tab */}
-          <TabsContent value="price">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Historique des prix</CardTitle>
-                  <Select value={selectedPeriod} onValueChange={(v: "7" | "30" | "90") => setSelectedPeriod(v)}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="7">7 jours</SelectItem>
-                      <SelectItem value="30">30 jours</SelectItem>
-                      <SelectItem value="90">90 jours</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardHeader>
+            {/* Price Chart Tab */}
+            <TabsContent value="price">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Évolution des prix</h3>
+                    <Select value={selectedPeriod} onValueChange={(v: "7" | "30" | "90") => setSelectedPeriod(v)}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="7">7 jours</SelectItem>
+                        <SelectItem value="30">30 jours</SelectItem>
+                        <SelectItem value="90">90 jours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
               <CardContent>
                 {historyLoading ? (
                   <div className="h-[300px] flex items-center justify-center">
@@ -873,24 +938,28 @@ export default function ModelDetail() {
               </Card>
             </TabsContent>
           )}
-        </Tabs>
+          </Tabs>
+        </section>
 
-        {/* Modèles similaires */}
+        {/* Modèles similaires - Section d'exploration */}
         {similarModels && similarModels.length > 0 && (
-          <motion.div
+          <motion.section
+            id="similar-models"
+            aria-labelledby="similar-heading"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
+            className="scroll-mt-8"
           >
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <h2 id="similar-heading" className="text-lg font-semibold flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-primary" />
                   Modèles similaires
-                </CardTitle>
-                <CardDescription>
-                  Modèles comparables par génération, performances ou gamme de prix
-                </CardDescription>
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Comparez avec des modèles de même génération, performances proches ou prix comparable
+                </p>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -946,7 +1015,7 @@ export default function ModelDetail() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </motion.section>
         )}
 
         {/* Skeleton pour modèles similaires */}
