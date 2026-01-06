@@ -172,28 +172,22 @@ export default function Deals() {
             </div> : null}
         </div>
 
-        <Separator className="my-8" />
-
         {/* Filters */}
-        <Card className="mb-8 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span>Filtres & Tri</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-4 gap-4 mb-4">
-              <div className="space-y-2">
-                <Label>Plateforme</Label>
+        <Card className="mb-6 border-border/50">
+          <CardContent className="py-4">
+            {/* Row 1: Main filters */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Plateforme</Label>
                 <Select value={platform} onValueChange={v => {
                 setPlatform(v);
                 setCurrentPage(1);
               }}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Plateforme" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Toutes plateformes</SelectItem>
+                    <SelectItem value="all">Toutes</SelectItem>
                     <SelectItem value="leboncoin">Leboncoin</SelectItem>
                     <SelectItem value="ebay">eBay</SelectItem>
                     <SelectItem value="facebook">Facebook</SelectItem>
@@ -201,17 +195,17 @@ export default function Deals() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Région</Label>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Région</Label>
                 <Select value={region} onValueChange={v => {
                 setRegion(v);
                 setCurrentPage(1);
               }}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Région" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Toutes régions</SelectItem>
+                    <SelectItem value="all">Toutes</SelectItem>
                     <SelectItem value="ile-de-france">Île-de-France</SelectItem>
                     <SelectItem value="auvergne-rhone-alpes">Auvergne-Rhône-Alpes</SelectItem>
                     <SelectItem value="paca">PACA</SelectItem>
@@ -226,17 +220,17 @@ export default function Deals() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Type</Label>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Type</Label>
                 <Select value={itemType} onValueChange={v => {
                 setItemType(v);
                 setCurrentPage(1);
               }}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous types</SelectItem>
+                    <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="component">Composant</SelectItem>
                     <SelectItem value="pc">PC complet</SelectItem>
                     <SelectItem value="lot">Lot</SelectItem>
@@ -244,17 +238,17 @@ export default function Deals() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>État</Label>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">État</Label>
                 <Select value={condition} onValueChange={v => {
                 setCondition(v);
                 setCurrentPage(1);
               }}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="État" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous états</SelectItem>
+                    <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="neuf">Neuf</SelectItem>
                     <SelectItem value="comme-neuf">Comme neuf</SelectItem>
                     <SelectItem value="bon">Bon état</SelectItem>
@@ -262,49 +256,14 @@ export default function Deals() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <Separator className="my-6" />
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label>Prix</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-primary">{priceRange[0]}€</span>
-                    <span className="text-muted-foreground">-</span>
-                    <span className="text-sm font-medium text-primary">{priceRange[1]}€</span>
-                  </div>
-                </div>
-                <Slider value={priceRange} onValueChange={v => {
-                setPriceRange(v);
-                setCurrentPage(1);
-              }} min={0} max={5000} step={50} className="w-full" />
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  <Input type="number" value={priceRange[0]} onChange={e => {
-                  const val = Number(e.target.value);
-                  if (val >= 0 && val <= priceRange[1]) {
-                    setPriceRange([val, priceRange[1]]);
-                    setCurrentPage(1);
-                  }
-                }} min={0} max={priceRange[1]} />
-                  <Input type="number" value={priceRange[1]} onChange={e => {
-                  const val = Number(e.target.value);
-                  if (val >= priceRange[0] && val <= 5000) {
-                    setPriceRange([priceRange[0], val]);
-                    setCurrentPage(1);
-                  }
-                }} min={priceRange[0]} max={5000} />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Trier par</Label>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Trier par</Label>
                 <Select value={sortBy} onValueChange={v => {
                 setSortBy(v as DealsFilters['sort_by']);
                 setCurrentPage(1);
               }}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Trier par" />
                   </SelectTrigger>
                   <SelectContent>
@@ -317,9 +276,57 @@ export default function Deals() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end pt-4 border-t mt-4">
-              <Button variant="outline" size="sm" onClick={resetFilters} className="gap-2">
-                <RotateCcw className="h-4 w-4" />
+            {/* Row 2: Price range + Reset */}
+            <div className="flex flex-col md:flex-row md:items-end gap-4 mt-4 pt-4 border-t border-border/50">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Prix</Label>
+                  <span className="text-xs font-medium text-primary">{priceRange[0]}€ - {priceRange[1]}€</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Input 
+                    type="number" 
+                    value={priceRange[0]} 
+                    onChange={e => {
+                      const val = Number(e.target.value);
+                      if (val >= 0 && val <= priceRange[1]) {
+                        setPriceRange([val, priceRange[1]]);
+                        setCurrentPage(1);
+                      }
+                    }} 
+                    min={0} 
+                    max={priceRange[1]} 
+                    className="h-9 w-24"
+                  />
+                  <Slider 
+                    value={priceRange} 
+                    onValueChange={v => {
+                      setPriceRange(v);
+                      setCurrentPage(1);
+                    }} 
+                    min={0} 
+                    max={5000} 
+                    step={50} 
+                    className="flex-1"
+                  />
+                  <Input 
+                    type="number" 
+                    value={priceRange[1]} 
+                    onChange={e => {
+                      const val = Number(e.target.value);
+                      if (val >= priceRange[0] && val <= 5000) {
+                        setPriceRange([priceRange[0], val]);
+                        setCurrentPage(1);
+                      }
+                    }} 
+                    min={priceRange[0]} 
+                    max={5000}
+                    className="h-9 w-24"
+                  />
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1.5 text-muted-foreground hover:text-foreground">
+                <RotateCcw className="h-3.5 w-3.5" />
                 Réinitialiser
               </Button>
             </div>
@@ -327,7 +334,7 @@ export default function Deals() {
         </Card>
 
         {/* Deals List */}
-        <div className="mb-8">
+        <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold">
               <span className="text-primary">{totalItems}</span> opportunité{totalItems > 1 ? "s" : ""}
@@ -493,7 +500,7 @@ export default function Deals() {
               </motion.div>
 
               {/* Pagination */}
-              {totalPages > 1 && <div className="mt-8 flex justify-center">
+              {totalPages > 1 && <div className="mt-6 flex justify-center">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
@@ -525,9 +532,8 @@ export default function Deals() {
                   </Pagination>
                 </div>}
 
-              <p className="text-center text-sm text-muted-foreground mt-4">
-                Affichage de {(currentPage - 1) * itemsPerPage + 1} à{" "}
-                {Math.min(currentPage * itemsPerPage, totalItems)} sur {totalItems}
+              <p className="text-center text-xs text-muted-foreground mt-3 pb-2">
+                {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} sur {totalItems}
               </p>
             </>}
         </div>
