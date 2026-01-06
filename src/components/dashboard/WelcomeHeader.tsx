@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Award, Search, TrendingUp, Users } from "lucide-react";
+import { Check, Download, GraduationCap, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -18,6 +18,9 @@ export function WelcomeHeader({
   creditsRemaining
 }: WelcomeHeaderProps) {
   const [scrapModalOpen, setScrapModalOpen] = useState(false);
+  
+  // Mock extension detection state - can be toggled for demo
+  const [extensionDetected] = useState(false);
   const formatDate = (date?: string) => {
     if (!date) return "jamais";
     const d = new Date(date);
@@ -83,7 +86,7 @@ export function WelcomeHeader({
                   Abonnement : {planName}
                 </Badge>
                 <Badge variant="default" className="text-sm px-3 py-1.5">
-                  {creditsRemaining} crédits restants
+                  {creditsRemaining} crédits
                 </Badge>
               </div>
             </div>
@@ -99,15 +102,28 @@ export function WelcomeHeader({
                   Lancer un scan
                 </div>
               </Button>
-              <Link to="/tracking">
-                
-              </Link>
-              <Link to="/catalog">
-                
-              </Link>
-              <Link to="/community">
-                
-              </Link>
+              
+              {/* Extension indicator - mock state */}
+              {extensionDetected ? (
+                <Button size="lg" variant="outline" className="gap-2 text-success border-success/30 bg-success/10 hover:bg-success/20 cursor-default">
+                  <Check className="h-5 w-5" />
+                  Extension OK
+                </Button>
+              ) : (
+                <Button size="lg" variant="outline" className="gap-2" asChild>
+                  <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer">
+                    <Download className="h-5 w-5" />
+                    Télécharger l'extension
+                  </a>
+                </Button>
+              )}
+              
+              <Button size="lg" variant="secondary" className="gap-2" asChild>
+                <Link to="/training">
+                  <GraduationCap className="h-5 w-5" />
+                  Formation
+                </Link>
+              </Button>
             </div>
           </div>
         </motion.div>
