@@ -261,19 +261,47 @@ export default function Deals() {
                   </Select>
                 </div>
 
-                {/* Price range inline */}
+                {/* Price range with inputs */}
                 <div className="flex items-end gap-2">
-                  <div className="w-[180px]">
-                    <Label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">
-                      Prix: {priceRange[0]}€ - {priceRange[1]}€
-                    </Label>
+                  <div>
+                    <Label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Prix min</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={priceRange[1]}
+                      step={10}
+                      value={priceRange[0]}
+                      onChange={(e) => {
+                        const val = Math.min(Number(e.target.value) || 0, priceRange[1]);
+                        setPriceRange([val, priceRange[1]]);
+                        setCurrentPage(1);
+                      }}
+                      className="h-8 w-[80px] text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Prix max</Label>
+                    <Input
+                      type="number"
+                      min={priceRange[0]}
+                      max={10000}
+                      step={10}
+                      value={priceRange[1]}
+                      onChange={(e) => {
+                        const val = Math.max(Number(e.target.value) || 0, priceRange[0]);
+                        setPriceRange([priceRange[0], val]);
+                        setCurrentPage(1);
+                      }}
+                      className="h-8 w-[80px] text-xs"
+                    />
+                  </div>
+                  <div className="w-[120px] pb-1">
                     <Slider 
                       value={priceRange} 
                       onValueChange={v => { setPriceRange(v); setCurrentPage(1); }} 
                       min={0} 
                       max={5000} 
-                      step={50} 
-                      className="mt-2"
+                      step={50}
                     />
                   </div>
                 </div>
