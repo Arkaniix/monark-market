@@ -391,13 +391,165 @@ export interface InternalPricePoint {
   price: number;
 }
 
+// ============= PC Configurations for "PC complet" item type =============
+interface PCConfig {
+  name: string;
+  tier: 'budget' | 'midrange' | 'highend' | 'enthusiast';
+  priceRange: [number, number];
+  components: string[];
+}
+
+const PC_CONFIGS: PCConfig[] = [
+  // Budget PCs
+  { name: "PC Gaming Budget RTX 3060", tier: 'budget', priceRange: [550, 750], components: ["Ryzen 5 5600", "RTX 3060", "16GB DDR4", "500GB NVMe"] },
+  { name: "PC Bureautique i5", tier: 'budget', priceRange: [300, 450], components: ["i5-12400F", "GTX 1650", "16GB DDR4", "256GB SSD"] },
+  { name: "PC Gaming Entry RX 6600", tier: 'budget', priceRange: [480, 650], components: ["Ryzen 5 5500", "RX 6600", "16GB DDR4", "512GB NVMe"] },
+  // Midrange PCs
+  { name: "PC Gaming RTX 4060 Ti", tier: 'midrange', priceRange: [850, 1100], components: ["Ryzen 5 7600", "RTX 4060 Ti", "32GB DDR5", "1TB NVMe"] },
+  { name: "PC Workstation Ryzen 7", tier: 'midrange', priceRange: [900, 1200], components: ["Ryzen 7 7700X", "RTX 4060", "32GB DDR5", "2TB NVMe"] },
+  { name: "PC Gaming RX 7700 XT", tier: 'midrange', priceRange: [800, 1050], components: ["Ryzen 5 7600X", "RX 7700 XT", "32GB DDR5", "1TB NVMe"] },
+  { name: "PC Gaming RTX 4070", tier: 'midrange', priceRange: [1000, 1300], components: ["i5-14600K", "RTX 4070", "32GB DDR5", "1TB NVMe"] },
+  // High-end PCs
+  { name: "PC Gaming RTX 4080 Super", tier: 'highend', priceRange: [1600, 2100], components: ["Ryzen 7 7800X3D", "RTX 4080 Super", "32GB DDR5", "2TB NVMe"] },
+  { name: "PC Ultra Gaming RTX 4070 Ti Super", tier: 'highend', priceRange: [1400, 1800], components: ["i7-14700K", "RTX 4070 Ti Super", "32GB DDR5", "2TB NVMe"] },
+  { name: "PC Streaming RX 7900 XT", tier: 'highend', priceRange: [1300, 1700], components: ["Ryzen 9 7900X", "RX 7900 XT", "64GB DDR5", "2TB NVMe"] },
+  // Enthusiast PCs
+  { name: "PC Ultime RTX 4090", tier: 'enthusiast', priceRange: [2500, 3500], components: ["Ryzen 9 7950X3D", "RTX 4090", "64GB DDR5", "4TB NVMe"] },
+  { name: "PC Workstation Pro i9", tier: 'enthusiast', priceRange: [2200, 3000], components: ["i9-14900K", "RTX 4080 Super", "128GB DDR5", "4TB NVMe"] },
+  { name: "PC Gaming RTX 5080", tier: 'enthusiast', priceRange: [2000, 2800], components: ["Ryzen 9 9900X", "RTX 5080", "64GB DDR5", "2TB NVMe"] },
+];
+
+// ============= Lot Configurations =============
+interface LotConfig {
+  name: string;
+  priceRange: [number, number];
+  itemCount: number;
+}
+
+const LOT_CONFIGS: LotConfig[] = [
+  { name: "Lot 2x RTX 3070", priceRange: [500, 700], itemCount: 2 },
+  { name: "Lot GPU mining (3x RX 580)", priceRange: [180, 280], itemCount: 3 },
+  { name: "Lot composants PC complet", priceRange: [400, 600], itemCount: 5 },
+  { name: "Lot RAM DDR4 4x16GB", priceRange: [80, 140], itemCount: 4 },
+  { name: "Lot SSD NVMe 2TB + 1TB", priceRange: [150, 220], itemCount: 2 },
+  { name: "Lot watercooling AIO 360mm + ventilateurs", priceRange: [120, 200], itemCount: 4 },
+];
+
 // ============= Generate Ads (Full Detail, 50+ items) =============
 function generateAds(count: number, models: InternalModel[]): InternalAd[] {
   const ads: InternalAd[] = [];
   const sellerTypes = ['Particulier', 'Professionnel', 'Boutique'];
   const statusOptions = ['active', 'active', 'active', 'active', 'sold'];
 
-  for (let i = 0; i < count; i++) {
+  // Calculate distribution: 75% components, 18% PCs, 7% lots
+  const pcCount = Math.floor(count * 0.18);
+  const lotCount = Math.floor(count * 0.07);
+  const componentCount = count - pcCount - lotCount;
+
+  // Generate PC ads first
+  for (let i = 0; i < pcCount; i++) {
+    const pcConfig = PC_CONFIGS[Math.floor(random() * PC_CONFIGS.length)];
+    const region = pick(REGIONS);
+    const cities = CITIES_BY_REGION[region] || ["Ville"];
+    const city = pick(cities);
+    const condition = pick(CONDITIONS);
+    const platform = pick(PLATFORMS);
+
+    const basePrice = pcConfig.priceRange[0] + random() * (pcConfig.priceRange[1] - pcConfig.priceRange[0]);
+    const fairValue = Math.round(basePrice * (1.1 + random() * 0.2));
+    const discountFactor = 0.70 + random() * 0.25;
+    const price = Math.round(fairValue * discountFactor);
+    const deviationPct = Math.round((1 - price / fairValue) * 100);
+    const score = Math.min(100, Math.max(40, 50 + deviationPct * 1.5 + random() * 10));
+
+    const daysAgo = Math.floor(random() * 60);
+    const pubDate = new Date(Date.now() - daysAgo * 86400000);
+    const firstSeen = new Date(pubDate.getTime() - Math.floor(random() * 7) * 86400000);
+    const postalCode = String(10000 + Math.floor(random() * 90000));
+
+    const adId = 40000000 + i;
+    ads.push({
+      id: ads.length + 1,
+      ad_id: adId,
+      title: `${pcConfig.name} - ${condition}`,
+      description: `PC complet gaming/bureautique. Config: ${pcConfig.components.join(', ')}. ${condition}.`,
+      price,
+      fair_value: fairValue,
+      deviation_pct: deviationPct,
+      score: Math.round(score),
+      platform,
+      city,
+      region,
+      postal_code: postalCode,
+      condition,
+      category: 'PC',
+      model_name: pcConfig.name,
+      model_id: null,
+      item_type: 'pc',
+      delivery_possible: random() > 0.4,
+      secured_payment: random() > 0.3,
+      published_at: pubDate.toISOString(),
+      first_seen_at: firstSeen.toISOString(),
+      last_seen_at: new Date(Date.now() - Math.floor(random() * 2) * 86400000).toISOString(),
+      status: pick(statusOptions),
+      seller_type: pick(sellerTypes),
+      url: `https://www.${platform}.fr/ad/${adId}`,
+    });
+  }
+
+  // Generate Lot ads
+  for (let i = 0; i < lotCount; i++) {
+    const lotConfig = LOT_CONFIGS[Math.floor(random() * LOT_CONFIGS.length)];
+    const region = pick(REGIONS);
+    const cities = CITIES_BY_REGION[region] || ["Ville"];
+    const city = pick(cities);
+    const condition = pick(CONDITIONS);
+    const platform = pick(PLATFORMS);
+
+    const basePrice = lotConfig.priceRange[0] + random() * (lotConfig.priceRange[1] - lotConfig.priceRange[0]);
+    const fairValue = Math.round(basePrice * (1.15 + random() * 0.25));
+    const discountFactor = 0.65 + random() * 0.30;
+    const price = Math.round(fairValue * discountFactor);
+    const deviationPct = Math.round((1 - price / fairValue) * 100);
+    const score = Math.min(100, Math.max(40, 50 + deviationPct * 1.5 + random() * 10));
+
+    const daysAgo = Math.floor(random() * 60);
+    const pubDate = new Date(Date.now() - daysAgo * 86400000);
+    const firstSeen = new Date(pubDate.getTime() - Math.floor(random() * 7) * 86400000);
+    const postalCode = String(10000 + Math.floor(random() * 90000));
+
+    const adId = 50000000 + i;
+    ads.push({
+      id: ads.length + 1,
+      ad_id: adId,
+      title: lotConfig.name,
+      description: `Lot de ${lotConfig.itemCount} articles. ${condition}. Vente groupée uniquement.`,
+      price,
+      fair_value: fairValue,
+      deviation_pct: deviationPct,
+      score: Math.round(score),
+      platform,
+      city,
+      region,
+      postal_code: postalCode,
+      condition,
+      category: 'Lot',
+      model_name: lotConfig.name,
+      model_id: null,
+      item_type: 'lot',
+      delivery_possible: random() > 0.5,
+      secured_payment: random() > 0.4,
+      published_at: pubDate.toISOString(),
+      first_seen_at: firstSeen.toISOString(),
+      last_seen_at: new Date(Date.now() - Math.floor(random() * 2) * 86400000).toISOString(),
+      status: pick(statusOptions),
+      seller_type: pick(sellerTypes),
+      url: `https://www.${platform}.fr/ad/${adId}`,
+    });
+  }
+
+  // Generate Component ads
+  for (let i = 0; i < componentCount; i++) {
     const model = models[Math.floor(random() * models.length)];
     const region = pick(REGIONS);
     const cities = CITIES_BY_REGION[region] || ["Ville"];
@@ -425,10 +577,11 @@ function generateAds(count: number, models: InternalModel[]): InternalAd[] {
         : model.name;
 
     const postalCode = String(10000 + Math.floor(random() * 90000));
+    const adId = 30000000 + i;
 
     ads.push({
-      id: i + 1,
-      ad_id: 30000000 + i,
+      id: ads.length + 1,
+      ad_id: adId,
       title,
       description: `${title} en ${condition.toLowerCase()}. ${model.category} ${model.brand}. Prix négociable.`,
       price,
@@ -451,7 +604,7 @@ function generateAds(count: number, models: InternalModel[]): InternalAd[] {
       last_seen_at: new Date(Date.now() - Math.floor(random() * 2) * 86400000).toISOString(),
       status: pick(statusOptions),
       seller_type: pick(sellerTypes),
-      url: `https://www.${platform}.fr/ad/${30000000 + i}`,
+      url: `https://www.${platform}.fr/ad/${adId}`,
     });
   }
 
