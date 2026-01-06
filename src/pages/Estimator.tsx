@@ -55,6 +55,7 @@ import {
   MemoryStick,
   Monitor,
   RotateCcw,
+  Camera,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useModelsSearch, type SearchState, useEstimationHistoryEnhanced } from "@/hooks";
@@ -88,6 +89,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import ImageUpload, { type UploadedImage } from "@/components/estimator/ImageUpload";
+import PhotoGalleryModal from "@/components/estimator/PhotoGalleryModal";
+
 
 export default function Estimator() {
   const { toast } = useToast();
@@ -107,6 +111,14 @@ export default function Estimator() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
+  
+  // Image upload state
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  
+  // Photo gallery modal state
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
+  const [galleryModelName, setGalleryModelName] = useState("");
   
   // Result state
   const [result, setResult] = useState<EstimationResult | null>(null);
@@ -244,6 +256,16 @@ export default function Estimator() {
     setRegion("");
     setBuyPriceInput("");
     setResult(null);
+    // Clean up image previews
+    uploadedImages.forEach(img => URL.revokeObjectURL(img.preview));
+    setUploadedImages([]);
+  };
+
+  // Open photo gallery for history item
+  const openPhotoGallery = (photos: string[], modelName: string) => {
+    setGalleryPhotos(photos);
+    setGalleryModelName(modelName);
+    setGalleryOpen(true);
   };
 
   const handleExport = () => {
@@ -594,6 +616,25 @@ Conseil,${result.advice}`;
                           </div>
                         </CollapsibleContent>
                       </Collapsible>
+
+                      {/* Photo Upload Section */}
+                      <div className="space-y-2 pt-2">
+                        <Label className="flex items-center gap-2">
+                          <Camera className="h-4 w-4" />
+                          Photos (optionnel)
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Ajoutez des photos de l'annonce ou du produit pour référence
+                        </p>
+                        <ImageUpload
+                          images={uploadedImages}
+                          onImagesChange={setUploadedImages}
+                          maxFiles={5}
+                          maxSizeMB={5}
+                          maxWidthPx={1600}
+                          disabled={runEstimation.isPending}
+                        />
+                      </div>
 
                       {/* Actions */}
                       <div className="flex gap-3 pt-4">
@@ -1113,14 +1154,27 @@ Conseil,${result.advice}`;
                             </div>
                           </div>
 
-                          {/* Date */}
-                          <div className="text-sm text-muted-foreground shrink-0">
-                            <Clock className="h-3 w-3 inline mr-1" />
-                            {new Date(item.created_at).toLocaleDateString('fr-FR', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
+                          {/* Photo Badge + Date */}
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground shrink-0">
+                            {/* Photo badge - clickable if has photos */}
+                            {item.photos && item.photos.length > 0 && (
+                              <button
+                                onClick={() => openPhotoGallery(item.photos!, item.model_name)}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                                title="Voir les photos"
+                              >
+                                <Camera className="h-3 w-3" />
+                                <span className="text-xs font-medium">{item.photos.length}</span>
+                              </button>
+                            )}
+                            <div>
+                              <Clock className="h-3 w-3 inline mr-1" />
+                              {new Date(item.created_at).toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </div>
                           </div>
 
                           {/* Prices */}
@@ -1233,6 +1287,14 @@ Conseil,${result.advice}`;
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Photo Gallery Modal */}
+        <PhotoGalleryModal
+          open={galleryOpen}
+          onOpenChange={setGalleryOpen}
+          photos={galleryPhotos}
+          modelName={galleryModelName}
+        />
       </div>
     </div>
   );
