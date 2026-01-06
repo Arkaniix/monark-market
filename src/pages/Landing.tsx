@@ -8,13 +8,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PricingSection } from "@/components/pricing/PricingTable";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 const containerVariants = {
   hidden: {
     opacity: 0
@@ -26,7 +20,6 @@ const containerVariants = {
     }
   }
 };
-
 const itemVariants = {
   hidden: {
     opacity: 0,
@@ -37,22 +30,35 @@ const itemVariants = {
     y: 0
   }
 };
-
-const features = [
-  { name: "Scanner automatique d'annonces", tooltip: "Parcourez des milliers d'annonces en quelques secondes sans effort manuel" },
-  { name: "Analyses de tendances en temps réel", tooltip: "Suivez l'évolution des prix et du marché pour anticiper les opportunités" },
-  { name: "Estimateur de prix intelligent", tooltip: "Obtenez une estimation précise de la valeur d'un produit basée sur les données du marché" },
-  { name: "Alertes personnalisées", tooltip: "Recevez une notification dès qu'une annonce correspond à vos critères" },
-  { name: "Accès à la communauté Discord", tooltip: "Échangez avec d'autres revendeurs, partagez vos tips et restez informé" },
-];
-
-const trainingModules = [
-  { name: "Comment identifier les bonnes affaires", tooltip: "Apprenez à repérer les annonces sous-évaluées" },
-  { name: "Stratégies d'achat-revente efficaces", tooltip: "Techniques éprouvées pour maximiser vos profits" },
-  { name: "Optimisation des marges bénéficiaires", tooltip: "Calculez et améliorez vos marges sur chaque deal" },
-  { name: "Gestion des risques et pièges à éviter", tooltip: "Évitez les erreurs courantes des débutants" },
-];
-
+const features = [{
+  name: "Scanner automatique d'annonces",
+  tooltip: "Parcourez des milliers d'annonces en quelques secondes sans effort manuel"
+}, {
+  name: "Analyses de tendances en temps réel",
+  tooltip: "Suivez l'évolution des prix et du marché pour anticiper les opportunités"
+}, {
+  name: "Estimateur de prix intelligent",
+  tooltip: "Obtenez une estimation précise de la valeur d'un produit basée sur les données du marché"
+}, {
+  name: "Alertes personnalisées",
+  tooltip: "Recevez une notification dès qu'une annonce correspond à vos critères"
+}, {
+  name: "Accès à la communauté Discord",
+  tooltip: "Échangez avec d'autres revendeurs, partagez vos tips et restez informé"
+}];
+const trainingModules = [{
+  name: "Comment identifier les bonnes affaires",
+  tooltip: "Apprenez à repérer les annonces sous-évaluées"
+}, {
+  name: "Stratégies d'achat-revente efficaces",
+  tooltip: "Techniques éprouvées pour maximiser vos profits"
+}, {
+  name: "Optimisation des marges bénéficiaires",
+  tooltip: "Calculez et améliorez vos marges sur chaque deal"
+}, {
+  name: "Gestion des risques et pièges à éviter",
+  tooltip: "Évitez les erreurs courantes des débutants"
+}];
 const benefits = [{
   icon: DollarSign,
   title: "Maximisez vos profits",
@@ -78,7 +84,6 @@ const benefits = [{
   description: "Apprenez les techniques des professionnels avec notre formation complète et notre communauté active.",
   tooltip: "Rejoignez une communauté de revendeurs expérimentés"
 }];
-
 const howItWorks = [{
   step: "1",
   title: "Suivez la formation",
@@ -100,7 +105,6 @@ const howItWorks = [{
   title: "Revendez avec profit",
   description: "Utilisez nos analyses de tendances pour choisir le moment optimal de revente et maximiser vos marges."
 }];
-
 const testimonials = [{
   name: "Thomas D.",
   role: "Revendeur GPU",
@@ -117,34 +121,27 @@ const testimonials = [{
   content: "Après 2 ans à faire ça à l'ancienne, cet outil a transformé mon business. Les alertes en temps réel sont juste incroyables.",
   profit: "+3200€/mois"
 }];
-
-const mainFeatures = [
-  {
-    icon: Search,
-    title: "Scanner intelligent",
-    description: "Scannez automatiquement des milliers d'annonces en quelques secondes",
-    tooltip: "Parcourez automatiquement LeBonCoin et d'autres plateformes pour trouver les meilleures annonces",
-    color: "primary"
-  },
-  {
-    icon: BarChart3,
-    title: "Analyses avancées",
-    description: "Graphiques détaillés, tendances du marché et prédictions de prix",
-    tooltip: "Visualisez l'évolution des prix, les tendances du marché et anticipez les opportunités",
-    color: "accent"
-  },
-  {
-    icon: Target,
-    title: "Détection d'opportunités",
-    description: "Repérez instantanément les meilleures affaires",
-    tooltip: "Notre algorithme identifie les annonces sous-cotées avec le meilleur potentiel de profit",
-    color: "success"
-  }
-];
-
+const mainFeatures = [{
+  icon: Search,
+  title: "Scanner intelligent",
+  description: "Scannez automatiquement des milliers d'annonces en quelques secondes",
+  tooltip: "Parcourez automatiquement LeBonCoin et d'autres plateformes pour trouver les meilleures annonces",
+  color: "primary"
+}, {
+  icon: BarChart3,
+  title: "Analyses avancées",
+  description: "Graphiques détaillés, tendances du marché et prédictions de prix",
+  tooltip: "Visualisez l'évolution des prix, les tendances du marché et anticipez les opportunités",
+  color: "accent"
+}, {
+  icon: Target,
+  title: "Détection d'opportunités",
+  description: "Repérez instantanément les meilleures affaires",
+  tooltip: "Notre algorithme identifie les annonces sous-cotées avec le meilleur potentiel de profit",
+  color: "success"
+}];
 export default function Landing() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  
   const scrollToPricing = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     const pricingSection = document.getElementById('pricing');
@@ -155,16 +152,16 @@ export default function Landing() {
       });
     }
   };
-  
   useEffect(() => {
     const checkMaintenance = async () => {
-      const { data } = await supabase.from('system_settings').select('maintenance_mode').eq('id', 1).single();
+      const {
+        data
+      } = await supabase.from('system_settings').select('maintenance_mode').eq('id', 1).single();
       if (data) {
         setMaintenanceMode(data.maintenance_mode);
       }
     };
     checkMaintenance();
-
     const maintenanceChannel = supabase.channel('system_settings_landing').on('postgres_changes', {
       event: '*',
       schema: 'public',
@@ -172,32 +169,30 @@ export default function Landing() {
     }, () => {
       checkMaintenance();
     }).subscribe();
-    
     return () => {
       maintenanceChannel.unsubscribe();
     };
   }, []);
-  
-  return (
-    <div className="min-h-screen">
-      {maintenanceMode && (
-        <Alert className="bg-warning/10 border-warning/50 rounded-none border-x-0 border-t-0">
+  return <div className="min-h-screen">
+      {maintenanceMode && <Alert className="bg-warning/10 border-warning/50 rounded-none border-x-0 border-t-0">
           <Construction className="h-5 w-5 text-warning" />
           <AlertDescription className="text-warning-foreground">
             <strong>Maintenance en cours.</strong> Le site est actuellement en maintenance. Les nouvelles inscriptions et connexions sont temporairement désactivées pour les utilisateurs réguliers.
           </AlertDescription>
-        </Alert>
-      )}
+        </Alert>}
       
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-background via-primary/5 to-accent/5 py-20 md:py-32">
         <div className="container relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-4xl mx-auto"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 30
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          duration: 0.6
+        }} className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
               Devenez expert en achat-revente de hardware
             </h1>
@@ -228,13 +223,9 @@ export default function Landing() {
       {/* Stats teaser */}
       <section className="py-12 border-b">
         <div className="container">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto"
-          >
+          <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
+          once: true
+        }} className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader className="pb-3">
@@ -277,15 +268,10 @@ export default function Landing() {
           </div>
 
           <TooltipProvider>
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="grid md:grid-cols-3 gap-8"
-            >
-              {mainFeatures.map((feature, i) => (
-                <motion.div key={i} variants={itemVariants} className="text-center">
+            <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
+            once: true
+          }} className="grid md:grid-cols-3 gap-8">
+              {mainFeatures.map((feature, i) => <motion.div key={i} variants={itemVariants} className="text-center">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className={`h-16 w-16 rounded-full bg-${feature.color}/10 flex items-center justify-center mx-auto mb-4 cursor-help transition-transform hover:scale-110`}>
@@ -298,8 +284,7 @@ export default function Landing() {
                   </Tooltip>
                   <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                   <p className="text-muted-foreground">{feature.description}</p>
-                </motion.div>
-              ))}
+                </motion.div>)}
             </motion.div>
           </TooltipProvider>
 
@@ -311,8 +296,7 @@ export default function Landing() {
               <CardContent>
                 <TooltipProvider>
                   <ul className="space-y-3">
-                    {features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-3">
+                    {features.map((feature, i) => <li key={i} className="flex items-start gap-3">
                         <div className="h-6 w-6 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                           <Check className="h-4 w-4 text-success" />
                         </div>
@@ -326,8 +310,7 @@ export default function Landing() {
                             <p className="max-w-xs">{feature.tooltip}</p>
                           </TooltipContent>
                         </Tooltip>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
                 </TooltipProvider>
               </CardContent>
@@ -352,15 +335,10 @@ export default function Landing() {
           </div>
 
           <TooltipProvider>
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="grid md:grid-cols-2 gap-8"
-            >
-              {benefits.map((benefit, i) => (
-                <motion.div key={i} variants={itemVariants}>
+            <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
+            once: true
+          }} className="grid md:grid-cols-2 gap-8">
+              {benefits.map((benefit, i) => <motion.div key={i} variants={itemVariants}>
                   <Card className="h-full">
                     <CardHeader>
                       <Tooltip>
@@ -377,17 +355,12 @@ export default function Landing() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <p className="text-muted-foreground">{benefit.description}</p>
-                      {'cta' in benefit && benefit.cta && (
-                        <Link to={benefit.cta.href}>
-                          <Button variant="link" className="p-0 h-auto">
-                            {benefit.cta.label} →
-                          </Button>
-                        </Link>
-                      )}
+                      {'cta' in benefit && benefit.cta && <Link to={benefit.cta.href}>
+                          
+                        </Link>}
                     </CardContent>
                   </Card>
-                </motion.div>
-              ))}
+                </motion.div>)}
             </motion.div>
           </TooltipProvider>
         </div>
@@ -407,15 +380,17 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {howItWorks.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="relative"
-              >
+            {howItWorks.map((item, i) => <motion.div key={i} initial={{
+            opacity: 0,
+            y: 20
+          }} whileInView={{
+            opacity: 1,
+            y: 0
+          }} viewport={{
+            once: true
+          }} transition={{
+            delay: i * 0.1
+          }} className="relative">
                 <div className="text-center">
                   <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-white">
                     {item.step}
@@ -423,11 +398,8 @@ export default function Landing() {
                   <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
                   <p className="text-muted-foreground">{item.description}</p>
                 </div>
-                {i < howItWorks.length - 1 && (
-                  <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-primary/50 to-accent/50" />
-                )}
-              </motion.div>
-            ))}
+                {i < howItWorks.length - 1 && <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-primary/50 to-accent/50" />}
+              </motion.div>)}
           </div>
         </div>
       </section>
@@ -464,8 +436,7 @@ export default function Landing() {
               </p>
               <TooltipProvider>
                 <ul className="space-y-3 mb-8">
-                  {trainingModules.map((module, i) => (
-                    <li key={i} className="flex items-start gap-3">
+                  {trainingModules.map((module, i) => <li key={i} className="flex items-start gap-3">
                       <div className="h-6 w-6 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Check className="h-4 w-4 text-warning" />
                       </div>
@@ -479,8 +450,7 @@ export default function Landing() {
                           <p className="max-w-xs">{module.tooltip}</p>
                         </TooltipContent>
                       </Tooltip>
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
               </TooltipProvider>
             </div>
@@ -535,6 +505,5 @@ export default function Landing() {
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 }
