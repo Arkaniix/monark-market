@@ -11,6 +11,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCategories, useBrands, useFamilies, useCatalogModels, useAddModelToWatchlist, type CatalogFilters } from "@/hooks/useCatalog";
 import { CatalogSkeleton } from "@/components/catalog/CatalogSkeleton";
+import { ModelCardImage } from "@/components/catalog/ModelCardImage";
 import { toast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
 const ITEMS_PER_PAGE = 24;
@@ -300,7 +301,15 @@ export default function Catalog() {
           </Card> : <>
             <motion.div variants={containerVariants} initial="hidden" animate="visible" className={viewMode === "grid" ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3" : "space-y-2"}>
               {modelsData.items.map(model => <motion.div key={model.id} variants={itemVariants}>
-                  <Card className="hover:border-primary/50 transition-all hover:shadow-md group h-full">
+                  <Card className="hover:border-primary/50 transition-all hover:shadow-md group h-full overflow-hidden">
+                    {/* Model Image */}
+                    <ModelCardImage
+                      imageUrl={model.image_url}
+                      modelName={model.name}
+                      brand={model.brand}
+                      category={model.category}
+                      aspectRatio="4/3"
+                    />
                     <CardHeader className="p-3 pb-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
