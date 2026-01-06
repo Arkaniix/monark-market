@@ -38,6 +38,7 @@ import {
   Cpu,
   Monitor,
   Package,
+  Calculator,
 } from "lucide-react";
 import { useAdDetail, useAdPriceHistory, useAddAdToWatchlist, useCreateAdAlert } from "@/hooks/useAdDetail";
 import { AdDetailSkeleton } from "@/components/ad/AdDetailSkeleton";
@@ -494,6 +495,13 @@ export default function AdDetail() {
                     <ExternalLink className="h-4 w-4" />
                     Voir l'annonce originale
                   </a>
+                </Button>
+
+                <Button className="w-full gap-2" variant="secondary" asChild>
+                  <Link to={`/estimator?ad_id=${ad.id}&model_id=${ad.model_id || ''}&model_name=${encodeURIComponent(ad.model_name || '')}&category=${encodeURIComponent(ad.category || '')}&price=${ad.price}&platform=${encodeURIComponent(ad.platform)}&condition=${encodeURIComponent(ad.condition || '')}&region=${encodeURIComponent(ad.region || '')}&city=${encodeURIComponent(ad.city || '')}`}>
+                    <Calculator className="h-4 w-4" />
+                    Estimer
+                  </Link>
                 </Button>
 
                 <Button
