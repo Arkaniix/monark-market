@@ -617,24 +617,6 @@ Conseil,${result.advice}`;
                         </CollapsibleContent>
                       </Collapsible>
 
-                      {/* Photo Upload Section */}
-                      <div className="space-y-2 pt-2">
-                        <Label className="flex items-center gap-2">
-                          <Camera className="h-4 w-4" />
-                          Photos (optionnel)
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          Ajoutez des photos de l'annonce ou du produit pour référence
-                        </p>
-                        <ImageUpload
-                          images={uploadedImages}
-                          onImagesChange={setUploadedImages}
-                          maxFiles={5}
-                          maxSizeMB={5}
-                          maxWidthPx={1600}
-                          disabled={runEstimation.isPending}
-                        />
-                      </div>
 
                       {/* Actions */}
                       <div className="flex gap-3 pt-4">
