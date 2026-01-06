@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { apiFetch } from "@/lib/api";
-import { ESTIMATOR } from "@/lib/api/endpoints";
+import { useDataProvider } from "@/providers";
 
-// Types
+// UI-friendly types with consistent naming
 export interface EstimationHistoryItem {
   id: string;
   created_at: string;
@@ -17,7 +16,7 @@ export interface EstimationHistoryItem {
   sell_price_1m: number;
   margin_pct: number;
   trend: "up" | "down" | "stable";
-  photos?: string[]; // URLs to photos attached to this estimation
+  photos?: string[];
 }
 
 export interface EstimationHistoryResponse {
@@ -29,105 +28,47 @@ export interface EstimationHistoryResponse {
 
 export type HistoryState = "idle" | "loading" | "success" | "empty" | "error";
 
-const TIMEOUT_MS = 10000; // 10 seconds
+const TIMEOUT_MS = 10000;
 const PAGE_SIZE = 20;
 
-// Mock data for fallback
-const mockHistoryItems: EstimationHistoryItem[] = [
-  {
-    id: "mock-1",
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    model_id: 1,
-    model_name: "NVIDIA RTX 3060 Ti",
-    brand: "NVIDIA",
-    category: "GPU",
-    condition: "bon",
-    region: "IDF",
-    buy_price_input: 260,
-    buy_price_recommended: 245,
-    sell_price_1m: 295,
-    margin_pct: 13.5,
-    trend: "up",
-    photos: [
-      "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400",
-      "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400",
-      "https://images.unsplash.com/photo-1555618254-5e4dc4e3c0a3?w=400",
-    ],
-  },
-  {
-    id: "mock-2",
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    model_id: 6,
-    model_name: "AMD Ryzen 7 5800X3D",
-    brand: "AMD",
-    category: "CPU",
-    condition: "comme-neuf",
-    buy_price_input: 255,
-    buy_price_recommended: 240,
-    sell_price_1m: 275,
-    margin_pct: 7.8,
-    trend: "stable",
-  },
-  {
-    id: "mock-3",
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    model_id: 13,
-    model_name: "Samsung 980 Pro 1TB",
-    brand: "Samsung",
-    category: "SSD",
-    condition: "neuf",
-    buy_price_input: 108,
-    buy_price_recommended: 100,
-    sell_price_1m: 125,
-    margin_pct: 15.7,
-    trend: "up",
-    photos: [
-      "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400",
-    ],
-  },
-  {
-    id: "mock-4",
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    model_id: 4,
-    model_name: "NVIDIA RTX 3080",
-    brand: "NVIDIA",
-    category: "GPU",
-    condition: "bon",
-    region: "PACA",
-    buy_price_input: 420,
-    buy_price_recommended: 395,
-    sell_price_1m: 465,
-    margin_pct: 10.7,
-    trend: "down",
-  },
-  {
-    id: "mock-5",
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    model_id: 9,
-    model_name: "Intel Core i7-13700K",
-    brand: "Intel",
-    category: "CPU",
-    condition: "neuf",
-    buy_price_input: 340,
-    buy_price_recommended: 320,
-    sell_price_1m: 385,
-    margin_pct: 13.2,
-    trend: "stable",
-  },
-];
+// Mock photos to add to some history items for demo purposes
+const mockPhotosMap: Record<number, string[]> = {
+  0: [
+    "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400",
+    "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400",
+    "https://images.unsplash.com/photo-1555618254-5e4dc4e3c0a3?w=400",
+  ],
+  2: [
+    "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400",
+  ],
+};
+
+// Condition labels mapping
+const conditionLabels: Record<string, string> = {
+  'neuf': 'Neuf',
+  'comme-neuf': 'Comme neuf',
+  'bon': 'Bon état',
+  'correct': 'Correct',
+  'pour-pieces': 'Pour pièces',
+};
 
 export function useEstimationHistory(page: number = 1, autoFetch: boolean = true) {
+  const provider = useDataProvider();
   const [data, setData] = useState<EstimationHistoryResponse | null>(null);
   const [state, setState] = useState<HistoryState>("idle");
   const [error, setError] = useState<string | null>(null);
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchHistory = useCallback(async (pageNum: number) => {
     // Cancel previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
 
     // Create new abort controller
@@ -138,64 +79,73 @@ export function useEstimationHistory(page: number = 1, autoFetch: boolean = true
     setError(null);
 
     // Create timeout
-    const timeoutId = setTimeout(() => {
+    let didTimeout = false;
+    timeoutRef.current = setTimeout(() => {
+      didTimeout = true;
       abortController.abort();
+      if (isMountedRef.current) {
+        setError("Délai d'attente dépassé");
+        setState("error");
+      }
     }, TIMEOUT_MS);
 
     try {
-      const response = await apiFetch<EstimationHistoryResponse>(
-        `${ESTIMATOR.HISTORY}?page=${pageNum}&limit=${PAGE_SIZE}`,
-        { signal: abortController.signal }
-      );
+      const response = await provider.getEstimationHistory(pageNum, PAGE_SIZE);
 
-      clearTimeout(timeoutId);
+      // Clear timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
 
+      // Check if aborted or timed out
+      if (abortController.signal.aborted || didTimeout) return;
       if (!isMountedRef.current) return;
 
-      if (response.items && response.items.length > 0) {
-        setData(response);
+      // Map provider items to UI-friendly format
+      const mappedItems: EstimationHistoryItem[] = response.items.map((item, idx) => ({
+        id: item.id,
+        created_at: item.date, // provider uses 'date', UI expects 'created_at'
+        model_id: idx + 1, // Placeholder - provider doesn't provide this
+        model_name: item.model, // provider uses 'model', UI expects 'model_name'
+        brand: '', // Not in provider type
+        category: item.category,
+        condition: 'bon', // Default - not in provider type
+        region: undefined, // Not in provider type
+        buy_price_input: item.buy_price, // provider uses 'buy_price'
+        buy_price_recommended: Math.round(item.buy_price * 0.95), // Derived value
+        sell_price_1m: item.median_price, // Use median as sell price
+        margin_pct: item.margin_pct,
+        trend: item.trend,
+        photos: mockPhotosMap[idx] || undefined,
+      }));
+
+      if (mappedItems.length > 0) {
+        setData({
+          items: mappedItems,
+          total: response.total,
+          page: response.page,
+          page_size: response.page_size,
+        });
         setState("success");
       } else {
         setData({ items: [], total: 0, page: pageNum, page_size: PAGE_SIZE });
         setState("empty");
       }
     } catch (err: any) {
-      clearTimeout(timeoutId);
+      // Clear timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
 
       if (!isMountedRef.current) return;
 
-      // Handle abort (don't set error for abort)
-      if (err.name === "AbortError") {
-        // Check if it was a timeout
-        if (abortController.signal.aborted) {
+      // Handle abort
+      if (err.name === "AbortError" || abortController.signal.aborted) {
+        if (didTimeout) {
           setError("Délai d'attente dépassé");
           setState("error");
-        }
-        return;
-      }
-
-      // Use mock data as fallback in development/demo mode
-      const useMockFallback = 
-        import.meta.env.VITE_DATA_PROVIDER !== "api" ||
-        err.message?.includes("Failed to fetch") ||
-        err.status === 0;
-
-      if (useMockFallback) {
-        // Return mock data
-        const startIdx = (pageNum - 1) * PAGE_SIZE;
-        const paginatedItems = mockHistoryItems.slice(startIdx, startIdx + PAGE_SIZE);
-        
-        if (paginatedItems.length > 0) {
-          setData({
-            items: paginatedItems,
-            total: mockHistoryItems.length,
-            page: pageNum,
-            page_size: PAGE_SIZE,
-          });
-          setState("success");
-        } else {
-          setData({ items: [], total: 0, page: pageNum, page_size: PAGE_SIZE });
-          setState("empty");
         }
         return;
       }
@@ -203,7 +153,7 @@ export function useEstimationHistory(page: number = 1, autoFetch: boolean = true
       setError(err.message || "Erreur lors du chargement de l'historique");
       setState("error");
     }
-  }, []);
+  }, [provider]);
 
   // Fetch on mount or page change
   useEffect(() => {
@@ -217,6 +167,9 @@ export function useEstimationHistory(page: number = 1, autoFetch: boolean = true
       isMountedRef.current = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
     };
   }, [page, autoFetch, fetchHistory]);
