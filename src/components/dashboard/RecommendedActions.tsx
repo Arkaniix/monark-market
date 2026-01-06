@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Search, Eye, Bell, GraduationCap, Award, Zap, Target, Trophy, ArrowRight } from "lucide-react";
+import { Search, Eye, GraduationCap, Award, Zap, Target, Trophy, ArrowRight, BookOpen, CheckCircle2, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import ScrapModal from "@/components/ScrapModal";
 interface RecommendedActionsProps {
@@ -165,51 +165,86 @@ export function RecommendedActions({
             <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-background h-full">
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <div className="text-2xl">🎓</div>
-                  <CardTitle>Formation & Progression</CardTitle>
+                  <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-accent/10">
+                    <GraduationCap className="h-5 w-5 text-accent" />
+                  </div>
+                  <div>
+                    <CardTitle>Formation & Progression</CardTitle>
+                    <p className="text-xs text-muted-foreground">Maîtrise le buy/resell</p>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Barre de progression */}
-                <div>
+                {/* Barre de progression globale */}
+                <div className="p-4 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">
-                      Modules complétés
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {trainingProgress.completed}/{trainingProgress.total}
+                    <span className="text-sm font-semibold">Progression globale</span>
+                    <Badge variant="outline" className="border-accent/30 text-accent">
+                      {trainingProgress.completed}/{trainingProgress.total} modules
+                    </Badge>
+                  </div>
+                  <Progress value={progressPercentage} className="h-3 mb-2" />
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{Math.round(progressPercentage)}% complété</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      ~{(trainingProgress.total - trainingProgress.completed) * 10} min restantes
                     </span>
                   </div>
-                  <Progress value={progressPercentage} className="h-3" />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {Math.round(progressPercentage)}% de progression
-                  </p>
                 </div>
 
-                {/* Dernier module */}
-                <Card className="bg-muted/50">
-                  <CardContent className="p-4">
-                    <h4 className="text-sm font-medium mb-1">Dernier module</h4>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      {trainingProgress.lastModule}
-                    </p>
-                    <Link to="/training">
-                      <Button variant="outline" size="sm" className="w-full gap-2">
-                        Continuer ma formation
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-
-                {/* Récompenses */}
+                {/* Liste des modules */}
                 <div className="space-y-2">
-                  
-                  <div className="space-y-2">
-                    
-                    
+                  <h4 className="text-sm font-medium flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    Parcours de formation
+                  </h4>
+                  <div className="space-y-1.5">
+                    {[
+                      { name: "Comprendre le marché", completed: true },
+                      { name: "Rechercher intelligemment", completed: true },
+                      { name: "Analyser la rentabilité", completed: trainingProgress.completed >= 3 },
+                      { name: "Acheter et négocier", completed: trainingProgress.completed >= 4 },
+                      { name: "Vendre efficacement", completed: trainingProgress.completed >= 5 },
+                      { name: "Rentabilité durable", completed: trainingProgress.completed >= 6 },
+                    ].map((module, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex items-center gap-2 p-2 rounded-md text-sm transition-colors ${
+                          module.completed
+                            ? "bg-success/10 text-success"
+                            : idx === trainingProgress.completed
+                            ? "bg-accent/10 border border-accent/30"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {module.completed ? (
+                          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                        ) : (
+                          <div className={`h-4 w-4 rounded-full border-2 flex-shrink-0 ${
+                            idx === trainingProgress.completed ? "border-accent" : "border-muted-foreground/30"
+                          }`} />
+                        )}
+                        <span className={idx === trainingProgress.completed ? "font-medium text-foreground" : ""}>
+                          {module.name}
+                        </span>
+                        {idx === trainingProgress.completed && (
+                          <Badge variant="secondary" className="ml-auto text-xs">
+                            En cours
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
+
+                {/* CTA */}
+                <Link to="/training">
+                  <Button className="w-full gap-2">
+                    {trainingProgress.completed === 0 ? "Commencer la formation" : "Continuer ma formation"}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </motion.div>
@@ -257,15 +292,10 @@ export function RecommendedActions({
                 </div>
 
                 <div className="space-y-2">
-                  <Link to="/community">
-                    <Button variant="outline" className="w-full gap-2">
+                  <Link to="/leaderboard">
+                    <Button className="w-full gap-2">
                       Voir le classement complet
                       <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link to="/community">
-                    <Button variant="ghost" size="sm" className="w-full gap-2 text-xs">
-                      🔍 Voir détails
                     </Button>
                   </Link>
                 </div>
