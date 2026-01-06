@@ -14,8 +14,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { 
   ArrowLeft, TrendingUp, TrendingDown, Bell, Heart, Clock, 
-  ExternalLink, Activity, BarChart3, MapPin, Sparkles, ImageOff
+  ExternalLink, Activity, BarChart3, MapPin, Sparkles, ImageOff, Info
 } from "lucide-react";
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Legend 
@@ -468,8 +469,8 @@ export default function ModelDetail() {
                       <Legend 
                         formatter={(value) => {
                           const labels: Record<string, string> = {
-                            'price_p75': 'P75 (75e percentile)',
-                            'price_p25': 'P25 (25e percentile)',
+                            'price_p75': 'P75',
+                            'price_p25': 'P25',
                             'price_median': 'Médiane',
                           };
                           return labels[value] || value;
@@ -528,6 +529,91 @@ export default function ModelDetail() {
                     <p className="text-muted-foreground">Aucune donnée disponible</p>
                   </div>
                 )}
+                
+                {/* Légende pédagogique */}
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                    <TooltipProvider>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 cursor-help">
+                            <div className="w-3 h-0.5 bg-primary rounded" />
+                            <span className="text-muted-foreground">Médiane</span>
+                            <Info className="h-3 w-3 text-muted-foreground/60" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="font-medium">Prix médian (50e percentile)</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Le prix "central" du marché : 50 % des annonces sont moins chères, 50 % sont plus chères.
+                          </p>
+                        </TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
+                    
+                    <TooltipProvider>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 cursor-help">
+                            <div className="w-3 h-0.5 bg-muted-foreground/60 rounded" style={{ backgroundImage: 'repeating-linear-gradient(90deg, currentColor 0, currentColor 3px, transparent 3px, transparent 6px)' }} />
+                            <span className="text-muted-foreground">P25</span>
+                            <Info className="h-3 w-3 text-muted-foreground/60" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="font-medium">P25 = Prix bas du marché</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            25 % des annonces sont moins chères que ce prix. Un bon indicateur pour repérer les bonnes affaires.
+                          </p>
+                        </TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
+                    
+                    <TooltipProvider>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 cursor-help">
+                            <div className="w-3 h-0.5 bg-muted-foreground/60 rounded" style={{ backgroundImage: 'repeating-linear-gradient(90deg, currentColor 0, currentColor 3px, transparent 3px, transparent 6px)' }} />
+                            <span className="text-muted-foreground">P75</span>
+                            <Info className="h-3 w-3 text-muted-foreground/60" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="font-medium">P75 = Prix haut du marché</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            25 % des annonces sont plus chères que ce prix. Utile pour éviter de surpayer.
+                          </p>
+                        </TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
+                    
+                    <TooltipProvider>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 cursor-help">
+                            <div className="w-4 h-3 bg-muted-foreground/15 rounded-sm" />
+                            <span className="text-muted-foreground">Dispersion</span>
+                            <Info className="h-3 w-3 text-muted-foreground/60" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="font-medium">Zone de dispersion des prix</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            La bande grisée entre P25 et P75 montre où se situent 50 % des annonces.
+                          </p>
+                        </TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
+                    <Info className="h-3.5 w-3.5" />
+                    <span>
+                      <strong>À retenir :</strong> 50 % des annonces se situent entre P25 et P75. 
+                      Un prix proche de P25 est une bonne affaire, proche de P75 est cher.
+                    </span>
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
