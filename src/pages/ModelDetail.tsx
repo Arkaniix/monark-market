@@ -6,15 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { 
-  ArrowLeft, TrendingUp, TrendingDown, Bell, Heart, Clock, 
+  TrendingUp, TrendingDown, Bell, Heart, Clock, 
   ExternalLink, Activity, BarChart3, MapPin, Sparkles, ImageOff, Info
 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -27,9 +23,9 @@ import {
   useModelPriceHistory, 
   useModelAds, 
   useSimilarModels,
-  useToggleModelWatchlist,
-  useCreatePriceAlert 
+  useToggleModelWatchlist
 } from "@/hooks/useModelDetail";
+import { CreateAlertModal, AlertTarget } from "@/components/alerts/CreateAlertModal";
 import { ModelDetailSkeleton } from "@/components/model/ModelDetailSkeleton";
 import { ModelCardImage } from "@/components/catalog/ModelCardImage";
 import { toast } from "@/hooks/use-toast";
@@ -40,10 +36,7 @@ export default function ModelDetail() {
   // State
   const [selectedPeriod, setSelectedPeriod] = useState<"7" | "30" | "90">("30");
   const [isInWatchlist, setIsInWatchlist] = useState(false);
-  const [showAlertDialog, setShowAlertDialog] = useState(false);
-  const [alertPriceMax, setAlertPriceMax] = useState("");
-  const [alertVarMin, setAlertVarMin] = useState("");
-  const [alertNotifyNewDeals, setAlertNotifyNewDeals] = useState(false);
+  const [showAlertModal, setShowAlertModal] = useState(false);
   const [adsPage, setAdsPage] = useState(1);
 
   // API queries
@@ -53,7 +46,15 @@ export default function ModelDetail() {
   const { data: similarModels, isLoading: similarLoading } = useSimilarModels(id, 6);
   
   const toggleWatchlist = useToggleModelWatchlist();
-  const createAlert = useCreatePriceAlert();
+  
+  // Alert target for CreateAlertModal
+  const alertTarget: AlertTarget | null = model ? {
+    type: 'model',
+    id: model.id,
+    name: `${model.brand} ${model.name}`,
+    category: model.category,
+    currentPrice: model.kpi.median_30d,
+  } : null;
 
   // Handlers
   const handleToggleWatchlist = async () => {
@@ -77,27 +78,14 @@ export default function ModelDetail() {
     }
   };
 
-  const handleCreateAlert = async () => {
-    if (!model) return;
-    try {
-      await createAlert.mutateAsync({
-        model_id: model.id,
-        price_max: alertPriceMax ? Number(alertPriceMax) : undefined,
-        variation_min: alertVarMin ? Number(alertVarMin) : undefined,
-        notify_new_deals: alertNotifyNewDeals,
-      });
-      setShowAlertDialog(false);
-      toast({
-        title: "Alerte créée",
-        description: "Vous serez notifié selon vos critères.",
-      });
-    } catch {
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer l'alerte.",
-        variant: "destructive",
-      });
-    }
+  // Build estimator URL with pre-filled params
+  const getEstimatorUrl = () => {
+    if (!model) return '/estimator';
+    const params = new URLSearchParams();
+    params.set('model_id', String(model.id));
+    params.set('model_name', `${model.brand} ${model.name}`);
+    params.set('price', String(model.kpi.median_30d));
+    return `/estimator?${params.toString()}`;
   };
 
   // Format helpers
@@ -308,75 +296,44 @@ export default function ModelDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
+                {/* Watchlist button */}
                 <Button
                   variant={isInWatchlist ? "default" : "outline"}
                   onClick={handleToggleWatchlist}
                   disabled={toggleWatchlist.isPending}
+                  className="gap-2"
                 >
-                  <Heart className="h-4 w-4 mr-2" />
-                  {isInWatchlist ? "Dans la watchlist" : "Suivre modèle"}
+                  <Heart className={`h-4 w-4 ${isInWatchlist ? 'fill-current' : ''}`} />
+                  {isInWatchlist ? "Dans la watchlist" : "Suivre le modèle"}
                 </Button>
 
-                <Dialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline">
-                      <Bell className="h-4 w-4 mr-2" />
-                      Créer alerte prix
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Créer une alerte pour {model.name}</DialogTitle>
-                      <DialogDescription>
-                        Soyez notifié lorsque certaines conditions sont remplies
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="price-max">Prix maximum (€)</Label>
-                        <Input
-                          id="price-max"
-                          type="number"
-                          placeholder={String(Math.round(model.kpi.fair_value_30d * 0.9))}
-                          value={alertPriceMax}
-                          onChange={(e) => setAlertPriceMax(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="var-pct">Variation minimale (%)</Label>
-                        <Input
-                          id="var-pct"
-                          type="number"
-                          placeholder="-5"
-                          value={alertVarMin}
-                          onChange={(e) => setAlertVarMin(e.target.value)}
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="new-deals"
-                          checked={alertNotifyNewDeals}
-                          onCheckedChange={setAlertNotifyNewDeals}
-                        />
-                        <Label htmlFor="new-deals">Notifier pour nouveaux deals</Label>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowAlertDialog(false)}>
-                        Annuler
-                      </Button>
-                      <Button onClick={handleCreateAlert} disabled={createAlert.isPending}>
-                        Créer l'alerte
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                {/* Alert button - opens CreateAlertModal */}
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAlertModal(true)}
+                  className="gap-2"
+                >
+                  <Bell className="h-4 w-4" />
+                  Créer une alerte prix
+                </Button>
 
-                <Button variant="outline" asChild>
-                  <Link to={`/estimator?model=${model.id}`}>Estimer</Link>
+                {/* Estimator button - navigates with pre-filled params */}
+                <Button variant="outline" asChild className="gap-2">
+                  <Link to={getEstimatorUrl()}>
+                    <Sparkles className="h-4 w-4" />
+                    Estimer
+                  </Link>
                 </Button>
               </div>
+
+              {/* CreateAlertModal component */}
+              <CreateAlertModal
+                open={showAlertModal}
+                onClose={() => setShowAlertModal(false)}
+                target={alertTarget}
+                defaultAlertType="price_below"
+              />
             </CardContent>
           </Card>
         </motion.div>
