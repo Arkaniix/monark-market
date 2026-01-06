@@ -401,9 +401,24 @@ export default function Deals() {
                             {/* Placeholder for: hasPriceHistory && <HistoryIcon /> */}
                           </div>
                         </div>
-                        <CardHeader className="deal-card__header pt-3 pb-2 space-y-2">
-                          {/* Primary badges row */}
-                          <div className="deal-card__badges flex gap-2 flex-wrap">
+                        <CardHeader className="deal-card__header pt-3 pb-1 space-y-1">
+                          {/* Title and price on same row - at the top */}
+                          <div className="deal-card__title-price flex items-start justify-between gap-3">
+                            <CardTitle className="deal-card__title text-base leading-tight line-clamp-2 flex-1">
+                              {deal.title}
+                            </CardTitle>
+                            <div className="deal-card__price-block text-right flex-shrink-0">
+                              <div className="flex items-center gap-1">
+                                {isHighValue && <span className="text-lg">⚡</span>}
+                                <div className="text-2xl font-bold">{deal.price}€</div>
+                              </div>
+                              {deal.fair_value && (
+                                <div className="text-sm text-muted-foreground line-through">{deal.fair_value}€</div>
+                              )}
+                            </div>
+                          </div>
+                          {/* All badges grouped together */}
+                          <div className="deal-card__badges flex gap-1.5 flex-wrap">
                             <Badge variant={perfBadge.variant} className="gap-1">
                               {perfBadge.label}
                             </Badge>
@@ -427,21 +442,6 @@ export default function Deals() {
                                 locale: fr
                               })}
                             </Badge>
-                          </div>
-                          {/* Title and price on same row */}
-                          <div className="deal-card__title-price flex items-start justify-between gap-3">
-                            <CardTitle className="deal-card__title text-base leading-tight line-clamp-2 flex-1">
-                              {deal.title}
-                            </CardTitle>
-                            <div className="deal-card__price-block text-right flex-shrink-0">
-                              <div className="flex items-center gap-1">
-                                {isHighValue && <span className="text-lg">⚡</span>}
-                                <div className="text-2xl font-bold">{deal.price}€</div>
-                              </div>
-                              {deal.fair_value && (
-                                <div className="text-sm text-muted-foreground line-through">{deal.fair_value}€</div>
-                              )}
-                            </div>
                           </div>
                         </CardHeader>
 
