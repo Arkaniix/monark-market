@@ -79,3 +79,59 @@ export function matchesSearch(text: string | null | undefined, search: string): 
   if (!text) return false;
   return normalizeString(text).includes(normalizeString(search));
 }
+
+/**
+ * Region slug to full name mapping
+ */
+const REGION_MAP: Record<string, string> = {
+  'ile-de-france': 'Île-de-France',
+  'auvergne-rhone-alpes': 'Auvergne-Rhône-Alpes',
+  'paca': "Provence-Alpes-Côte d'Azur",
+  'occitanie': 'Occitanie',
+  'nouvelle-aquitaine': 'Nouvelle-Aquitaine',
+  'bretagne': 'Bretagne',
+  'pays-de-la-loire': 'Pays de la Loire',
+  'grand-est': 'Grand Est',
+  'hauts-de-france': 'Hauts-de-France',
+  'normandie': 'Normandie',
+  'bourgogne-franche-comte': 'Bourgogne-Franche-Comté',
+  'centre-val-de-loire': 'Centre-Val de Loire',
+};
+
+/**
+ * Condition slug to full name mapping
+ */
+const CONDITION_MAP: Record<string, string[]> = {
+  'neuf': ['Neuf'],
+  'comme-neuf': ['Comme neuf'],
+  'bon': ['Bon état', 'Très bon état'],
+  'correct': ['Satisfaisant'],
+};
+
+/**
+ * Check if a region matches the filter slug
+ */
+export function matchesRegion(regionValue: string | null | undefined, filterSlug: string): boolean {
+  if (!regionValue) return false;
+  const fullName = REGION_MAP[filterSlug.toLowerCase()];
+  if (!fullName) return false;
+  return normalizeString(regionValue) === normalizeString(fullName);
+}
+
+/**
+ * Check if a condition matches the filter slug
+ */
+export function matchesCondition(conditionValue: string | null | undefined, filterSlug: string): boolean {
+  if (!conditionValue) return false;
+  const allowedConditions = CONDITION_MAP[filterSlug.toLowerCase()];
+  if (!allowedConditions) return false;
+  return allowedConditions.some(c => normalizeString(conditionValue) === normalizeString(c));
+}
+
+/**
+ * Check if an item type matches the filter slug
+ */
+export function matchesItemType(itemTypeValue: string | null | undefined, filterSlug: string): boolean {
+  if (!itemTypeValue) return false;
+  return normalizeString(itemTypeValue) === normalizeString(filterSlug);
+}

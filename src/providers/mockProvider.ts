@@ -93,7 +93,7 @@ import {
 } from "./mockDataset";
 
 // Centralized filter utilities
-import { isValidFilter, matchesSearch } from "./mockUtils";
+import { isValidFilter, matchesSearch, matchesRegion, matchesCondition, matchesItemType } from "./mockUtils";
 
 // Mock subscription management
 import {
@@ -476,16 +476,16 @@ export const mockProvider: DataProvider = {
       items = items.filter(i => i.category === filters.category);
     }
     if (isValidFilter(filters.condition)) {
-      items = items.filter(i => i.condition === filters.condition);
+      items = items.filter(i => matchesCondition(i.condition, filters.condition!));
     }
     if (isValidFilter(filters.region)) {
-      items = items.filter(i => i.region === filters.region);
+      items = items.filter(i => matchesRegion(i.region, filters.region!));
     }
     if (isValidFilter(filters.platform)) {
       items = items.filter(i => i.platform === filters.platform);
     }
     if (isValidFilter(filters.item_type)) {
-      items = items.filter(i => i.item_type === filters.item_type);
+      items = items.filter(i => matchesItemType(i.item_type, filters.item_type!));
     }
     
     // Price filters - only apply if they are valid numbers > 0
