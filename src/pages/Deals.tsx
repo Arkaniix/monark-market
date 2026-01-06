@@ -17,6 +17,7 @@ import { fr } from "date-fns/locale";
 import { useDeals, useMarketSummary, useAddToWatchlist, type DealsFilters } from "@/hooks/useDeals";
 import { DealsSkeleton, MarketSummarySkeleton } from "@/components/deals/DealsSkeleton";
 import { DealCardImage } from "@/components/deals/DealCardImage";
+import { PlatformBadge } from "@/components/deals/PlatformBadge";
 import { toast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
@@ -438,9 +439,7 @@ export default function Deals() {
                                 {deal.category}
                               </Badge>
                               <Badge variant="outline">{deal.condition}</Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {deal.platform}
-                              </Badge>
+                              <PlatformBadge platform={deal.platform} />
                             </div>
 
                             <div className="space-y-2 text-sm text-muted-foreground">
