@@ -54,12 +54,12 @@ import {
   HardDrive,
   MemoryStick,
   Monitor,
+  RotateCcw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useModelsSearch, type SearchState } from "@/hooks/useModelsSearch";
+import { useModelsSearch, type SearchState, useEstimationHistoryEnhanced } from "@/hooks";
 import {
   useRunEstimation,
-  useEstimationHistory,
   useEstimatorStats,
   type EstimationResult,
 } from "@/hooks/useEstimator";
@@ -117,7 +117,16 @@ export default function Estimator() {
   // API hooks - using new search hook with debounce/abort/timeout
   const { models, state: searchState, error: searchError, retry: retrySearch } = useModelsSearch(modelSearch);
   const { data: stats } = useEstimatorStats();
-  const { data: historyData, isLoading: isLoadingHistory } = useEstimationHistory(historyPage);
+  // Only fetch history when on history tab
+  const shouldFetchHistory = activeTab === "history";
+  const { 
+    data: historyData, 
+    state: historyState,
+    error: historyError,
+    refresh: refreshHistory,
+    retry: retryHistory,
+    isLoading: isLoadingHistory 
+  } = useEstimationHistoryEnhanced(historyPage, shouldFetchHistory);
   const runEstimation = useRunEstimation();
 
   // Helper to get category icon
@@ -999,111 +1008,200 @@ Conseil,${result.advice}`;
           {/* History Tab */}
           <TabsContent value="history" className="mt-8">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <History className="h-5 w-5" />
                   Historique des estimations
                 </CardTitle>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={refreshHistory}
+                  disabled={isLoadingHistory}
+                  className="gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoadingHistory ? 'animate-spin' : ''}`} />
+                  Rafraîchir
+                </Button>
               </CardHeader>
               <CardContent>
-                {isLoadingHistory ? (
+                {/* Loading State - Skeleton Cards */}
+                {historyState === "loading" && (
                   <div className="space-y-4">
                     {[...Array(5)].map((_, i) => (
-                      <div key={i} className="flex items-center gap-4">
-                        <Skeleton className="h-12 w-12 rounded" />
+                      <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+                        <Skeleton className="h-12 w-12 rounded-lg" />
                         <div className="flex-1 space-y-2">
                           <Skeleton className="h-4 w-1/3" />
                           <Skeleton className="h-3 w-1/2" />
                         </div>
-                        <Skeleton className="h-6 w-16" />
+                        <div className="space-y-2 text-right">
+                          <Skeleton className="h-4 w-20 ml-auto" />
+                          <Skeleton className="h-3 w-16 ml-auto" />
+                        </div>
+                        <Skeleton className="h-8 w-24" />
                       </div>
                     ))}
                   </div>
-                ) : historyData?.items && historyData.items.length > 0 ? (
+                )}
+
+                {/* Error State */}
+                {historyState === "error" && (
+                  <div className="text-center py-12">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-destructive opacity-70" />
+                    <p className="text-lg font-medium text-destructive mb-2">
+                      Erreur de chargement
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {historyError || "Impossible de charger l'historique des estimations"}
+                    </p>
+                    <Button variant="outline" onClick={retryHistory} className="gap-2">
+                      <RefreshCw className="h-4 w-4" />
+                      Réessayer
+                    </Button>
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {historyState === "empty" && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-medium">Aucune estimation enregistrée</p>
+                    <p className="text-sm mt-1">Lancez votre première estimation pour la voir ici</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => setActiveTab("estimator")}
+                    >
+                      <Calculator className="h-4 w-4 mr-2" />
+                      Nouvelle estimation
+                    </Button>
+                  </div>
+                )}
+
+                {/* Success State - History Cards */}
+                {historyState === "success" && historyData?.items && historyData.items.length > 0 && (
                   <>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Modèle</TableHead>
-                          <TableHead>Catégorie</TableHead>
-                          <TableHead>Prix achat</TableHead>
-                          <TableHead>
-                            Prix conseillé
-                            {!estimatorLimits.canSeeBuyPrice && (
-                              <Lock className="h-3 w-3 inline ml-1 text-muted-foreground" />
-                            )}
-                          </TableHead>
-                          <TableHead>
-                            Revente 1m
-                            {!estimatorLimits.canSeeSellPrice && (
-                              <Lock className="h-3 w-3 inline ml-1 text-muted-foreground" />
-                            )}
-                          </TableHead>
-                          <TableHead>
-                            Marge
-                            {!estimatorLimits.canSeeMargin && (
-                              <Lock className="h-3 w-3 inline ml-1 text-muted-foreground" />
-                            )}
-                          </TableHead>
-                          <TableHead>Tendance</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {historyData.items.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="text-muted-foreground">
-                              {new Date(item.created_at).toLocaleDateString('fr-FR')}
-                            </TableCell>
-                            <TableCell className="font-medium">{item.model_name}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{item.category}</Badge>
-                            </TableCell>
-                            <TableCell>{item.buy_price_input}€</TableCell>
-                            <TableCell className="text-accent">
+                    <div className="space-y-3">
+                      {historyData.items.map((item) => (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                          {/* Model Info */}
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                              {getCategoryIcon(item.category)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{item.model_name}</p>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Badge variant="outline" className="text-xs">
+                                  {item.category}
+                                </Badge>
+                                <span>•</span>
+                                <span className="capitalize">{item.condition?.replace('-', ' ')}</span>
+                                {item.region && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{item.region}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Date */}
+                          <div className="text-sm text-muted-foreground shrink-0">
+                            <Clock className="h-3 w-3 inline mr-1" />
+                            {new Date(item.created_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </div>
+
+                          {/* Prices */}
+                          <div className="flex items-center gap-6 text-sm">
+                            <div className="text-center">
+                              <p className="text-muted-foreground text-xs">Achat</p>
+                              <p className="font-medium">{item.buy_price_input}€</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-muted-foreground text-xs">Conseillé</p>
                               <LockedValue 
-                                value={`${item.buy_price_recommended}€`}
+                                value={<span className="font-medium text-accent">{item.buy_price_recommended}€</span>}
                                 isLocked={!estimatorLimits.canSeeBuyPrice}
                                 requiredPlan="pro"
                               />
-                            </TableCell>
-                            <TableCell className="text-primary">
+                            </div>
+                            <div className="text-center">
+                              <p className="text-muted-foreground text-xs">Revente</p>
                               <LockedValue 
-                                value={`${item.sell_price_1m}€`}
+                                value={<span className="font-medium text-primary">{item.sell_price_1m}€</span>}
                                 isLocked={!estimatorLimits.canSeeSellPrice}
                                 requiredPlan="pro"
                               />
-                            </TableCell>
-                            <TableCell>
-                              <LockedValue 
-                                value={
-                                  <span className={
-                                    item.margin_pct >= 10
-                                      ? "text-green-500"
-                                      : item.margin_pct >= 0
-                                      ? "text-orange-500"
-                                      : "text-destructive"
-                                  }>
-                                    {item.margin_pct > 0 ? "+" : ""}{item.margin_pct}%
-                                  </span>
-                                }
-                                isLocked={!estimatorLimits.canSeeMargin}
-                                requiredPlan="pro"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              {item.trend === "up" ? (
-                                <TrendingUp className="h-4 w-4 text-green-500" />
-                              ) : item.trend === "down" ? (
-                                <TrendingDown className="h-4 w-4 text-destructive" />
-                              ) : (
-                                <Minus className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                            </div>
+                          </div>
+
+                          {/* Margin + Trend */}
+                          <div className="flex items-center gap-3">
+                            <LockedValue 
+                              value={
+                                <Badge 
+                                  variant={item.margin_pct >= 10 ? "default" : item.margin_pct >= 0 ? "secondary" : "destructive"}
+                                  className={item.margin_pct >= 10 ? "bg-green-500/20 text-green-600 border-green-500/30" : ""}
+                                >
+                                  {item.margin_pct > 0 ? "+" : ""}{item.margin_pct}%
+                                </Badge>
+                              }
+                              isLocked={!estimatorLimits.canSeeMargin}
+                              requiredPlan="pro"
+                            />
+                            {item.trend === "up" ? (
+                              <TrendingUp className="h-4 w-4 text-green-500" />
+                            ) : item.trend === "down" ? (
+                              <TrendingDown className="h-4 w-4 text-destructive" />
+                            ) : (
+                              <Minus className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+
+                          {/* Reprendre Action */}
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              // Pre-fill form with history item values
+                              setSelectedModel({
+                                id: item.model_id,
+                                name: item.model_name,
+                                brand: item.brand || '',
+                                category: item.category,
+                                family: null,
+                              });
+                              setModelSearch(item.model_name);
+                              setCondition(item.condition || '');
+                              setRegion(item.region || '');
+                              setBuyPriceInput(item.buy_price_input.toString());
+                              setResult(null);
+                              setActiveTab("estimator");
+                              toast({
+                                title: "Formulaire pré-rempli",
+                                description: `Estimation de ${item.model_name} prête à être relancée`,
+                              });
+                            }}
+                            className="gap-1 shrink-0"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            Reprendre
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
 
                     {/* Pagination */}
                     {historyData.total > historyData.page_size && (
@@ -1112,7 +1210,7 @@ Conseil,${result.advice}`;
                           variant="outline"
                           size="sm"
                           onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
-                          disabled={historyPage === 1}
+                          disabled={historyPage === 1 || isLoadingHistory}
                         >
                           Précédent
                         </Button>
@@ -1123,19 +1221,13 @@ Conseil,${result.advice}`;
                           variant="outline"
                           size="sm"
                           onClick={() => setHistoryPage((p) => p + 1)}
-                          disabled={historyPage >= Math.ceil(historyData.total / historyData.page_size)}
+                          disabled={historyPage >= Math.ceil(historyData.total / historyData.page_size) || isLoadingHistory}
                         >
                           Suivant
                         </Button>
                       </div>
                     )}
                   </>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Aucune estimation dans l'historique</p>
-                    <p className="text-sm">Lancez votre première estimation pour la voir ici</p>
-                  </div>
                 )}
               </CardContent>
             </Card>

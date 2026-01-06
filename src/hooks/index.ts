@@ -43,6 +43,14 @@ export {
   type UseModelsSearchResult,
 } from "./useModelsSearch";
 
+// Estimation History - with state management, retry, refresh
+export {
+  useEstimationHistory as useEstimationHistoryEnhanced,
+  type EstimationHistoryItem as EstimationHistoryItemEnhanced,
+  type EstimationHistoryResponse as EstimationHistoryResponseEnhanced,
+  type HistoryState,
+} from "./useEstimationHistory";
+
 // Entitlements - single source of truth for user permissions
 export {
   useEntitlements,
