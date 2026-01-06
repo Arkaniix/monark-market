@@ -16,6 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useDeals, useMarketSummary, useAddToWatchlist, type DealsFilters } from "@/hooks/useDeals";
 import { DealsSkeleton, MarketSummarySkeleton } from "@/components/deals/DealsSkeleton";
+import { DealCardImage } from "@/components/deals/DealCardImage";
 import { toast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
@@ -379,8 +380,16 @@ export default function Deals() {
               const isHighValue = discount >= 15;
               const ItemTypeIcon = getItemTypeIcon(deal.item_type);
               return <motion.div key={deal.id} variants={itemVariants}>
-                      <Card className="hover:border-primary transition-all hover:shadow-xl group h-full flex flex-col">
-                        <CardHeader>
+                      <Card className="hover:border-primary transition-all hover:shadow-xl group h-full flex flex-col overflow-hidden">
+                        {/* Image slot */}
+                        <DealCardImage
+                          imageUrl={null}
+                          modelName={deal.model_name}
+                          category={deal.category}
+                          alt={deal.title}
+                          className="rounded-t-lg"
+                        />
+                        <CardHeader className="pt-3">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex gap-2 flex-wrap">
                               <Badge variant={perfBadge.variant} className="gap-1">
