@@ -65,16 +65,28 @@ export function PersonalStats({
   const filteredData = useMemo(() => {
     const periodDays = timeFilter === '7j' ? 7 : timeFilter === '30j' ? 30 : 90;
     
-    // Générer des données cohérentes pour la période avec un seed basé sur le filtre
-    const seedMultiplier = timeFilter === '7j' ? 1 : timeFilter === '30j' ? 2 : 3;
+    // Générateur pseudo-aléatoire avec seed pour données cohérentes
+    const seededRandom = (seed: number) => {
+      const x = Math.sin(seed * 9999) * 10000;
+      return x - Math.floor(x);
+    };
+    
+    const baseSeed = timeFilter === '7j' ? 42 : timeFilter === '30j' ? 137 : 256;
     
     return Array.from({ length: periodDays }, (_, i) => {
-      // Utiliser une formule déterministe pour des données cohérentes
-      const baseValue = 3 + Math.sin((i + seedMultiplier) * 0.3) * 2;
-      const variation = Math.cos((i * seedMultiplier) * 0.5) * 1.5;
+      const seed = baseSeed + i * 7.3;
+      const random1 = seededRandom(seed);
+      const random2 = seededRandom(seed + 100);
+      
+      // Tendance légère à la hausse + bruit réaliste
+      const trend = (i / periodDays) * 1.5;
+      const weekdayEffect = (i % 7 < 5) ? 1.2 : 0.6; // Plus actif en semaine
+      const noise = (random1 - 0.5) * 4;
+      const spike = random2 > 0.9 ? 3 : 0; // Pics occasionnels
+      
       return {
         day: i + 1,
-        scans: Math.max(0, Math.round(baseValue + variation))
+        scans: Math.max(0, Math.round(2 + trend + weekdayEffect + noise + spike))
       };
     });
   }, [timeFilter]);
