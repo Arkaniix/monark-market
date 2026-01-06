@@ -139,8 +139,8 @@ export default function Tracking() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-5">
-            <TabsTrigger value="watchlist" className="gap-2">
+          <TabsList className="w-full h-auto p-1 mb-5 grid grid-cols-3">
+            <TabsTrigger value="watchlist" className="gap-2 py-2.5">
               <Eye className="h-4 w-4" />
               <span className="hidden sm:inline">Watchlist</span>
               <Badge variant="secondary" className="ml-1">{watchlist.length}</Badge>
@@ -148,7 +148,7 @@ export default function Tracking() {
                 Gratuit
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="alerts" className="gap-2">
+            <TabsTrigger value="alerts" className="gap-2 py-2.5">
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Alertes</span>
               <Badge 
@@ -158,7 +158,7 @@ export default function Tracking() {
                 {activeAlertsCount}/{maxAlerts}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-2">
+            <TabsTrigger value="notifications" className="gap-2 py-2.5">
               <Radar className="h-4 w-4" />
               <span className="hidden sm:inline">Notifications</span>
               {unreadNotifications.length > 0 && (
