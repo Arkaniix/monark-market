@@ -52,7 +52,7 @@ const CITIES_BY_REGION: Record<string, string[]> = {
 };
 
 const CONDITIONS = ["Neuf", "Comme neuf", "Très bon état", "Bon état", "Satisfaisant"];
-const PLATFORMS = ["leboncoin", "facebook", "rakuten", "ebay", "hardware.fr"];
+const PLATFORMS = ["leboncoin", "ebay", "amazon", "ldlc", "facebook", "vinted"];
 const CARD_BRANDS = ["ASUS", "MSI", "Gigabyte", "EVGA", "Sapphire", "XFX", "Zotac", "PowerColor", "Palit", "PNY", "Gainward"];
 const SUFFIXES = ["Gaming", "OC", "Pro", "Elite", "Strix", "Tuf", "Ventus", "Gaming X", "Eagle", ""];
 
