@@ -112,8 +112,9 @@ export default function Home() {
         totalScraps={userStats.totalScraps}
         creditsRemaining={userStats.creditsRemaining}
         creditsResetDate={userStats.creditsResetDate}
-        watchlistCount={userStats.watchlistCount}
-        estimatedGains={userStats.estimatedGains}
+        opportunitiesDetected={topDeals.length}
+        alertsTriggered={alerts.length}
+        potentialSavings={userStats.estimatedGains}
         recentActivity={recentActivity}
         performanceData={performanceData}
       />
