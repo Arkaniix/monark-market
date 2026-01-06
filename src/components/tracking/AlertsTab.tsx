@@ -273,24 +273,24 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Dashboard alertes - Statistiques réelles */}
       <Card className="bg-gradient-to-br from-amber-500/5 via-transparent to-transparent border-amber-500/20">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center justify-between">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center justify-between">
             <span className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-amber-500" />
-              Vue d'ensemble de vos alertes
+              Vue d'ensemble
             </span>
-            <Badge variant="outline" className="gap-1">
+            <Badge variant="outline" className="gap-1 text-xs">
               {plan === "starter" && <Bell className="h-3 w-3" />}
               {plan === "pro" && <Crown className="h-3 w-3 text-primary" />}
               {plan === "elite" && <Crown className="h-3 w-3 text-amber-500" />}
-              Plan {plan.charAt(0).toUpperCase() + plan.slice(1)}
+              {plan.charAt(0).toUpperCase() + plan.slice(1)}
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* Alertes actives avec jauge limite */}
             <div className="space-y-2 md:col-span-2">
@@ -370,24 +370,24 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
 
       {/* Liste alertes */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <Bell className="h-5 w-5 text-amber-500" />
                 Mes alertes
                 <Badge variant="outline">{filteredAlerts.length}</Badge>
               </CardTitle>
-              <CardDescription className="mt-1">
-                Panneau de contrôle de vos alertes prix et bonnes affaires
+              <CardDescription className="mt-1 text-xs">
+                Panneau de contrôle de vos alertes
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={refetch}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={refetch}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
               <Link to="/catalog">
-                <Button size="sm" className="gap-2">
+                <Button size="sm" className="gap-2 h-8">
                   <Plus className="h-4 w-4" />
                   Créer
                 </Button>
@@ -395,11 +395,11 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           {/* Filtres */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-              <SelectTrigger className="w-full sm:w-[160px]">
+              <SelectTrigger className="w-full sm:w-[140px] h-9">
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
@@ -409,7 +409,7 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(1); }}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[160px] h-9">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
@@ -423,7 +423,7 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
               </SelectContent>
             </Select>
             <Select value={targetFilter} onValueChange={(v) => { setTargetFilter(v); setPage(1); }}>
-              <SelectTrigger className="w-full sm:w-[160px]">
+              <SelectTrigger className="w-full sm:w-[140px] h-9">
                 <SelectValue placeholder="Cible" />
               </SelectTrigger>
               <SelectContent>

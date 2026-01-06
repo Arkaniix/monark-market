@@ -41,32 +41,32 @@ export default function Tracking() {
   }
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-6">
       <div className="container max-w-6xl">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-1">
             <div className="p-2 rounded-lg bg-primary/10">
-              <Radar className="h-6 w-6 text-primary" />
+              <Radar className="h-5 w-5 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold">Mon Suivi</h1>
+            <h1 className="text-2xl font-bold">Mon Suivi</h1>
           </div>
-          <p className="text-muted-foreground">
-            Gérez votre watchlist, vos alertes et notifications personnalisées
+          <p className="text-sm text-muted-foreground">
+            Gérez votre watchlist, vos alertes et notifications
           </p>
         </div>
 
         {/* Stats rapides avec indication des limites */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
           {/* Watchlist - Gratuit & Illimité */}
           <Card className="cursor-pointer hover:border-primary/50 transition-colors relative overflow-hidden" onClick={() => setActiveTab("watchlist")}>
-            <div className="absolute top-2 right-2 flex gap-1">
+            <div className="absolute top-2 right-2">
               <Badge variant="secondary" className="text-[10px] bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
                 <Infinity className="h-3 w-3 mr-0.5" />
                 Illimité
               </Badge>
             </div>
-            <CardContent className="pt-6">
+            <CardContent className="pt-5 pb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-500/10">
                   <Eye className="h-5 w-5 text-blue-500" />
@@ -90,7 +90,7 @@ export default function Tracking() {
                 {activeAlertsCount}/{maxAlerts}
               </Badge>
             </div>
-            <CardContent className="pt-6">
+            <CardContent className="pt-5 pb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-amber-500/10">
                   <Bell className="h-5 w-5 text-amber-500" />
@@ -120,7 +120,7 @@ export default function Tracking() {
 
           {/* Notifications - Toujours accessibles */}
           <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setActiveTab("notifications")}>
-            <CardContent className="pt-6">
+            <CardContent className="pt-5 pb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-green-500/10">
                   <Radar className="h-5 w-5 text-green-500" />
@@ -139,7 +139,7 @@ export default function Tracking() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-5">
             <TabsTrigger value="watchlist" className="gap-2">
               <Eye className="h-4 w-4" />
               <span className="hidden sm:inline">Watchlist</span>

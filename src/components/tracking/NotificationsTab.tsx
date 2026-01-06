@@ -268,36 +268,33 @@ export function NotificationsTab({
         {renderGroup("Plus ancien", grouped.older, isRead)}
       </>;
   };
-  return <div className="space-y-6">
-      {/* Dashboard notifications - Stats réelles */}
-      
-
+  return <div className="space-y-5">
       {/* Liste notifications */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <Inbox className="h-5 w-5 text-green-500" />
                 Inbox
-                {unreadNotifications.length > 0 && <Badge variant="destructive">{unreadNotifications.length} non lues</Badge>}
+                {unreadNotifications.length > 0 && <Badge variant="destructive">{unreadNotifications.length}</Badge>}
               </CardTitle>
-              <CardDescription className="mt-1">
+              <CardDescription className="mt-1 text-xs">
                 Vos alertes et notifications système
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={refetch}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={refetch}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
-              {unreadNotifications.length > 0 && <Button variant="outline" size="sm" onClick={() => markAllNotificationsRead.mutate()} disabled={markAllNotificationsRead.isPending} className="gap-2">
+              {unreadNotifications.length > 0 && <Button variant="outline" size="sm" onClick={() => markAllNotificationsRead.mutate()} disabled={markAllNotificationsRead.isPending} className="gap-2 h-8">
                   <CheckCircle2 className="h-4 w-4" />
-                  Tout marquer lu
+                  <span className="hidden sm:inline">Tout marquer lu</span>
                 </Button>}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           {isLoading ? <ListSkeleton /> : error ? <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Erreur</AlertTitle>
@@ -307,13 +304,13 @@ export function NotificationsTab({
                   Réessayer
                 </Button>
               </AlertDescription>
-            </Alert> : notifications.length === 0 ? <div className="text-center py-16">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-4">
-                <Inbox className="h-8 w-8 text-green-500" />
+            </Alert> : notifications.length === 0 ? <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-green-500/10 mb-3">
+                <Inbox className="h-7 w-7 text-green-500" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Inbox vide</h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Vos notifications apparaîtront ici lorsque vos alertes seront déclenchées ou que vous recevrez des messages système.
+              <h3 className="text-base font-semibold mb-1">Inbox vide</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                Vos notifications apparaîtront ici lorsque vos alertes seront déclenchées.
               </p>
             </div> : <div>
               {/* Section non lues */}
