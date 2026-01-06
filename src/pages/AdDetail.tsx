@@ -474,24 +474,6 @@ export default function AdDetail() {
                         )}
                         <span>Paiement sécurisé {ad.secured_payment ? 'disponible' : 'non disponible'}</span>
                       </div>
-                      {ad.model_confidence !== null && (
-                        <div className="pt-2">
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Confiance d'identification du modèle
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary transition-all"
-                                style={{ width: `${ad.model_confidence * 100}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-medium">
-                              {(ad.model_confidence * 100).toFixed(0)}%
-                            </span>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </CardContent>
