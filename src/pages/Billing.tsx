@@ -8,8 +8,44 @@ import { Separator } from "@/components/ui/separator";
 import { CreditResetInfo } from "@/components/credits/CreditResetInfo";
 import { useCredits } from "@/hooks/useCredits";
 import { useEntitlements } from "@/hooks/useEntitlements";
-import { Coins, Crown, ArrowRight, Sparkles } from "lucide-react";
+import { Coins, Crown, ArrowRight, Sparkles, Puzzle, CheckCircle2, Download, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+
+// Mock component for extension status (visual only)
+function ExtensionStatus() {
+  const [isDetected] = useState(false); // Mock: change to true to see detected state
+
+  if (isDetected) {
+    return (
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+        <CheckCircle2 className="h-5 w-5 text-green-500" />
+        <div>
+          <p className="font-medium text-green-700 dark:text-green-400">Extension détectée</p>
+          <p className="text-xs text-muted-foreground">Prêt à scanner</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+        <Puzzle className="h-5 w-5 text-muted-foreground" />
+        <div>
+          <p className="font-medium">Extension non détectée</p>
+          <p className="text-xs text-muted-foreground">Installez l'extension pour commencer</p>
+        </div>
+      </div>
+      <Button className="w-full" asChild>
+        <a href="#" target="_blank" rel="noopener noreferrer">
+          <Download className="h-4 w-4 mr-2" />
+          Télécharger l'extension
+        </a>
+      </Button>
+    </div>
+  );
+}
 
 export default function Billing() {
   const { creditsRemaining, resetInfo } = useCredits();
@@ -56,10 +92,10 @@ export default function Billing() {
               </div>
               <Separator />
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Crédits disponibles</span>
+                <span className="text-muted-foreground">Crédits</span>
                 <div className="flex items-center gap-2">
                   <Coins className="h-4 w-4 text-primary" />
-                  <span className="font-bold text-lg">{creditsRemaining}</span>
+                  <span className="font-bold text-lg">{creditsRemaining} crédits</span>
                 </div>
               </div>
               {resetInfo?.resetDate && (
@@ -78,32 +114,25 @@ export default function Billing() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                Besoin de plus de crédits ?
+                <Puzzle className="h-5 w-5 text-primary" />
+                Extension navigateur
               </CardTitle>
               <CardDescription>
-                Rechargez votre compte instantanément
+                Statut de l'extension et formation
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  ✓ Crédits disponibles immédiatement
-                </li>
-                <li className="flex items-center gap-2">
-                  ✓ Utilisables pour toutes les actions
-                </li>
-                <li className="flex items-center gap-2">
-                  ✓ Jusqu'à 25% d'économies sur les gros packs
-                </li>
-              </ul>
-              <p className="text-xs text-muted-foreground">
-                Les crédits de recharge expirent à la fin de votre cycle mensuel 
-                et ne sont pas cumulables d'un mois à l'autre.
-              </p>
+              <ExtensionStatus />
+              <Separator />
+              <Button variant="outline" className="w-full" asChild>
+                <Link to="/training">
+                  <GraduationCap className="h-4 w-4 mr-2" />
+                  Module de formation extension
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
