@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -57,6 +58,7 @@ export default function MyAccount() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [displayName, setDisplayName] = useState("");
+  const [language, setLanguage] = useState("fr");
 
   // Entitlements & subscription data
   const { 
@@ -234,6 +236,23 @@ export default function MyAccount() {
 
                   {/* Préférences rapides */}
                   <div className="space-y-3">
+                    {/* Langue */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        <span className="text-sm">Langue</span>
+                      </div>
+                      <Select value={language} onValueChange={setLanguage}>
+                        <SelectTrigger className="w-32 h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fr">Français</SelectItem>
+                          <SelectItem value="en">English</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Thème */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -244,6 +263,7 @@ export default function MyAccount() {
                         onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
                       />
                     </div>
+                    {/* Notifications push */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Bell className="h-4 w-4" />
@@ -254,6 +274,7 @@ export default function MyAccount() {
                         onCheckedChange={setNotificationsEnabled}
                       />
                     </div>
+                    {/* Alertes email */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4" />
