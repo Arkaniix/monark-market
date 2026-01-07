@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,19 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Flame, MapPin, Calendar, TrendingDown, Package, Truck, ExternalLink, RotateCcw, DollarSign, BarChart3, Sparkles, Star, Bell, Cpu, HardDrive, CircuitBoard, Monitor, TrendingUp } from "lucide-react";
+import { Flame, MapPin, TrendingDown, Package, Truck, ExternalLink, RotateCcw, Cpu, Monitor, TrendingUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useDeals, useMarketSummary, useAddToWatchlist, type DealsFilters } from "@/hooks/useDeals";
-import { DealsSkeleton, MarketSummarySkeleton } from "@/components/deals/DealsSkeleton";
+import { useDeals, useMarketSummary, type DealsFilters } from "@/hooks/useDeals";
+import { useWatchlist, useAddToWatchlist, useRemoveFromWatchlist } from "@/hooks/useWatchlist";
+import { useAlerts, useDeleteAlert } from "@/hooks/useProviderData";
+import { DealsSkeleton } from "@/components/deals/DealsSkeleton";
 import { DealCardImage } from "@/components/deals/DealCardImage";
 import { PlatformBadge, AVAILABLE_PLATFORMS } from "@/components/deals/PlatformBadge";
 import { toast } from "@/hooks/use-toast";
 import { CreateAlertModal, type AlertTarget } from "@/components/alerts/CreateAlertModal";
+import { WatchlistActionButton } from "@/components/common/WatchlistActionButton";
+import { AlertActionButton } from "@/components/common/AlertActionButton";
+
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
+
 const containerVariants = {
   hidden: {
     opacity: 0
@@ -80,7 +85,38 @@ export default function Deals() {
     data: summary,
     isLoading: summaryLoading
   } = useMarketSummary();
+  
+  // Watchlist & Alerts hooks
+  const { data: watchlistData } = useWatchlist();
+  const { data: alertsData } = useAlerts();
   const addToWatchlist = useAddToWatchlist();
+  const removeFromWatchlist = useRemoveFromWatchlist();
+  const deleteAlert = useDeleteAlert();
+
+  // Create lookup sets for fast checking
+  const watchlistAdIds = useMemo(() => {
+    if (!watchlistData?.items) return new Set<number>();
+    return new Set(
+      watchlistData.items
+        .filter(item => item.target_type === 'ad')
+        .map(item => item.target_id)
+    );
+  }, [watchlistData]);
+
+  // Get alerts by ad id (multiple alerts per ad possible)
+  const alertsByAdId = useMemo(() => {
+    const map = new Map<number, typeof alertsData.items>();
+    if (!alertsData?.items) return map;
+    alertsData.items
+      .filter(alert => alert.target_type === 'ad' && alert.is_active)
+      .forEach(alert => {
+        const existing = map.get(alert.target_id) || [];
+        existing.push(alert);
+        map.set(alert.target_id, existing);
+      });
+    return map;
+  }, [alertsData]);
+
   const openAlertModal = (deal: {
     id: number;
     title: string;
@@ -103,21 +139,52 @@ export default function Deals() {
     setSortBy("score");
     setCurrentPage(1);
   };
-  const handleAddToWatchlist = async (adId: number, title: string) => {
+  
+  const handleToggleWatchlist = async (adId: number, title: string, isInWatchlist: boolean) => {
     try {
-      await addToWatchlist.mutateAsync(adId);
-      toast({
-        title: "Ajouté à la watchlist",
-        description: `"${title}" a été ajouté à votre watchlist.`
-      });
+      if (isInWatchlist) {
+        const entry = watchlistData?.items.find(
+          item => item.target_type === 'ad' && item.target_id === adId
+        );
+        if (entry) {
+          await removeFromWatchlist.mutateAsync(entry.id);
+          toast({
+            title: "Retiré de la watchlist",
+            description: `"${title}" a été retiré de votre watchlist.`
+          });
+        }
+      } else {
+        await addToWatchlist.mutateAsync({ target_type: 'ad', target_id: adId });
+        toast({
+          title: "Ajouté à la watchlist",
+          description: `"${title}" a été ajouté à votre watchlist.`
+        });
+      }
     } catch {
       toast({
         title: "Erreur",
-        description: "Impossible d'ajouter à la watchlist.",
+        description: "Impossible de modifier la watchlist.",
         variant: "destructive"
       });
     }
   };
+
+  const handleDeleteAlert = async (alertId: number) => {
+    try {
+      await deleteAlert.mutateAsync(alertId);
+      toast({
+        title: "Alerte supprimée",
+        description: "L'alerte a été supprimée avec succès."
+      });
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'alerte.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   const getScoreColor = (score: number) => {
     if (score >= 80) return "default";
     if (score >= 60) return "secondary";
@@ -356,6 +423,8 @@ export default function Deals() {
               const perfBadge = getPerformanceBadge(deal.score);
               const isHighValue = discount >= 15;
               const ItemTypeIcon = getItemTypeIcon(deal.item_type);
+              const isInWatchlist = watchlistAdIds.has(deal.id);
+              const existingAlerts = alertsByAdId.get(deal.id) || [];
               return <motion.div key={deal.id} variants={itemVariants}>
                       <Card className="deal-card hover:border-primary/50 transition-all hover:shadow-lg group h-full flex flex-col overflow-hidden">
                         {/* Image zone - fixed aspect ratio */}
@@ -450,26 +519,21 @@ export default function Deals() {
                                 </Button> : <Button className="flex-1 h-9 text-sm" variant="default" size="sm" disabled>
                                   Voir
                                 </Button>}
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => handleAddToWatchlist(deal.id, deal.title)} disabled={addToWatchlist.isPending || !deal.id}>
-                                      <Star className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Suivre</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => openAlertModal(deal)} disabled={!deal.id}>
-                                      <Bell className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Alerter</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <WatchlistActionButton
+                                isInWatchlist={isInWatchlist}
+                                onToggle={() => handleToggleWatchlist(deal.id, deal.title, isInWatchlist)}
+                                disabled={addToWatchlist.isPending || removeFromWatchlist.isPending || !deal.id}
+                                size="sm"
+                              />
+                              <AlertActionButton
+                                targetId={deal.id}
+                                targetType="ad"
+                                existingAlerts={existingAlerts}
+                                onCreateAlert={() => openAlertModal(deal)}
+                                onDeleteAlert={handleDeleteAlert}
+                                disabled={!deal.id}
+                                size="sm"
+                              />
                               {deal.url && <Button variant="outline" size="sm" className="h-9 w-9 p-0" asChild>
                                   <a href={deal.url} target="_blank" rel="noopener noreferrer">
                                     <ExternalLink className="h-4 w-4" />
