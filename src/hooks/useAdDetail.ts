@@ -18,13 +18,7 @@ export function useAdDetail(adId: string | undefined) {
         model_id: ad.model?.id || null,
         model_name: ad.model?.name || null,
         model_confidence: 0.95,
-        components: ad.components?.map(c => ({
-          role: c.type,
-          model_id: null,
-          model_name: c.model,
-          brand: c.brand,
-          category: c.type,
-        })) || [],
+        components: ad.components || [],
       };
     },
     enabled: !!adId,
