@@ -134,21 +134,20 @@ export default function Community() {
   ];
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="container max-w-7xl">
+    <div className="min-h-screen py-6 md:py-8">
+      <div className="container max-w-7xl space-y-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-2">
             <div className="flex items-center gap-3">
-              <Users className="w-10 h-10 text-primary" />
+              <Users className="w-8 h-8 md:w-10 md:h-10 text-primary flex-shrink-0" />
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold">🤝 Communauté</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">🤝 Communauté</h1>
+                <p className="text-sm md:text-base text-muted-foreground">
                   Aide à mettre le marché à jour
                 </p>
               </div>
@@ -168,14 +167,14 @@ export default function Community() {
               </Button>
             </div>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Contribue au rafraîchissement des données et gagne des crédits.
           </p>
         </motion.div>
 
         {/* Error state */}
         {errorAvailable && (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Erreur lors du chargement des missions. {errorAvailable.message}
@@ -186,22 +185,20 @@ export default function Community() {
           </Alert>
         )}
 
-        {/* KPI Cards */}
+        {/* KPI Cards - Uniform height */}
         {loadingStats && loadingAvailable ? (
-          <div className="mb-8">
-            <CommunityStatsSkeleton />
-          </div>
+          <CommunityStatsSkeleton />
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             {statsCards.map((stat, index) => (
-              <Card key={index} className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-muted">
-                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
+              <Card key={index} className="p-3 md:p-4 flex items-center min-h-[72px]">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="p-2 rounded-lg bg-muted flex-shrink-0">
+                    <stat.icon className={`h-4 w-4 md:h-5 md:w-5 ${stat.color}`} />
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{stat.title}</p>
-                    <p className="text-xl font-bold">{stat.value}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs md:text-sm text-muted-foreground truncate">{stat.title}</p>
+                    <p className="text-lg md:text-xl font-bold">{stat.value}</p>
                   </div>
                 </div>
               </Card>
@@ -210,19 +207,19 @@ export default function Community() {
         )}
 
         {/* Quick Scrap Block */}
-        <Card className="mb-8 border-2 border-primary">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Flame className="w-6 h-6 text-orange-500" />
+        <Card className="border-2 border-primary">
+          <CardHeader className="pb-2 md:pb-4">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <Flame className="w-5 h-5 md:w-6 md:h-6 text-orange-500" />
               Collecte communautaire
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs md:text-sm">
               Lance une mission pour contribuer aux données du marché
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className={`p-4 rounded-lg border ${buttonState.disabled ? "bg-muted border-border" : "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800"}`}>
+          <CardContent className="pt-0">
+            <div className="space-y-3 md:space-y-4">
+              <div className={`p-3 md:p-4 rounded-lg border ${buttonState.disabled ? "bg-muted border-border" : "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800"}`}>
                 <p className="text-sm font-medium mb-1">{buttonState.reason}</p>
                 {!buttonState.disabled && availableData?.tasks[0] && (
                   <p className="text-xs text-muted-foreground">
@@ -257,138 +254,139 @@ export default function Community() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+        {/* Missions + Summary - 70/30 ratio on desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 md:gap-6 items-start">
           {/* Available Tasks */}
-          <div className="lg:col-span-2">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle>Missions disponibles</CardTitle>
-                <CardDescription>
-                  Clique sur une mission pour la claim et démarrer
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loadingAvailable ? (
-                  <CommunityTasksSkeleton />
-                ) : availableData?.tasks.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    Aucune mission disponible pour le moment.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {availableData?.tasks.map(task => (
-                      <div 
-                        key={task.id} 
-                        className="p-4 border rounded-lg hover:border-primary transition-colors cursor-pointer group" 
-                        onClick={() => !buttonState.disabled && handleClaimTask(task)}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <p className="font-semibold">{task.model_name}</p>
-                              <Badge variant={PRIORITY_COLORS[task.priority]} className="text-xs">
-                                {task.priority === "high" ? "Haute" : task.priority === "medium" ? "Moyenne" : "Basse"}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {task.platform}
-                              </Badge>
-                            </div>
-                            {task.context && <p className="text-sm text-muted-foreground">{task.context}</p>}
+          <Card>
+            <CardHeader className="pb-2 md:pb-4">
+              <CardTitle className="text-base md:text-lg">Missions disponibles</CardTitle>
+              <CardDescription className="text-xs md:text-sm">
+                Clique sur une mission pour la claim et démarrer
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingAvailable ? (
+                <CommunityTasksSkeleton />
+              ) : availableData?.tasks.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  Aucune mission disponible pour le moment.
+                </p>
+              ) : (
+                <div className="space-y-2 md:space-y-3">
+                  {availableData?.tasks.map(task => (
+                    <div 
+                      key={task.id} 
+                      className="p-3 md:p-4 border rounded-lg hover:border-primary transition-colors cursor-pointer group" 
+                      onClick={() => !buttonState.disabled && handleClaimTask(task)}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <p className="font-semibold text-sm md:text-base truncate">{task.model_name}</p>
+                            <Badge variant={PRIORITY_COLORS[task.priority]} className="text-xs flex-shrink-0">
+                              {task.priority === "high" ? "Haute" : task.priority === "medium" ? "Moyenne" : "Basse"}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs flex-shrink-0">
+                              {task.platform}
+                            </Badge>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Star className={`w-5 h-5 flex-shrink-0 ${task.priority === "high" ? "text-orange-500 fill-orange-500" : "text-muted-foreground"}`} />
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="opacity-0 group-hover:opacity-100 transition-opacity" 
-                              disabled={buttonState.disabled || claimTask.isPending} 
-                              onClick={e => {
-                                e.stopPropagation();
-                                handleClaimTask(task);
-                              }}
-                            >
-                              <Play className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          {task.context && <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">{task.context}</p>}
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                          <div className="flex items-center gap-1">
-                            <Activity className="w-3 h-3" />
-                            <span>{task.type}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            <span>~{task.estimated_time_min} min</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            <span>{task.region || "FR"}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-green-600">
-                            <Award className="w-3 h-3" />
-                            <span>+{task.reward_credits}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Timer className="w-3 h-3" />
-                            <span>p.{task.pages_from}-{task.pages_to}</span>
-                          </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Star className={`w-4 h-4 md:w-5 md:h-5 ${task.priority === "high" ? "text-orange-500 fill-orange-500" : "text-muted-foreground"}`} />
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0" 
+                            disabled={buttonState.disabled || claimTask.isPending} 
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleClaimTask(task);
+                            }}
+                          >
+                            <Play className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* User Summary */}
-          <div>
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="text-lg">Ton résumé</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {loadingMyTasks ? (
-                  <MyTasksSkeleton />
-                ) : (
-                  <>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Crédits ce mois-ci</p>
-                      <p className="text-2xl font-bold text-green-600">
-                        +{myTasksData?.tasks.filter(t => t.status === "completed" || t.status === "done").reduce((acc, t) => acc + t.credits_earned, 0) ?? 0}
-                      </p>
+                      <div className="grid grid-cols-3 md:grid-cols-5 gap-2 text-xs">
+                        <div className="flex items-center gap-1">
+                          <Activity className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{task.type}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 flex-shrink-0" />
+                          <span>~{task.estimated_time_min}min</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          <span>{task.region || "FR"}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-green-600">
+                          <Award className="w-3 h-3 flex-shrink-0" />
+                          <span>+{task.reward_credits}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground hidden md:flex">
+                          <Timer className="w-3 h-3 flex-shrink-0" />
+                          <span>p.{task.pages_from}-{task.pages_to}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Missions terminées</p>
-                      <p className="text-xl font-semibold">
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* User Summary - Fixed width sidebar */}
+          <Card className="lg:sticky lg:top-4">
+            <CardHeader className="pb-2 md:pb-4">
+              <CardTitle className="text-base md:text-lg">Ton résumé</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loadingMyTasks ? (
+                <MyTasksSkeleton />
+              ) : (
+                <>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <p className="text-xs md:text-sm text-muted-foreground">Crédits ce mois-ci</p>
+                    <p className="text-xl md:text-2xl font-bold text-green-600">
+                      +{myTasksData?.tasks.filter(t => t.status === "completed" || t.status === "done").reduce((acc, t) => acc + t.credits_earned, 0) ?? 0}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground">Missions</p>
+                      <p className="text-lg md:text-xl font-semibold">
                         {myTasksData?.tasks.filter(t => t.status === "completed" || t.status === "done").length ?? 0}
                       </p>
                     </div>
                     {userLimits && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Limite du jour</p>
-                        <p className="text-xl font-semibold">
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <p className="text-xs text-muted-foreground">Limite jour</p>
+                        <p className="text-lg md:text-xl font-semibold">
                           {userLimits.used_today}/{userLimits.max_comm_jobs_per_day}
                         </p>
                       </div>
                     )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* History & Leaderboard Previews */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+        {/* History & Leaderboard Previews - Equal width columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {/* Personal History Preview */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 md:pb-4">
               <div>
-                <CardTitle>Historique personnel</CardTitle>
-                <CardDescription>Tes dernières contributions</CardDescription>
+                <CardTitle className="text-base md:text-lg">Historique personnel</CardTitle>
+                <CardDescription className="text-xs md:text-sm">Tes dernières contributions</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/community/history")}>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/community/history")} className="flex-shrink-0">
                 Voir tout
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
@@ -397,7 +395,7 @@ export default function Community() {
               {loadingMyTasks ? (
                 <MyTasksSkeleton />
               ) : myTasksData?.tasks.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
+                <p className="text-center text-muted-foreground py-6">
                   Aucune mission effectuée.
                 </p>
               ) : (
@@ -407,15 +405,15 @@ export default function Community() {
                     return (
                       <div 
                         key={task.id} 
-                        className="p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer" 
+                        className="p-2.5 md:p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer" 
                         onClick={() => navigate(`/jobs/${task.job_id}`)}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <StatusIcon className={`w-4 h-4 ${taskStatusColor[task.status]}`} />
-                            <p className="font-semibold text-sm">{task.model_name}</p>
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <StatusIcon className={`w-4 h-4 flex-shrink-0 ${taskStatusColor[task.status]}`} />
+                            <p className="font-semibold text-sm truncate">{task.model_name}</p>
                           </div>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs flex-shrink-0">
                             {task.type}
                           </Badge>
                         </div>
@@ -434,40 +432,40 @@ export default function Community() {
 
           {/* Leaderboard Preview */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 md:pb-4">
               <div>
-                <CardTitle>Classement</CardTitle>
-                <CardDescription>Les meilleurs contributeurs</CardDescription>
+                <CardTitle className="text-base md:text-lg">Classement</CardTitle>
+                <CardDescription className="text-xs md:text-sm">Les meilleurs contributeurs</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/community/leaderboard")}>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/community/leaderboard")} className="flex-shrink-0">
                 Voir tout
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </CardHeader>
             <CardContent>
               <Tabs value={leaderboardPeriod} onValueChange={v => setLeaderboardPeriod(v as '30d' | 'all')}>
-                <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsList className="grid w-full grid-cols-2 mb-3">
                   <TabsTrigger value="30d">30 jours</TabsTrigger>
                   <TabsTrigger value="all">All-time</TabsTrigger>
                 </TabsList>
-                <TabsContent value={leaderboardPeriod}>
+                <TabsContent value={leaderboardPeriod} className="mt-0">
                   {loadingLeaderboard ? (
                     <LeaderboardSkeleton />
                   ) : leaderboardData?.entries.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
+                    <p className="text-center text-muted-foreground py-6">
                       Aucune donnée disponible.
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {leaderboardData?.entries.slice(0, 5).map(entry => (
-                        <div key={entry.rank} className="p-3 border rounded-lg hover:border-primary transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className={`text-lg font-bold ${entry.rank <= 3 ? "text-primary" : "text-muted-foreground"}`}>
+                      {leaderboardData?.entries.slice(0, 4).map(entry => (
+                        <div key={entry.rank} className="p-2.5 md:p-3 border rounded-lg hover:border-primary transition-colors">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                              <span className={`text-base md:text-lg font-bold flex-shrink-0 w-6 ${entry.rank <= 3 ? "text-primary" : "text-muted-foreground"}`}>
                                 #{entry.rank}
                               </span>
-                              <div>
-                                <p className="font-semibold text-sm">{entry.user_display}</p>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-sm truncate">{entry.user_display}</p>
                                 {entry.badge && (
                                   <Badge variant="secondary" className="text-xs">
                                     {entry.badge}
@@ -475,9 +473,9 @@ export default function Community() {
                                 )}
                               </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex-shrink-0">
                               <p className="text-sm font-semibold text-green-600">
-                                {entry.credits} crédits
+                                {entry.credits} cr.
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {entry.missions} missions
@@ -494,66 +492,71 @@ export default function Community() {
           </Card>
         </div>
 
-        {/* Rules & FAQ */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
+
+        {/* Rules & FAQ - Consistent with other cards */}
+        <Card>
+          <CardHeader className="pb-2 md:pb-4">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <Shield className="w-4 h-4 md:w-5 md:h-5" />
               Règles d'or & FAQ
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="font-semibold mb-3">Règles d'or</h3>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Respect des plateformes : pas d'automatisation serveur, captcha humain</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Vitesse : respecte les délais entre pages pour éviter les blocages</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Plage & périmètre : ne pas déborder (reste sur la fourchette indiquée)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Confidentialité : données agrégées et anonymisées</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>RGPD : demande de suppression à tout moment</span>
-                </li>
-              </ul>
-            </div>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Rules */}
+              <div>
+                <h3 className="font-semibold mb-3 text-sm md:text-base">Règles d'or</h3>
+                <ul className="space-y-2 text-xs md:text-sm">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Respect des plateformes : pas d'automatisation serveur, captcha humain</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Vitesse : respecte les délais entre pages pour éviter les blocages</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Plage & périmètre : ne pas déborder (reste sur la fourchette indiquée)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Confidentialité : données agrégées et anonymisées</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>RGPD : demande de suppression à tout moment</span>
+                  </li>
+                </ul>
+              </div>
 
-            <div>
-              <h3 className="font-semibold mb-3">Questions fréquentes</h3>
-              <div className="space-y-2">
-                {faqs.map(faq => (
-                  <Collapsible 
-                    key={faq.id} 
-                    open={expandedFaq === faq.id} 
-                    onOpenChange={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
-                  >
-                    <CollapsibleTrigger className="w-full">
-                      <div className="flex items-center justify-between p-3 border rounded-lg hover:border-primary transition-colors">
-                        <div className="flex items-center gap-2">
-                          <HelpCircle className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-medium text-left">{faq.question}</span>
+              {/* FAQ */}
+              <div>
+                <h3 className="font-semibold mb-3 text-sm md:text-base">Questions fréquentes</h3>
+                <div className="space-y-2">
+                  {faqs.map(faq => (
+                    <Collapsible 
+                      key={faq.id} 
+                      open={expandedFaq === faq.id} 
+                      onOpenChange={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
+                    >
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-2.5 md:p-3 border rounded-lg hover:border-primary transition-colors">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <HelpCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-xs md:text-sm font-medium text-left truncate">{faq.question}</span>
+                          </div>
+                          {expandedFaq === faq.id ? <ChevronUp className="w-4 h-4 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 flex-shrink-0" />}
                         </div>
-                        {expandedFaq === faq.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="p-3 text-sm text-muted-foreground">
-                        {faq.answer}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ))}
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="p-2.5 md:p-3 text-xs md:text-sm text-muted-foreground">
+                          {faq.answer}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ))}
+                </div>
               </div>
             </div>
           </CardContent>
