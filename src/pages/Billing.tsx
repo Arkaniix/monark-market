@@ -1,4 +1,3 @@
-import Layout from "@/components/Layout";
 import { CreditPackages } from "@/components/billing/CreditPackages";
 import { PurchaseHistory } from "@/components/billing/PurchaseHistory";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,8 +16,7 @@ export default function Billing() {
   const isSubscriptionActive = plan !== "starter";
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold">Facturation & Crédits</h1>
@@ -116,7 +114,6 @@ export default function Billing() {
 
         {/* Purchase History */}
         <PurchaseHistory />
-      </div>
-    </Layout>
+    </div>
   );
 }
