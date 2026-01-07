@@ -12,6 +12,8 @@ import Estimator from "./pages/Estimator";
 import AdDetail from "./pages/AdDetail";
 import JobDetail from "./pages/JobDetail";
 import Community from "./pages/Community";
+import CommunityHistory from "./pages/CommunityHistory";
+import CommunityLeaderboard from "./pages/CommunityLeaderboard";
 import Training from "./pages/Training";
 import Admin from "./pages/Admin";
 import MyAccount from "./pages/MyAccount";
@@ -133,6 +135,16 @@ export const routes: RouteConfig[] = [
   {
     path: "/community",
     component: Community,
+    requiresAuth: true,
+  },
+  {
+    path: "/community/history",
+    component: CommunityHistory,
+    requiresAuth: true,
+  },
+  {
+    path: "/community/leaderboard",
+    component: CommunityLeaderboard,
     requiresAuth: true,
   },
   {
