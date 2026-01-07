@@ -44,10 +44,29 @@ export interface EstimationHistoryItem {
   id: string;
   date: string;
   model: string;
+  model_id: number;
+  brand: string;
   category: string;
-  median_price: number;
+  condition: string;
+  region?: string;
   buy_price: number;
-  margin_pct: number;
+  results: {
+    buy_price_recommended: number;
+    sell_price_1m: number;
+    sell_price_3m?: number;
+    margin_pct: number;
+    resell_probability: number;
+    risk_level: "low" | "medium" | "high";
+    badge: "good" | "caution" | "risk";
+    advice: string;
+    market: {
+      median_price: number;
+      var_30d_pct: number;
+      volume: number;
+      rarity_index: number;
+      trend: "up" | "down" | "stable";
+    };
+  };
   trend: "up" | "down" | "stable";
 }
 
@@ -201,30 +220,84 @@ export const mockEstimationHistory: EstimationHistoryItem[] = [
     id: "1",
     date: "2025-11-05",
     model: "NVIDIA RTX 3060 Ti",
+    model_id: 1,
+    brand: "NVIDIA",
     category: "GPU",
-    median_price: 280,
+    condition: "bon",
     buy_price: 260,
-    margin_pct: 9.6,
+    results: {
+      buy_price_recommended: 252,
+      sell_price_1m: 286,
+      sell_price_3m: 290,
+      margin_pct: 9.6,
+      resell_probability: 0.78,
+      risk_level: "low",
+      badge: "good",
+      advice: "Bonne opportunité d'achat – marché stable ou légèrement baissier.",
+      market: {
+        median_price: 280,
+        var_30d_pct: -2.1,
+        volume: 342,
+        rarity_index: 0.35,
+        trend: "down",
+      },
+    },
     trend: "down",
   },
   {
     id: "2",
     date: "2025-11-04",
     model: "AMD Ryzen 7 5800X3D",
+    model_id: 6,
+    brand: "AMD",
     category: "CPU",
-    median_price: 270,
+    condition: "comme-neuf",
     buy_price: 255,
-    margin_pct: 5.9,
+    results: {
+      buy_price_recommended: 243,
+      sell_price_1m: 275,
+      sell_price_3m: 280,
+      margin_pct: 5.9,
+      resell_probability: 0.82,
+      risk_level: "low",
+      badge: "good",
+      advice: "Prix correct dans la fourchette recommandée.",
+      market: {
+        median_price: 270,
+        var_30d_pct: 3.5,
+        volume: 289,
+        rarity_index: 0.42,
+        trend: "up",
+      },
+    },
     trend: "up",
   },
   {
     id: "3",
     date: "2025-11-03",
     model: "Samsung 980 Pro 1TB",
+    model_id: 13,
+    brand: "Samsung",
     category: "SSD",
-    median_price: 115,
+    condition: "neuf",
     buy_price: 108,
-    margin_pct: 6.5,
+    results: {
+      buy_price_recommended: 103,
+      sell_price_1m: 117,
+      sell_price_3m: 115,
+      margin_pct: 6.5,
+      resell_probability: 0.71,
+      risk_level: "low",
+      badge: "good",
+      advice: "Prix correct dans la fourchette recommandée.",
+      market: {
+        median_price: 115,
+        var_30d_pct: 0.8,
+        volume: 456,
+        rarity_index: 0.55,
+        trend: "stable",
+      },
+    },
     trend: "stable",
   },
 ];

@@ -12,9 +12,24 @@ export interface EstimationHistoryItem {
   condition: string;
   region?: string;
   buy_price_input: number;
-  buy_price_recommended: number;
-  sell_price_1m: number;
-  margin_pct: number;
+  // Stored results from the estimation
+  results: {
+    buy_price_recommended: number;
+    sell_price_1m: number;
+    sell_price_3m?: number;
+    margin_pct: number;
+    resell_probability: number;
+    risk_level: 'low' | 'medium' | 'high';
+    badge: 'good' | 'caution' | 'risk';
+    advice: string;
+    market: {
+      median_price: number;
+      var_30d_pct: number;
+      volume: number;
+      rarity_index: number;
+      trend: 'up' | 'down' | 'stable';
+    };
+  };
   trend: "up" | "down" | "stable";
   photos?: string[];
 }
@@ -105,17 +120,15 @@ export function useEstimationHistory(page: number = 1, autoFetch: boolean = true
       // Map provider items to UI-friendly format
       const mappedItems: EstimationHistoryItem[] = response.items.map((item, idx) => ({
         id: item.id,
-        created_at: item.date, // provider uses 'date', UI expects 'created_at'
-        model_id: idx + 1, // Placeholder - provider doesn't provide this
-        model_name: item.model, // provider uses 'model', UI expects 'model_name'
-        brand: '', // Not in provider type
+        created_at: item.date,
+        model_id: item.model_id,
+        model_name: item.model,
+        brand: item.brand || '',
         category: item.category,
-        condition: 'bon', // Default - not in provider type
-        region: undefined, // Not in provider type
-        buy_price_input: item.buy_price, // provider uses 'buy_price'
-        buy_price_recommended: Math.round(item.buy_price * 0.95), // Derived value
-        sell_price_1m: item.median_price, // Use median as sell price
-        margin_pct: item.margin_pct,
+        condition: item.condition || 'bon',
+        region: item.region,
+        buy_price_input: item.buy_price,
+        results: item.results,
         trend: item.trend,
         photos: mockPhotosMap[idx] || undefined,
       }));
