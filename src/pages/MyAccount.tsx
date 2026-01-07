@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import { fr } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "next-themes";
+import { useMockSubscription, MOCK_PLANS } from "@/hooks/useMockSubscription";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,8 +48,6 @@ import {
 // ═══════════════════════════════════════════════════════════════════
 // MOCK DATA
 // ═══════════════════════════════════════════════════════════════════
-
-const PLAN_STORAGE_KEY = "mock_current_plan";
 
 const mockUsageHistory = [
   { id: 1, date: subHours(new Date(), 2), action: "Estimation", cost: 3 },
@@ -120,6 +119,20 @@ export default function MyAccount() {
   const { user, isLoading: authLoading, logout, isAdmin } = useAuth();
   const { theme, setTheme } = useTheme();
   
+  // Centralized subscription state
+  const { 
+    plan: currentPlan,
+    planDisplayName: mockPlanDisplayName,
+    planConfig,
+    creditsRemaining: mockCreditsRemaining,
+    creditsMax: mockMaxCredits,
+    creditsResetDate,
+    creditPercentage,
+    isCreditsLow,
+    changePlan,
+    isChangingPlan,
+  } = useMockSubscription();
+  
   // Form state
   const [displayName, setDisplayName] = useState("Jean");
   const [language, setLanguage] = useState("fr");
@@ -134,36 +147,19 @@ export default function MyAccount() {
   
   // Plan change modal
   const [planModalOpen, setPlanModalOpen] = useState(false);
-  const [changingPlan, setChangingPlan] = useState<string | null>(null);
   const [showDowngradeWarning, setShowDowngradeWarning] = useState(false);
   const [pendingDowngrade, setPendingDowngrade] = useState<string | null>(null);
   
   // Loading states for mock
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
-  
-  // Plan state (mock, persisted locally)
-  const [currentPlan, setCurrentPlan] = useState<"starter" | "pro" | "elite">(() => {
-    const raw = localStorage.getItem(PLAN_STORAGE_KEY);
-    return raw === "starter" || raw === "pro" || raw === "elite" ? raw : "pro";
-  });
-
-  useEffect(() => {
-    localStorage.setItem(PLAN_STORAGE_KEY, currentPlan);
-  }, [currentPlan]);
 
   // ═══════════════════════════════════════════════════════════════════
-  // MOCK DATA
+  // MOCK DATA (non-subscription)
   // ═══════════════════════════════════════════════════════════════════
   
-  const mockPlanDisplayName = currentPlan === "starter" ? "Starter" : currentPlan === "pro" ? "Pro" : "Élite";
-  const mockCreditsRemaining = 347;
-  const mockMaxCredits = 500;
   const mockEmail = "jean.dupont@email.com";
   const mockMemberSince = subDays(new Date(), 180);
-  const mockResetDate = new Date(Date.now() + 12 * 24 * 60 * 60 * 1000);
-  
-  const creditPercentage = Math.min((mockCreditsRemaining / mockMaxCredits) * 100, 100);
-  const isCreditsLow = creditPercentage < 20;
+  const mockResetDate = new Date(creditsResetDate);
   const daysUntilReset = differenceInDays(mockResetDate, new Date());
 
   // ═══════════════════════════════════════════════════════════════════
@@ -258,24 +254,18 @@ export default function MyAccount() {
     }
   };
 
-  const processPlanChange = (targetPlan: string) => {
-    setChangingPlan(targetPlan);
+  const processPlanChange = async (targetPlan: string) => {
     setShowDowngradeWarning(false);
     setPendingDowngrade(null);
     
-    setTimeout(() => {
-      setCurrentPlan(targetPlan as "starter" | "pro" | "elite");
-      // Persist immediately too (even if component unmounts fast)
-      localStorage.setItem(PLAN_STORAGE_KEY, targetPlan);
-
-      setChangingPlan(null);
-      setPlanModalOpen(false);
-      const targetName = plans.find(p => p.id === targetPlan)?.name || targetPlan;
-      toast({ 
-        title: "Plan modifié", 
-        description: `Votre abonnement est maintenant ${targetName}.`
-      });
-    }, 2000);
+    await changePlan(targetPlan as "starter" | "pro" | "elite");
+    
+    setPlanModalOpen(false);
+    const targetName = plans.find(p => p.id === targetPlan)?.name || targetPlan;
+    toast({ 
+      title: "Plan modifié", 
+      description: `Votre abonnement est maintenant ${targetName}.`
+    });
   };
 
   const getDowngradeLosses = (targetPlan: string) => {
@@ -896,9 +886,9 @@ export default function MyAccount() {
                         <Button 
                           className="w-full gap-2"
                           onClick={() => handlePlanChange(p.id)}
-                          disabled={changingPlan !== null}
+                          disabled={isChangingPlan}
                         >
-                          {changingPlan === p.id ? (
+                          {isChangingPlan ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin" />
                               Traitement...
@@ -915,9 +905,9 @@ export default function MyAccount() {
                           variant="outline"
                           className="w-full gap-2 text-muted-foreground"
                           onClick={() => handlePlanChange(p.id)}
-                          disabled={changingPlan !== null}
+                          disabled={isChangingPlan}
                         >
-                          {changingPlan === p.id ? (
+                          {isChangingPlan ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin" />
                               Traitement...
@@ -998,9 +988,9 @@ export default function MyAccount() {
             <AlertDialogAction 
               className="bg-warning text-warning-foreground hover:bg-warning/90"
               onClick={() => pendingDowngrade && processPlanChange(pendingDowngrade)}
-              disabled={changingPlan !== null}
+              disabled={isChangingPlan}
             >
-              {changingPlan ? (
+              {isChangingPlan ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Traitement...
