@@ -361,27 +361,45 @@ export default function AdDetail() {
                       {ad.components.map((comp, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors group"
                         >
                           <div className="flex items-center gap-3">
-                            <Badge variant="outline">{comp.role}</Badge>
+                            <Badge variant="outline" className="shrink-0">{comp.role}</Badge>
                             <div>
-                              <p className="font-medium">{comp.model_name}</p>
+                              {comp.model_id ? (
+                                <Link 
+                                  to={`/models/${comp.model_id}`}
+                                  className="font-medium text-primary hover:underline"
+                                >
+                                  {comp.model_name}
+                                </Link>
+                              ) : (
+                                <p className="font-medium">{comp.model_name}</p>
+                              )}
                               <p className="text-sm text-muted-foreground">
                                 {comp.brand} • {comp.category}
                               </p>
                             </div>
                           </div>
                           {comp.model_id && (
-                            <Button variant="ghost" size="sm" asChild>
+                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" asChild>
                               <Link to={`/models/${comp.model_id}`}>
-                                <ExternalLink className="h-4 w-4" />
+                                Voir la fiche
+                                <ExternalLink className="h-4 w-4 ml-1" />
                               </Link>
                             </Button>
                           )}
                         </div>
                       ))}
                     </div>
+                    {ad.item_type === 'pc' && (
+                      <Alert className="mt-4">
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          L'estimation individuelle n'est pas disponible pour les PC complets. Consultez les fiches de chaque composant pour connaître leur valeur.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -508,12 +526,19 @@ export default function AdDetail() {
                   </a>
                 </Button>
 
-                <Button className="w-full gap-2" variant="secondary" asChild>
-                  <Link to={`/estimator?ad_id=${ad.id}&model_id=${ad.model_id || ''}&model_name=${encodeURIComponent(ad.model_name || '')}&category=${encodeURIComponent(ad.category || '')}&price=${ad.price}&platform=${encodeURIComponent(ad.platform)}&condition=${encodeURIComponent(ad.condition || '')}&region=${encodeURIComponent(ad.region || '')}&city=${encodeURIComponent(ad.city || '')}`}>
+                {ad.item_type === 'pc' ? (
+                  <Button className="w-full gap-2" variant="secondary" disabled title="L'estimation n'est pas disponible pour les PC complets">
                     <Calculator className="h-4 w-4" />
-                    Estimer
-                  </Link>
-                </Button>
+                    Estimer (non disponible)
+                  </Button>
+                ) : (
+                  <Button className="w-full gap-2" variant="secondary" asChild>
+                    <Link to={`/estimator?ad_id=${ad.id}&model_id=${ad.model_id || ''}&model_name=${encodeURIComponent(ad.model_name || '')}&category=${encodeURIComponent(ad.category || '')}&price=${ad.price}&platform=${encodeURIComponent(ad.platform)}&condition=${encodeURIComponent(ad.condition || '')}&region=${encodeURIComponent(ad.region || '')}&city=${encodeURIComponent(ad.city || '')}`}>
+                      <Calculator className="h-4 w-4" />
+                      Estimer
+                    </Link>
+                  </Button>
+                )}
 
                 <Button
                   variant={isInWatchlist ? "secondary" : "outline"}
