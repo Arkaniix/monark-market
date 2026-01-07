@@ -138,13 +138,15 @@ export default function MyAccount() {
   
   // Loading states for mock
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  
+  // Plan state
+  const [currentPlan, setCurrentPlan] = useState<"starter" | "pro" | "elite">("pro");
 
   // ═══════════════════════════════════════════════════════════════════
   // MOCK DATA
   // ═══════════════════════════════════════════════════════════════════
   
-  const mockPlan: "starter" | "pro" | "elite" = "pro";
-  const mockPlanDisplayName = "Pro";
+  const mockPlanDisplayName = currentPlan === "starter" ? "Starter" : currentPlan === "pro" ? "Pro" : "Élite";
   const mockCreditsRemaining = 347;
   const mockMaxCredits = 500;
   const mockEmail = "jean.dupont@email.com";
@@ -193,7 +195,7 @@ export default function MyAccount() {
     },
   ];
 
-  const currentPlanData = plans.find(p => p.id === mockPlan)!;
+  const currentPlanData = plans.find(p => p.id === currentPlan)!;
   const planOrder = { starter: 1, pro: 2, elite: 3 };
 
   // ═══════════════════════════════════════════════════════════════════
@@ -236,7 +238,7 @@ export default function MyAccount() {
   };
 
   const handlePlanChange = (targetPlan: string) => {
-    const currentOrder = planOrder[mockPlan];
+    const currentOrder = planOrder[currentPlan];
     const targetOrder = planOrder[targetPlan as keyof typeof planOrder] || 0;
     
     if (targetOrder < currentOrder) {
@@ -253,6 +255,7 @@ export default function MyAccount() {
     setPendingDowngrade(null);
     
     setTimeout(() => {
+      setCurrentPlan(targetPlan as "starter" | "pro" | "elite");
       setChangingPlan(null);
       setPlanModalOpen(false);
       const targetName = plans.find(p => p.id === targetPlan)?.name || targetPlan;
@@ -265,7 +268,7 @@ export default function MyAccount() {
 
   const getDowngradeLosses = (targetPlan: string) => {
     const losses: string[] = [];
-    const current = plans.find(p => p.id === mockPlan);
+    const current = plans.find(p => p.id === currentPlan);
     const target = plans.find(p => p.id === targetPlan);
     
     if (current && target) {
@@ -466,7 +469,7 @@ export default function MyAccount() {
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-xl bg-primary/15 text-primary">
-                    {getPlanIcon(mockPlan)}
+                    {getPlanIcon(currentPlan)}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -819,8 +822,8 @@ export default function MyAccount() {
             {/* Comparaison des plans */}
             <div className="grid gap-4 md:grid-cols-3">
               {plans.map((p) => {
-                const isActive = p.id === mockPlan;
-                const currentOrder = planOrder[mockPlan];
+                const isActive = p.id === currentPlan;
+                const currentOrder = planOrder[currentPlan];
                 const targetOrder = planOrder[p.id as keyof typeof planOrder];
                 const isUpgrade = targetOrder > currentOrder;
                 const isDowngrade = targetOrder < currentOrder;
