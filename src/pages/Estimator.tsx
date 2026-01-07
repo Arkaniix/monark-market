@@ -62,7 +62,7 @@ import { useModelsSearch, type SearchState, useEstimationHistoryEnhanced } from 
 import {
   useRunEstimation,
   useEstimatorStats,
-  type EstimationResult,
+  type EstimationResultUI,
 } from "@/hooks/useEstimator";
 import type { ModelAutocomplete } from "@/providers/types";
 import { useEntitlements } from "@/hooks/useEntitlements";
@@ -121,7 +121,7 @@ export default function Estimator() {
   const [galleryModelName, setGalleryModelName] = useState("");
   
   // Result state
-  const [result, setResult] = useState<EstimationResult | null>(null);
+  const [result, setResult] = useState<EstimationResultUI | null>(null);
   
   // History pagination
   const [historyPage, setHistoryPage] = useState(1);
