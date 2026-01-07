@@ -1,4 +1,3 @@
-import Layout from "@/components/Layout";
 import { PricingTable, PLANS } from "@/components/pricing/PricingTable";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,8 +55,7 @@ export default function Pricing() {
   const { plan: currentPlan } = useEntitlements();
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-8 space-y-16">
+    <div className="container mx-auto px-4 py-8 space-y-16">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto">
           <Badge className="mb-4" variant="secondary">
@@ -141,7 +139,6 @@ export default function Pricing() {
             </span>
           </div>
         </div>
-      </div>
-    </Layout>
+    </div>
   );
 }
