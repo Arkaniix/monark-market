@@ -357,6 +357,67 @@ function generatePcComponents(pc: typeof mockPCs[0]): import('./types').AdCompon
   return components;
 }
 
+// Helper to generate components from ad description (for PC/lot ads in MOCK_ADS)
+function generateComponentsFromAd(ad: { description: string; item_type: 'component' | 'pc' | 'lot'; model_name: string }): import('./types').AdComponent[] {
+  const components: import('./types').AdComponent[] = [];
+  
+  // Parse components from description (format: "Config: CPU, GPU, RAM, Storage")
+  const configMatch = ad.description.match(/Config:\s*([^.]+)/);
+  if (!configMatch) return components;
+  
+  const parts = configMatch[1].split(',').map(s => s.trim());
+  
+  for (const part of parts) {
+    // CPU detection
+    if (part.includes('Ryzen') || part.includes('i5') || part.includes('i7') || part.includes('i9')) {
+      const brand = part.includes('Ryzen') ? 'AMD' : 'Intel';
+      components.push({
+        role: 'Processeur',
+        model_name: part,
+        model_id: findModelIdByName(part, 'CPU'),
+        brand,
+        category: 'CPU',
+      });
+    }
+    // GPU detection
+    else if (part.includes('RTX') || part.includes('GTX') || part.includes('RX') || part.includes('Arc')) {
+      let brand = 'Generic';
+      if (part.includes('RTX') || part.includes('GTX')) brand = 'NVIDIA';
+      else if (part.includes('RX')) brand = 'AMD';
+      else if (part.includes('Arc')) brand = 'Intel';
+      
+      components.push({
+        role: 'Carte graphique',
+        model_name: part,
+        model_id: findModelIdByName(part, 'GPU'),
+        brand,
+        category: 'GPU',
+      });
+    }
+    // RAM detection
+    else if (part.includes('GB DDR') || part.includes('Go DDR')) {
+      components.push({
+        role: 'Mémoire',
+        model_name: part,
+        model_id: findModelIdByName(part, 'RAM'),
+        brand: 'Generic',
+        category: 'RAM',
+      });
+    }
+    // Storage detection
+    else if (part.includes('NVMe') || part.includes('SSD') || part.includes('TB') || part.includes('To')) {
+      components.push({
+        role: 'Stockage',
+        model_name: part,
+        model_id: findModelIdByName(part, 'SSD'),
+        brand: 'Generic',
+        category: 'SSD',
+      });
+    }
+  }
+  
+  return components;
+}
 // ============= Mock Provider =============
 export const mockProvider: DataProvider = {
   // Dashboard
@@ -1019,58 +1080,19 @@ export const mockProvider: DataProvider = {
     const watchlist = initializeWatchlist();
     const isInWatchlist = watchlist.some(w => w.target_type === 'ad' && w.target_id === id);
 
-    // Check if this is a PC ad (IDs 1000+ are PCs)
-    if (id >= 1000) {
-      const pcIndex = (id - 1000) % mockPCs.length;
-      const pc = mockPCs[pcIndex];
-      return {
-        id,
-        title: pc.name,
-        description: `PC complet ${pc.family} - Configuration ${pc.condition}. ${pc.cpu}, ${pc.gpu || 'Graphiques intégrés'}, ${pc.ram}, ${pc.storage}.`,
-        price: pc.price,
-        fair_value: pc.fairValue,
-        deviation_pct: Math.round((1 - pc.price / pc.fairValue) * 100),
-        score: pc.score,
-        condition: pc.condition,
-        city: pc.city,
-        region: pc.region,
-        postal_code: '75015',
-        platform: 'leboncoin',
-        url: '#',
-        published_at: new Date(Date.now() - Math.random() * 30 * 86400000).toISOString(),
-        first_seen_at: new Date(Date.now() - Math.random() * 60 * 86400000).toISOString(),
-        last_seen_at: new Date().toISOString(),
-        status: 'active',
-        seller_type: 'Particulier',
-        delivery_possible: true,
-        secured_payment: true,
-        model: null,
-        components: generatePcComponents(pc),
-        images: [],
-        is_in_watchlist: isInWatchlist,
-        item_type: 'pc' as const,
-        pc_components: {
-          cpu: pc.cpu,
-          gpu: pc.gpu,
-          ram: pc.ram,
-          storage: pc.storage,
-          motherboard: pc.motherboard,
-          psu: pc.psu,
-          case: pc.case,
-          age_years: pc.age_years,
-          condition: pc.condition as 'Excellent' | 'Bon' | 'Correct' | 'Usé',
-          warranty_months: pc.warranty_months,
-        },
-        price_history_30d: generatePriceHistory(pc.price, 30),
-      };
-    }
-
     // Find ad in MOCK_ADS by id
     const ad = MOCK_ADS.find(a => a.id === id);
     
     // Handle NotFound
     if (!ad) {
       throw new Error('AD_NOT_FOUND');
+    }
+
+    // Generate components for PC and lot ads
+    let components: import('./types').AdComponent[] = [];
+    if (ad.item_type === 'pc' || ad.item_type === 'lot') {
+      // Parse components from the description
+      components = generateComponentsFromAd(ad);
     }
 
     return {
@@ -1100,7 +1122,7 @@ export const mockProvider: DataProvider = {
         brand: MOCK_MODELS.find(m => m.id === ad.model_id)?.brand || 'Unknown', 
         category: ad.category 
       } : null,
-      components: [],
+      components,
       images: [],
       is_in_watchlist: isInWatchlist,
       item_type: ad.item_type,
