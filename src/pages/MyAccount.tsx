@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,8 @@ import {
 // ═══════════════════════════════════════════════════════════════════
 // MOCK DATA
 // ═══════════════════════════════════════════════════════════════════
+
+const PLAN_STORAGE_KEY = "mock_current_plan";
 
 const mockUsageHistory = [
   { id: 1, date: subHours(new Date(), 2), action: "Estimation", cost: 3 },
@@ -139,8 +141,15 @@ export default function MyAccount() {
   // Loading states for mock
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   
-  // Plan state
-  const [currentPlan, setCurrentPlan] = useState<"starter" | "pro" | "elite">("pro");
+  // Plan state (mock, persisted locally)
+  const [currentPlan, setCurrentPlan] = useState<"starter" | "pro" | "elite">(() => {
+    const raw = localStorage.getItem(PLAN_STORAGE_KEY);
+    return raw === "starter" || raw === "pro" || raw === "elite" ? raw : "pro";
+  });
+
+  useEffect(() => {
+    localStorage.setItem(PLAN_STORAGE_KEY, currentPlan);
+  }, [currentPlan]);
 
   // ═══════════════════════════════════════════════════════════════════
   // MOCK DATA
@@ -256,6 +265,9 @@ export default function MyAccount() {
     
     setTimeout(() => {
       setCurrentPlan(targetPlan as "starter" | "pro" | "elite");
+      // Persist immediately too (even if component unmounts fast)
+      localStorage.setItem(PLAN_STORAGE_KEY, targetPlan);
+
       setChangingPlan(null);
       setPlanModalOpen(false);
       const targetName = plans.find(p => p.id === targetPlan)?.name || targetPlan;
