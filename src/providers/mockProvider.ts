@@ -268,6 +268,95 @@ function generateId(): number {
   return nextId++;
 }
 
+// Helper to find model_id by name pattern
+function findModelIdByName(name: string, category: string): number | null {
+  const nameLower = name.toLowerCase();
+  const model = MOCK_MODELS.find(m => 
+    m.category.toLowerCase() === category.toLowerCase() &&
+    nameLower.includes(m.name.toLowerCase())
+  );
+  return model?.id || null;
+}
+
+// Helper to generate components with model_id lookup
+function generatePcComponents(pc: typeof mockPCs[0]): import('./types').AdComponent[] {
+  const components: import('./types').AdComponent[] = [];
+  
+  // CPU
+  const cpuBrand = pc.cpu.includes('Intel') ? 'Intel' : 'AMD';
+  components.push({
+    role: 'Processeur',
+    model_name: pc.cpu,
+    model_id: findModelIdByName(pc.cpu, 'CPU'),
+    brand: cpuBrand,
+    category: 'CPU',
+  });
+  
+  // GPU
+  if (pc.gpu) {
+    let gpuBrand = 'Generic';
+    if (pc.gpu.includes('RTX') || pc.gpu.includes('GTX')) gpuBrand = 'NVIDIA';
+    else if (pc.gpu.includes('RX') || pc.gpu.includes('Radeon')) gpuBrand = 'AMD';
+    else if (pc.gpu.includes('Arc')) gpuBrand = 'Intel';
+    
+    components.push({
+      role: 'Carte graphique',
+      model_name: pc.gpu,
+      model_id: findModelIdByName(pc.gpu, 'GPU'),
+      brand: gpuBrand,
+      category: 'GPU',
+    });
+  }
+  
+  // RAM
+  components.push({
+    role: 'Mémoire',
+    model_name: pc.ram,
+    model_id: findModelIdByName(pc.ram, 'RAM'),
+    brand: 'Generic',
+    category: 'RAM',
+  });
+  
+  // Storage
+  components.push({
+    role: 'Stockage',
+    model_name: pc.storage,
+    model_id: findModelIdByName(pc.storage, 'SSD'),
+    brand: 'Generic',
+    category: 'SSD',
+  });
+  
+  // Motherboard
+  if (pc.motherboard) {
+    let mbBrand = 'Generic';
+    if (pc.motherboard.includes('ASUS')) mbBrand = 'ASUS';
+    else if (pc.motherboard.includes('MSI')) mbBrand = 'MSI';
+    else if (pc.motherboard.includes('Gigabyte')) mbBrand = 'Gigabyte';
+    else if (pc.motherboard.includes('ASRock')) mbBrand = 'ASRock';
+    
+    components.push({
+      role: 'Carte mère',
+      model_name: pc.motherboard,
+      model_id: findModelIdByName(pc.motherboard, 'Motherboard'),
+      brand: mbBrand,
+      category: 'Motherboard',
+    });
+  }
+  
+  // PSU
+  if (pc.psu) {
+    components.push({
+      role: 'Alimentation',
+      model_name: pc.psu,
+      model_id: null,
+      brand: 'Generic',
+      category: 'PSU',
+    });
+  }
+  
+  return components;
+}
+
 // ============= Mock Provider =============
 export const mockProvider: DataProvider = {
   // Dashboard
@@ -956,12 +1045,7 @@ export const mockProvider: DataProvider = {
         delivery_possible: true,
         secured_payment: true,
         model: null,
-        components: [
-          { type: 'CPU', model: pc.cpu, brand: pc.cpu.includes('Intel') ? 'Intel' : 'AMD' },
-          ...(pc.gpu ? [{ type: 'GPU', model: pc.gpu, brand: pc.gpu.includes('RTX') || pc.gpu.includes('GTX') ? 'NVIDIA' : 'AMD' }] : []),
-          { type: 'RAM', model: pc.ram, brand: 'Generic' },
-          { type: 'Storage', model: pc.storage, brand: 'Generic' },
-        ],
+        components: generatePcComponents(pc),
         images: [],
         is_in_watchlist: isInWatchlist,
         item_type: 'pc' as const,

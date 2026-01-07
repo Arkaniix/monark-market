@@ -302,9 +302,11 @@ export interface SimilarModel {
 
 // ============= Ad Detail =============
 export interface AdComponent {
-  type: string;
-  model: string;
+  role: string;
+  model_name: string;
+  model_id: number | null;
   brand: string;
+  category: string;
 }
 
 export interface AdPricePoint {
