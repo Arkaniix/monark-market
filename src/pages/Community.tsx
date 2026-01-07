@@ -400,7 +400,7 @@ export default function Community() {
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {myTasksData?.tasks.slice(0, 4).map(task => {
+                  {myTasksData?.tasks.slice(0, 5).map(task => {
                     const StatusIcon = taskStatusIcon[task.status];
                     return (
                       <div 
@@ -457,7 +457,7 @@ export default function Community() {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {leaderboardData?.entries.slice(0, 4).map(entry => (
+                      {leaderboardData?.entries.slice(0, 5).map(entry => (
                         <div key={entry.rank} className="p-2.5 md:p-3 border rounded-lg hover:border-primary transition-colors">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 md:gap-3 min-w-0">
