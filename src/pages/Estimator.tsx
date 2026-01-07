@@ -56,6 +56,7 @@ import {
   Monitor,
   RotateCcw,
   Camera,
+  Eye,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useModelsSearch, type SearchState, useEstimationHistoryEnhanced } from "@/hooks";
@@ -91,7 +92,13 @@ import {
 } from "@/components/ui/table";
 import ImageUpload, { type UploadedImage } from "@/components/estimator/ImageUpload";
 import PhotoGalleryModal from "@/components/estimator/PhotoGalleryModal";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import type { EstimationHistoryItem } from "@/hooks/useEstimationHistory";
 
 export default function Estimator() {
   const { toast } = useToast();
@@ -122,6 +129,9 @@ export default function Estimator() {
   
   // Result state
   const [result, setResult] = useState<EstimationResultUI | null>(null);
+  
+  // View past results dialog state
+  const [viewResultsItem, setViewResultsItem] = useState<EstimationHistoryItem | null>(null);
   
   // History pagination
   const [historyPage, setHistoryPage] = useState(1);
@@ -1168,7 +1178,7 @@ Conseil,${result.advice}`;
                             <div className="text-center">
                               <p className="text-muted-foreground text-xs">Conseillé</p>
                               <LockedValue 
-                                value={<span className="font-medium text-accent">{item.buy_price_recommended}€</span>}
+                                value={<span className="font-medium text-accent">{item.results.buy_price_recommended}€</span>}
                                 isLocked={!estimatorLimits.canSeeBuyPrice}
                                 requiredPlan="pro"
                               />
@@ -1176,7 +1186,7 @@ Conseil,${result.advice}`;
                             <div className="text-center">
                               <p className="text-muted-foreground text-xs">Revente</p>
                               <LockedValue 
-                                value={<span className="font-medium text-primary">{item.sell_price_1m}€</span>}
+                                value={<span className="font-medium text-primary">{item.results.sell_price_1m}€</span>}
                                 isLocked={!estimatorLimits.canSeeSellPrice}
                                 requiredPlan="pro"
                               />
@@ -1188,10 +1198,10 @@ Conseil,${result.advice}`;
                             <LockedValue 
                               value={
                                 <Badge 
-                                  variant={item.margin_pct >= 10 ? "default" : item.margin_pct >= 0 ? "secondary" : "destructive"}
-                                  className={item.margin_pct >= 10 ? "bg-green-500/20 text-green-600 border-green-500/30" : ""}
+                                  variant={item.results.margin_pct >= 10 ? "default" : item.results.margin_pct >= 0 ? "secondary" : "destructive"}
+                                  className={item.results.margin_pct >= 10 ? "bg-green-500/20 text-green-600 border-green-500/30" : ""}
                                 >
-                                  {item.margin_pct > 0 ? "+" : ""}{item.margin_pct}%
+                                  {item.results.margin_pct > 0 ? "+" : ""}{item.results.margin_pct}%
                                 </Badge>
                               }
                               isLocked={!estimatorLimits.canSeeMargin}
@@ -1205,6 +1215,18 @@ Conseil,${result.advice}`;
                               <Minus className="h-4 w-4 text-muted-foreground" />
                             )}
                           </div>
+
+                          {/* View Results Button */}
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setViewResultsItem(item)}
+                            className="gap-1 shrink-0"
+                            title="Voir les résultats"
+                          >
+                            <Eye className="h-3 w-3" />
+                            Voir
+                          </Button>
 
                           {/* Reprendre Action */}
                           <Button 
@@ -1277,6 +1299,226 @@ Conseil,${result.advice}`;
           photos={galleryPhotos}
           modelName={galleryModelName}
         />
+
+        {/* View Past Results Dialog */}
+        <Dialog open={!!viewResultsItem} onOpenChange={(open) => !open && setViewResultsItem(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Résultats du {viewResultsItem && new Date(viewResultsItem.created_at).toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })}
+              </DialogTitle>
+            </DialogHeader>
+
+            {viewResultsItem && (
+              <div className="space-y-6">
+                {/* Model Info */}
+                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg">
+                  <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
+                    {getCategoryIcon(viewResultsItem.category)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg">{viewResultsItem.model_name}</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Badge variant="outline">{viewResultsItem.category}</Badge>
+                      <span>•</span>
+                      <span className="capitalize">{viewResultsItem.condition?.replace('-', ' ')}</span>
+                      {viewResultsItem.region && (
+                        <>
+                          <span>•</span>
+                          <span>{viewResultsItem.region}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Badge */}
+                <div className="text-center">
+                  <Badge
+                    variant={
+                      viewResultsItem.results.badge === "good"
+                        ? "default"
+                        : viewResultsItem.results.badge === "caution"
+                        ? "secondary"
+                        : "destructive"
+                    }
+                    className="text-base px-6 py-2 gap-2"
+                  >
+                    {viewResultsItem.results.badge === "good" ? (
+                      <CheckCircle2 className="h-5 w-5" />
+                    ) : (
+                      <AlertTriangle className="h-5 w-5" />
+                    )}
+                    {viewResultsItem.results.badge === "good"
+                      ? "✅ Bonne opportunité"
+                      : viewResultsItem.results.badge === "caution"
+                      ? "⚠️ Prudence"
+                      : "📉 Risque élevé"}
+                  </Badge>
+                </div>
+
+                {/* Key Metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-muted/30 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Prix médian</p>
+                    <p className="text-xl font-bold text-primary">
+                      {viewResultsItem.results.market.median_price}€
+                    </p>
+                  </div>
+                  <div className="text-center p-4 bg-muted/30 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Variation 30j</p>
+                    <p className={`text-xl font-bold ${viewResultsItem.results.market.var_30d_pct >= 0 ? "text-green-500" : "text-destructive"}`}>
+                      {viewResultsItem.results.market.var_30d_pct > 0 ? "+" : ""}
+                      {viewResultsItem.results.market.var_30d_pct}%
+                    </p>
+                  </div>
+                  <div className="text-center p-4 bg-muted/30 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Volume</p>
+                    <p className="text-xl font-bold">{viewResultsItem.results.market.volume}</p>
+                  </div>
+                  <LockedFeatureOverlay
+                    isLocked={!estimatorLimits.canSeeProbability}
+                    requiredPlan="pro"
+                    featureName="Probabilité"
+                  >
+                    <div className="text-center p-4 bg-muted/30 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Prob. revente</p>
+                      <p className="text-xl font-bold">
+                        {Math.round(viewResultsItem.results.resell_probability * 100)}%
+                      </p>
+                    </div>
+                  </LockedFeatureOverlay>
+                </div>
+
+                {/* Prices Grid */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  <LockedFeatureOverlay
+                    isLocked={!estimatorLimits.canSeeBuyPrice}
+                    requiredPlan="pro"
+                    featureName="Prix d'achat conseillé"
+                  >
+                    <Card className="border-accent/40">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-normal text-muted-foreground">
+                          Prix d'achat conseillé
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-accent">
+                          {viewResultsItem.results.buy_price_recommended}€
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Vous avez payé: {viewResultsItem.buy_price_input}€
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </LockedFeatureOverlay>
+
+                  <LockedFeatureOverlay
+                    isLocked={!estimatorLimits.canSeeSellPrice}
+                    requiredPlan="pro"
+                    featureName="Prix de revente"
+                  >
+                    <Card className="border-primary/40">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-normal text-muted-foreground">
+                          Prix de revente (1 mois)
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-primary">
+                          {viewResultsItem.results.sell_price_1m}€
+                        </div>
+                        {viewResultsItem.results.sell_price_3m && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            À 3 mois: {viewResultsItem.results.sell_price_3m}€
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </LockedFeatureOverlay>
+
+                  <LockedFeatureOverlay
+                    isLocked={!estimatorLimits.canSeeMargin}
+                    requiredPlan="pro"
+                    featureName="Marge estimée"
+                  >
+                    <Card className={`border-2 ${
+                      viewResultsItem.results.margin_pct >= 10
+                        ? "border-green-500/40"
+                        : viewResultsItem.results.margin_pct >= 0
+                        ? "border-orange-500/40"
+                        : "border-destructive/40"
+                    }`}>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-normal text-muted-foreground">
+                          Marge estimée
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className={`text-3xl font-bold ${
+                          viewResultsItem.results.margin_pct >= 10
+                            ? "text-green-500"
+                            : viewResultsItem.results.margin_pct >= 0
+                            ? "text-orange-500"
+                            : "text-destructive"
+                        }`}>
+                          {viewResultsItem.results.margin_pct > 0 ? "+" : ""}
+                          {viewResultsItem.results.margin_pct}%
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </LockedFeatureOverlay>
+                </div>
+
+                {/* Advice */}
+                <div className="p-4 bg-muted/30 rounded-lg">
+                  <p className="text-sm font-medium mb-2">💡 Conseil</p>
+                  <p className="text-sm text-muted-foreground">
+                    {viewResultsItem.results.advice}
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      // Pre-fill form and switch to estimator tab
+                      setSelectedModel({
+                        id: viewResultsItem.model_id,
+                        name: viewResultsItem.model_name,
+                        brand: viewResultsItem.brand || '',
+                        category: viewResultsItem.category,
+                        family: null,
+                      });
+                      setModelSearch(viewResultsItem.model_name);
+                      setCondition(viewResultsItem.condition || '');
+                      setRegion(viewResultsItem.region || '');
+                      setBuyPriceInput(viewResultsItem.buy_price_input.toString());
+                      setResult(null);
+                      setViewResultsItem(null);
+                      setActiveTab("estimator");
+                      toast({
+                        title: "Formulaire pré-rempli",
+                        description: "Lancez une nouvelle estimation pour des résultats à jour",
+                      });
+                    }}
+                    className="gap-2"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Reprendre l'analyse
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

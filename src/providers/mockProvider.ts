@@ -1057,16 +1057,35 @@ export const mockProvider: DataProvider = {
     const result = generateEstimation(data.model_id, data.state, data.purchase_price, data.region);
     if (!result) throw new Error('Model not found');
 
-    // Save to history
+    // Save to history with full results
     const history = getFromStorage(STORAGE_KEYS.ESTIMATION_HISTORY, mockEstimationHistory);
     history.unshift({
       id: generateId().toString(),
       date: new Date().toISOString().split('T')[0],
       model: result.model,
+      model_id: data.model_id,
+      brand: result.brand,
       category: result.category,
-      median_price: result.market.median_price,
-      buy_price: result.estimate.buy_price,
-      margin_pct: result.estimate.profit_margin_pct,
+      condition: data.state,
+      region: data.region,
+      buy_price: data.purchase_price,
+      results: {
+        buy_price_recommended: result.estimate.buy_price,
+        sell_price_1m: result.estimate.sell_price_30d,
+        sell_price_3m: result.estimate.sell_price_90d,
+        margin_pct: result.estimate.profit_margin_pct,
+        resell_probability: result.estimate.resell_probability,
+        risk_level: result.estimate.risk_level,
+        badge: result.estimate.badge,
+        advice: result.estimate.advice,
+        market: {
+          median_price: result.market.median_price,
+          var_30d_pct: result.market.var_30d_pct,
+          volume: result.market.volume,
+          rarity_index: result.market.rarity_index,
+          trend: result.market.trend,
+        },
+      },
       trend: result.market.trend,
     });
     setToStorage(STORAGE_KEYS.ESTIMATION_HISTORY, history.slice(0, 50));
