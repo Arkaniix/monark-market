@@ -1,20 +1,22 @@
 import { Link } from "react-router-dom";
-import { TrendingUp, TrendingDown, Star, Bell, Package } from "lucide-react";
+import { TrendingUp, TrendingDown, Package } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ModelCardImage } from "./ModelCardImage";
-import { cn } from "@/lib/utils";
-import type { CatalogModel } from "@/providers/types";
+import { WatchlistActionButton } from "@/components/common/WatchlistActionButton";
+import { AlertActionButton } from "@/components/common/AlertActionButton";
+import type { CatalogModel, Alert } from "@/providers/types";
 
 interface ModelListRowProps {
   model: CatalogModel;
   onToggleWatchlist: (id: number, name: string, isInWatchlist: boolean) => void;
   onOpenAlert: (model: CatalogModel) => void;
+  onDeleteAlert: (alertId: number) => void;
   isWatchlistPending?: boolean;
   isInWatchlist?: boolean;
-  hasAlert?: boolean;
+  existingAlerts?: Alert[];
 }
 
 const getLiquidityLabel = (liquidity: number) => {
@@ -48,9 +50,10 @@ export function ModelListRow({
   model, 
   onToggleWatchlist, 
   onOpenAlert, 
+  onDeleteAlert,
   isWatchlistPending,
   isInWatchlist = false,
-  hasAlert = false
+  existingAlerts = []
 }: ModelListRowProps) {
   return (
     <Card className="hover:border-primary/50 transition-all hover:shadow-md group overflow-hidden">
@@ -161,38 +164,21 @@ export function ModelListRow({
             </Button>
           )}
           <div className="flex gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant={isInWatchlist ? "default" : "outline"} 
-                    size="default" 
-                    className={cn("h-10 w-10 p-0", isInWatchlist && "bg-primary text-primary-foreground")}
-                    onClick={() => onToggleWatchlist(model.id, model.name, isInWatchlist)} 
-                    disabled={isWatchlistPending || !model.id}
-                  >
-                    <Star className={cn("h-5 w-5", isInWatchlist && "fill-current")} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="text-sm">{isInWatchlist ? "Dans la watchlist" : "Ajouter à la watchlist"}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant={hasAlert ? "default" : "outline"} 
-                    size="default" 
-                    className={cn("h-10 w-10 p-0", hasAlert && "bg-primary text-primary-foreground")}
-                    onClick={() => onOpenAlert(model)} 
-                    disabled={!model.id}
-                  >
-                    <Bell className={cn("h-5 w-5", hasAlert && "fill-current")} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="text-sm">{hasAlert ? "Alerte active" : "Créer une alerte"}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <WatchlistActionButton
+              isInWatchlist={isInWatchlist}
+              onToggle={() => onToggleWatchlist(model.id, model.name, isInWatchlist)}
+              disabled={isWatchlistPending || !model.id}
+              size="default"
+            />
+            <AlertActionButton
+              targetId={model.id}
+              targetType="model"
+              existingAlerts={existingAlerts}
+              onCreateAlert={() => onOpenAlert(model)}
+              onDeleteAlert={onDeleteAlert}
+              disabled={!model.id}
+              size="default"
+            />
           </div>
         </div>
       </div>
