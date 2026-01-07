@@ -554,6 +554,12 @@ export default function MyAccount() {
                   Réinitialisation le {format(mockResetDate, "d MMMM", { locale: fr })}
                   {daysUntilReset > 0 && ` (dans ${daysUntilReset} jour${daysUntilReset > 1 ? "s" : ""})`}
                 </p>
+                <Button className="w-full mt-4 gap-2" asChild>
+                  <Link to="/billing">
+                    <Coins className="h-4 w-4" />
+                    Recharger des crédits
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
 
