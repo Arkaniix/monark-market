@@ -13,7 +13,8 @@ import {
   User, CreditCard, Settings, Zap, Crown, Building2, 
   Calendar, ArrowUpRight, RefreshCw, AlertTriangle, 
   Mail, Shield, LogOut, Trash2, Bell, Moon, Sun, 
-  ExternalLink, Loader2, Check, Info, Coins, Eye
+  Globe, Key, Monitor, Loader2, Check, Info, Coins, 
+  ChevronRight, Sparkles
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays } from "date-fns";
@@ -21,7 +22,7 @@ import { fr } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useEntitlements, CREDIT_COSTS, type CreditActionType } from "@/hooks/useEntitlements";
-import { useUserSubscription } from "@/hooks/useProviderData";
+import { useUserSubscription, useSubscriptionPlans } from "@/hooks/useProviderData";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTheme } from "next-themes";
 import {
@@ -36,27 +37,26 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const CREDIT_RESET_EXPLANATION = 
-  "Les crédits sont remis à zéro à chaque nouveau cycle mensuel. " +
-  "Les crédits non utilisés ne sont pas reportés au mois suivant.";
-
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0 }
 };
 
 export default function MyAccount() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isLoading: authLoading, logout } = useAuth();
+  const { user, isLoading: authLoading, logout, isAdmin } = useAuth();
   const { theme, setTheme } = useTheme();
+  
+  // Preferences state (mock)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
+  const [displayName, setDisplayName] = useState("");
 
   // Entitlements & subscription data
   const { 
@@ -64,13 +64,12 @@ export default function MyAccount() {
     planDisplayName, 
     creditsRemaining, 
     creditsResetDate, 
-    currentAlerts,
-    currentWatchlistItems,
     limits,
     isLoading: entitlementsLoading 
   } = useEntitlements();
   
   const { data: currentSubscription, isLoading: subscriptionLoading } = useUserSubscription();
+  const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
 
   // Credit calculations
   const maxCreditsForPlan = plan === "starter" ? 120 : plan === "pro" ? 500 : 1500;
@@ -78,28 +77,20 @@ export default function MyAccount() {
   const isCreditsLow = creditPercentage < 20;
   const resetDate = creditsResetDate ? new Date(creditsResetDate) : null;
   const daysUntilReset = resetDate ? differenceInDays(resetDate, new Date()) : null;
-  const isResetSoon = daysUntilReset !== null && daysUntilReset <= 7 && daysUntilReset >= 0;
 
-  // Action costs for display
+  // Action costs
   const actionCosts: { action: CreditActionType; label: string; cost: number }[] = [
-    { action: "scrap_faible", label: "Scrap standard", cost: CREDIT_COSTS.scrap_faible },
-    { action: "scrap_fort", label: "Scrap avancé", cost: CREDIT_COSTS.scrap_fort },
+    { action: "scrap_faible", label: "Scrap", cost: CREDIT_COSTS.scrap_faible },
+    { action: "scrap_fort", label: "Scrap+", cost: CREDIT_COSTS.scrap_fort },
     { action: "estimator", label: "Estimation", cost: CREDIT_COSTS.estimator },
   ];
 
-  const getPlanIcon = () => {
-    switch (plan) {
+  const getPlanIcon = (planName: string) => {
+    switch (planName.toLowerCase()) {
       case "starter": return <Zap className="h-5 w-5" />;
       case "pro": return <Crown className="h-5 w-5" />;
       case "elite": return <Building2 className="h-5 w-5" />;
-    }
-  };
-
-  const getPlanColor = () => {
-    switch (plan) {
-      case "starter": return "bg-muted text-muted-foreground";
-      case "pro": return "bg-primary text-primary-foreground";
-      case "elite": return "bg-gradient-to-r from-amber-500 to-orange-500 text-white";
+      default: return <CreditCard className="h-5 w-5" />;
     }
   };
 
@@ -109,13 +100,17 @@ export default function MyAccount() {
     toast({ title: "Déconnexion", description: "À bientôt !" });
   };
 
+  const handleSaveDisplayName = () => {
+    toast({ title: "Profil mis à jour", description: "Votre nom d'affichage a été enregistré." });
+  };
+
   // Redirect if not authenticated
   if (!authLoading && !user) {
     navigate("/auth");
     return null;
   }
 
-  const isLoading = authLoading || entitlementsLoading || subscriptionLoading;
+  const isLoading = authLoading || entitlementsLoading || subscriptionLoading || plansLoading;
 
   if (isLoading) {
     return (
@@ -129,8 +124,11 @@ export default function MyAccount() {
 
   const userInitials = user?.email?.slice(0, 2).toUpperCase() || "U";
   const memberSince = currentSubscription?.started_at 
-    ? format(new Date(currentSubscription.started_at), "MMMM yyyy", { locale: fr })
-    : "Récemment";
+    ? format(new Date(currentSubscription.started_at), "d MMMM yyyy", { locale: fr })
+    : format(new Date(), "d MMMM yyyy", { locale: fr });
+
+  // Filter other plans (not current)
+  const otherPlans = (plans || []).filter(p => p.id !== currentSubscription?.plan_id);
 
   return (
     <TooltipProvider>
@@ -145,362 +143,447 @@ export default function MyAccount() {
           variants={containerVariants} 
           initial="hidden" 
           animate="visible" 
-          className="space-y-6"
+          className="space-y-8"
         >
-          {/* Section 1: Identité */}
-          <motion.div variants={itemVariants}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <User className="h-5 w-5 text-primary" />
-                  Profil
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src="" />
-                    <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                      {userInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 space-y-1">
-                    <p className="font-medium text-lg">{user?.email}</p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
-                      Membre depuis {memberSince}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className={getPlanColor()}>
-                    {planDisplayName}
-                  </Badge>
-                </div>
-
-                <Separator />
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label htmlFor="email">Adresse email</Label>
-                    <Input 
-                      id="email" 
-                      value={user?.email || ""} 
-                      disabled 
-                      className="mt-1.5"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="displayName">Nom d'affichage</Label>
-                    <Input 
-                      id="displayName" 
-                      placeholder="Votre pseudo" 
-                      className="mt-1.5"
-                    />
-                  </div>
-                </div>
-
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Mail className="h-4 w-4" />
-                  Modifier l'email
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Section 2: Abonnement & Crédits */}
-          <motion.div variants={itemVariants}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <CreditCard className="h-5 w-5 text-primary" />
-                  Abonnement & Crédits
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Current Plan */}
-                <div className="flex items-start justify-between p-4 rounded-lg bg-muted/30 border">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-xl ${getPlanColor()}`}>
-                      {getPlanIcon()}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-lg">{planDisplayName}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {plan === "starter" && "9,99€/mois • 120 crédits"}
-                        {plan === "pro" && "29€/mois • 500 crédits"}
-                        {plan === "elite" && "79€/mois • 1500 crédits"}
-                      </p>
-                    </div>
-                  </div>
-                  {plan !== "elite" && (
-                    <Button variant="outline" size="sm" className="gap-2" asChild>
-                      <Link to="/pricing">
-                        <ArrowUpRight className="h-4 w-4" />
-                        Changer de plan
-                      </Link>
-                    </Button>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* Credits */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Coins className="h-5 w-5 text-primary" />
-                      <span className="font-medium">Crédits restants</span>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>{CREDIT_RESET_EXPLANATION}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold">{creditsRemaining}</span>
-                      <span className="text-muted-foreground">/ {maxCreditsForPlan}</span>
-                      {isCreditsLow && <AlertTriangle className="h-5 w-5 text-warning" />}
-                    </div>
-                  </div>
-                  
-                  <Progress 
-                    value={creditPercentage} 
-                    className={`h-2 ${isCreditsLow ? "[&>div]:bg-warning" : ""}`}
-                  />
-
-                  {resetDate && (
-                    <div className={`flex items-center gap-2 text-sm ${isResetSoon ? "text-warning" : "text-muted-foreground"}`}>
-                      <RefreshCw className="h-4 w-4" />
-                      <span>
-                        Réinitialisation le {format(resetDate, "dd MMMM", { locale: fr })}
-                        {daysUntilReset !== null && (
-                          <span className="ml-1">
-                            ({daysUntilReset === 0 ? "aujourd'hui" : `dans ${daysUntilReset} jour${daysUntilReset > 1 ? "s" : ""}`})
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  )}
-
-                  {isResetSoon && creditsRemaining > 0 && (
-                    <p className="text-xs text-warning p-2 bg-warning/10 rounded-lg">
-                      ⚠️ {creditsRemaining} crédit{creditsRemaining > 1 ? "s" : ""} sera{creditsRemaining > 1 ? "ont" : ""} perdu{creditsRemaining > 1 ? "s" : ""} après la réinitialisation
-                    </p>
-                  )}
-                </div>
-
-                {/* Usage Overview */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="p-3 rounded-lg bg-muted/30 border">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                        <Bell className="h-4 w-4" />
-                        Alertes actives
-                      </span>
-                      <span className="font-medium">
-                        {currentAlerts} / {limits.maxAlerts === -1 ? "∞" : limits.maxAlerts}
-                      </span>
-                    </div>
-                    {limits.maxAlerts !== -1 && (
-                      <Progress value={(currentAlerts / limits.maxAlerts) * 100} className="h-1" />
-                    )}
-                  </div>
-                  <div className="p-3 rounded-lg bg-muted/30 border">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                        <Eye className="h-4 w-4" />
-                        Watchlist
-                      </span>
-                      <span className="font-medium">
-                        {currentWatchlistItems} / {limits.maxWatchlistItems === -1 ? "∞" : limits.maxWatchlistItems}
-                      </span>
-                    </div>
-                    {limits.maxWatchlistItems !== -1 && (
-                      <Progress value={(currentWatchlistItems / limits.maxWatchlistItems) * 100} className="h-1" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Credit Costs */}
-                <div className="pt-2">
-                  <p className="text-sm text-muted-foreground mb-3">Coût des actions</p>
-                  <div className="flex flex-wrap gap-2">
-                    {actionCosts.map(({ action, label, cost }) => (
-                      <div 
-                        key={action} 
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 text-sm"
-                      >
-                        <span className="text-muted-foreground">{label}</span>
-                        <Badge variant="secondary" className="font-mono text-xs">
-                          {cost}
+          {/* ═══════════════════════════════════════════════════════════════════
+              SECTION 1: PROFIL & IDENTITÉ
+              ═══════════════════════════════════════════════════════════════════ */}
+          <motion.section variants={itemVariants}>
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              Profil & Identité
+            </h2>
+            
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Informations en lecture seule */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription className="text-xs uppercase tracking-wide font-medium">
+                    Informations du compte
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-14 w-14">
+                      <AvatarImage src="" />
+                      <AvatarFallback className="text-lg bg-primary/10 text-primary font-semibold">
+                        {userInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{user?.email}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant={isAdmin ? "default" : "secondary"} className="text-xs">
+                          {isAdmin ? "Administrateur" : "Utilisateur"}
                         </Badge>
                       </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        Email
+                      </span>
+                      <span className="font-medium truncate ml-4">{user?.email}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Membre depuis
+                      </span>
+                      <span className="font-medium">{memberSince}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Paramètres modifiables */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardDescription className="text-xs uppercase tracking-wide font-medium">
+                    Paramètres modifiables
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="displayName" className="text-sm">Nom d'affichage</Label>
+                    <div className="flex gap-2 mt-1.5">
+                      <Input 
+                        id="displayName" 
+                        placeholder="Votre pseudo"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleSaveDisplayName}
+                        disabled={!displayName}
+                      >
+                        Enregistrer
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Préférences rapides */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                        <span className="text-sm">Thème sombre</span>
+                      </div>
+                      <Switch 
+                        checked={theme === "dark"} 
+                        onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bell className="h-4 w-4" />
+                        <span className="text-sm">Notifications push</span>
+                      </div>
+                      <Switch 
+                        checked={notificationsEnabled} 
+                        onCheckedChange={setNotificationsEnabled}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        <span className="text-sm">Alertes email</span>
+                      </div>
+                      <Switch 
+                        checked={emailAlerts} 
+                        onCheckedChange={setEmailAlerts}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </motion.section>
+
+          {/* ═══════════════════════════════════════════════════════════════════
+              SECTION 2: ABONNEMENT ACTIF
+              ═══════════════════════════════════════════════════════════════════ */}
+          <motion.section variants={itemVariants}>
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Abonnement
+            </h2>
+            
+            {/* Plan actif - Mise en avant claire */}
+            <Card className="border-primary/40 bg-gradient-to-br from-primary/5 via-transparent to-transparent mb-4">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-primary/10 text-primary">
+                      {getPlanIcon(plan)}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-xl">{planDisplayName}</CardTitle>
+                        <Badge className="bg-primary text-primary-foreground">Plan actif</Badge>
+                      </div>
+                      <CardDescription className="mt-1">
+                        {plan === "starter" && "Accès aux fonctionnalités essentielles"}
+                        {plan === "pro" && "Scrap avancé, exports et statistiques détaillées"}
+                        {plan === "elite" && "Accès complet et illimité à toutes les fonctionnalités"}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="p-3 rounded-lg bg-background/50 border">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Prix mensuel</p>
+                    <p className="text-2xl font-bold">
+                      {plan === "starter" && "9,99€"}
+                      {plan === "pro" && "29€"}
+                      {plan === "elite" && "79€"}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-background/50 border">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Crédits / mois</p>
+                    <p className="text-2xl font-bold">{maxCreditsForPlan}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-background/50 border">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Réinitialisation</p>
+                    <p className="text-lg font-semibold">
+                      {resetDate ? format(resetDate, "d MMM", { locale: fr }) : "—"}
+                    </p>
+                    {daysUntilReset !== null && (
+                      <p className="text-xs text-muted-foreground">
+                        {daysUntilReset === 0 ? "Aujourd'hui" : `Dans ${daysUntilReset} jour${daysUntilReset > 1 ? "s" : ""}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Fonctionnalités incluses */}
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Inclus dans votre plan</p>
+                  <div className="flex flex-wrap gap-2">
+                    {plan === "starter" && (
+                      <>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Catalogue complet</Badge>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />3 alertes max</Badge>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Scrap standard</Badge>
+                      </>
+                    )}
+                    {plan === "pro" && (
+                      <>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />20 alertes max</Badge>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Scrap avancé</Badge>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Historique 90j</Badge>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Statistiques</Badge>
+                      </>
+                    )}
+                    {plan === "elite" && (
+                      <>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Alertes illimitées</Badge>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Scrap illimité</Badge>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Export données</Badge>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Accès API</Badge>
+                        <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />Support prioritaire</Badge>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Autres plans disponibles */}
+            {plan !== "elite" && otherPlans.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">Améliorer votre plan</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {otherPlans
+                    .filter(p => {
+                      // Only show upgrade options
+                      const planOrder = { starter: 1, pro: 2, elite: 3 };
+                      const currentOrder = planOrder[plan] || 0;
+                      const otherOrder = planOrder[p.name.toLowerCase() as keyof typeof planOrder] || 0;
+                      return otherOrder > currentOrder;
+                    })
+                    .map(otherPlan => {
+                      const isPro = otherPlan.name.toLowerCase() === "pro";
+                      const isElite = otherPlan.name.toLowerCase().includes("elite");
+                      const planCredits = typeof otherPlan.features === 'object' && otherPlan.features !== null 
+                        ? (otherPlan.features as Record<string, unknown>).credits 
+                        : null;
+
+                      return (
+                        <Card key={otherPlan.id} className="hover:border-muted-foreground/30 transition-colors">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-muted">
+                                  {getPlanIcon(otherPlan.name)}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-semibold">{otherPlan.name}</p>
+                                    {isPro && <Badge variant="outline" className="text-xs">Populaire</Badge>}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    {otherPlan.price}€/mois • {typeof planCredits === 'number' ? planCredits : "—"} crédits
+                                  </p>
+                                </div>
+                              </div>
+                              <Button variant="outline" size="sm" className="gap-1" asChild>
+                                <Link to="/pricing">
+                                  <ArrowUpRight className="h-4 w-4" />
+                                  Voir
+                                </Link>
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+          </motion.section>
+
+          {/* ═══════════════════════════════════════════════════════════════════
+              SECTION 3: CRÉDITS & UTILISATION
+              ═══════════════════════════════════════════════════════════════════ */}
+          <motion.section variants={itemVariants}>
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Coins className="h-5 w-5 text-primary" />
+              Crédits & Utilisation
+            </h2>
+            
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Crédits restants ce mois</p>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-4xl font-bold">{creditsRemaining}</span>
+                      <span className="text-muted-foreground">/ {maxCreditsForPlan}</span>
+                      {isCreditsLow && (
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <AlertTriangle className="h-5 w-5 text-warning" />
+                          </TooltipTrigger>
+                          <TooltipContent>Crédits bientôt épuisés</TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Réinitialisation</p>
+                    <p className="font-semibold mt-1">
+                      {resetDate ? format(resetDate, "d MMMM", { locale: fr }) : "—"}
+                    </p>
+                    {daysUntilReset !== null && (
+                      <p className="text-xs text-muted-foreground">
+                        {daysUntilReset === 0 ? "Aujourd'hui" : `Dans ${daysUntilReset} jour${daysUntilReset > 1 ? "s" : ""}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <Progress 
+                  value={creditPercentage} 
+                  className={`h-3 mb-4 ${isCreditsLow ? "[&>div]:bg-warning" : ""}`}
+                />
+
+                {/* Coût par action - discret */}
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    {actionCosts.map(({ action, label, cost }) => (
+                      <span key={action} className="flex items-center gap-1">
+                        {label}: <span className="font-medium text-foreground">{cost}</span>
+                      </span>
                     ))}
                   </div>
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <Button className="gap-2" asChild>
+                  <Button variant="ghost" size="sm" className="gap-1 text-primary" asChild>
                     <Link to="/billing">
-                      <Coins className="h-4 w-4" />
-                      Recharger des crédits
-                    </Link>
-                  </Button>
-                  <Button variant="outline" className="gap-2" asChild>
-                    <Link to="/tracking">
-                      <Bell className="h-4 w-4" />
-                      Gérer alertes & watchlist
+                      <Sparkles className="h-4 w-4" />
+                      Recharger
                     </Link>
                   </Button>
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </motion.section>
 
-          {/* Section 3: Préférences */}
-          <motion.div variants={itemVariants}>
+          {/* ═══════════════════════════════════════════════════════════════════
+              SECTION 4: ACTIONS DE COMPTE
+              ═══════════════════════════════════════════════════════════════════ */}
+          <motion.section variants={itemVariants}>
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              Actions de compte
+            </h2>
+            
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Settings className="h-5 w-5 text-primary" />
-                  Préférences
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Theme */}
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    {theme === "dark" ? (
-                      <Moon className="h-5 w-5 text-muted-foreground" />
-                    ) : (
-                      <Sun className="h-5 w-5 text-muted-foreground" />
-                    )}
-                    <div>
-                      <p className="font-medium">Thème sombre</p>
-                      <p className="text-sm text-muted-foreground">Adapter l'interface à vos préférences</p>
-                    </div>
-                  </div>
-                  <Switch 
-                    checked={theme === "dark"} 
-                    onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                  />
-                </div>
-
-                <Separator />
-
-                {/* Notifications */}
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <Bell className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Notifications push</p>
-                      <p className="text-sm text-muted-foreground">Recevoir les alertes dans le navigateur</p>
-                    </div>
-                  </div>
-                  <Switch 
-                    checked={notificationsEnabled} 
-                    onCheckedChange={setNotificationsEnabled}
-                  />
-                </div>
-
-                <Separator />
-
-                {/* Email alerts */}
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Alertes par email</p>
-                      <p className="text-sm text-muted-foreground">Recevoir un email pour les alertes importantes</p>
-                    </div>
-                  </div>
-                  <Switch 
-                    checked={emailAlerts} 
-                    onCheckedChange={setEmailAlerts}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Section 4: Sécurité & Compte */}
-          <motion.div variants={itemVariants}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Shield className="h-5 w-5 text-primary" />
-                  Sécurité & Compte
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="pt-6 space-y-4">
+                {/* Actions standard */}
                 <div className="flex flex-wrap gap-3">
                   <Button variant="outline" className="gap-2">
-                    <Shield className="h-4 w-4" />
+                    <Key className="h-4 w-4" />
                     Changer le mot de passe
                   </Button>
-                  <Button variant="outline" className="gap-2" asChild>
-                    <Link to="/cgu">
-                      <ExternalLink className="h-4 w-4" />
-                      Conditions d'utilisation
-                    </Link>
-                  </Button>
-                  <Button variant="outline" className="gap-2" asChild>
-                    <Link to="/rgpd">
-                      <ExternalLink className="h-4 w-4" />
-                      Politique de confidentialité
-                    </Link>
+                  
+                  {plan === "elite" && (
+                    <Button variant="outline" className="gap-2">
+                      <Globe className="h-4 w-4" />
+                      Gérer l'accès API
+                    </Button>
+                  )}
+                  
+                  <Button variant="outline" className="gap-2">
+                    <Monitor className="h-4 w-4" />
+                    Déconnecter toutes les sessions
                   </Button>
                 </div>
 
                 <Separator />
 
-                <div className="flex flex-wrap gap-3">
-                  <Button 
-                    variant="outline" 
-                    className="gap-2 text-destructive hover:text-destructive"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Se déconnecter
-                  </Button>
+                {/* Zone danger */}
+                <div className="pt-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                    Zone sensible
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button 
+                      variant="outline" 
+                      className="gap-2 border-destructive/30 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Se déconnecter
+                    </Button>
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10">
-                        <Trash2 className="h-4 w-4" />
-                        Supprimer mon compte
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Cette action est irréversible. Toutes vos données, votre watchlist, vos alertes 
-                          et votre historique seront définitivement supprimés.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction 
-                          className="bg-destructive hover:bg-destructive/90"
-                          onClick={() => {
-                            toast({ 
-                              title: "Fonctionnalité à venir", 
-                              description: "La suppression de compte sera disponible prochainement.",
-                              variant: "default"
-                            });
-                          }}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="gap-2 border-destructive/30 text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
-                          Supprimer définitivement
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          <Trash2 className="h-4 w-4" />
+                          Supprimer mon compte
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-destructive" />
+                            Supprimer votre compte ?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="space-y-2">
+                            <p>Cette action est <strong>irréversible</strong>. Toutes vos données seront définitivement supprimées :</p>
+                            <ul className="list-disc list-inside text-sm space-y-1 mt-2">
+                              <li>Votre profil et préférences</li>
+                              <li>Votre watchlist et alertes</li>
+                              <li>Votre historique d'estimations</li>
+                              <li>Vos crédits restants</li>
+                            </ul>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction 
+                            className="bg-destructive hover:bg-destructive/90"
+                            onClick={() => {
+                              toast({ 
+                                title: "Fonctionnalité à venir", 
+                                description: "La suppression de compte sera disponible prochainement.",
+                              });
+                            }}
+                          >
+                            Supprimer définitivement
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </CardContent>
             </Card>
+          </motion.section>
+
+          {/* Liens légaux */}
+          <motion.div variants={itemVariants} className="flex items-center justify-center gap-4 pt-4 text-sm text-muted-foreground">
+            <Link to="/cgu" className="hover:text-foreground transition-colors">Conditions d'utilisation</Link>
+            <span>•</span>
+            <Link to="/rgpd" className="hover:text-foreground transition-colors">Politique de confidentialité</Link>
+            <span>•</span>
+            <Link to="/legal-notice" className="hover:text-foreground transition-colors">Mentions légales</Link>
           </motion.div>
         </motion.div>
       </div>
