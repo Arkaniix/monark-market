@@ -24,6 +24,7 @@ import { toast } from "@/hooks/use-toast";
 type ProblemType = 
   | "incorrect_price"
   | "wrong_category"
+  | "wrong_components"
   | "duplicate"
   | "expired"
   | "other";
@@ -31,6 +32,7 @@ type ProblemType =
 const PROBLEM_TYPES: { value: ProblemType; label: string }[] = [
   { value: "incorrect_price", label: "Prix incorrect" },
   { value: "wrong_category", label: "Mauvaise catégorie" },
+  { value: "wrong_components", label: "Composant manquant/en trop" },
   { value: "duplicate", label: "Annonce en doublon" },
   { value: "expired", label: "Annonce expirée" },
   { value: "other", label: "Autre problème" },

@@ -297,8 +297,30 @@ export default function AdDetail() {
                           />
                           <YAxis className="text-xs" />
                           <Tooltip
-                            labelFormatter={(v) => formatDate(v)}
-                            formatter={(value: number) => [`${value} €`, "Prix"]}
+                            content={({ active, payload, label }) => {
+                              if (!active || !payload?.length) return null;
+                              const data = payload[0]?.payload;
+                              return (
+                                <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-xl min-w-[180px]">
+                                  <p className="font-semibold text-sm mb-2 pb-2 border-b border-border/50 text-foreground">
+                                    {formatDate(String(label))}
+                                  </p>
+                                  <div className="flex justify-between items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                      <span className="text-sm text-foreground">Prix</span>
+                                    </div>
+                                    <span className="font-bold text-primary">{data?.price} €</span>
+                                  </div>
+                                  {data?.price_drop && (
+                                    <p className="text-xs text-success mt-2 flex items-center gap-1">
+                                      <TrendingDown className="h-3 w-3" />
+                                      Baisse de prix détectée
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            }}
                           />
                           <Line
                             type="stepAfter"
