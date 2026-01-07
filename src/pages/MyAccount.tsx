@@ -20,7 +20,8 @@ import {
   Globe, Key, Monitor, Loader2, Check, Info, Coins, 
   ChevronRight, Sparkles, Clock, HelpCircle, Copy,
   Smartphone, Laptop, MapPin, Eye, EyeOff, Plus,
-  AlertCircle, Lock, FileText, Download
+  AlertCircle, Lock, FileText, Download, X, Minus,
+  TrendingUp, TrendingDown
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays, subDays, subHours } from "date-fns";
@@ -164,6 +165,12 @@ export default function MyAccount() {
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  
+  // Plan change modal state
+  const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [changingPlan, setChangingPlan] = useState<string | null>(null);
+  const [showDowngradeWarning, setShowDowngradeWarning] = useState(false);
+  const [pendingDowngrade, setPendingDowngrade] = useState<string | null>(null);
 
   // Entitlements & subscription data
   const { 
@@ -250,6 +257,120 @@ export default function MyAccount() {
 
   const handleRevokeAllSessions = () => {
     toast({ title: "Sessions déconnectées", description: "Tous les autres appareils ont été déconnectés." });
+  };
+
+  // Plan change handlers
+  const planOrder = { starter: 1, pro: 2, elite: 3 };
+  
+  const handlePlanChange = (targetPlan: string) => {
+    const currentOrder = planOrder[mockPlan as keyof typeof planOrder] || 0;
+    const targetOrder = planOrder[targetPlan as keyof typeof planOrder] || 0;
+    
+    if (targetOrder < currentOrder) {
+      // Downgrade - show warning
+      setPendingDowngrade(targetPlan);
+      setShowDowngradeWarning(true);
+    } else {
+      // Upgrade - proceed directly
+      processPlanChange(targetPlan);
+    }
+  };
+
+  const processPlanChange = (targetPlan: string) => {
+    setChangingPlan(targetPlan);
+    setShowDowngradeWarning(false);
+    setPendingDowngrade(null);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setChangingPlan(null);
+      setPlanModalOpen(false);
+      toast({ 
+        title: "Plan modifié", 
+        description: `Votre abonnement est maintenant ${targetPlan === "starter" ? "Starter" : targetPlan === "pro" ? "Pro" : "Élite"}.`
+      });
+    }, 2000);
+  };
+
+  const confirmDowngrade = () => {
+    if (pendingDowngrade) {
+      processPlanChange(pendingDowngrade);
+    }
+  };
+
+  const cancelDowngrade = () => {
+    setShowDowngradeWarning(false);
+    setPendingDowngrade(null);
+  };
+
+  // Plan comparison data with features for modal
+  const planComparisonFull = [
+    { 
+      id: "starter", 
+      name: "Starter", 
+      price: 9.99, 
+      credits: 120,
+      features: {
+        scrapAdvanced: false,
+        advancedStats: false,
+        export: false,
+        apiAccess: false,
+        prioritySupport: false,
+      },
+      featuresList: ["3 alertes actives", "Scrap standard", "Catalogue complet"],
+    },
+    { 
+      id: "pro", 
+      name: "Pro", 
+      price: 29, 
+      credits: 500,
+      features: {
+        scrapAdvanced: true,
+        advancedStats: true,
+        export: false,
+        apiAccess: true,
+        prioritySupport: true,
+      },
+      featuresList: ["20 alertes actives", "Scrap avancé", "Historique 90j", "API"],
+      isPopular: true,
+    },
+    { 
+      id: "elite", 
+      name: "Élite", 
+      price: 79, 
+      credits: 1500,
+      features: {
+        scrapAdvanced: true,
+        advancedStats: true,
+        export: true,
+        apiAccess: true,
+        prioritySupport: true,
+      },
+      featuresList: ["Alertes illimitées", "Tout illimité", "Export", "Support dédié"],
+    },
+  ];
+
+  const getDowngradeLosses = (targetPlan: string) => {
+    const losses: string[] = [];
+    const currentFeatures = planComparisonFull.find(p => p.id === mockPlan)?.features;
+    const targetFeatures = planComparisonFull.find(p => p.id === targetPlan)?.features;
+    
+    if (currentFeatures && targetFeatures) {
+      if (currentFeatures.scrapAdvanced && !targetFeatures.scrapAdvanced) losses.push("Scrap avancé");
+      if (currentFeatures.advancedStats && !targetFeatures.advancedStats) losses.push("Statistiques avancées");
+      if (currentFeatures.export && !targetFeatures.export) losses.push("Export de données");
+      if (currentFeatures.apiAccess && !targetFeatures.apiAccess) losses.push("Accès API");
+      if (currentFeatures.prioritySupport && !targetFeatures.prioritySupport) losses.push("Support prioritaire");
+    }
+    
+    // Add credit difference
+    const currentCredits = planComparisonFull.find(p => p.id === mockPlan)?.credits || 0;
+    const targetCredits = planComparisonFull.find(p => p.id === targetPlan)?.credits || 0;
+    if (targetCredits < currentCredits) {
+      losses.push(`${currentCredits - targetCredits} crédits/mois`);
+    }
+    
+    return losses;
   };
 
   const copyToClipboard = (text: string) => {
@@ -668,11 +789,13 @@ export default function MyAccount() {
                           </CardDescription>
                         </div>
                       </div>
-                      <Button variant="outline" className="gap-2" asChild>
-                        <Link to="/pricing">
-                          <RefreshCw className="h-4 w-4" />
-                          Changer de plan
-                        </Link>
+                      <Button 
+                        variant="outline" 
+                        className="gap-2" 
+                        onClick={() => setPlanModalOpen(true)}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        Changer de plan
                       </Button>
                     </div>
                   </CardHeader>
@@ -1361,6 +1484,260 @@ export default function MyAccount() {
           <Link to="/legal-notice" className="hover:text-foreground transition-colors">Mentions légales</Link>
         </div>
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          MODAL: CHANGER DE PLAN
+          ═══════════════════════════════════════════════════════════════════ */}
+      <Dialog open={planModalOpen} onOpenChange={setPlanModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RefreshCw className="h-5 w-5 text-primary" />
+              Changer de plan
+            </DialogTitle>
+            <DialogDescription>
+              Comparez les plans et choisissez celui qui correspond le mieux à vos besoins
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            {/* Tableau de comparaison */}
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="w-[200px]">Fonctionnalité</TableHead>
+                    {planComparisonFull.map((p) => (
+                      <TableHead key={p.id} className="text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <div className={`p-2 rounded-lg ${p.id === mockPlan ? "bg-primary/15 text-primary" : "bg-muted"}`}>
+                            {getPlanIcon(p.name)}
+                          </div>
+                          <span className="font-semibold">{p.name}</span>
+                          {p.id === mockPlan && (
+                            <Badge className="bg-primary text-primary-foreground text-xs">Actuel</Badge>
+                          )}
+                          {p.isPopular && p.id !== mockPlan && (
+                            <Badge variant="secondary" className="text-xs">Populaire</Badge>
+                          )}
+                        </div>
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">Prix mensuel</TableCell>
+                    {planComparisonFull.map((p) => (
+                      <TableCell key={p.id} className="text-center">
+                        <span className="text-lg font-bold">{p.price}€</span>
+                        <span className="text-muted-foreground text-sm">/mois</span>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Crédits / mois</TableCell>
+                    {planComparisonFull.map((p) => (
+                      <TableCell key={p.id} className="text-center font-semibold">
+                        {p.credits}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Scrap avancé</TableCell>
+                    {planComparisonFull.map((p) => (
+                      <TableCell key={p.id} className="text-center">
+                        {p.features.scrapAdvanced ? (
+                          <Check className="h-5 w-5 text-primary mx-auto" />
+                        ) : (
+                          <Minus className="h-5 w-5 text-muted-foreground mx-auto" />
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Statistiques avancées</TableCell>
+                    {planComparisonFull.map((p) => (
+                      <TableCell key={p.id} className="text-center">
+                        {p.features.advancedStats ? (
+                          <Check className="h-5 w-5 text-primary mx-auto" />
+                        ) : (
+                          <Minus className="h-5 w-5 text-muted-foreground mx-auto" />
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Export de données</TableCell>
+                    {planComparisonFull.map((p) => (
+                      <TableCell key={p.id} className="text-center">
+                        {p.features.export ? (
+                          <Check className="h-5 w-5 text-primary mx-auto" />
+                        ) : (
+                          <Minus className="h-5 w-5 text-muted-foreground mx-auto" />
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Accès API</TableCell>
+                    {planComparisonFull.map((p) => (
+                      <TableCell key={p.id} className="text-center">
+                        {p.features.apiAccess ? (
+                          <Check className="h-5 w-5 text-primary mx-auto" />
+                        ) : (
+                          <Minus className="h-5 w-5 text-muted-foreground mx-auto" />
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Support prioritaire</TableCell>
+                    {planComparisonFull.map((p) => (
+                      <TableCell key={p.id} className="text-center">
+                        {p.features.prioritySupport ? (
+                          <Check className="h-5 w-5 text-primary mx-auto" />
+                        ) : (
+                          <Minus className="h-5 w-5 text-muted-foreground mx-auto" />
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {/* Actions row */}
+                  <TableRow className="bg-muted/30">
+                    <TableCell></TableCell>
+                    {planComparisonFull.map((p) => {
+                      const isActive = p.id === mockPlan;
+                      const currentOrder = planOrder[mockPlan as keyof typeof planOrder] || 0;
+                      const targetOrder = planOrder[p.id as keyof typeof planOrder] || 0;
+                      const isUpgrade = targetOrder > currentOrder;
+                      const isDowngrade = targetOrder < currentOrder;
+                      
+                      return (
+                        <TableCell key={p.id} className="text-center">
+                          {isActive ? (
+                            <Button disabled variant="secondary" className="w-full gap-2">
+                              <Check className="h-4 w-4" />
+                              Plan actuel
+                            </Button>
+                          ) : isUpgrade ? (
+                            <Button 
+                              className="w-full gap-2"
+                              onClick={() => handlePlanChange(p.id)}
+                              disabled={changingPlan !== null}
+                            >
+                              {changingPlan === p.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  Traitement...
+                                </>
+                              ) : (
+                                <>
+                                  <TrendingUp className="h-4 w-4" />
+                                  Passer à {p.name}
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="outline"
+                              className="w-full gap-2 text-muted-foreground hover:text-foreground"
+                              onClick={() => handlePlanChange(p.id)}
+                              disabled={changingPlan !== null}
+                            >
+                              {changingPlan === p.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  Traitement...
+                                </>
+                              ) : (
+                                <>
+                                  <TrendingDown className="h-4 w-4" />
+                                  Rétrograder
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Info supplémentaire */}
+            <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
+              <p className="text-sm text-muted-foreground">
+                <Info className="h-4 w-4 inline mr-1.5" />
+                Le changement de plan prend effet immédiatement. Les crédits non utilisés ne sont pas reportés.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPlanModalOpen(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          DIALOG: AVERTISSEMENT DOWNGRADE
+          ═══════════════════════════════════════════════════════════════════ */}
+      <AlertDialog open={showDowngradeWarning} onOpenChange={setShowDowngradeWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-warning">
+              <AlertTriangle className="h-5 w-5" />
+              Attention : Rétrogradation de plan
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  Vous êtes sur le point de passer de <strong>{mockPlanDisplayName}</strong> à{" "}
+                  <strong>{pendingDowngrade === "starter" ? "Starter" : "Pro"}</strong>.
+                </p>
+                
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+                  <p className="font-medium text-destructive mb-2">Vous perdrez l'accès à :</p>
+                  <ul className="space-y-1">
+                    {pendingDowngrade && getDowngradeLosses(pendingDowngrade).map((loss, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm">
+                        <X className="h-4 w-4 text-destructive shrink-0" />
+                        <span>{loss}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <p className="text-sm text-muted-foreground">
+                  Ce changement prendra effet à la fin de votre période de facturation actuelle.
+                  Vos données seront conservées mais certaines fonctionnalités ne seront plus accessibles.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDowngrade}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-warning text-warning-foreground hover:bg-warning/90"
+              onClick={confirmDowngrade}
+              disabled={changingPlan !== null}
+            >
+              {changingPlan ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Traitement...
+                </>
+              ) : (
+                "Confirmer la rétrogradation"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
