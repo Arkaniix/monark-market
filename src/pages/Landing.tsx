@@ -520,7 +520,7 @@ export default function Landing() {
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
             <Users className="h-12 w-12 text-primary mx-auto mb-4" />
-            <h2 className="text-3xl font-bold mb-4">Rejoignez 2,500+ membres actifs</h2>
+            <h2 className="text-3xl font-bold mb-4">Rejoignez notre communauté de membres actifs</h2>
             <p className="text-lg text-muted-foreground mb-8">
               Partagez vos trouvailles, apprenez des meilleurs et progressez ensemble dans une communauté soudée
             </p>
