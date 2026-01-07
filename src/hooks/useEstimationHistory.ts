@@ -117,21 +117,43 @@ export function useEstimationHistory(page: number = 1, autoFetch: boolean = true
       if (abortController.signal.aborted || didTimeout) return;
       if (!isMountedRef.current) return;
 
-      // Map provider items to UI-friendly format
-      const mappedItems: EstimationHistoryItem[] = response.items.map((item, idx) => ({
-        id: item.id,
-        created_at: item.date,
-        model_id: item.model_id,
-        model_name: item.model,
-        brand: item.brand || '',
-        category: item.category,
-        condition: item.condition || 'bon',
-        region: item.region,
-        buy_price_input: item.buy_price,
-        results: item.results,
-        trend: item.trend,
-        photos: mockPhotosMap[idx] || undefined,
-      }));
+      // Map provider items to UI-friendly format with fallback for legacy data
+      const mappedItems: EstimationHistoryItem[] = response.items.map((item, idx) => {
+        // Handle legacy data that doesn't have the new results structure
+        const legacyItem = item as any;
+        const results = item.results || {
+          buy_price_recommended: legacyItem.buy_price_recommended || Math.round(item.buy_price * 0.95),
+          sell_price_1m: legacyItem.sell_price_1m || legacyItem.median_price || Math.round(item.buy_price * 1.1),
+          sell_price_3m: undefined,
+          margin_pct: legacyItem.margin_pct || 5,
+          resell_probability: 0.7,
+          risk_level: 'medium' as const,
+          badge: 'caution' as const,
+          advice: 'Données anciennes - relancez une estimation pour des résultats à jour.',
+          market: {
+            median_price: legacyItem.median_price || Math.round(item.buy_price * 1.05),
+            var_30d_pct: 0,
+            volume: 100,
+            rarity_index: 0.5,
+            trend: item.trend || 'stable',
+          },
+        };
+
+        return {
+          id: item.id,
+          created_at: item.date,
+          model_id: item.model_id || idx + 1,
+          model_name: item.model,
+          brand: item.brand || '',
+          category: item.category,
+          condition: item.condition || 'bon',
+          region: item.region,
+          buy_price_input: item.buy_price,
+          results,
+          trend: item.trend,
+          photos: mockPhotosMap[idx] || undefined,
+        };
+      });
 
       if (mappedItems.length > 0) {
         setData({
