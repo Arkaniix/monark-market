@@ -5,14 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CreditResetInfo } from "@/components/credits/CreditResetInfo";
-import { useCredits } from "@/hooks/useCredits";
-import { useEntitlements } from "@/hooks/useEntitlements";
+import { useMockSubscription } from "@/hooks/useMockSubscription";
 import { Coins, Crown, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Billing() {
-  const { creditsRemaining, resetInfo } = useCredits();
-  const { planDisplayName: planName, plan } = useEntitlements();
+  const { 
+    creditsRemaining, 
+    creditsResetDate, 
+    planDisplayName, 
+    plan 
+  } = useMockSubscription();
+  
   const isSubscriptionActive = plan !== "starter";
 
   return (
@@ -41,16 +45,12 @@ export default function Billing() {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Plan</span>
                 <Badge variant="default" className="text-sm">
-                  {planName}
+                  {planDisplayName}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Statut</span>
-                {isSubscriptionActive ? (
-                  <Badge variant="default" className="bg-green-500">Actif</Badge>
-                ) : (
-                  <Badge variant="secondary">Inactif</Badge>
-                )}
+                <Badge variant="default" className="bg-green-500">Actif</Badge>
               </div>
               <Separator />
               <div className="flex items-center justify-between">
@@ -60,15 +60,15 @@ export default function Billing() {
                   <span className="font-bold text-lg">{creditsRemaining}</span>
                 </div>
               </div>
-              {resetInfo?.resetDate && (
+              {creditsResetDate && (
                 <CreditResetInfo 
-                  resetDate={resetInfo.resetDate.toISOString()} 
+                  resetDate={creditsResetDate} 
                   creditsRemaining={creditsRemaining}
                   variant="default"
                 />
               )}
               <Button variant="outline" className="w-full" asChild>
-                <Link to="/account">
+                <Link to="/my-account">
                   Gérer mon abonnement
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
@@ -109,7 +109,7 @@ export default function Billing() {
         {/* Credit Packages */}
         <CreditPackages 
           hasActiveSubscription={isSubscriptionActive}
-          creditsResetDate={resetInfo?.resetDate?.toISOString() ?? null}
+          creditsResetDate={creditsResetDate ?? null}
         />
 
         {/* Purchase History */}
