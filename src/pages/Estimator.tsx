@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calculator, ChevronDown, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown } from "lucide-react";
+
+import { Calculator, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useModelsSearch, useEstimationHistoryEnhanced } from "@/hooks";
 import { useRunEstimation, useEstimatorStats, type EstimationResultUI } from "@/hooks/useEstimator";
@@ -66,10 +66,8 @@ export default function Estimator() {
   const [modelSearch, setModelSearch] = useState("");
   const [selectedModel, setSelectedModel] = useState<ModelAutocomplete | null>(null);
   const [condition, setCondition] = useState("");
-  const [region, setRegion] = useState("");
   const [adPrice, setAdPrice] = useState("");
   const [platform, setPlatform] = useState("");
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
   const [isPCBlocked, setIsPCBlocked] = useState(false);
@@ -168,16 +166,24 @@ export default function Estimator() {
     }
     if (price) setAdPrice(price);
     if (conditionParam) {
+      const normalized = conditionParam.toLowerCase().trim();
       const conditionMap: Record<string, string> = {
         'neuf': 'neuf',
         'comme_neuf': 'comme-neuf',
+        'comme-neuf': 'comme-neuf',
+        'comme neuf': 'comme-neuf',
         'bon': 'bon',
+        'bon état': 'bon',
+        'bon-etat': 'bon',
         'correct': 'bon',
-        'à_réparer': 'a-reparer'
+        'satisfaisant': 'bon',
+        'à_réparer': 'a-reparer',
+        'a-reparer': 'a-reparer',
+        'à réparer': 'a-reparer',
       };
-      setCondition(conditionMap[conditionParam] || conditionParam);
+      setCondition(conditionMap[normalized] || 'bon');
     }
-    if (regionParam) setRegion(regionParam);
+    if (platformParam) setPlatform(platformParam);
     if (platformParam) setPlatform(platformParam);
     setPrefillApplied(true);
   }, [searchParams, prefillApplied]);
@@ -196,8 +202,6 @@ export default function Estimator() {
         model_id: selectedModel.id,
         condition,
         buy_price_input: parseFloat(adPrice),
-        region: region || undefined,
-        mode_advanced: showAdvanced
       });
       setResult({ ...estimation, platform });
       toast({
@@ -218,7 +222,6 @@ export default function Estimator() {
     setSelectedModel(null);
     setModelSearch("");
     setCondition("");
-    setRegion("");
     setAdPrice("");
     setPlatform("");
     setResult(null);
@@ -449,34 +452,7 @@ export default function Estimator() {
                             onChange={e => setAdPrice(e.target.value)} 
                             className="mt-2" 
                           />
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Le prix demandé par le vendeur
-                          </p>
                         </div>
-
-                        {/* Advanced options */}
-                        <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
-                          <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
-                              <ChevronDown className={`h-4 w-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
-                              Options avancées
-                            </Button>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="pt-4">
-                            <Label>Région</Label>
-                            <Select value={region} onValueChange={setRegion}>
-                              <SelectTrigger className="mt-2">
-                                <SelectValue placeholder="Sélectionner..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="IDF">Île-de-France</SelectItem>
-                                <SelectItem value="ARA">Auvergne-Rhône-Alpes</SelectItem>
-                                <SelectItem value="PACA">PACA</SelectItem>
-                                <SelectItem value="Occitanie">Occitanie</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </CollapsibleContent>
-                        </Collapsible>
 
                         {/* Submit buttons */}
                         <div className="flex gap-3 pt-2">
