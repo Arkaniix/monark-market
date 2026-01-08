@@ -26,6 +26,7 @@ export interface EstimationResultUI {
   category: string;
   condition: string;
   region?: string;
+  platform?: string;
   buy_price_input: number;
   buy_price_recommended: number;
   sell_price_1m: number;
