@@ -8,12 +8,17 @@ import {
   XCircle, 
   Target,
   User,
-  AlertTriangle
+  AlertTriangle,
+  Lock
 } from "lucide-react";
+import LockedFeatureOverlay from "@/components/LockedFeatureOverlay";
 import type { EstimationResultUI } from "@/hooks/useEstimator";
+import type { PlanType, EstimatorFeatures } from "@/hooks/useEntitlements";
 
 interface DecisionBlockProps {
   result: EstimationResultUI;
+  plan: PlanType;
+  limits: EstimatorFeatures;
 }
 
 // Décision basée sur les résultats
@@ -94,11 +99,12 @@ function getTargetProfile(result: EstimationResultUI): { label: string; descript
   };
 }
 
-export default function DecisionBlock({ result }: DecisionBlockProps) {
+export default function DecisionBlock({ result, plan, limits }: DecisionBlockProps) {
   const decision = getDecision(result);
   const DecisionIcon = decision.icon;
   const justification = getJustification(result, decision.verdict);
   const profile = getTargetProfile(result);
+  const isStarter = plan === "starter";
 
   return (
     <motion.div
@@ -111,9 +117,19 @@ export default function DecisionBlock({ result }: DecisionBlockProps) {
           <CardTitle className="text-lg flex items-center gap-2">
             <Target className="h-5 w-5" />
             Décision recommandée
+            {isStarter && (
+              <Badge variant="outline" className="ml-2 gap-1 text-xs">
+                <Lock className="h-3 w-3" /> Pro
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <LockedFeatureOverlay
+            isLocked={!limits.canSeeBuyPrice}
+            requiredPlan="pro"
+            featureName="Décision recommandée"
+          >
           <div className="flex flex-col md:flex-row gap-6">
             {/* Verdict principal */}
             <div className="flex-1">
@@ -188,6 +204,7 @@ export default function DecisionBlock({ result }: DecisionBlockProps) {
               </p>
             </div>
           </div>
+          </LockedFeatureOverlay>
         </CardContent>
       </Card>
     </motion.div>
