@@ -199,11 +199,11 @@ export default function Estimator() {
   const convertHistoryToResult = (item: EstimationHistoryItem): EstimationResultUI => {
     return {
       model_id: item.model_id,
-      model_name: item.model,
+      model_name: item.model_name,
       category: item.category,
       condition: item.condition,
       region: item.region,
-      buy_price_input: item.buy_price,
+      buy_price_input: item.buy_price_input,
       buy_price_recommended: item.results.buy_price_recommended,
       sell_price_1m: item.results.sell_price_1m,
       sell_price_3m: item.results.sell_price_3m,
@@ -515,14 +515,14 @@ export default function Estimator() {
                       {getCategoryIcon(item.category)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{item.model}</p>
+                      <p className="font-medium truncate">{item.model_name}</p>
                       <p className="text-xs text-muted-foreground">{item.category} • {item.condition}</p>
                     </div>
                     <div className="text-sm text-right">
-                      <p className="font-medium">{item.buy_price}€</p>
+                      <p className="font-medium">{item.buy_price_input}€</p>
                       <p className="text-xs text-muted-foreground">
                         <Clock className="h-3 w-3 inline mr-1" />
-                        {new Date(item.date).toLocaleDateString('fr-FR')}
+                        {new Date(item.created_at).toLocaleDateString('fr-FR')}
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -543,14 +543,14 @@ export default function Estimator() {
                         onClick={() => {
                           setSelectedModel({
                             id: item.model_id,
-                            name: item.model,
+                            name: item.model_name,
                             brand: item.brand || '',
                             category: item.category,
                             family: null
                           });
-                          setModelSearch(item.model);
+                          setModelSearch(item.model_name);
                           setCondition(item.condition || '');
-                          setAdPrice(item.buy_price.toString());
+                          setAdPrice(item.buy_price_input.toString());
                           setActiveTab("estimator");
                         }}
                         title="Réestimer (coûte des crédits)"
@@ -572,14 +572,14 @@ export default function Estimator() {
               <DialogTitle className="flex items-center gap-2">
                 <History className="h-5 w-5" />
                 Résultats sauvegardés
-                <Badge variant="secondary" className="ml-2">Données du {viewHistoryItem?.date ? new Date(viewHistoryItem.date).toLocaleDateString('fr-FR') : ''}</Badge>
+                <Badge variant="secondary" className="ml-2">Données du {viewHistoryItem?.created_at ? new Date(viewHistoryItem.created_at).toLocaleDateString('fr-FR') : ''}</Badge>
               </DialogTitle>
             </DialogHeader>
             {viewHistoryItem && (
               <div className="space-y-6 mt-4">
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                   <p className="text-sm text-amber-700 dark:text-amber-400">
-                    ⚠️ Ces données datent du {new Date(viewHistoryItem.date).toLocaleDateString('fr-FR')}. 
+                    ⚠️ Ces données datent du {new Date(viewHistoryItem.created_at).toLocaleDateString('fr-FR')}. 
                     Le marché peut avoir évolué depuis. Pour des données à jour, relancez une estimation (coûte des crédits).
                   </p>
                 </div>
