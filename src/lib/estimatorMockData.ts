@@ -49,7 +49,9 @@ export interface EstimationHistoryItem {
   category: string;
   condition: string;
   region?: string;
+  platform?: string;
   buy_price: number;
+  plan_at_creation: "starter" | "pro" | "elite";
   results: {
     buy_price_recommended: number;
     sell_price_1m: number;
@@ -65,6 +67,26 @@ export interface EstimationHistoryItem {
       volume: number;
       rarity_index: number;
       trend: "up" | "down" | "stable";
+    };
+    negotiation?: {
+      buy_aggressive: number;
+      buy_negotiable: number;
+      buy_max: number;
+      sell_min: number;
+      sell_negotiable: number;
+      sell_premium: number;
+    };
+    platforms?: Array<{
+      name: string;
+      importance: number;
+      sell_probability: number;
+      recommended_price: number;
+      avg_days_to_sell: number;
+    }>;
+    scenarios?: {
+      quick: { price: number; margin: number; days: number };
+      optimal: { price: number; margin: number; days: number };
+      long: { price: number; margin: number; days: number };
     };
   };
   trend: "up" | "down" | "stable";
@@ -214,7 +236,7 @@ export function generateEstimation(
   };
 }
 
-// Mock history (could be in localStorage)
+// Mock history with plan_at_creation to demonstrate different access levels
 export const mockEstimationHistory: EstimationHistoryItem[] = [
   {
     id: "1",
@@ -224,7 +246,9 @@ export const mockEstimationHistory: EstimationHistoryItem[] = [
     brand: "NVIDIA",
     category: "GPU",
     condition: "bon",
+    platform: "leboncoin",
     buy_price: 260,
+    plan_at_creation: "elite",
     results: {
       buy_price_recommended: 252,
       sell_price_1m: 286,
@@ -241,6 +265,24 @@ export const mockEstimationHistory: EstimationHistoryItem[] = [
         rarity_index: 0.35,
         trend: "down",
       },
+      negotiation: {
+        buy_aggressive: 230,
+        buy_negotiable: 245,
+        buy_max: 260,
+        sell_min: 270,
+        sell_negotiable: 285,
+        sell_premium: 310,
+      },
+      platforms: [
+        { name: "Leboncoin", importance: 0.85, sell_probability: 0.72, recommended_price: 285, avg_days_to_sell: 8 },
+        { name: "eBay", importance: 0.65, sell_probability: 0.58, recommended_price: 295, avg_days_to_sell: 12 },
+        { name: "Facebook Marketplace", importance: 0.55, sell_probability: 0.48, recommended_price: 275, avg_days_to_sell: 6 },
+      ],
+      scenarios: {
+        quick: { price: 265, margin: 1.9, days: 3 },
+        optimal: { price: 285, margin: 9.6, days: 10 },
+        long: { price: 310, margin: 19.2, days: 25 },
+      },
     },
     trend: "down",
   },
@@ -252,7 +294,9 @@ export const mockEstimationHistory: EstimationHistoryItem[] = [
     brand: "AMD",
     category: "CPU",
     condition: "comme-neuf",
+    platform: "ebay",
     buy_price: 255,
+    plan_at_creation: "pro",
     results: {
       buy_price_recommended: 243,
       sell_price_1m: 275,
@@ -280,7 +324,9 @@ export const mockEstimationHistory: EstimationHistoryItem[] = [
     brand: "Samsung",
     category: "SSD",
     condition: "neuf",
+    platform: "ldlc",
     buy_price: 108,
+    plan_at_creation: "starter",
     results: {
       buy_price_recommended: 103,
       sell_price_1m: 117,

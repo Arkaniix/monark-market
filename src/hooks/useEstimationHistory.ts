@@ -11,7 +11,10 @@ export interface EstimationHistoryItem {
   category: string;
   condition: string;
   region?: string;
+  platform?: string;
   buy_price_input: number;
+  /** Plan active when estimation was created - determines what data user can see */
+  plan_at_creation: 'starter' | 'pro' | 'elite';
   // Stored results from the estimation
   results: {
     buy_price_recommended: number;
@@ -28,6 +31,27 @@ export interface EstimationHistoryItem {
       volume: number;
       rarity_index: number;
       trend: 'up' | 'down' | 'stable';
+    };
+    // Elite-only data stored at creation time
+    negotiation?: {
+      buy_aggressive: number;
+      buy_negotiable: number;
+      buy_max: number;
+      sell_min: number;
+      sell_negotiable: number;
+      sell_premium: number;
+    };
+    platforms?: Array<{
+      name: string;
+      importance: number;
+      sell_probability: number;
+      recommended_price: number;
+      avg_days_to_sell: number;
+    }>;
+    scenarios?: {
+      quick: { price: number; margin: number; days: number };
+      optimal: { price: number; margin: number; days: number };
+      long: { price: number; margin: number; days: number };
     };
   };
   trend: "up" | "down" | "stable";
@@ -148,8 +172,15 @@ export function useEstimationHistory(page: number = 1, autoFetch: boolean = true
           category: item.category,
           condition: item.condition || 'bon',
           region: item.region,
+          platform: item.platform,
           buy_price_input: item.buy_price,
-          results,
+          plan_at_creation: item.plan_at_creation || 'starter',
+          results: {
+            ...results,
+            negotiation: item.results?.negotiation,
+            platforms: item.results?.platforms,
+            scenarios: item.results?.scenarios,
+          },
           trend: item.trend,
           photos: mockPhotosMap[idx] || undefined,
         };

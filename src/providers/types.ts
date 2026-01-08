@@ -421,7 +421,10 @@ export interface EstimationHistoryItem {
   category: string;
   condition: string;
   region?: string;
+  platform?: string;
   buy_price: number;
+  /** Plan active when estimation was created - determines what data user can see */
+  plan_at_creation: 'starter' | 'pro' | 'elite';
   // Stored results from when estimation was run
   results: {
     buy_price_recommended: number;
@@ -438,6 +441,27 @@ export interface EstimationHistoryItem {
       volume: number;
       rarity_index: number;
       trend: 'up' | 'down' | 'stable';
+    };
+    // Elite-only data stored at creation time
+    negotiation?: {
+      buy_aggressive: number;
+      buy_negotiable: number;
+      buy_max: number;
+      sell_min: number;
+      sell_negotiable: number;
+      sell_premium: number;
+    };
+    platforms?: Array<{
+      name: string;
+      importance: number;
+      sell_probability: number;
+      recommended_price: number;
+      avg_days_to_sell: number;
+    }>;
+    scenarios?: {
+      quick: { price: number; margin: number; days: number };
+      optimal: { price: number; margin: number; days: number };
+      long: { price: number; margin: number; days: number };
     };
   };
   trend: 'up' | 'down' | 'stable';

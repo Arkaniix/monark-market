@@ -44,10 +44,13 @@ export default function AdSearchBar({ onAdSelect }: AdSearchBarProps) {
         });
         
         // Filtrer par le terme de recherche (côté client pour le mock)
-        const filtered = response.items.filter(item => 
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.model_name.toLowerCase().includes(searchQuery.toLowerCase())
-        ).slice(0, 5);
+        // Exclure les PC complets et les lots
+        const filtered = response.items
+          .filter(item => item.item_type === 'component') // Only components
+          .filter(item => 
+            item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.model_name.toLowerCase().includes(searchQuery.toLowerCase())
+          ).slice(0, 5);
         
         setResults(filtered);
         setShowResults(true);
