@@ -13,7 +13,7 @@ import { Calculator, ChevronDown, RefreshCw, History, Search, Loader2, AlertCirc
 import { useToast } from "@/hooks/use-toast";
 import { useModelsSearch, useEstimationHistoryEnhanced } from "@/hooks";
 import { useRunEstimation, useEstimatorStats, type EstimationResultUI } from "@/hooks/useEstimator";
-import type { ModelAutocomplete } from "@/providers/types";
+import type { ModelAutocomplete, DealItem } from "@/providers/types";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { PlanBadge, LockedValue } from "@/components/LockedFeatureOverlay";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -22,36 +22,42 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { EstimationHistoryItem } from "@/hooks/useEstimationHistory";
 
-// Import new section components
+// Import section components
 import SynthesisBanner from "@/components/estimator/SynthesisBanner";
 import IndicatorsSection from "@/components/estimator/IndicatorsSection";
 import AnalysisSection from "@/components/estimator/AnalysisSection";
 import ScenariosSection from "@/components/estimator/ScenariosSection";
 import ChartsSection from "@/components/estimator/ChartsSection";
 import DecisionBlock from "@/components/estimator/DecisionBlock";
+import NegotiationSection from "@/components/estimator/NegotiationSection";
+import PlatformAnalysisSection from "@/components/estimator/PlatformAnalysisSection";
+import AdSearchBar from "@/components/estimator/AdSearchBar";
+
+// Available platforms
+const PLATFORMS = [
+  { value: "leboncoin", label: "Leboncoin" },
+  { value: "ebay", label: "eBay" },
+  { value: "fb-marketplace", label: "Facebook Marketplace" },
+  { value: "vinted", label: "Vinted" },
+  { value: "ldlc", label: "LDLC Occasion" },
+];
+
 export default function Estimator() {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<"estimator" | "history">("estimator");
 
   // Entitlements
-  const {
-    plan,
-    limits,
-    helpers
-  } = useEntitlements();
-  const {
-    estimator: estimatorLimits
-  } = limits;
+  const { plan, limits, helpers } = useEntitlements();
+  const { estimator: estimatorLimits } = limits;
 
   // Form state
   const [modelSearch, setModelSearch] = useState("");
   const [selectedModel, setSelectedModel] = useState<ModelAutocomplete | null>(null);
   const [condition, setCondition] = useState("");
   const [region, setRegion] = useState("");
-  const [buyPriceInput, setBuyPriceInput] = useState("");
+  const [adPrice, setAdPrice] = useState(""); // Changed from buyPriceInput
+  const [platform, setPlatform] = useState(""); // New field
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
@@ -59,30 +65,24 @@ export default function Estimator() {
   // Result state
   const [result, setResult] = useState<EstimationResultUI | null>(null);
 
-  // History
-  const [viewResultsItem, setViewResultsItem] = useState<EstimationHistoryItem | null>(null);
+  // History modal state
+  const [viewHistoryItem, setViewHistoryItem] = useState<EstimationHistoryItem | null>(null);
   const [historyPage, setHistoryPage] = useState(1);
 
   // API hooks
-  const {
-    models,
-    state: searchState,
-    error: searchError,
-    retry: retrySearch
-  } = useModelsSearch(modelSearch);
-  const {
-    data: stats
-  } = useEstimatorStats();
+  const { models, state: searchState, error: searchError, retry: retrySearch } = useModelsSearch(modelSearch);
+  const { data: stats } = useEstimatorStats();
   const shouldFetchHistory = activeTab === "history";
-  const {
-    data: historyData,
-    state: historyState,
-    error: historyError,
-    refresh: refreshHistory,
-    retry: retryHistory,
-    isLoading: isLoadingHistory
+  const { 
+    data: historyData, 
+    state: historyState, 
+    error: historyError, 
+    refresh: refreshHistory, 
+    retry: retryHistory, 
+    isLoading: isLoadingHistory 
   } = useEstimationHistoryEnhanced(historyPage, shouldFetchHistory);
   const runEstimation = useRunEstimation();
+
   const getCategoryIcon = (category: string) => {
     switch (category?.toUpperCase()) {
       case "GPU":
@@ -99,6 +99,22 @@ export default function Estimator() {
     }
   };
 
+  // Handle ad selection from search
+  const handleAdSelect = (ad: DealItem) => {
+    // Find matching model or create a basic one
+    setSelectedModel({
+      id: ad.id, // Use ad id as model id for mock
+      name: ad.model_name,
+      brand: "",
+      category: ad.category,
+      family: null,
+    });
+    setModelSearch(ad.model_name);
+    setAdPrice(ad.price.toString());
+    setPlatform(ad.platform.toLowerCase().replace(" ", "-"));
+    setCondition(ad.condition?.toLowerCase().replace(" ", "-") || "bon");
+  };
+
   // Pre-fill from URL
   useEffect(() => {
     if (prefillApplied) return;
@@ -108,6 +124,8 @@ export default function Estimator() {
     const price = searchParams.get('price');
     const conditionParam = searchParams.get('condition');
     const regionParam = searchParams.get('region');
+    const platformParam = searchParams.get('platform');
+
     if (modelId && modelName) {
       setSelectedModel({
         id: parseInt(modelId, 10),
@@ -118,7 +136,7 @@ export default function Estimator() {
       });
       setModelSearch(modelName);
     }
-    if (price) setBuyPriceInput(price);
+    if (price) setAdPrice(price);
     if (conditionParam) {
       const conditionMap: Record<string, string> = {
         'neuf': 'neuf',
@@ -130,10 +148,12 @@ export default function Estimator() {
       setCondition(conditionMap[conditionParam] || conditionParam);
     }
     if (regionParam) setRegion(regionParam);
+    if (platformParam) setPlatform(platformParam);
     setPrefillApplied(true);
   }, [searchParams, prefillApplied]);
+
   const handleCalculate = async () => {
-    if (!selectedModel || !condition || !buyPriceInput) {
+    if (!selectedModel || !condition || !adPrice) {
       toast({
         title: "Informations manquantes",
         description: "Veuillez remplir tous les champs obligatoires",
@@ -145,11 +165,12 @@ export default function Estimator() {
       const estimation = await runEstimation.mutateAsync({
         model_id: selectedModel.id,
         condition,
-        buy_price_input: parseFloat(buyPriceInput),
+        buy_price_input: parseFloat(adPrice),
         region: region || undefined,
         mode_advanced: showAdvanced
       });
-      setResult(estimation);
+      // Add platform to result
+      setResult({ ...estimation, platform });
       toast({
         title: "Estimation réussie",
         description: `${estimation.credit_cost} crédits déduits`
@@ -163,25 +184,56 @@ export default function Estimator() {
       });
     }
   };
+
   const handleReset = () => {
     setSelectedModel(null);
     setModelSearch("");
     setCondition("");
     setRegion("");
-    setBuyPriceInput("");
+    setAdPrice("");
+    setPlatform("");
     setResult(null);
   };
+
+  // Convert history item to result UI format for viewing
+  const convertHistoryToResult = (item: EstimationHistoryItem): EstimationResultUI => {
+    return {
+      model_id: item.model_id,
+      model_name: item.model,
+      category: item.category,
+      condition: item.condition,
+      region: item.region,
+      buy_price_input: item.buy_price,
+      buy_price_recommended: item.results.buy_price_recommended,
+      sell_price_1m: item.results.sell_price_1m,
+      sell_price_3m: item.results.sell_price_3m,
+      margin_pct: item.results.margin_pct,
+      resell_probability: item.results.resell_probability,
+      risk_level: item.results.risk_level,
+      advice: item.results.advice,
+      badge: item.results.badge,
+      market: {
+        median_price: item.results.market.median_price,
+        var_30d_pct: item.results.market.var_30d_pct,
+        volume_active: item.results.market.volume,
+        rarity_index: item.results.market.rarity_index,
+        trend: item.results.market.trend,
+      },
+      credit_cost: 0, // Already paid
+    };
+  };
+
   const canUseEstimator = helpers.canUseEstimator();
-  return <div className="min-h-screen py-8">
+
+  return (
+    <div className="min-h-screen py-8">
       <div className="container max-w-5xl">
         {/* Header */}
-        <motion.div initial={{
-        opacity: 0,
-        y: -20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} className="mb-8 text-center">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="mb-8 text-center"
+        >
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
               <Calculator className="h-8 w-8 text-primary-foreground" />
@@ -201,19 +253,22 @@ export default function Estimator() {
           </TabsList>
 
           <TabsContent value="estimator" className="mt-8">
+            {/* Ad Search Bar */}
+            <AdSearchBar onAdSelect={handleAdSelect} />
+
             {/* Form */}
-            <motion.div initial={{
-            opacity: 0,
-            y: 20
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} className="mb-8">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
               <Card className="shadow-lg">
-                <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" />Formulaire d'estimation</CardTitle></CardHeader>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Formulaire d'estimation
+                  </CardTitle>
+                </CardHeader>
                 <CardContent>
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-4">
+                      {/* Model search */}
                       <div className="space-y-2">
                         <Label>Modèle *</Label>
                         <Popover open={modelPopoverOpen} onOpenChange={setModelPopoverOpen}>
@@ -227,44 +282,142 @@ export default function Estimator() {
                             <Command shouldFilter={false}>
                               <CommandInput placeholder="Tapez pour rechercher..." value={modelSearch} onValueChange={setModelSearch} />
                               <CommandList>
-                                {searchState === "loading" && <div className="p-4 flex items-center justify-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /><span className="text-sm">Recherche…</span></div>}
-                                {searchState === "idle" && modelSearch.length < 2 && <div className="p-4 text-sm text-muted-foreground text-center">Tapez au moins 2 caractères</div>}
+                                {searchState === "loading" && (
+                                  <div className="p-4 flex items-center justify-center gap-2 text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <span className="text-sm">Recherche…</span>
+                                  </div>
+                                )}
+                                {searchState === "idle" && modelSearch.length < 2 && (
+                                  <div className="p-4 text-sm text-muted-foreground text-center">
+                                    Tapez au moins 2 caractères
+                                  </div>
+                                )}
                                 {searchState === "empty" && <CommandEmpty>Aucun modèle trouvé</CommandEmpty>}
-                                {searchState === "error" && <div className="p-4 text-center"><div className="flex items-center justify-center gap-2 text-destructive mb-2"><AlertCircle className="h-4 w-4" /><span className="text-sm">{searchError}</span></div><Button variant="outline" size="sm" onClick={retrySearch}><RefreshCw className="h-3 w-3 mr-1" />Réessayer</Button></div>}
-                                {searchState === "success" && models.length > 0 && <CommandGroup>
-                                    {models.map(model => <CommandItem key={model.id} value={model.id.toString()} onSelect={() => {
-                                  setSelectedModel(model);
-                                  setModelPopoverOpen(false);
-                                }} className="flex items-center gap-3 cursor-pointer">
-                                        <div className="flex-shrink-0 w-8 h-8 rounded bg-muted flex items-center justify-center">{getCategoryIcon(model.category)}</div>
+                                {searchState === "error" && (
+                                  <div className="p-4 text-center">
+                                    <div className="flex items-center justify-center gap-2 text-destructive mb-2">
+                                      <AlertCircle className="h-4 w-4" />
+                                      <span className="text-sm">{searchError}</span>
+                                    </div>
+                                    <Button variant="outline" size="sm" onClick={retrySearch}>
+                                      <RefreshCw className="h-3 w-3 mr-1" />Réessayer
+                                    </Button>
+                                  </div>
+                                )}
+                                {searchState === "success" && models.length > 0 && (
+                                  <CommandGroup>
+                                    {models.map(model => (
+                                      <CommandItem 
+                                        key={model.id} 
+                                        value={model.id.toString()} 
+                                        onSelect={() => {
+                                          setSelectedModel(model);
+                                          setModelPopoverOpen(false);
+                                        }} 
+                                        className="flex items-center gap-3 cursor-pointer"
+                                      >
+                                        <div className="flex-shrink-0 w-8 h-8 rounded bg-muted flex items-center justify-center">
+                                          {getCategoryIcon(model.category)}
+                                        </div>
                                         <div className="flex flex-col flex-1 min-w-0">
                                           <span className="font-medium truncate">{model.name}</span>
                                           <span className="text-xs text-muted-foreground truncate">{model.brand} • {model.category}</span>
                                         </div>
-                                      </CommandItem>)}
-                                  </CommandGroup>}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                )}
                               </CommandList>
                             </Command>
                           </PopoverContent>
                         </Popover>
                       </div>
+
+                      {/* Condition */}
                       <div>
                         <Label>État *</Label>
-                        <Select value={condition} onValueChange={setCondition}><SelectTrigger className="mt-2"><SelectValue placeholder="Sélectionner..." /></SelectTrigger><SelectContent><SelectItem value="neuf">Neuf</SelectItem><SelectItem value="comme-neuf">Comme neuf</SelectItem><SelectItem value="bon">Bon état</SelectItem><SelectItem value="a-reparer">À réparer</SelectItem></SelectContent></Select>
+                        <Select value={condition} onValueChange={setCondition}>
+                          <SelectTrigger className="mt-2">
+                            <SelectValue placeholder="Sélectionner..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="neuf">Neuf</SelectItem>
+                            <SelectItem value="comme-neuf">Comme neuf</SelectItem>
+                            <SelectItem value="bon">Bon état</SelectItem>
+                            <SelectItem value="a-reparer">À réparer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Platform */}
+                      <div>
+                        <Label>Plateforme de l'annonce *</Label>
+                        <Select value={platform} onValueChange={setPlatform}>
+                          <SelectTrigger className="mt-2">
+                            <SelectValue placeholder="Sélectionner..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PLATFORMS.map(p => (
+                              <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
+
                     <div className="space-y-4">
-                      <div><Label>Prix d'achat envisagé (€) *</Label><Input type="number" placeholder="Ex: 280" value={buyPriceInput} onChange={e => setBuyPriceInput(e.target.value)} className="mt-2" /></div>
+                      {/* Ad price (changed from purchase price) */}
+                      <div>
+                        <Label>Prix affiché sur l'annonce (€) *</Label>
+                        <Input 
+                          type="number" 
+                          placeholder="Ex: 280" 
+                          value={adPrice} 
+                          onChange={e => setAdPrice(e.target.value)} 
+                          className="mt-2" 
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Le prix demandé par le vendeur
+                        </p>
+                      </div>
+
+                      {/* Advanced options */}
                       <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
-                        
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
+                            <ChevronDown className={`h-4 w-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+                            Options avancées
+                          </Button>
+                        </CollapsibleTrigger>
                         <CollapsibleContent className="pt-4">
                           <Label>Région</Label>
-                          <Select value={region} onValueChange={setRegion}><SelectTrigger className="mt-2"><SelectValue placeholder="Sélectionner..." /></SelectTrigger><SelectContent><SelectItem value="IDF">Île-de-France</SelectItem><SelectItem value="ARA">Auvergne-Rhône-Alpes</SelectItem><SelectItem value="PACA">PACA</SelectItem><SelectItem value="Occitanie">Occitanie</SelectItem></SelectContent></Select>
+                          <Select value={region} onValueChange={setRegion}>
+                            <SelectTrigger className="mt-2">
+                              <SelectValue placeholder="Sélectionner..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="IDF">Île-de-France</SelectItem>
+                              <SelectItem value="ARA">Auvergne-Rhône-Alpes</SelectItem>
+                              <SelectItem value="PACA">PACA</SelectItem>
+                              <SelectItem value="Occitanie">Occitanie</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </CollapsibleContent>
                       </Collapsible>
+
+                      {/* Submit buttons */}
                       <div className="flex gap-3 pt-2">
-                        <Button onClick={handleCalculate} disabled={!selectedModel || !condition || !buyPriceInput || runEstimation.isPending || !canUseEstimator} className="flex-1 gap-2">
-                          {runEstimation.isPending ? <><RefreshCw className="h-4 w-4 animate-spin" />Calcul...</> : <><Calculator className="h-4 w-4" />Estimer</>}
+                        <Button 
+                          onClick={handleCalculate} 
+                          disabled={!selectedModel || !condition || !adPrice || !platform || runEstimation.isPending || !canUseEstimator} 
+                          className="flex-1 gap-2"
+                        >
+                          {runEstimation.isPending ? (
+                            <><RefreshCw className="h-4 w-4 animate-spin" />Calcul...</>
+                          ) : (
+                            <><Calculator className="h-4 w-4" />Estimer</>
+                          )}
                         </Button>
                         <Button variant="outline" onClick={handleReset}>Reset</Button>
                       </div>
@@ -274,59 +427,188 @@ export default function Estimator() {
               </Card>
             </motion.div>
 
-            {/* Results */}
+            {/* Results - Grouped by visibility */}
             <AnimatePresence mode="wait">
-              {result && <motion.div key="results" initial={{
-              opacity: 0,
-              y: 40
-            }} animate={{
-              opacity: 1,
-              y: 0
-            }} exit={{
-              opacity: 0
-            }} className="space-y-6">
+              {result && (
+                <motion.div 
+                  key="results" 
+                  initial={{ opacity: 0, y: 40 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0 }} 
+                  className="space-y-6"
+                >
+                  {/* === VISIBLE FOR ALL PLANS === */}
                   <SynthesisBanner result={result} />
+                  
+                  {/* Starter visible indicators */}
                   <IndicatorsSection result={result} plan={plan} limits={estimatorLimits} />
+
+                  {/* === PRO+ CONTENT (locked for Starter) === */}
                   <AnalysisSection result={result} plan={plan} limits={estimatorLimits} />
-                  <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
                   <ChartsSection result={result} plan={plan} limits={estimatorLimits} />
-                  <DecisionBlock result={result} />
-                </motion.div>}
+                  <DecisionBlock result={result} plan={plan} limits={estimatorLimits} />
+
+                  {/* === ELITE ONLY CONTENT === */}
+                  <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
+                  <NegotiationSection result={result} plan={plan} limits={estimatorLimits} />
+                  <PlatformAnalysisSection 
+                    result={result} 
+                    plan={plan} 
+                    limits={estimatorLimits} 
+                    sourcePlatform={platform}
+                  />
+                </motion.div>
+              )}
             </AnimatePresence>
           </TabsContent>
 
           <TabsContent value="history" className="mt-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2"><History className="h-5 w-5" />Historique</CardTitle>
-                <Button variant="outline" size="sm" onClick={refreshHistory} disabled={isLoadingHistory}><RefreshCw className={`h-4 w-4 ${isLoadingHistory ? 'animate-spin' : ''}`} /></Button>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="h-5 w-5" />
+                  Historique des estimations
+                </CardTitle>
+                <Button variant="outline" size="sm" onClick={refreshHistory} disabled={isLoadingHistory}>
+                  <RefreshCw className={`h-4 w-4 ${isLoadingHistory ? 'animate-spin' : ''}`} />
+                </Button>
               </CardHeader>
               <CardContent>
-                {historyState === "loading" && <div className="space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="flex items-center gap-4 p-4 border rounded-lg"><Skeleton className="h-12 w-12 rounded-lg" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-3 w-1/2" /></div></div>)}</div>}
-                {historyState === "error" && <div className="text-center py-12"><AlertCircle className="h-12 w-12 mx-auto mb-4 text-destructive opacity-70" /><p className="text-destructive mb-2">Erreur de chargement</p><Button variant="outline" onClick={retryHistory}><RefreshCw className="h-4 w-4 mr-2" />Réessayer</Button></div>}
-                {historyState === "empty" && <div className="text-center py-12 text-muted-foreground"><History className="h-12 w-12 mx-auto mb-4 opacity-50" /><p>Aucune estimation</p></div>}
-                {historyState === "success" && historyData?.items?.map(item => <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg mb-3 hover:bg-muted/50">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">{getCategoryIcon(item.category)}</div>
-                    <div className="flex-1 min-w-0"><p className="font-medium truncate">{item.model_name}</p><p className="text-xs text-muted-foreground">{item.category} • {item.condition}</p></div>
-                    <div className="text-sm text-right"><p className="font-medium">{item.buy_price_input}€</p><p className="text-xs text-muted-foreground"><Clock className="h-3 w-3 inline mr-1" />{new Date(item.created_at).toLocaleDateString('fr-FR')}</p></div>
-                    <Button variant="ghost" size="sm" onClick={() => {
-                  setSelectedModel({
-                    id: item.model_id,
-                    name: item.model_name,
-                    brand: item.brand || '',
-                    category: item.category,
-                    family: null
-                  });
-                  setModelSearch(item.model_name);
-                  setCondition(item.condition || '');
-                  setBuyPriceInput(item.buy_price_input.toString());
-                  setActiveTab("estimator");
-                }}><RotateCcw className="h-4 w-4" /></Button>
-                  </div>)}
+                <p className="text-sm text-muted-foreground mb-4">
+                  💡 Consultez vos estimations passées sans dépenser de crédits. Pour actualiser les données, relancez une estimation.
+                </p>
+
+                {historyState === "loading" && (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+                        <Skeleton className="h-12 w-12 rounded-lg" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-1/3" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {historyState === "error" && (
+                  <div className="text-center py-12">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-destructive opacity-70" />
+                    <p className="text-destructive mb-2">Erreur de chargement</p>
+                    <Button variant="outline" onClick={retryHistory}>
+                      <RefreshCw className="h-4 w-4 mr-2" />Réessayer
+                    </Button>
+                  </div>
+                )}
+
+                {historyState === "empty" && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Aucune estimation</p>
+                  </div>
+                )}
+
+                {historyState === "success" && historyData?.items?.map(item => (
+                  <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg mb-3 hover:bg-muted/50">
+                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                      {getCategoryIcon(item.category)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{item.model}</p>
+                      <p className="text-xs text-muted-foreground">{item.category} • {item.condition}</p>
+                    </div>
+                    <div className="text-sm text-right">
+                      <p className="font-medium">{item.buy_price}€</p>
+                      <p className="text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3 inline mr-1" />
+                        {new Date(item.date).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      {/* View saved results (no credit cost) */}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setViewHistoryItem(item)}
+                        className="gap-1"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Voir
+                      </Button>
+                      {/* Re-estimate (costs credits) */}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedModel({
+                            id: item.model_id,
+                            name: item.model,
+                            brand: item.brand || '',
+                            category: item.category,
+                            family: null
+                          });
+                          setModelSearch(item.model);
+                          setCondition(item.condition || '');
+                          setAdPrice(item.buy_price.toString());
+                          setActiveTab("estimator");
+                        }}
+                        title="Réestimer (coûte des crédits)"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* History View Modal */}
+        <Dialog open={!!viewHistoryItem} onOpenChange={(open) => !open && setViewHistoryItem(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Résultats sauvegardés
+                <Badge variant="secondary" className="ml-2">Données du {viewHistoryItem?.date ? new Date(viewHistoryItem.date).toLocaleDateString('fr-FR') : ''}</Badge>
+              </DialogTitle>
+            </DialogHeader>
+            {viewHistoryItem && (
+              <div className="space-y-6 mt-4">
+                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                    ⚠️ Ces données datent du {new Date(viewHistoryItem.date).toLocaleDateString('fr-FR')}. 
+                    Le marché peut avoir évolué depuis. Pour des données à jour, relancez une estimation (coûte des crédits).
+                  </p>
+                </div>
+                
+                <SynthesisBanner result={convertHistoryToResult(viewHistoryItem)} />
+                <IndicatorsSection 
+                  result={convertHistoryToResult(viewHistoryItem)} 
+                  plan={plan} 
+                  limits={estimatorLimits} 
+                />
+                {plan !== "starter" && (
+                  <>
+                    <AnalysisSection 
+                      result={convertHistoryToResult(viewHistoryItem)} 
+                      plan={plan} 
+                      limits={estimatorLimits} 
+                    />
+                    <DecisionBlock 
+                      result={convertHistoryToResult(viewHistoryItem)} 
+                      plan={plan} 
+                      limits={estimatorLimits} 
+                    />
+                  </>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
-    </div>;
+    </div>
+  );
 }
