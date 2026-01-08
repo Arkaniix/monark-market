@@ -32,6 +32,7 @@ import DecisionBlock from "@/components/estimator/DecisionBlock";
 import NegotiationSection from "@/components/estimator/NegotiationSection";
 import PlatformAnalysisSection from "@/components/estimator/PlatformAnalysisSection";
 import AdSearchBar from "@/components/estimator/AdSearchBar";
+import ExportCSVButton from "@/components/estimator/ExportCSVButton";
 
 // Available platforms
 const PLATFORMS = [
@@ -502,6 +503,9 @@ export default function Estimator() {
                   {/* === SECTION 3: ELITE CONTENT (visible Elite only) === */}
                   {plan === 'elite' && (
                     <>
+                      <div className="flex justify-end">
+                        <ExportCSVButton result={result} platform={platform} />
+                      </div>
                       <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
                       <NegotiationSection result={result} plan={plan} limits={estimatorLimits} />
                       <PlatformAnalysisSection 
