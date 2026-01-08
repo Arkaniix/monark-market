@@ -486,10 +486,12 @@ export default function MyAccount() {
                 <Button 
                   variant="outline" 
                   className="gap-2"
-                  onClick={() => setPlanModalOpen(true)}
+                  asChild
                 >
-                  <RefreshCw className="h-4 w-4" />
-                  Changer de plan
+                  <Link to="/pricing">
+                    <RefreshCw className="h-4 w-4" />
+                    Changer de plan
+                  </Link>
                 </Button>
               </div>
             </CardHeader>
