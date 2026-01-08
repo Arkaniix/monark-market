@@ -449,14 +449,14 @@ function PricingComparisonTable({ currentPlan }: { currentPlan?: string }) {
 function FeatureValue({ value, highlight }: { value: string | boolean | number; highlight?: boolean }) {
   if (typeof value === "boolean") {
     return value ? (
-      <Check className="h-5 w-5 mx-auto text-primary" />
+      <Check className="h-5 w-5 mx-auto text-green-500" />
     ) : (
       <X className="h-5 w-5 mx-auto text-muted-foreground/50" />
     );
   }
   
   return (
-    <span className={cn("font-medium", highlight && "text-primary")}>
+    <span className={cn("font-medium text-foreground", highlight && "text-primary")}>
       {value}
     </span>
   );
