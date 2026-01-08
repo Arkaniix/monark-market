@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calculator, ChevronDown, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles } from "lucide-react";
+import { Calculator, ChevronDown, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useModelsSearch, useEstimationHistoryEnhanced } from "@/hooks";
 import { useRunEstimation, useEstimatorStats, type EstimationResultUI } from "@/hooks/useEstimator";
@@ -42,6 +42,17 @@ const PLATFORMS = [
   { value: "ldlc", label: "LDLC Occasion" },
 ];
 
+// Plan hierarchy helper
+const PLAN_HIERARCHY = { starter: 0, pro: 1, elite: 2 };
+
+// Check if user can see data based on plan used at creation
+function canViewHistoryData(currentPlan: string, planAtCreation: string, requiredPlan: 'pro' | 'elite'): boolean {
+  const requiredLevel = PLAN_HIERARCHY[requiredPlan];
+  const creationLevel = PLAN_HIERARCHY[planAtCreation as keyof typeof PLAN_HIERARCHY] ?? 0;
+  // User can see data if they had access when created OR have access now
+  return creationLevel >= requiredLevel;
+}
+
 export default function Estimator() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -56,11 +67,12 @@ export default function Estimator() {
   const [selectedModel, setSelectedModel] = useState<ModelAutocomplete | null>(null);
   const [condition, setCondition] = useState("");
   const [region, setRegion] = useState("");
-  const [adPrice, setAdPrice] = useState(""); // Changed from buyPriceInput
-  const [platform, setPlatform] = useState(""); // New field
+  const [adPrice, setAdPrice] = useState("");
+  const [platform, setPlatform] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
+  const [isPCBlocked, setIsPCBlocked] = useState(false);
 
   // Result state
   const [result, setResult] = useState<EstimationResultUI | null>(null);
@@ -101,9 +113,19 @@ export default function Estimator() {
 
   // Handle ad selection from search
   const handleAdSelect = (ad: DealItem) => {
-    // Find matching model or create a basic one
+    // Block PC and Lot types
+    if (ad.item_type === 'pc' || ad.item_type === 'lot') {
+      setIsPCBlocked(true);
+      toast({
+        title: "Type non supporté",
+        description: "L'estimation n'est pas disponible pour les PC complets et les lots. Estimez les composants individuellement.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsPCBlocked(false);
     setSelectedModel({
-      id: ad.id, // Use ad id as model id for mock
+      id: ad.id,
       name: ad.model_name,
       brand: "",
       category: ad.category,
@@ -125,6 +147,14 @@ export default function Estimator() {
     const conditionParam = searchParams.get('condition');
     const regionParam = searchParams.get('region');
     const platformParam = searchParams.get('platform');
+    const itemType = searchParams.get('item_type');
+
+    // Block PC types from URL params
+    if (itemType === 'pc' || itemType === 'lot') {
+      setIsPCBlocked(true);
+      setPrefillApplied(true);
+      return;
+    }
 
     if (modelId && modelName) {
       setSelectedModel({
@@ -169,7 +199,6 @@ export default function Estimator() {
         region: region || undefined,
         mode_advanced: showAdvanced
       });
-      // Add platform to result
       setResult({ ...estimation, platform });
       toast({
         title: "Estimation réussie",
@@ -193,6 +222,7 @@ export default function Estimator() {
     setAdPrice("");
     setPlatform("");
     setResult(null);
+    setIsPCBlocked(false);
   };
 
   // Convert history item to result UI format for viewing
@@ -203,6 +233,7 @@ export default function Estimator() {
       category: item.category,
       condition: item.condition,
       region: item.region,
+      platform: item.platform,
       buy_price_input: item.buy_price_input,
       buy_price_recommended: item.results.buy_price_recommended,
       sell_price_1m: item.results.sell_price_1m,
@@ -219,8 +250,20 @@ export default function Estimator() {
         rarity_index: item.results.market.rarity_index,
         trend: item.results.market.trend,
       },
-      credit_cost: 0, // Already paid
+      credit_cost: 0,
     };
+  };
+
+  // Get badge for plan at creation
+  const getPlanBadge = (planAtCreation: string) => {
+    switch (planAtCreation) {
+      case 'elite':
+        return <Badge variant="secondary" className="gap-1 text-xs"><Crown className="h-3 w-3" />Élite</Badge>;
+      case 'pro':
+        return <Badge variant="outline" className="text-xs">Pro</Badge>;
+      default:
+        return <Badge variant="outline" className="text-xs opacity-60">Starter</Badge>;
+    }
   };
 
   const canUseEstimator = helpers.canUseEstimator();
@@ -253,181 +296,211 @@ export default function Estimator() {
           </TabsList>
 
           <TabsContent value="estimator" className="mt-8">
-            {/* Ad Search Bar */}
-            <AdSearchBar onAdSelect={handleAdSelect} />
-
-            {/* Form */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    Formulaire d'estimation
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      {/* Model search */}
-                      <div className="space-y-2">
-                        <Label>Modèle *</Label>
-                        <Popover open={modelPopoverOpen} onOpenChange={setModelPopoverOpen}>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" role="combobox" className="w-full justify-between">
-                              {selectedModel ? <span>{selectedModel.name}</span> : <span className="text-muted-foreground">Rechercher...</span>}
-                              <Search className="ml-2 h-4 w-4 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0 z-50" align="start">
-                            <Command shouldFilter={false}>
-                              <CommandInput placeholder="Tapez pour rechercher..." value={modelSearch} onValueChange={setModelSearch} />
-                              <CommandList>
-                                {searchState === "loading" && (
-                                  <div className="p-4 flex items-center justify-center gap-2 text-muted-foreground">
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    <span className="text-sm">Recherche…</span>
-                                  </div>
-                                )}
-                                {searchState === "idle" && modelSearch.length < 2 && (
-                                  <div className="p-4 text-sm text-muted-foreground text-center">
-                                    Tapez au moins 2 caractères
-                                  </div>
-                                )}
-                                {searchState === "empty" && <CommandEmpty>Aucun modèle trouvé</CommandEmpty>}
-                                {searchState === "error" && (
-                                  <div className="p-4 text-center">
-                                    <div className="flex items-center justify-center gap-2 text-destructive mb-2">
-                                      <AlertCircle className="h-4 w-4" />
-                                      <span className="text-sm">{searchError}</span>
-                                    </div>
-                                    <Button variant="outline" size="sm" onClick={retrySearch}>
-                                      <RefreshCw className="h-3 w-3 mr-1" />Réessayer
-                                    </Button>
-                                  </div>
-                                )}
-                                {searchState === "success" && models.length > 0 && (
-                                  <CommandGroup>
-                                    {models.map(model => (
-                                      <CommandItem 
-                                        key={model.id} 
-                                        value={model.id.toString()} 
-                                        onSelect={() => {
-                                          setSelectedModel(model);
-                                          setModelPopoverOpen(false);
-                                        }} 
-                                        className="flex items-center gap-3 cursor-pointer"
-                                      >
-                                        <div className="flex-shrink-0 w-8 h-8 rounded bg-muted flex items-center justify-center">
-                                          {getCategoryIcon(model.category)}
-                                        </div>
-                                        <div className="flex flex-col flex-1 min-w-0">
-                                          <span className="font-medium truncate">{model.name}</span>
-                                          <span className="text-xs text-muted-foreground truncate">{model.brand} • {model.category}</span>
-                                        </div>
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                )}
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      {/* Condition */}
+            {/* PC Blocked Warning */}
+            {isPCBlocked && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }} 
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6"
+              >
+                <Card className="border-destructive/50 bg-destructive/5">
+                  <CardContent className="py-4">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
                       <div>
-                        <Label>État *</Label>
-                        <Select value={condition} onValueChange={setCondition}>
-                          <SelectTrigger className="mt-2">
-                            <SelectValue placeholder="Sélectionner..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="neuf">Neuf</SelectItem>
-                            <SelectItem value="comme-neuf">Comme neuf</SelectItem>
-                            <SelectItem value="bon">Bon état</SelectItem>
-                            <SelectItem value="a-reparer">À réparer</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Platform */}
-                      <div>
-                        <Label>Plateforme de l'annonce *</Label>
-                        <Select value={platform} onValueChange={setPlatform}>
-                          <SelectTrigger className="mt-2">
-                            <SelectValue placeholder="Sélectionner..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PLATFORMS.map(p => (
-                              <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <p className="font-medium text-destructive">Estimation non disponible</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          L'estimateur ne prend pas en charge les PC complets ni les lots. 
+                          Pour évaluer un PC, estimez chaque composant individuellement (CPU, GPU, RAM, etc.) 
+                          et additionnez les valeurs.
+                        </p>
+                        <Button variant="outline" size="sm" className="mt-3" onClick={handleReset}>
+                          Nouvelle estimation
+                        </Button>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
-                    <div className="space-y-4">
-                      {/* Ad price (changed from purchase price) */}
-                      <div>
-                        <Label>Prix affiché sur l'annonce (€) *</Label>
-                        <Input 
-                          type="number" 
-                          placeholder="Ex: 280" 
-                          value={adPrice} 
-                          onChange={e => setAdPrice(e.target.value)} 
-                          className="mt-2" 
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Le prix demandé par le vendeur
-                        </p>
-                      </div>
+            {/* Ad Search Bar */}
+            {!isPCBlocked && <AdSearchBar onAdSelect={handleAdSelect} />}
 
-                      {/* Advanced options */}
-                      <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
-                            <ChevronDown className={`h-4 w-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
-                            Options avancées
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="pt-4">
-                          <Label>Région</Label>
-                          <Select value={region} onValueChange={setRegion}>
+            {/* Form */}
+            {!isPCBlocked && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+                <Card className="shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      Formulaire d'estimation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        {/* Model search */}
+                        <div className="space-y-2">
+                          <Label>Modèle *</Label>
+                          <Popover open={modelPopoverOpen} onOpenChange={setModelPopoverOpen}>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" role="combobox" className="w-full justify-between">
+                                {selectedModel ? <span>{selectedModel.name}</span> : <span className="text-muted-foreground">Rechercher...</span>}
+                                <Search className="ml-2 h-4 w-4 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0 z-50" align="start">
+                              <Command shouldFilter={false}>
+                                <CommandInput placeholder="Tapez pour rechercher..." value={modelSearch} onValueChange={setModelSearch} />
+                                <CommandList>
+                                  {searchState === "loading" && (
+                                    <div className="p-4 flex items-center justify-center gap-2 text-muted-foreground">
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                      <span className="text-sm">Recherche…</span>
+                                    </div>
+                                  )}
+                                  {searchState === "idle" && modelSearch.length < 2 && (
+                                    <div className="p-4 text-sm text-muted-foreground text-center">
+                                      Tapez au moins 2 caractères
+                                    </div>
+                                  )}
+                                  {searchState === "empty" && <CommandEmpty>Aucun modèle trouvé</CommandEmpty>}
+                                  {searchState === "error" && (
+                                    <div className="p-4 text-center">
+                                      <div className="flex items-center justify-center gap-2 text-destructive mb-2">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <span className="text-sm">{searchError}</span>
+                                      </div>
+                                      <Button variant="outline" size="sm" onClick={retrySearch}>
+                                        <RefreshCw className="h-3 w-3 mr-1" />Réessayer
+                                      </Button>
+                                    </div>
+                                  )}
+                                  {searchState === "success" && models.length > 0 && (
+                                    <CommandGroup>
+                                      {models.map(model => (
+                                        <CommandItem 
+                                          key={model.id} 
+                                          value={model.id.toString()} 
+                                          onSelect={() => {
+                                            setSelectedModel(model);
+                                            setModelPopoverOpen(false);
+                                          }} 
+                                          className="flex items-center gap-3 cursor-pointer"
+                                        >
+                                          <div className="flex-shrink-0 w-8 h-8 rounded bg-muted flex items-center justify-center">
+                                            {getCategoryIcon(model.category)}
+                                          </div>
+                                          <div className="flex flex-col flex-1 min-w-0">
+                                            <span className="font-medium truncate">{model.name}</span>
+                                            <span className="text-xs text-muted-foreground truncate">{model.brand} • {model.category}</span>
+                                          </div>
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  )}
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+
+                        {/* Condition */}
+                        <div>
+                          <Label>État *</Label>
+                          <Select value={condition} onValueChange={setCondition}>
                             <SelectTrigger className="mt-2">
                               <SelectValue placeholder="Sélectionner..." />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="IDF">Île-de-France</SelectItem>
-                              <SelectItem value="ARA">Auvergne-Rhône-Alpes</SelectItem>
-                              <SelectItem value="PACA">PACA</SelectItem>
-                              <SelectItem value="Occitanie">Occitanie</SelectItem>
+                              <SelectItem value="neuf">Neuf</SelectItem>
+                              <SelectItem value="comme-neuf">Comme neuf</SelectItem>
+                              <SelectItem value="bon">Bon état</SelectItem>
+                              <SelectItem value="a-reparer">À réparer</SelectItem>
                             </SelectContent>
                           </Select>
-                        </CollapsibleContent>
-                      </Collapsible>
+                        </div>
 
-                      {/* Submit buttons */}
-                      <div className="flex gap-3 pt-2">
-                        <Button 
-                          onClick={handleCalculate} 
-                          disabled={!selectedModel || !condition || !adPrice || !platform || runEstimation.isPending || !canUseEstimator} 
-                          className="flex-1 gap-2"
-                        >
-                          {runEstimation.isPending ? (
-                            <><RefreshCw className="h-4 w-4 animate-spin" />Calcul...</>
-                          ) : (
-                            <><Calculator className="h-4 w-4" />Estimer</>
-                          )}
-                        </Button>
-                        <Button variant="outline" onClick={handleReset}>Reset</Button>
+                        {/* Platform */}
+                        <div>
+                          <Label>Plateforme de l'annonce *</Label>
+                          <Select value={platform} onValueChange={setPlatform}>
+                            <SelectTrigger className="mt-2">
+                              <SelectValue placeholder="Sélectionner..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PLATFORMS.map(p => (
+                                <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        {/* Ad price */}
+                        <div>
+                          <Label>Prix affiché sur l'annonce (€) *</Label>
+                          <Input 
+                            type="number" 
+                            placeholder="Ex: 280" 
+                            value={adPrice} 
+                            onChange={e => setAdPrice(e.target.value)} 
+                            className="mt-2" 
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Le prix demandé par le vendeur
+                          </p>
+                        </div>
+
+                        {/* Advanced options */}
+                        <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground">
+                              <ChevronDown className={`h-4 w-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+                              Options avancées
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="pt-4">
+                            <Label>Région</Label>
+                            <Select value={region} onValueChange={setRegion}>
+                              <SelectTrigger className="mt-2">
+                                <SelectValue placeholder="Sélectionner..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="IDF">Île-de-France</SelectItem>
+                                <SelectItem value="ARA">Auvergne-Rhône-Alpes</SelectItem>
+                                <SelectItem value="PACA">PACA</SelectItem>
+                                <SelectItem value="Occitanie">Occitanie</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </CollapsibleContent>
+                        </Collapsible>
+
+                        {/* Submit buttons */}
+                        <div className="flex gap-3 pt-2">
+                          <Button 
+                            onClick={handleCalculate} 
+                            disabled={!selectedModel || !condition || !adPrice || !platform || runEstimation.isPending || !canUseEstimator} 
+                            className="flex-1 gap-2"
+                          >
+                            {runEstimation.isPending ? (
+                              <><RefreshCw className="h-4 w-4 animate-spin" />Calcul...</>
+                            ) : (
+                              <><Calculator className="h-4 w-4" />Estimer</>
+                            )}
+                          </Button>
+                          <Button variant="outline" onClick={handleReset}>Reset</Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
-            {/* Results - Grouped by visibility */}
+            {/* Results - Reorganized by plan visibility */}
             <AnimatePresence mode="wait">
               {result && (
                 <motion.div 
@@ -437,26 +510,62 @@ export default function Estimator() {
                   exit={{ opacity: 0 }} 
                   className="space-y-6"
                 >
-                  {/* === VISIBLE FOR ALL PLANS === */}
+                  {/* === SECTION 1: VISIBLE FOR ALL PLANS === */}
                   <SynthesisBanner result={result} />
-                  
-                  {/* Starter visible indicators */}
                   <IndicatorsSection result={result} plan={plan} limits={estimatorLimits} />
 
-                  {/* === PRO+ CONTENT (locked for Starter) === */}
-                  <AnalysisSection result={result} plan={plan} limits={estimatorLimits} />
-                  <ChartsSection result={result} plan={plan} limits={estimatorLimits} />
-                  <DecisionBlock result={result} plan={plan} limits={estimatorLimits} />
+                  {/* === SECTION 2: PRO+ CONTENT (visible Pro/Elite, locked Starter) === */}
+                  {plan !== 'starter' && (
+                    <>
+                      <AnalysisSection result={result} plan={plan} limits={estimatorLimits} />
+                      <ChartsSection result={result} plan={plan} limits={estimatorLimits} />
+                      <DecisionBlock result={result} plan={plan} limits={estimatorLimits} />
+                    </>
+                  )}
 
-                  {/* === ELITE ONLY CONTENT === */}
-                  <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
-                  <NegotiationSection result={result} plan={plan} limits={estimatorLimits} />
-                  <PlatformAnalysisSection 
-                    result={result} 
-                    plan={plan} 
-                    limits={estimatorLimits} 
-                    sourcePlatform={platform}
-                  />
+                  {/* === SECTION 3: ELITE CONTENT (visible Elite only) === */}
+                  {plan === 'elite' && (
+                    <>
+                      <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
+                      <NegotiationSection result={result} plan={plan} limits={estimatorLimits} />
+                      <PlatformAnalysisSection 
+                        result={result} 
+                        plan={plan} 
+                        limits={estimatorLimits} 
+                        sourcePlatform={platform}
+                      />
+                    </>
+                  )}
+
+                  {/* === SECTION 4: LOCKED CONTENT FOR LOWER PLANS === */}
+                  {plan === 'starter' && (
+                    <div className="space-y-6 opacity-80">
+                      <AnalysisSection result={result} plan={plan} limits={estimatorLimits} />
+                      <ChartsSection result={result} plan={plan} limits={estimatorLimits} />
+                      <DecisionBlock result={result} plan={plan} limits={estimatorLimits} />
+                      <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
+                      <NegotiationSection result={result} plan={plan} limits={estimatorLimits} />
+                      <PlatformAnalysisSection 
+                        result={result} 
+                        plan={plan} 
+                        limits={estimatorLimits} 
+                        sourcePlatform={platform}
+                      />
+                    </div>
+                  )}
+
+                  {plan === 'pro' && (
+                    <div className="space-y-6 opacity-80">
+                      <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
+                      <NegotiationSection result={result} plan={plan} limits={estimatorLimits} />
+                      <PlatformAnalysisSection 
+                        result={result} 
+                        plan={plan} 
+                        limits={estimatorLimits} 
+                        sourcePlatform={platform}
+                      />
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -475,7 +584,7 @@ export default function Estimator() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  💡 Consultez vos estimations passées sans dépenser de crédits. Pour actualiser les données, relancez une estimation.
+                  💡 Consultez vos estimations passées sans dépenser de crédits. Les données affichées correspondent au plan actif lors de l'estimation.
                 </p>
 
                 {historyState === "loading" && (
@@ -515,7 +624,10 @@ export default function Estimator() {
                       {getCategoryIcon(item.category)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{item.model_name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium truncate">{item.model_name}</p>
+                        {getPlanBadge(item.plan_at_creation)}
+                      </div>
                       <p className="text-xs text-muted-foreground">{item.category} • {item.condition}</p>
                     </div>
                     <div className="text-sm text-right">
@@ -526,7 +638,6 @@ export default function Estimator() {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      {/* View saved results (no credit cost) */}
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -536,7 +647,6 @@ export default function Estimator() {
                         <Eye className="h-4 w-4" />
                         Voir
                       </Button>
-                      {/* Re-estimate (costs credits) */}
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -551,6 +661,7 @@ export default function Estimator() {
                           setModelSearch(item.model_name);
                           setCondition(item.condition || '');
                           setAdPrice(item.buy_price_input.toString());
+                          setPlatform(item.platform || '');
                           setActiveTab("estimator");
                         }}
                         title="Réestimer (coûte des crédits)"
@@ -565,14 +676,17 @@ export default function Estimator() {
           </TabsContent>
         </Tabs>
 
-        {/* History View Modal */}
+        {/* History View Modal - Shows data based on plan_at_creation */}
         <Dialog open={!!viewHistoryItem} onOpenChange={(open) => !open && setViewHistoryItem(null)}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <History className="h-5 w-5" />
                 Résultats sauvegardés
-                <Badge variant="secondary" className="ml-2">Données du {viewHistoryItem?.created_at ? new Date(viewHistoryItem.created_at).toLocaleDateString('fr-FR') : ''}</Badge>
+                {viewHistoryItem && getPlanBadge(viewHistoryItem.plan_at_creation)}
+                <Badge variant="secondary" className="ml-2">
+                  {viewHistoryItem?.created_at ? new Date(viewHistoryItem.created_at).toLocaleDateString('fr-FR') : ''}
+                </Badge>
               </DialogTitle>
             </DialogHeader>
             {viewHistoryItem && (
@@ -584,25 +698,61 @@ export default function Estimator() {
                   </p>
                 </div>
                 
+                {/* Always show synthesis and basic indicators */}
                 <SynthesisBanner result={convertHistoryToResult(viewHistoryItem)} />
                 <IndicatorsSection 
                   result={convertHistoryToResult(viewHistoryItem)} 
-                  plan={plan} 
+                  plan={viewHistoryItem.plan_at_creation} 
                   limits={estimatorLimits} 
                 />
-                {plan !== "starter" && (
+
+                {/* Show Pro content if estimation was made with Pro or Elite */}
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && (
                   <>
                     <AnalysisSection 
                       result={convertHistoryToResult(viewHistoryItem)} 
-                      plan={plan} 
+                      plan={viewHistoryItem.plan_at_creation} 
+                      limits={estimatorLimits} 
+                    />
+                    <ChartsSection 
+                      result={convertHistoryToResult(viewHistoryItem)} 
+                      plan={viewHistoryItem.plan_at_creation} 
                       limits={estimatorLimits} 
                     />
                     <DecisionBlock 
                       result={convertHistoryToResult(viewHistoryItem)} 
-                      plan={plan} 
+                      plan={viewHistoryItem.plan_at_creation} 
                       limits={estimatorLimits} 
                     />
                   </>
+                )}
+
+                {/* Show Elite content if estimation was made with Elite */}
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && viewHistoryItem.results.scenarios && (
+                  <>
+                    <ScenariosSection 
+                      result={convertHistoryToResult(viewHistoryItem)} 
+                      plan="elite" 
+                      limits={estimatorLimits} 
+                    />
+                  </>
+                )}
+
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && viewHistoryItem.results.negotiation && (
+                  <NegotiationSection 
+                    result={convertHistoryToResult(viewHistoryItem)} 
+                    plan="elite" 
+                    limits={estimatorLimits} 
+                  />
+                )}
+
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && viewHistoryItem.results.platforms && (
+                  <PlatformAnalysisSection 
+                    result={convertHistoryToResult(viewHistoryItem)} 
+                    plan="elite" 
+                    limits={estimatorLimits} 
+                    sourcePlatform={viewHistoryItem.platform}
+                  />
                 )}
               </div>
             )}
