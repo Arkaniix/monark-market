@@ -456,7 +456,7 @@ function FeatureValue({ value, highlight }: { value: string | boolean | number; 
   }
   
   return (
-    <span className={cn("font-medium text-foreground", highlight && "text-primary")}>
+    <span className="font-medium text-foreground">
       {value}
     </span>
   );
