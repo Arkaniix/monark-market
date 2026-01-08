@@ -5,7 +5,6 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getMockSubscriptionState,
-  setMockSubscriptionState,
   changeMockPlan as changeMockPlanFn,
   MOCK_PLANS,
   type MockSubscriptionState,
@@ -14,9 +13,9 @@ import {
 import type { PlanType } from "./useEntitlements";
 
 // Custom event for subscription changes (for cross-component reactivity)
-const SUBSCRIPTION_CHANGE_EVENT = "mock-subscription-change";
+export const SUBSCRIPTION_CHANGE_EVENT = "mock-subscription-change";
 
-function dispatchSubscriptionChange() {
+export function dispatchSubscriptionChange() {
   window.dispatchEvent(new CustomEvent(SUBSCRIPTION_CHANGE_EVENT));
 }
 
@@ -36,6 +35,7 @@ export interface UseMockSubscriptionResult {
   
   // Actions
   changePlan: (newPlan: PlanType) => Promise<void>;
+  refreshState: () => void;
   
   // Loading state (for async simulation)
   isChangingPlan: boolean;
@@ -46,10 +46,15 @@ export function useMockSubscription(): UseMockSubscriptionResult {
   const [state, setState] = useState<MockSubscriptionState>(() => getMockSubscriptionState());
   const [isChangingPlan, setIsChangingPlan] = useState(false);
 
+  // Function to refresh state from localStorage
+  const refreshState = useCallback(() => {
+    setState(getMockSubscriptionState());
+  }, []);
+
   // Listen for subscription changes from other components
   useEffect(() => {
     const handleChange = () => {
-      setState(getMockSubscriptionState());
+      refreshState();
     };
 
     window.addEventListener(SUBSCRIPTION_CHANGE_EVENT, handleChange);
@@ -66,7 +71,7 @@ export function useMockSubscription(): UseMockSubscriptionResult {
       window.removeEventListener(SUBSCRIPTION_CHANGE_EVENT, handleChange);
       clearInterval(interval);
     };
-  }, [state]);
+  }, [state, refreshState]);
 
   // Derived values
   const plan = state.planName;
@@ -92,9 +97,13 @@ export function useMockSubscription(): UseMockSubscriptionResult {
     // Notify other components
     dispatchSubscriptionChange();
     
-    // Invalidate relevant queries so useEntitlements/useCredits update
-    queryClient.invalidateQueries({ queryKey: ["user", "credits"] });
-    queryClient.invalidateQueries({ queryKey: ["user", "subscription"] });
+    // Invalidate ALL relevant queries so useEntitlements/useCredits update everywhere
+    await queryClient.invalidateQueries({ queryKey: ["user", "credits"] });
+    await queryClient.invalidateQueries({ queryKey: ["user", "subscription"] });
+    await queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+    await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    await queryClient.invalidateQueries({ queryKey: ["alerts"] });
+    await queryClient.invalidateQueries({ queryKey: ["watchlist"] });
     
     setIsChangingPlan(false);
   }, [queryClient]);
@@ -110,6 +119,7 @@ export function useMockSubscription(): UseMockSubscriptionResult {
     creditPercentage,
     isCreditsLow,
     changePlan,
+    refreshState,
     isChangingPlan,
   };
 }

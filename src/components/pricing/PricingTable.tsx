@@ -1,8 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X, Zap, Award, Rocket, Info, RefreshCw, AlertTriangle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Check, X, Zap, Award, Rocket, Info, RefreshCw, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -10,6 +10,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useMockSubscription } from "@/hooks/useMockSubscription";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import type { PlanType } from "@/hooks/useEntitlements";
 
 // Plan configuration matching useEntitlements
 export interface PlanConfig {
@@ -189,13 +193,15 @@ interface PricingTableProps {
   showCTA?: boolean;
   variant?: "cards" | "table" | "both";
   className?: string;
+  onPlanChange?: (planId: PlanType) => Promise<void>;
 }
 
 export function PricingTable({ 
   currentPlan, 
   showCTA = true, 
   variant = "both",
-  className 
+  className,
+  onPlanChange,
 }: PricingTableProps) {
   return (
     <div className={cn("space-y-8", className)}>
@@ -211,7 +217,7 @@ export function PricingTable({
       </div>
 
       {(variant === "cards" || variant === "both") && (
-        <PricingCards currentPlan={currentPlan} showCTA={showCTA} />
+        <PricingCards currentPlan={currentPlan} showCTA={showCTA} onPlanChange={onPlanChange} />
       )}
       
       {(variant === "table" || variant === "both") && (
@@ -221,11 +227,58 @@ export function PricingTable({
   );
 }
 
-function PricingCards({ currentPlan, showCTA }: { currentPlan?: string; showCTA: boolean }) {
+function PricingCards({ 
+  currentPlan, 
+  showCTA,
+  onPlanChange,
+}: { 
+  currentPlan?: string; 
+  showCTA: boolean;
+  onPlanChange?: (planId: PlanType) => Promise<void>;
+}) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { changePlan, isChangingPlan, plan: activePlan } = useMockSubscription();
+  
+  const effectiveCurrentPlan = currentPlan || activePlan;
+
+  const handlePlanSelect = async (planId: string) => {
+    if (!user) {
+      // Not logged in, redirect to auth
+      navigate("/auth");
+      return;
+    }
+    
+    if (planId === effectiveCurrentPlan) {
+      return;
+    }
+
+    try {
+      if (onPlanChange) {
+        await onPlanChange(planId as PlanType);
+      } else {
+        await changePlan(planId as PlanType);
+      }
+      
+      const planName = PLANS.find(p => p.id === planId)?.displayName || planId;
+      toast({
+        title: "Plan modifié",
+        description: `Votre abonnement est maintenant ${planName}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de changer de plan. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
       {PLANS.map((plan) => {
-        const isCurrentPlan = currentPlan === plan.id;
+        const isCurrentPlan = effectiveCurrentPlan === plan.id;
         const PlanIcon = plan.icon;
         
         return (
@@ -285,15 +338,20 @@ function PricingCards({ currentPlan, showCTA }: { currentPlan?: string; showCTA:
                 <Button 
                   className="w-full" 
                   variant={plan.popular ? "default" : "outline"}
-                  disabled={isCurrentPlan}
-                  asChild={!isCurrentPlan}
+                  disabled={isCurrentPlan || isChangingPlan}
+                  onClick={() => handlePlanSelect(plan.id)}
                 >
-                  {isCurrentPlan ? (
+                  {isChangingPlan ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Changement...
+                    </>
+                  ) : isCurrentPlan ? (
                     <span>Plan actuel</span>
+                  ) : user ? (
+                    <span>Choisir ce plan</span>
                   ) : (
-                    <Link to="/auth">
-                      {plan.price === 0 ? "Commencer gratuitement" : "Choisir ce plan"}
-                    </Link>
+                    <span>Commencer</span>
                   )}
                 </Button>
               )}
@@ -306,6 +364,9 @@ function PricingCards({ currentPlan, showCTA }: { currentPlan?: string; showCTA:
 }
 
 function PricingComparisonTable({ currentPlan }: { currentPlan?: string }) {
+  const { plan: activePlan } = useMockSubscription();
+  const effectiveCurrentPlan = currentPlan || activePlan;
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full max-w-5xl mx-auto border-collapse">
@@ -327,7 +388,7 @@ function PricingComparisonTable({ currentPlan }: { currentPlan?: string }) {
                   <span className="font-bold text-lg">{plan.displayName}</span>
                   <span className="text-2xl font-bold">{plan.price}€</span>
                   <span className="text-xs text-muted-foreground">/mois</span>
-                  {currentPlan === plan.id && (
+                  {effectiveCurrentPlan === plan.id && (
                     <Badge variant="secondary" className="mt-1 text-xs">Actuel</Badge>
                   )}
                 </div>
