@@ -487,6 +487,13 @@ export default function Estimator() {
                   exit={{ opacity: 0 }} 
                   className="space-y-6"
                 >
+                  {/* === EXPORT CSV (Elite only, at top) === */}
+                  {plan === 'elite' && (
+                    <div className="flex justify-end">
+                      <ExportCSVButton result={result} platform={platform} />
+                    </div>
+                  )}
+
                   {/* === SECTION 1: VISIBLE FOR ALL PLANS === */}
                   <SynthesisBanner result={result} />
                   <IndicatorsSection result={result} plan={plan} limits={estimatorLimits} />
@@ -503,9 +510,6 @@ export default function Estimator() {
                   {/* === SECTION 3: ELITE CONTENT (visible Elite only) === */}
                   {plan === 'elite' && (
                     <>
-                      <div className="flex justify-end">
-                        <ExportCSVButton result={result} platform={platform} />
-                      </div>
                       <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
                       <NegotiationSection result={result} plan={plan} limits={estimatorLimits} />
                       <PlatformAnalysisSection 
@@ -671,6 +675,16 @@ export default function Estimator() {
             </DialogHeader>
             {viewHistoryItem && (
               <div className="space-y-6 mt-4">
+                {/* Export CSV for Elite estimations */}
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && (
+                  <div className="flex justify-end">
+                    <ExportCSVButton 
+                      result={convertHistoryToResult(viewHistoryItem)} 
+                      platform={viewHistoryItem.platform} 
+                    />
+                  </div>
+                )}
+
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                   <p className="text-sm text-amber-700 dark:text-amber-400">
                     ⚠️ Ces données datent du {new Date(viewHistoryItem.created_at).toLocaleDateString('fr-FR')}. 
