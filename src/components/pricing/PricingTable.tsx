@@ -103,8 +103,8 @@ export const PLAN_FEATURES: PlanFeature[] = [
     elite: true,
   },
   {
-    name: "Estimator - Prix médian & variation",
-    tooltip: "Voir le prix médian et la variation 30j",
+    name: "Estimator - Synthèse & Indicateurs",
+    tooltip: "Voir le verdict global, prix médian et variation",
     starter: true,
     pro: true,
     elite: true,
@@ -138,15 +138,15 @@ export const PLAN_FEATURES: PlanFeature[] = [
     elite: true,
   },
   {
-    name: "Estimator - Prix achat/vente",
-    tooltip: "Voir les prix d'achat et revente conseillés",
+    name: "Estimator - Analyse & Recommandation",
+    tooltip: "Analyse interprétée, risques, et bloc décision final",
     starter: false,
     pro: true,
     elite: true,
   },
   {
-    name: "Estimator - Marge & probabilité",
-    tooltip: "Voir la marge brute et probabilité de revente",
+    name: "Estimator - Prix achat/revente",
+    tooltip: "Voir les prix d'achat et revente conseillés avec marge",
     starter: false,
     pro: true,
     elite: true,
@@ -159,15 +159,22 @@ export const PLAN_FEATURES: PlanFeature[] = [
     elite: true,
   },
   {
-    name: "Historique étendu",
-    tooltip: "Accès à l'historique complet des prix",
+    name: "Estimator - Scénarios comparatifs",
+    tooltip: "Comparaison prudent/équilibré/agressif",
     starter: false,
     pro: false,
     elite: true,
   },
   {
-    name: "Indicateurs avancés",
-    tooltip: "Volatilité, vitesse de vente, etc.",
+    name: "Estimator - Négociation & Plateformes",
+    tooltip: "Prix cibles et probabilités par plateforme",
+    starter: false,
+    pro: false,
+    elite: true,
+  },
+  {
+    name: "Historique étendu",
+    tooltip: "Accès à l'historique complet des prix",
     starter: false,
     pro: false,
     elite: true,
@@ -464,7 +471,7 @@ function getHighlightedFeatures(planId: string): string[] {
         "Accès catalogue composants",
         "3 alertes actives",
         "Scan rapide (5 cr)",
-        "Prix médian & variation",
+        "Estimator : Synthèse & Indicateurs",
         "Accès communauté",
       ];
     case "pro":
@@ -472,20 +479,20 @@ function getHighlightedFeatures(planId: string): string[] {
         "500 crédits/mois",
         "20 alertes actives",
         "Scan approfondi (20 cr)",
-        "Prix achat/vente conseillés",
-        "Marge & probabilité",
-        "Graphiques 30j/90j",
+        "Estimator : Analyse complète",
+        "Prix achat/revente & marge",
+        "Graphiques interactifs",
         "Formation complète",
       ];
     case "elite":
       return [
         "1500 crédits/mois",
         "500 alertes actives",
-        "Priorité d'analyse",
+        "Scénarios comparatifs",
+        "Négociation & Plateformes",
         "Historique étendu",
-        "Indicateurs avancés",
         "Export des données",
-        "Support prioritaire",
+        "Priorité d'analyse",
       ];
     default:
       return [];
