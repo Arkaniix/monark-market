@@ -22,8 +22,8 @@ const FAQ_ITEMS = [{
 }];
 const GUARANTEES = [{
   icon: Shield,
-  title: "Satisfait ou remboursé",
-  description: "14 jours pour tester, remboursement sans condition"
+  title: "Données sécurisées",
+  description: "Vos données sont chiffrées et protégées"
 }, {
   icon: Zap,
   title: "Activation instantanée",
