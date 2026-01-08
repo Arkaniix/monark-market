@@ -193,7 +193,7 @@ export default function MyAccount() {
       name: "Élite", 
       price: 79, 
       credits: 1500,
-      features: ["Alertes illimitées", "Tout illimité", "Export données", "Support prioritaire"],
+      features: ["500 Alertes", "Tout illimité", "Export données", "Support prioritaire"],
       hasAdvancedScrap: true,
       hasAdvancedStats: true,
       hasExport: true,
