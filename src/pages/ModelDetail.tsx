@@ -158,6 +158,12 @@ export default function ModelDetail() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to={`/catalog?brand=${model.brand}`}>{model.brand}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
                 <BreadcrumbPage>{model.name}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
@@ -192,6 +198,9 @@ export default function ModelDetail() {
           <div className="flex-1 space-y-3">
             <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">{model.brand} {model.name}</h1>
             <div className="flex gap-2 flex-wrap">
+              <Badge variant="default" className="bg-primary/90">
+                {model.brand}
+              </Badge>
               <Badge variant="secondary">{model.category}</Badge>
               {model.family && <Badge variant="outline">{model.family}</Badge>}
               {model.aliases.length > 0 && (
