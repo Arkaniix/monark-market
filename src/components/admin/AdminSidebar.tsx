@@ -25,7 +25,7 @@ const menuItems = [
 
 export default function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarProps) {
   return (
-    <div className="fixed left-0 top-0 h-screen w-64 border-r bg-card overflow-y-auto">
+    <div className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 border-r bg-card overflow-y-auto">
       <div className="p-6">
         <h2 className="text-lg font-semibold mb-4">Menu Admin</h2>
         <nav className="space-y-1">
