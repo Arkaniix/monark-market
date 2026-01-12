@@ -174,6 +174,15 @@ export function useCategories() {
   });
 }
 
+export function useManufacturers(category?: string) {
+  const provider = useDataProvider();
+  return useQuery({
+    queryKey: ["catalog", "manufacturers", category],
+    queryFn: () => provider.getManufacturers(category),
+    staleTime: 1000 * 60 * 30,
+  });
+}
+
 export function useBrands(category?: string) {
   const provider = useDataProvider();
   return useQuery({
@@ -183,12 +192,12 @@ export function useBrands(category?: string) {
   });
 }
 
-export function useFamilies(brand?: string) {
+export function useFamilies(manufacturer?: string) {
   const provider = useDataProvider();
   return useQuery({
-    queryKey: ["catalog", "families", brand],
-    queryFn: () => provider.getFamilies(brand),
-    enabled: !!brand,
+    queryKey: ["catalog", "families", manufacturer],
+    queryFn: () => provider.getFamilies(manufacturer),
+    enabled: !!manufacturer && manufacturer !== 'all',
     staleTime: 1000 * 60 * 30,
   });
 }
