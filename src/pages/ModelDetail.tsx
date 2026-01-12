@@ -201,7 +201,10 @@ export default function ModelDetail() {
               <Badge variant="default" className="bg-primary/90">
                 {model.brand}
               </Badge>
-              <Badge variant="secondary">{model.category}</Badge>
+              {model.manufacturer && (
+                <Badge variant="secondary">{model.manufacturer}</Badge>
+              )}
+              <Badge variant="outline">{model.category}</Badge>
               {model.family && <Badge variant="outline">{model.family}</Badge>}
               {model.aliases.length > 0 && (
                 <TooltipProvider>

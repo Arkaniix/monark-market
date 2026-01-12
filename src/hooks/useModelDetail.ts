@@ -13,6 +13,7 @@ export function useModelDetail(modelId: string | undefined) {
         id: model.id,
         name: model.name,
         brand: model.brand,
+        manufacturer: model.manufacturer,
         family: model.family,
         category: model.category,
         aliases: model.aliases,

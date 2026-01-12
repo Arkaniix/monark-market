@@ -167,7 +167,10 @@ export interface Category {
 export interface CatalogModel {
   id: number;
   name: string;
+  /** Card/product brand (MSI, ASUS, etc.) */
   brand: string;
+  /** Chipset manufacturer (NVIDIA, AMD, Intel) - mainly for GPUs */
+  manufacturer?: string | null;
   family: string | null;
   category: string;
   median_price: number;
@@ -243,7 +246,10 @@ export interface ModelSpecs {
 export interface ModelDetail {
   id: number;
   name: string;
+  /** Card/product brand (MSI, ASUS, etc.) */
   brand: string;
+  /** Chipset manufacturer (NVIDIA, AMD, Intel) - mainly for GPUs */
+  manufacturer?: string | null;
   family: string | null;
   category: string;
   aliases: string[];

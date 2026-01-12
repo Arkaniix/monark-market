@@ -59,75 +59,78 @@ const SUFFIXES = ["Gaming", "OC", "Pro", "Elite", "Strix", "Tuf", "Ventus", "Gam
 // ============= Hardware Models Database =============
 interface BaseModel {
   name: string;
+  /** Brand of the product (for GPU: card brand like MSI, ASUS. For CPU/RAM/SSD: chip maker) */
   brand: string;
   family: string;
   priceRange: [number, number];
+  /** Optional: chipset manufacturer for GPUs (NVIDIA, AMD, Intel) */
+  manufacturer?: string;
 }
 
 const GPU_MODELS: BaseModel[] = [
   // RTX 50 Series (newest)
-  { name: "RTX 5090", brand: "NVIDIA", family: "RTX 50", priceRange: [1999, 2499] },
-  { name: "RTX 5080", brand: "NVIDIA", family: "RTX 50", priceRange: [999, 1299] },
-  { name: "RTX 5070 Ti", brand: "NVIDIA", family: "RTX 50", priceRange: [749, 899] },
-  { name: "RTX 5070", brand: "NVIDIA", family: "RTX 50", priceRange: [549, 699] },
+  { name: "RTX 5090", brand: "ASUS", manufacturer: "NVIDIA", family: "RTX 50", priceRange: [1999, 2499] },
+  { name: "RTX 5080", brand: "MSI", manufacturer: "NVIDIA", family: "RTX 50", priceRange: [999, 1299] },
+  { name: "RTX 5070 Ti", brand: "Gigabyte", manufacturer: "NVIDIA", family: "RTX 50", priceRange: [749, 899] },
+  { name: "RTX 5070", brand: "EVGA", manufacturer: "NVIDIA", family: "RTX 50", priceRange: [549, 699] },
   // RTX 40 Series
-  { name: "RTX 4090", brand: "NVIDIA", family: "RTX 40", priceRange: [1500, 2000] },
-  { name: "RTX 4090 D", brand: "NVIDIA", family: "RTX 40", priceRange: [1400, 1800] },
-  { name: "RTX 4080 Super", brand: "NVIDIA", family: "RTX 40", priceRange: [950, 1200] },
-  { name: "RTX 4080", brand: "NVIDIA", family: "RTX 40", priceRange: [900, 1100] },
-  { name: "RTX 4070 Ti Super", brand: "NVIDIA", family: "RTX 40", priceRange: [750, 900] },
-  { name: "RTX 4070 Ti", brand: "NVIDIA", family: "RTX 40", priceRange: [650, 800] },
-  { name: "RTX 4070 Super", brand: "NVIDIA", family: "RTX 40", priceRange: [550, 700] },
-  { name: "RTX 4070", brand: "NVIDIA", family: "RTX 40", priceRange: [480, 600] },
-  { name: "RTX 4060 Ti 16GB", brand: "NVIDIA", family: "RTX 40", priceRange: [400, 480] },
-  { name: "RTX 4060 Ti 8GB", brand: "NVIDIA", family: "RTX 40", priceRange: [350, 420] },
-  { name: "RTX 4060", brand: "NVIDIA", family: "RTX 40", priceRange: [270, 340] },
+  { name: "RTX 4090", brand: "ASUS", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [1500, 2000] },
+  { name: "RTX 4090 D", brand: "MSI", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [1400, 1800] },
+  { name: "RTX 4080 Super", brand: "Gigabyte", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [950, 1200] },
+  { name: "RTX 4080", brand: "ASUS", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [900, 1100] },
+  { name: "RTX 4070 Ti Super", brand: "MSI", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [750, 900] },
+  { name: "RTX 4070 Ti", brand: "Gigabyte", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [650, 800] },
+  { name: "RTX 4070 Super", brand: "EVGA", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [550, 700] },
+  { name: "RTX 4070", brand: "Zotac", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [480, 600] },
+  { name: "RTX 4060 Ti 16GB", brand: "ASUS", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [400, 480] },
+  { name: "RTX 4060 Ti 8GB", brand: "MSI", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [350, 420] },
+  { name: "RTX 4060", brand: "Palit", manufacturer: "NVIDIA", family: "RTX 40", priceRange: [270, 340] },
   // RTX 30 Series
-  { name: "RTX 3090 Ti", brand: "NVIDIA", family: "RTX 30", priceRange: [750, 950] },
-  { name: "RTX 3090", brand: "NVIDIA", family: "RTX 30", priceRange: [650, 850] },
-  { name: "RTX 3080 Ti", brand: "NVIDIA", family: "RTX 30", priceRange: [520, 680] },
-  { name: "RTX 3080 12GB", brand: "NVIDIA", family: "RTX 30", priceRange: [450, 600] },
-  { name: "RTX 3080 10GB", brand: "NVIDIA", family: "RTX 30", priceRange: [420, 550] },
-  { name: "RTX 3070 Ti", brand: "NVIDIA", family: "RTX 30", priceRange: [360, 460] },
-  { name: "RTX 3070", brand: "NVIDIA", family: "RTX 30", priceRange: [300, 400] },
-  { name: "RTX 3060 Ti", brand: "NVIDIA", family: "RTX 30", priceRange: [260, 340] },
-  { name: "RTX 3060 12GB", brand: "NVIDIA", family: "RTX 30", priceRange: [200, 280] },
-  { name: "RTX 3060 8GB", brand: "NVIDIA", family: "RTX 30", priceRange: [180, 250] },
-  { name: "RTX 3050", brand: "NVIDIA", family: "RTX 30", priceRange: [150, 220] },
+  { name: "RTX 3090 Ti", brand: "ASUS", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [750, 950] },
+  { name: "RTX 3090", brand: "MSI", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [650, 850] },
+  { name: "RTX 3080 Ti", brand: "Gigabyte", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [520, 680] },
+  { name: "RTX 3080 12GB", brand: "EVGA", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [450, 600] },
+  { name: "RTX 3080 10GB", brand: "ASUS", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [420, 550] },
+  { name: "RTX 3070 Ti", brand: "MSI", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [360, 460] },
+  { name: "RTX 3070", brand: "Zotac", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [300, 400] },
+  { name: "RTX 3060 Ti", brand: "Gigabyte", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [260, 340] },
+  { name: "RTX 3060 12GB", brand: "PNY", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [200, 280] },
+  { name: "RTX 3060 8GB", brand: "Gainward", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [180, 250] },
+  { name: "RTX 3050", brand: "ASUS", manufacturer: "NVIDIA", family: "RTX 30", priceRange: [150, 220] },
   // RTX 20 Series
-  { name: "RTX 2080 Ti", brand: "NVIDIA", family: "RTX 20", priceRange: [350, 480] },
-  { name: "RTX 2080 Super", brand: "NVIDIA", family: "RTX 20", priceRange: [280, 380] },
-  { name: "RTX 2080", brand: "NVIDIA", family: "RTX 20", priceRange: [250, 340] },
-  { name: "RTX 2070 Super", brand: "NVIDIA", family: "RTX 20", priceRange: [220, 300] },
-  { name: "RTX 2070", brand: "NVIDIA", family: "RTX 20", priceRange: [180, 260] },
-  { name: "RTX 2060 Super", brand: "NVIDIA", family: "RTX 20", priceRange: [160, 230] },
-  { name: "RTX 2060", brand: "NVIDIA", family: "RTX 20", priceRange: [130, 190] },
+  { name: "RTX 2080 Ti", brand: "MSI", manufacturer: "NVIDIA", family: "RTX 20", priceRange: [350, 480] },
+  { name: "RTX 2080 Super", brand: "Gigabyte", manufacturer: "NVIDIA", family: "RTX 20", priceRange: [280, 380] },
+  { name: "RTX 2080", brand: "EVGA", manufacturer: "NVIDIA", family: "RTX 20", priceRange: [250, 340] },
+  { name: "RTX 2070 Super", brand: "ASUS", manufacturer: "NVIDIA", family: "RTX 20", priceRange: [220, 300] },
+  { name: "RTX 2070", brand: "Zotac", manufacturer: "NVIDIA", family: "RTX 20", priceRange: [180, 260] },
+  { name: "RTX 2060 Super", brand: "MSI", manufacturer: "NVIDIA", family: "RTX 20", priceRange: [160, 230] },
+  { name: "RTX 2060", brand: "Palit", manufacturer: "NVIDIA", family: "RTX 20", priceRange: [130, 190] },
   // AMD RX 9000
-  { name: "RX 9070 XT", brand: "AMD", family: "RX 9000", priceRange: [549, 699] },
-  { name: "RX 9070", brand: "AMD", family: "RX 9000", priceRange: [449, 579] },
+  { name: "RX 9070 XT", brand: "Sapphire", manufacturer: "AMD", family: "RX 9000", priceRange: [549, 699] },
+  { name: "RX 9070", brand: "XFX", manufacturer: "AMD", family: "RX 9000", priceRange: [449, 579] },
   // AMD RX 7000
-  { name: "RX 7900 XTX", brand: "AMD", family: "RX 7000", priceRange: [850, 1050] },
-  { name: "RX 7900 XT", brand: "AMD", family: "RX 7000", priceRange: [700, 900] },
-  { name: "RX 7900 GRE", brand: "AMD", family: "RX 7000", priceRange: [520, 660] },
-  { name: "RX 7800 XT", brand: "AMD", family: "RX 7000", priceRange: [430, 560] },
-  { name: "RX 7700 XT", brand: "AMD", family: "RX 7000", priceRange: [360, 460] },
-  { name: "RX 7600 XT", brand: "AMD", family: "RX 7000", priceRange: [300, 380] },
-  { name: "RX 7600", brand: "AMD", family: "RX 7000", priceRange: [240, 320] },
+  { name: "RX 7900 XTX", brand: "Sapphire", manufacturer: "AMD", family: "RX 7000", priceRange: [850, 1050] },
+  { name: "RX 7900 XT", brand: "PowerColor", manufacturer: "AMD", family: "RX 7000", priceRange: [700, 900] },
+  { name: "RX 7900 GRE", brand: "XFX", manufacturer: "AMD", family: "RX 7000", priceRange: [520, 660] },
+  { name: "RX 7800 XT", brand: "Sapphire", manufacturer: "AMD", family: "RX 7000", priceRange: [430, 560] },
+  { name: "RX 7700 XT", brand: "ASUS", manufacturer: "AMD", family: "RX 7000", priceRange: [360, 460] },
+  { name: "RX 7600 XT", brand: "MSI", manufacturer: "AMD", family: "RX 7000", priceRange: [300, 380] },
+  { name: "RX 7600", brand: "Gigabyte", manufacturer: "AMD", family: "RX 7000", priceRange: [240, 320] },
   // AMD RX 6000
-  { name: "RX 6950 XT", brand: "AMD", family: "RX 6000", priceRange: [420, 550] },
-  { name: "RX 6900 XT", brand: "AMD", family: "RX 6000", priceRange: [380, 500] },
-  { name: "RX 6800 XT", brand: "AMD", family: "RX 6000", priceRange: [320, 430] },
-  { name: "RX 6800", brand: "AMD", family: "RX 6000", priceRange: [280, 380] },
-  { name: "RX 6750 XT", brand: "AMD", family: "RX 6000", priceRange: [240, 320] },
-  { name: "RX 6700 XT", brand: "AMD", family: "RX 6000", priceRange: [220, 300] },
-  { name: "RX 6650 XT", brand: "AMD", family: "RX 6000", priceRange: [180, 250] },
-  { name: "RX 6600 XT", brand: "AMD", family: "RX 6000", priceRange: [160, 230] },
-  { name: "RX 6600", brand: "AMD", family: "RX 6000", priceRange: [140, 200] },
+  { name: "RX 6950 XT", brand: "Sapphire", manufacturer: "AMD", family: "RX 6000", priceRange: [420, 550] },
+  { name: "RX 6900 XT", brand: "PowerColor", manufacturer: "AMD", family: "RX 6000", priceRange: [380, 500] },
+  { name: "RX 6800 XT", brand: "XFX", manufacturer: "AMD", family: "RX 6000", priceRange: [320, 430] },
+  { name: "RX 6800", brand: "Sapphire", manufacturer: "AMD", family: "RX 6000", priceRange: [280, 380] },
+  { name: "RX 6750 XT", brand: "ASUS", manufacturer: "AMD", family: "RX 6000", priceRange: [240, 320] },
+  { name: "RX 6700 XT", brand: "MSI", manufacturer: "AMD", family: "RX 6000", priceRange: [220, 300] },
+  { name: "RX 6650 XT", brand: "Gigabyte", manufacturer: "AMD", family: "RX 6000", priceRange: [180, 250] },
+  { name: "RX 6600 XT", brand: "PowerColor", manufacturer: "AMD", family: "RX 6000", priceRange: [160, 230] },
+  { name: "RX 6600", brand: "XFX", manufacturer: "AMD", family: "RX 6000", priceRange: [140, 200] },
   // Intel Arc
-  { name: "Arc A770 16GB", brand: "Intel", family: "Arc", priceRange: [280, 360] },
-  { name: "Arc A770 8GB", brand: "Intel", family: "Arc", priceRange: [240, 320] },
-  { name: "Arc A750", brand: "Intel", family: "Arc", priceRange: [200, 280] },
-  { name: "Arc A580", brand: "Intel", family: "Arc", priceRange: [160, 220] },
+  { name: "Arc A770 16GB", brand: "ASUS", manufacturer: "Intel", family: "Arc", priceRange: [280, 360] },
+  { name: "Arc A770 8GB", brand: "MSI", manufacturer: "Intel", family: "Arc", priceRange: [240, 320] },
+  { name: "Arc A750", brand: "Gigabyte", manufacturer: "Intel", family: "Arc", priceRange: [200, 280] },
+  { name: "Arc A580", brand: "ASUS", manufacturer: "Intel", family: "Arc", priceRange: [160, 220] },
 ];
 
 const CPU_MODELS: BaseModel[] = [
@@ -275,7 +278,10 @@ const MOTHERBOARD_MODELS: BaseModel[] = [
 export interface InternalModel {
   id: number;
   name: string;
+  /** Card/product brand (MSI, ASUS, Gigabyte, etc.) */
   brand: string;
+  /** Chipset manufacturer (NVIDIA, AMD, Intel) - mainly for GPUs */
+  manufacturer: string | null;
   family: string;
   category: string;
   median_price: number;
@@ -320,6 +326,7 @@ function generateModels(): InternalModel[] {
       id: id++,
       name: base.name,
       brand: base.brand,
+      manufacturer: base.manufacturer || null,
       family: base.family,
       category: base.category,
       median_price: medianPrice,
