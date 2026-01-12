@@ -3,36 +3,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { Search, Plus, Edit, PieChart, Loader2 } from "lucide-react";
+import { Search, Plus, Edit, PieChart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface Category {
-  id: number;
-  name: string;
-}
-
-interface NewModelForm {
-  name: string;
-  brand: string;
-  manufacturer: string;
-  family: string;
-  category_id: string;
-  aliases: string;
-}
-
-const initialFormState: NewModelForm = {
-  name: '',
-  brand: '',
-  manufacturer: '',
-  family: '',
-  category_id: '',
-  aliases: '',
-};
+import { AddModelModal } from "./models/AddModelModal";
+import { Category } from "./models/types";
 
 export default function AdminModels() {
   const [models, setModels] = useState<any[]>([]);
@@ -44,8 +20,6 @@ export default function AdminModels() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<NewModelForm>(initialFormState);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -103,63 +77,11 @@ export default function AdminModels() {
     }
   };
 
-  const handleFormChange = (field: keyof NewModelForm, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleModelAdded = (newModel: any) => {
+    setModels(prev => [...prev, newModel]);
   };
 
-  const handleSubmit = async () => {
-    // Validation
-    if (!formData.name.trim() || !formData.brand.trim() || !formData.category_id) {
-      toast({ 
-        title: "Champs requis", 
-        description: "Nom, marque et catégorie sont obligatoires", 
-        variant: "destructive" 
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const aliasesArray = formData.aliases
-        .split(',')
-        .map(a => a.trim())
-        .filter(a => a.length > 0);
-
-      const { data, error } = await supabase
-        .from('hardware_models')
-        .insert({
-          name: formData.name.trim(),
-          brand: formData.brand.trim(),
-          manufacturer: formData.manufacturer.trim() || null,
-          family: formData.family.trim() || null,
-          category_id: parseInt(formData.category_id),
-          aliases: aliasesArray.length > 0 ? aliasesArray : null,
-        })
-        .select('*, hardware_categories(name)')
-        .single();
-
-      if (error) throw error;
-
-      setModels(prev => [...prev, data]);
-      setFormData(initialFormState);
-      setIsAddModalOpen(false);
-      toast({ 
-        title: "Modèle ajouté", 
-        description: `"${data.name}" a été ajouté au catalogue` 
-      });
-    } catch (error: any) {
-      console.error('Error adding model:', error);
-      toast({ 
-        title: "Erreur", 
-        description: error.message || "Impossible d'ajouter le modèle", 
-        variant: "destructive" 
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const filteredModels = models.filter(model => 
+  const filteredModels = models.filter(model =>
     model.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     model.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     model.manufacturer?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -209,101 +131,17 @@ export default function AdminModels() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Modèles matériels ({filteredModels.length})</CardTitle>
-          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-            <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" />Ajouter modèle</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Ajouter un modèle</DialogTitle>
-                <DialogDescription>
-                  Créez un nouveau modèle matériel dans le catalogue
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Nom du modèle *</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="ex: RTX 4090 Gaming X Trio"
-                    value={formData.name}
-                    onChange={(e) => handleFormChange('name', e.target.value)}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="brand">Marque *</Label>
-                    <Input 
-                      id="brand" 
-                      placeholder="ex: MSI, ASUS, Gigabyte"
-                      value={formData.brand}
-                      onChange={(e) => handleFormChange('brand', e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="manufacturer">Fabricant</Label>
-                    <Input 
-                      id="manufacturer" 
-                      placeholder="ex: NVIDIA, AMD, Intel"
-                      value={formData.manufacturer}
-                      onChange={(e) => handleFormChange('manufacturer', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="category">Catégorie *</Label>
-                    <Select 
-                      value={formData.category_id} 
-                      onValueChange={(value) => handleFormChange('category_id', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map(cat => (
-                          <SelectItem key={cat.id} value={cat.id.toString()}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="family">Famille / Gamme</Label>
-                    <Input 
-                      id="family" 
-                      placeholder="ex: RTX 40, Ryzen 7000"
-                      value={formData.family}
-                      onChange={(e) => handleFormChange('family', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="aliases">Alias (séparés par virgules)</Label>
-                  <Input 
-                    id="aliases" 
-                    placeholder="ex: 4090, GeForce RTX 4090"
-                    value={formData.aliases}
-                    onChange={(e) => handleFormChange('aliases', e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Noms alternatifs utilisés pour matcher les annonces
-                  </p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
-                  Annuler
-                </Button>
-                <Button onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Créer le modèle
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setIsAddModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />Ajouter modèle
+          </Button>
         </CardHeader>
+        
+        <AddModelModal
+          open={isAddModalOpen}
+          onOpenChange={setIsAddModalOpen}
+          categories={categories}
+          onModelAdded={handleModelAdded}
+        />
         <CardContent>
           <div className="flex gap-4 mb-4">
             <div className="relative flex-1">
