@@ -197,6 +197,7 @@ export interface CatalogResponse {
 export interface CatalogFilters {
   category?: string;
   brand?: string;
+  manufacturer?: string;
   family?: string;
   search?: string;
   sort_by?: 'fair_value_30d' | 'var_30d' | 'liquidity' | 'name' | string;
@@ -829,8 +830,9 @@ export interface DataProvider {
   
   // Catalog
   getCategories(): Promise<Category[]>;
+  getManufacturers(category?: string): Promise<string[]>;
   getBrands(category?: string): Promise<string[]>;
-  getFamilies(brand?: string): Promise<string[]>;
+  getFamilies(manufacturer?: string): Promise<string[]>;
   getCatalogModels(filters: CatalogFilters): Promise<CatalogResponse>;
   getCatalogSummary(): Promise<CatalogSummary>;
   

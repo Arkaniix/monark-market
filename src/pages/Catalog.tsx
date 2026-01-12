@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, TrendingUp, TrendingDown, LayoutGrid, List, RotateCcw } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useCategories, useBrands, useFamilies, useCatalogModels, useAddModelToWatchlist, type CatalogFilters } from "@/hooks/useCatalog";
+import { useCategories, useManufacturers, useBrands, useFamilies, useCatalogModels, useAddModelToWatchlist, type CatalogFilters } from "@/hooks/useCatalog";
 import { useWatchlist, useRemoveFromWatchlist } from "@/hooks/useWatchlist";
 import { useAlerts, useDeleteAlert } from "@/hooks/useProviderData";
 import { CatalogSkeleton } from "@/components/catalog/CatalogSkeleton";
@@ -49,6 +49,7 @@ export default function Catalog() {
   // Filters state
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "all");
+  const [manufacturer, setManufacturer] = useState(searchParams.get("manufacturer") || "all");
   const [brand, setBrand] = useState(searchParams.get("brand") || "all");
   const [family, setFamily] = useState(searchParams.get("family") || "all");
   const [sortBy, setSortBy] = useState<CatalogFilters['sort_by']>(searchParams.get("sort") as CatalogFilters['sort_by'] || "fair_value_30d");
@@ -61,9 +62,10 @@ export default function Catalog() {
 
   // Build filters
   const filters: CatalogFilters = {
-    category,
-    brand,
-    family,
+    category: category !== 'all' ? category : undefined,
+    manufacturer: manufacturer !== 'all' ? manufacturer : undefined,
+    brand: brand !== 'all' ? brand : undefined,
+    family: family !== 'all' ? family : undefined,
     search: searchQuery || undefined,
     sort_by: sortBy,
     sort_order: sortOrder,
@@ -77,12 +79,16 @@ export default function Catalog() {
     isLoading: categoriesLoading
   } = useCategories();
   const {
+    data: manufacturers,
+    isLoading: manufacturersLoading
+  } = useManufacturers(category !== 'all' ? category : undefined);
+  const {
     data: brands,
     isLoading: brandsLoading
-  } = useBrands(category);
+  } = useBrands(category !== 'all' ? category : undefined);
   const {
     data: families
-  } = useFamilies(brand);
+  } = useFamilies(manufacturer !== 'all' ? manufacturer : undefined);
   const {
     data: modelsData,
     isLoading: modelsLoading,
@@ -162,6 +168,7 @@ export default function Catalog() {
   const resetFilters = () => {
     setSearchQuery("");
     setCategory("all");
+    setManufacturer("all");
     setBrand("all");
     setFamily("all");
     setSortBy("fair_value_30d");
@@ -175,13 +182,18 @@ export default function Catalog() {
   };
   const handleCategoryChange = (value: string) => {
     setCategory(value);
+    setManufacturer("all");
     setBrand("all");
+    setFamily("all");
+    setCurrentPage(1);
+  };
+  const handleManufacturerChange = (value: string) => {
+    setManufacturer(value);
     setFamily("all");
     setCurrentPage(1);
   };
   const handleBrandChange = (value: string) => {
     setBrand(value);
-    setFamily("all");
     setCurrentPage(1);
   };
   
@@ -294,6 +306,22 @@ export default function Catalog() {
                 </Select>
               </div>
 
+              {/* Manufacturer filter */}
+              <div className="w-[120px]">
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Fabricant</label>
+                <Select value={manufacturer} onValueChange={handleManufacturerChange} disabled={manufacturersLoading}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tous" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous</SelectItem>
+                    {manufacturers?.filter(m => m && m.trim() !== "").map(m => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Brand filter */}
               <div className="w-[120px]">
                 <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Marque</label>
@@ -310,12 +338,16 @@ export default function Catalog() {
                 </Select>
               </div>
 
-              {/* Family filter */}
+              {/* Family filter - only enabled when manufacturer is selected */}
               <div className="w-[120px]">
                 <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Famille</label>
-                <Select value={family} onValueChange={v => { setFamily(v); setCurrentPage(1); }} disabled={!families?.length}>
+                <Select 
+                  value={family} 
+                  onValueChange={v => { setFamily(v); setCurrentPage(1); }} 
+                  disabled={manufacturer === 'all' || !families?.length}
+                >
                   <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Toutes" />
+                    <SelectValue placeholder={manufacturer === 'all' ? "Choisir fabricant" : "Toutes"} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Toutes</SelectItem>

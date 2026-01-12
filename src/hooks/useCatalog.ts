@@ -1,6 +1,7 @@
 // Re-export from provider-based hooks for backward compatibility
 export {
   useCategories,
+  useManufacturers,
   useBrands,
   useFamilies,
   useCatalogModels,

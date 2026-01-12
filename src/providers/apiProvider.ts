@@ -129,10 +129,13 @@ export const apiProvider: DataProvider = {
   async getCategories() {
     return apiFetch<Category[]>(ENDPOINTS.HARDWARE.CATEGORIES);
   },
+  async getManufacturers(category) {
+    throw new ApiFeatureUnavailableError('Catalog Manufacturers', 'Le filtre par fabricant n\'est pas encore disponible via l\'API.');
+  },
   async getBrands(category) {
     throw new ApiFeatureUnavailableError('Catalog Brands', 'Le filtre par marque n\'est pas encore disponible via l\'API.');
   },
-  async getFamilies(brand) {
+  async getFamilies(manufacturer) {
     throw new ApiFeatureUnavailableError('Catalog Families', 'Le filtre par famille n\'est pas encore disponible via l\'API.');
   },
   async getCatalogModels(filters) {

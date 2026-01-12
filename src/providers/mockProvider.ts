@@ -732,17 +732,42 @@ export const mockProvider: DataProvider = {
       count: MOCK_MODELS.filter(m => m.category === cat.name).length,
     }));
   },
+  async getManufacturers(category) {
+    await delay();
+    // Get unique manufacturers from mock models (for GPUs, this is NVIDIA, AMD, Intel, etc.)
+    if (category && category !== 'all') {
+      const manufacturers = MOCK_MODELS
+        .filter(m => m.category === category && m.manufacturer)
+        .map(m => m.manufacturer!)
+        .filter((v, i, a) => a.indexOf(v) === i)
+        .sort();
+      return manufacturers.length > 0 ? manufacturers : MOCK_BRANDS_BY_CATEGORY[category] || [];
+    }
+    // Return all unique manufacturers across all categories
+    const allManufacturers = MOCK_MODELS
+      .filter(m => m.manufacturer)
+      .map(m => m.manufacturer!)
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort();
+    return allManufacturers.length > 0 ? allManufacturers : Object.values(MOCK_BRANDS_BY_CATEGORY).flat().filter((v, i, a) => a.indexOf(v) === i);
+  },
   async getBrands(category) {
     await delay();
-    if (category && MOCK_BRANDS_BY_CATEGORY[category]) {
-      return MOCK_BRANDS_BY_CATEGORY[category];
+    // Get unique card brands from mock models (MSI, ASUS, Gigabyte, etc.)
+    if (category && category !== 'all') {
+      const brands = MOCK_MODELS
+        .filter(m => m.category === category)
+        .map(m => m.brand)
+        .filter((v, i, a) => a.indexOf(v) === i)
+        .sort();
+      return brands;
     }
-    return Object.values(MOCK_BRANDS_BY_CATEGORY).flat().filter((v, i, a) => a.indexOf(v) === i);
+    return MOCK_MODELS.map(m => m.brand).filter((v, i, a) => a.indexOf(v) === i).sort();
   },
-  async getFamilies(brand) {
+  async getFamilies(manufacturer) {
     await delay();
-    if (brand && MOCK_FAMILIES_BY_BRAND[brand]) {
-      return MOCK_FAMILIES_BY_BRAND[brand];
+    if (manufacturer && manufacturer !== 'all' && MOCK_FAMILIES_BY_BRAND[manufacturer]) {
+      return MOCK_FAMILIES_BY_BRAND[manufacturer];
     }
     return Object.values(MOCK_FAMILIES_BY_BRAND).flat().filter((v, i, a) => a.indexOf(v) === i).slice(0, 8);
   },
@@ -770,6 +795,9 @@ export const mockProvider: DataProvider = {
     // Apply filters only if they have meaningful values (use centralized isValidFilter)
     if (isValidFilter(filters.category)) {
       items = items.filter(i => i.category === filters.category);
+    }
+    if (isValidFilter(filters.manufacturer)) {
+      items = items.filter(i => i.manufacturer === filters.manufacturer);
     }
     if (isValidFilter(filters.brand)) {
       items = items.filter(i => i.brand === filters.brand);
