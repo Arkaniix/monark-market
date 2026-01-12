@@ -15,6 +15,7 @@ export default function AdminLogs() {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
+  const [serviceFilter, setServiceFilter] = useState("all");
   const [selectedLog, setSelectedLog] = useState<SystemLog | null>(null);
   const limit = 50;
 
@@ -32,6 +33,13 @@ export default function AdminLogs() {
     }
   };
 
+  // Filter by service (simulated via message content)
+  const filteredLogs = (data?.items ?? []).filter(log => {
+    if (serviceFilter === 'all') return true;
+    const message = log.message.toLowerCase();
+    return message.includes(serviceFilter);
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -45,13 +53,11 @@ export default function AdminLogs() {
       <Card>
         <CardContent className="py-12 text-center">
           <p className="text-destructive">Erreur lors du chargement des logs</p>
-          <p className="text-sm text-muted-foreground mt-2">L'endpoint /v1/admin/logs n'est peut-être pas disponible</p>
         </CardContent>
       </Card>
     );
   }
 
-  const logs = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / limit);
 
@@ -70,16 +76,13 @@ export default function AdminLogs() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-4">
-            <div className="relative flex-1">
+          <div className="flex gap-4 mb-4 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Rechercher dans les logs..."
                 value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setPage(1);
-                }}
+                onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                 className="pl-10"
               />
             </div>
@@ -94,6 +97,18 @@ export default function AdminLogs() {
                 <SelectItem value="error">Error</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={serviceFilter} onValueChange={(v) => { setServiceFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Service" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous services</SelectItem>
+                <SelectItem value="scraper">Scraper</SelectItem>
+                <SelectItem value="api">API</SelectItem>
+                <SelectItem value="ingest">Ingest</SelectItem>
+                <SelectItem value="estimator">Estimator</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <Table>
@@ -106,33 +121,23 @@ export default function AdminLogs() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {logs.length === 0 ? (
+              {filteredLogs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                     Aucun log trouvé
                   </TableCell>
                 </TableRow>
               ) : (
-                logs.map((log) => (
+                filteredLogs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell>
-                      <Badge variant={getLevelColor(log.level)}>
-                        {log.level}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-lg truncate font-mono text-sm">
-                      {log.message}
-                    </TableCell>
+                    <TableCell><Badge variant={getLevelColor(log.level)}>{log.level}</Badge></TableCell>
+                    <TableCell className="max-w-lg truncate font-mono text-sm">{log.message}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {format(new Date(log.created_at), "dd MMM yyyy HH:mm:ss", { locale: fr })}
                     </TableCell>
                     <TableCell>
                       {log.context && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => setSelectedLog(log)}
-                        >
+                        <Button size="icon" variant="ghost" onClick={() => setSelectedLog(log)}>
                           <Eye className="h-4 w-4" />
                         </Button>
                       )}
@@ -143,30 +148,15 @@ export default function AdminLogs() {
             </TableBody>
           </Table>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t">
-              <p className="text-sm text-muted-foreground">
-                Page {page} sur {totalPages} ({total} logs)
-              </p>
+              <p className="text-sm text-muted-foreground">Page {page} sur {totalPages}</p>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Précédent
+                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+                  <ChevronLeft className="h-4 w-4" />Précédent
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                >
-                  Suivant
-                  <ChevronRight className="h-4 w-4" />
+                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+                  Suivant<ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -174,12 +164,9 @@ export default function AdminLogs() {
         </CardContent>
       </Card>
 
-      {/* Log Detail Dialog */}
       <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Détail du Log</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Détail du Log</DialogTitle></DialogHeader>
           {selectedLog && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -190,9 +177,7 @@ export default function AdminLogs() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Message</p>
-                <p className="font-mono text-sm bg-muted p-3 rounded-lg break-all">
-                  {selectedLog.message}
-                </p>
+                <p className="font-mono text-sm bg-muted p-3 rounded-lg break-all">{selectedLog.message}</p>
               </div>
               {selectedLog.context && (
                 <div>

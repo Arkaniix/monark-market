@@ -5,9 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download, Calendar } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, TrendingUp, TrendingDown, Eye, Coins, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { format, subMonths } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface Subscription {
   id: string;
@@ -31,12 +34,18 @@ interface Subscription {
   } | null;
 }
 
+interface SubscriptionDetail extends Subscription {
+  payments: Array<{ id: number; amount: number; date: string; status: string }>;
+  creditInjections: Array<{ id: number; delta: number; date: string; reason: string }>;
+}
+
 export default function AdminSubscriptions() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
+  const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionDetail | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -86,29 +95,6 @@ export default function AdminSubscriptions() {
     }
   };
 
-  const exportToCSV = () => {
-    const csv = [
-      ['Référence', 'Utilisateur', 'Plan', 'Statut', 'Montant', 'Date début', 'Date fin', 'Crédits'].join(','),
-      ...filteredSubscriptions.map(sub => [
-        sub.checkout_ref || 'N/A',
-        sub.profiles?.display_name || 'Inconnu',
-        sub.subscription_plans?.name || 'N/A',
-        sub.status,
-        sub.subscription_plans?.price || 0,
-        new Date(sub.started_at).toLocaleDateString('fr-FR'),
-        sub.expires_at ? new Date(sub.expires_at).toLocaleDateString('fr-FR') : 'N/A',
-        sub.credits_remaining
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `abonnements-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-  };
-
   const filteredSubscriptions = subscriptions.filter(sub => {
     const matchesSearch = (sub.profiles?.display_name || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || sub.status === statusFilter;
@@ -122,9 +108,28 @@ export default function AdminSubscriptions() {
     return matchesSearch && matchesStatus && matchesMonth;
   });
 
-  const totalRevenue = filteredSubscriptions
+  // Calculate MRR (Monthly Recurring Revenue)
+  const mrr = subscriptions
     .filter(sub => sub.status === 'active')
     .reduce((sum, sub) => sum + (sub.subscription_plans?.price || 0), 0);
+
+  // Calculate Churn (% of expired subscriptions last month)
+  const lastMonth = subMonths(new Date(), 1);
+  const expiredLastMonth = subscriptions.filter(sub => {
+    if (sub.status !== 'expired' || !sub.expires_at) return false;
+    const expiryDate = new Date(sub.expires_at);
+    return expiryDate.getMonth() === lastMonth.getMonth() && 
+           expiryDate.getFullYear() === lastMonth.getFullYear();
+  }).length;
+  
+  const totalActiveLastMonth = subscriptions.filter(sub => {
+    const startDate = new Date(sub.started_at);
+    return startDate <= lastMonth;
+  }).length;
+  
+  const churnRate = totalActiveLastMonth > 0 
+    ? ((expiredLastMonth / totalActiveLastMonth) * 100).toFixed(1) 
+    : '0';
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -133,6 +138,21 @@ export default function AdminSubscriptions() {
       case 'cancelled': return 'destructive';
       default: return 'outline';
     }
+  };
+
+  const handleViewDetail = (sub: Subscription) => {
+    // Mock payment and credit injection data
+    const detail: SubscriptionDetail = {
+      ...sub,
+      payments: [
+        { id: 1, amount: sub.subscription_plans?.price || 0, date: sub.started_at, status: 'completed' },
+      ],
+      creditInjections: [
+        { id: 1, delta: 50, date: sub.started_at, reason: 'subscription_start' },
+        { id: 2, delta: 50, date: sub.credits_reset_date || sub.started_at, reason: 'monthly_refill' },
+      ]
+    };
+    setSelectedSubscription(detail);
   };
 
   if (loading) {
@@ -146,13 +166,29 @@ export default function AdminSubscriptions() {
         <p className="text-muted-foreground">Gestion des plans et transactions</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Revenus actifs</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              MRR
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRevenue.toFixed(2)} €</div>
+            <div className="text-2xl font-bold">{mrr.toFixed(2)} €</div>
+            <p className="text-xs text-muted-foreground">Revenu mensuel récurrent</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <TrendingDown className="h-4 w-4" />
+              Churn
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{churnRate}%</div>
+            <p className="text-xs text-muted-foreground">Expirés le mois dernier</p>
           </CardContent>
         </Card>
         <Card>
@@ -212,17 +248,12 @@ export default function AdminSubscriptions() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={exportToCSV}>
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Référence</TableHead>
                 <TableHead>Utilisateur</TableHead>
                 <TableHead>Plan</TableHead>
                 <TableHead>Statut</TableHead>
@@ -230,15 +261,12 @@ export default function AdminSubscriptions() {
                 <TableHead>Crédits</TableHead>
                 <TableHead>Date début</TableHead>
                 <TableHead>Date fin</TableHead>
-                <TableHead>Cycle</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredSubscriptions.map((subscription) => (
                 <TableRow key={subscription.id}>
-                  <TableCell className="font-mono text-xs">
-                    {subscription.checkout_ref || 'N/A'}
-                  </TableCell>
                   <TableCell className="font-medium">
                     {subscription.profiles?.display_name || 'Inconnu'}
                   </TableCell>
@@ -260,13 +288,125 @@ export default function AdminSubscriptions() {
                       ? new Date(subscription.expires_at).toLocaleDateString('fr-FR')
                       : 'N/A'}
                   </TableCell>
-                  <TableCell className="capitalize">{subscription.billing_cycle}</TableCell>
+                  <TableCell>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleViewDetail(subscription)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Subscription Detail Modal */}
+      <Dialog open={!!selectedSubscription} onOpenChange={(open) => !open && setSelectedSubscription(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Détail abonnement
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedSubscription && (
+            <div className="space-y-6">
+              {/* Summary */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Utilisateur</p>
+                  <p className="font-medium">{selectedSubscription.profiles?.display_name || 'Inconnu'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Plan</p>
+                  <Badge variant="secondary">{selectedSubscription.subscription_plans?.name || 'N/A'}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Période</p>
+                  <p className="text-sm">
+                    {format(new Date(selectedSubscription.started_at), "dd/MM/yyyy", { locale: fr })}
+                    {' → '}
+                    {selectedSubscription.expires_at 
+                      ? format(new Date(selectedSubscription.expires_at), "dd/MM/yyyy", { locale: fr })
+                      : 'Illimité'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Statut</p>
+                  <Badge variant={getStatusColor(selectedSubscription.status)}>
+                    {selectedSubscription.status}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Payments */}
+              <div>
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Paiements
+                </h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Montant</TableHead>
+                      <TableHead>Statut</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedSubscription.payments.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell className="text-sm">
+                          {format(new Date(payment.date), "dd/MM/yyyy", { locale: fr })}
+                        </TableCell>
+                        <TableCell className="font-medium">{payment.amount.toFixed(2)} €</TableCell>
+                        <TableCell>
+                          <Badge variant={payment.status === 'completed' ? 'default' : 'destructive'}>
+                            {payment.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Credit Injections */}
+              <div>
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <Coins className="h-4 w-4" />
+                  Crédits injectés
+                </h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Delta</TableHead>
+                      <TableHead>Raison</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedSubscription.creditInjections.map((injection) => (
+                      <TableRow key={injection.id}>
+                        <TableCell className="text-sm">
+                          {format(new Date(injection.date), "dd/MM/yyyy", { locale: fr })}
+                        </TableCell>
+                        <TableCell className="text-green-600">+{injection.delta}</TableCell>
+                        <TableCell className="text-sm">{injection.reason}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

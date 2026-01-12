@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { Search, ExternalLink, Eye, EyeOff, RefreshCw, FileText } from "lucide-react";
+import { Search, ExternalLink, Eye, RefreshCw, FileText, AlertTriangle, Archive, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { subDays } from "date-fns";
 
 export default function AdminAds() {
   const [ads, setAds] = useState<any[]>([]);
@@ -15,6 +16,7 @@ export default function AdminAds() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
+  const [archiving, setArchiving] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -42,7 +44,8 @@ export default function AdminAds() {
             status: 'active',
             city: 'Paris',
             last_seen_at: new Date().toISOString(),
-            hardware_models: { name: 'RTX 4090', brand: 'NVIDIA' }
+            hardware_models: { name: 'RTX 4090', brand: 'NVIDIA' },
+            model_id: 1
           },
           {
             id: 2,
@@ -52,27 +55,30 @@ export default function AdminAds() {
             status: 'active',
             city: 'Lyon',
             last_seen_at: new Date(Date.now() - 3600000).toISOString(),
-            hardware_models: { name: 'RX 7900 XTX', brand: 'AMD' }
+            hardware_models: { name: 'RX 7900 XTX', brand: 'AMD' },
+            model_id: 2
           },
           {
             id: 3,
             platform: 'leboncoin',
             platform_ad_id: '2345678903',
-            title: 'RTX 4080 ASUS TUF Gaming',
-            status: 'sold',
+            title: 'Carte graphique gaming',
+            status: 'active',
             city: 'Marseille',
-            last_seen_at: new Date(Date.now() - 86400000).toISOString(),
-            hardware_models: { name: 'RTX 4080', brand: 'NVIDIA' }
+            last_seen_at: new Date(Date.now() - 86400000 * 35).toISOString(),
+            hardware_models: null,
+            model_id: null
           },
           {
             id: 4,
             platform: 'leboncoin',
             platform_ad_id: '2345678904',
-            title: 'RTX 3080 Ti MSI Gaming X Trio',
+            title: 'GPU haute performance',
             status: 'active',
             city: 'Toulouse',
             last_seen_at: new Date(Date.now() - 7200000).toISOString(),
-            hardware_models: { name: 'RTX 3080 Ti', brand: 'NVIDIA' }
+            hardware_models: null,
+            model_id: null
           },
           {
             id: 5,
@@ -81,8 +87,9 @@ export default function AdminAds() {
             title: 'RX 6800 XT Sapphire Nitro+',
             status: 'inactive',
             city: 'Nice',
-            last_seen_at: new Date(Date.now() - 172800000).toISOString(),
-            hardware_models: { name: 'RX 6800 XT', brand: 'AMD' }
+            last_seen_at: new Date(Date.now() - 86400000 * 45).toISOString(),
+            hardware_models: { name: 'RX 6800 XT', brand: 'AMD' },
+            model_id: 3
           }
         ]);
       } else {
@@ -100,6 +107,37 @@ export default function AdminAds() {
     }
   };
 
+  const handleArchive = async (adId: number) => {
+    setArchiving(adId);
+    try {
+      const { error } = await supabase
+        .from('ads')
+        .update({ status: 'archived' })
+        .eq('id', adId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setAds(ads.map(ad => 
+        ad.id === adId ? { ...ad, status: 'archived' } : ad
+      ));
+      
+      toast({
+        title: "Annonce archivée",
+        description: "L'annonce a été marquée comme archivée"
+      });
+    } catch (error) {
+      console.error('Error archiving ad:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'archiver l'annonce",
+        variant: "destructive"
+      });
+    } finally {
+      setArchiving(null);
+    }
+  };
+
   const filteredAds = ads.filter(ad => {
     const matchesSearch = ad.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          ad.platform_ad_id?.includes(searchTerm);
@@ -107,6 +145,11 @@ export default function AdminAds() {
     const matchesPlatform = platformFilter === "all" || ad.platform === platformFilter;
     return matchesSearch && matchesStatus && matchesPlatform;
   });
+
+  // Calculate KPIs
+  const orphanAds = ads.filter(a => !a.model_id).length;
+  const thirtyDaysAgo = subDays(new Date(), 30);
+  const staleAds = ads.filter(a => new Date(a.last_seen_at) < thirtyDaysAgo).length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -128,7 +171,7 @@ export default function AdminAds() {
         <p className="text-muted-foreground">Gestion et modération des annonces</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold">{ads.length}</div>
@@ -141,16 +184,22 @@ export default function AdminAds() {
             <p className="text-xs text-muted-foreground">Actives</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className={orphanAds > 0 ? 'border-yellow-500/30' : ''}>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{ads.filter(a => a.status === 'inactive').length}</div>
-            <p className="text-xs text-muted-foreground">Inactives</p>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className={`h-4 w-4 ${orphanAds > 0 ? 'text-yellow-500' : 'text-muted-foreground'}`} />
+              <div className="text-2xl font-bold">{orphanAds}</div>
+            </div>
+            <p className="text-xs text-muted-foreground">Orphelines (sans modèle)</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className={staleAds > 0 ? 'border-yellow-500/30' : ''}>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{ads.filter(a => a.hardware_models).length}</div>
-            <p className="text-xs text-muted-foreground">Avec modèle</p>
+            <div className="flex items-center gap-2">
+              <Clock className={`h-4 w-4 ${staleAds > 0 ? 'text-yellow-500' : 'text-muted-foreground'}`} />
+              <div className="text-2xl font-bold">{staleAds}</div>
+            </div>
+            <p className="text-xs text-muted-foreground">Non vues &gt; 30j</p>
           </CardContent>
         </Card>
       </div>
@@ -234,7 +283,9 @@ export default function AdminAds() {
                         {ad.hardware_models.brand} {ad.hardware_models.name}
                       </span>
                     ) : (
-                      <span className="text-muted-foreground text-xs">Non mappé</span>
+                      <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                        Non mappé
+                      </Badge>
                     )}
                   </TableCell>
                   <TableCell>
@@ -248,7 +299,7 @@ export default function AdminAds() {
                     {new Date(ad.last_seen_at).toLocaleDateString('fr-FR')}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <Button variant="ghost" size="sm" asChild>
                         <a href={ad.url} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-4 w-4" />
@@ -257,6 +308,16 @@ export default function AdminAds() {
                       <Button variant="ghost" size="sm">
                         <Eye className="h-4 w-4" />
                       </Button>
+                      {ad.status !== 'archived' && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleArchive(ad.id)}
+                          disabled={archiving === ad.id}
+                        >
+                          <Archive className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
