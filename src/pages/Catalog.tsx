@@ -413,7 +413,9 @@ export default function Catalog() {
                               <CardTitle className="text-base font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem]">
                                 {model.name}
                               </CardTitle>
-                              <p className="text-sm text-muted-foreground mt-1">{model.brand}</p>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {model.brand}{model.manufacturer ? ` • ${model.manufacturer}` : ''}
+                              </p>
                             </div>
                             <Badge variant="secondary" className="text-xs px-2 py-0.5 shrink-0">{model.category}</Badge>
                           </div>
