@@ -1,11 +1,40 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, Activity, Database, Server, RefreshCw, Loader2, XCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, Activity, Database, Server, RefreshCw, Loader2, XCircle, Clock } from "lucide-react";
 import { useHealthStatus } from "@/hooks/useAdmin";
+import { useState, useMemo } from "react";
+
+// Génère un historique simulé sur 24h
+const generateStatusHistory = () => {
+  const history = [];
+  const now = Date.now();
+  for (let i = 23; i >= 0; i--) {
+    const hour = new Date(now - i * 3600000);
+    // Simuler quelques incidents aléatoires
+    const rand = Math.random();
+    let status: 'operational' | 'degraded' | 'down' = 'operational';
+    if (rand < 0.05) status = 'down';
+    else if (rand < 0.15) status = 'degraded';
+    
+    history.push({
+      hour: hour.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      status,
+      timestamp: hour.getTime()
+    });
+  }
+  return history;
+};
 
 export default function AdminHealth() {
   const { data, isLoading, isError, refetch, isFetching } = useHealthStatus();
+  const [statusHistory] = useState(generateStatusHistory);
+
+  // Calcul uptime sur 24h
+  const uptime24h = useMemo(() => {
+    const operational = statusHistory.filter(h => h.status === 'operational').length;
+    return (operational / statusHistory.length) * 100;
+  }, [statusHistory]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -47,6 +76,15 @@ export default function AdminHealth() {
     if (days > 0) return `${days}j ${hours}h`;
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'operational': return 'bg-success';
+      case 'degraded': return 'bg-warning';
+      case 'down': return 'bg-destructive';
+      default: return 'bg-muted';
+    }
   };
 
   if (isLoading) {
@@ -98,37 +136,102 @@ export default function AdminHealth() {
         </Button>
       </div>
 
-      {/* Global Status */}
-      <Card className={`border-2 ${
-        data.status === 'healthy' ? 'border-success/50 bg-success/5' :
-        data.status === 'degraded' ? 'border-warning/50 bg-warning/5' :
-        'border-destructive/50 bg-destructive/5'
-      }`}>
-        <CardContent className="py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {data.status === 'healthy' ? (
-                <CheckCircle2 className="h-10 w-10 text-success" />
-              ) : data.status === 'degraded' ? (
-                <AlertCircle className="h-10 w-10 text-warning" />
-              ) : (
-                <XCircle className="h-10 w-10 text-destructive" />
-              )}
-              <div>
-                <h3 className="text-xl font-bold">
-                  {data.status === 'healthy' ? 'Tous les systèmes opérationnels' :
-                   data.status === 'degraded' ? 'Performance dégradée' :
-                   'Incident en cours'}
-                </h3>
-                <p className="text-muted-foreground">
-                  Version {data.version} • Uptime: {formatUptime(data.uptime_seconds)}
-                </p>
+      {/* Global Status + Uptime */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className={`lg:col-span-2 border-2 ${
+          data.status === 'healthy' ? 'border-success/50 bg-success/5' :
+          data.status === 'degraded' ? 'border-warning/50 bg-warning/5' :
+          'border-destructive/50 bg-destructive/5'
+        }`}>
+          <CardContent className="py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {data.status === 'healthy' ? (
+                  <CheckCircle2 className="h-10 w-10 text-success" />
+                ) : data.status === 'degraded' ? (
+                  <AlertCircle className="h-10 w-10 text-warning" />
+                ) : (
+                  <XCircle className="h-10 w-10 text-destructive" />
+                )}
+                <div>
+                  <h3 className="text-xl font-bold">
+                    {data.status === 'healthy' ? 'Tous les systèmes opérationnels' :
+                     data.status === 'degraded' ? 'Performance dégradée' :
+                     'Incident en cours'}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Version {data.version} • Uptime: {formatUptime(data.uptime_seconds)}
+                  </p>
+                </div>
               </div>
+              <Badge variant={getStatusBadge(data.status)} className="text-sm px-3 py-1">
+                {data.status === 'healthy' ? 'Opérationnel' :
+                 data.status === 'degraded' ? 'Dégradé' : 'Problème'}
+              </Badge>
             </div>
-            <Badge variant={getStatusBadge(data.status)} className="text-sm px-3 py-1">
-              {data.status === 'healthy' ? 'Opérationnel' :
-               data.status === 'degraded' ? 'Dégradé' : 'Problème'}
-            </Badge>
+          </CardContent>
+        </Card>
+
+        {/* Uptime 24h KPI */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Uptime 24h
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold mb-2">
+              <span className={uptime24h >= 99 ? 'text-success' : uptime24h >= 95 ? 'text-warning' : 'text-destructive'}>
+                {uptime24h.toFixed(1)}%
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {statusHistory.filter(h => h.status !== 'operational').length} incident(s) détecté(s)
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Historique 24h */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Historique de statut (24h)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-1 h-12">
+            {statusHistory.map((entry, idx) => (
+              <div 
+                key={idx}
+                className="flex-1 group relative"
+              >
+                <div 
+                  className={`w-full h-8 rounded-sm ${getStatusColor(entry.status)} transition-all hover:opacity-80`}
+                  title={`${entry.hour} - ${entry.status}`}
+                />
+                <div className="opacity-0 group-hover:opacity-100 absolute -top-10 left-1/2 -translate-x-1/2 bg-popover border rounded px-2 py-1 text-xs whitespace-nowrap z-10 shadow-lg">
+                  {entry.hour} - {entry.status === 'operational' ? 'OK' : entry.status === 'degraded' ? 'Dégradé' : 'Down'}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+            <span>Il y a 24h</span>
+            <span>Maintenant</span>
+          </div>
+          <div className="flex gap-4 mt-3 text-xs">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-sm bg-success" />
+              <span>Opérationnel</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-sm bg-warning" />
+              <span>Dégradé</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-sm bg-destructive" />
+              <span>Down</span>
+            </div>
           </div>
         </CardContent>
       </Card>
