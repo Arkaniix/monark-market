@@ -473,6 +473,7 @@ export type Database = {
           created_at: string
           family: string | null
           id: number
+          image_url: string | null
           manufacturer: string | null
           name: string
           updated_at: string
@@ -484,6 +485,7 @@ export type Database = {
           created_at?: string
           family?: string | null
           id?: number
+          image_url?: string | null
           manufacturer?: string | null
           name: string
           updated_at?: string
@@ -495,6 +497,7 @@ export type Database = {
           created_at?: string
           family?: string | null
           id?: number
+          image_url?: string | null
           manufacturer?: string | null
           name?: string
           updated_at?: string
