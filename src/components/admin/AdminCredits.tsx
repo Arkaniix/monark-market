@@ -1,10 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { Settings, History } from "lucide-react";
+import { History, Calculator, Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminCredits() {
@@ -13,9 +14,20 @@ export default function AdminCredits() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Simulator state
+  const [simPlatform, setSimPlatform] = useState("leboncoin");
+  const [simType, setSimType] = useState("faible");
+  const [simPages, setSimPages] = useState(10);
+  const [estimatedCost, setEstimatedCost] = useState<number | null>(null);
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    // Calculate estimated cost when inputs change
+    calculateCost();
+  }, [simPlatform, simType, simPages]);
 
   const fetchData = async () => {
     try {
@@ -81,6 +93,27 @@ export default function AdminCredits() {
     }
   };
 
+  const calculateCost = () => {
+    // Cost calculation based on type
+    let cost = 0;
+    
+    switch (simType) {
+      case 'communautaire':
+        cost = 0;
+        break;
+      case 'faible':
+        cost = Math.max(5, Math.ceil(simPages / 10));
+        break;
+      case 'fort':
+        cost = Math.max(10, Math.ceil(simPages / 5));
+        break;
+      default:
+        cost = 5;
+    }
+    
+    setEstimatedCost(cost);
+  };
+
   if (loading) {
     return <div>Chargement...</div>;
   }
@@ -91,6 +124,87 @@ export default function AdminCredits() {
         <h2 className="text-2xl font-bold mb-2">Crédits & Politiques d'usage</h2>
         <p className="text-muted-foreground">Configuration des règles de scraping et crédits</p>
       </div>
+
+      {/* Cost Simulator */}
+      <Card className="border-2 border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calculator className="h-5 w-5" />
+            Simulateur de coût
+          </CardTitle>
+          <CardDescription>
+            Estimez le coût en crédits d'un job avant de le lancer
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div className="space-y-2">
+              <Label>Plateforme</Label>
+              <Select value={simPlatform} onValueChange={setSimPlatform}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="leboncoin">LeBonCoin</SelectItem>
+                  <SelectItem value="facebook">Facebook Marketplace</SelectItem>
+                  <SelectItem value="ebay">eBay</SelectItem>
+                  <SelectItem value="vinted">Vinted</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Type de scrap</Label>
+              <Select value={simType} onValueChange={setSimType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="communautaire">Communautaire</SelectItem>
+                  <SelectItem value="faible">Faible</SelectItem>
+                  <SelectItem value="fort">Fort</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Pages cibles</Label>
+              <Select value={simPages.toString()} onValueChange={(v) => setSimPages(parseInt(v))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 pages</SelectItem>
+                  <SelectItem value="10">10 pages</SelectItem>
+                  <SelectItem value="25">25 pages</SelectItem>
+                  <SelectItem value="50">50 pages</SelectItem>
+                  <SelectItem value="100">100 pages</SelectItem>
+                  <SelectItem value="200">200 pages</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="p-4 bg-muted rounded-lg text-center">
+              <div className="flex items-center justify-center gap-2">
+                <Coins className="h-5 w-5 text-primary" />
+                <span className="text-2xl font-bold text-primary">
+                  {estimatedCost !== null ? estimatedCost : '-'}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">crédits estimés</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+            <strong>Formules :</strong>
+            <ul className="list-disc list-inside mt-1 space-y-1">
+              <li><span className="font-medium">Communautaire</span> : 0 crédit (gratuit)</li>
+              <li><span className="font-medium">Faible</span> : max(5, pages/10) crédits</li>
+              <li><span className="font-medium">Fort</span> : max(10, pages/5) crédits</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

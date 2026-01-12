@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, ChevronLeft, ChevronRight, Loader2, Eye, Briefcase } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Loader2, Eye, Briefcase, CheckCircle2, XCircle, Clock, AlertTriangle } from "lucide-react";
 import { useAdminJobs, useAdminJobDetail, AdminJob } from "@/hooks/useAdmin";
-import { format } from "date-fns";
+import { format, differenceInSeconds } from "date-fns";
 import { fr } from "date-fns/locale";
 
 export default function AdminJobs() {
@@ -16,16 +16,38 @@ export default function AdminJobs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [showErrorsOnly, setShowErrorsOnly] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const limit = 20;
 
   const { data, isLoading, isError } = useAdminJobs(page, limit, {
-    status: statusFilter,
+    status: showErrorsOnly ? 'failed' : statusFilter,
     type: typeFilter,
     search: searchTerm || undefined,
   });
 
   const { data: jobDetail, isLoading: loadingDetail } = useAdminJobDetail(selectedJobId);
+
+  // Calculate KPIs
+  const kpis = useMemo(() => {
+    const allJobs = data?.items ?? [];
+    const completedJobs = allJobs.filter(j => j.status === 'completed');
+    const failedJobs = allJobs.filter(j => j.status === 'failed');
+    
+    const successRate = allJobs.length > 0 
+      ? ((completedJobs.length / allJobs.length) * 100).toFixed(1)
+      : '0';
+    
+    const avgPages = completedJobs.length > 0
+      ? Math.round(completedJobs.reduce((sum, j) => sum + (j.pages_scanned || 0), 0) / completedJobs.length)
+      : 0;
+
+    return {
+      successRate,
+      avgPages,
+      failedCount: failedJobs.length
+    };
+  }, [data]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -45,6 +67,16 @@ export default function AdminJobs() {
       case 'fort': return 'destructive';
       default: return 'outline';
     }
+  };
+
+  // Calculate job duration and error rate for detail view
+  const getJobDuration = (job: AdminJob) => {
+    if (!job.started_at || !job.ended_at) return null;
+    const seconds = differenceInSeconds(new Date(job.ended_at), new Date(job.started_at));
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
   };
 
   if (isLoading) {
@@ -76,6 +108,37 @@ export default function AdminJobs() {
         <p className="text-muted-foreground">Gestion des jobs de scraping (lecture seule)</p>
       </div>
 
+      {/* KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <span className="text-sm text-muted-foreground">Taux de réussite</span>
+            </div>
+            <div className="text-2xl font-bold mt-1">{kpis.successRate}%</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Moyenne pages/job</span>
+            </div>
+            <div className="text-2xl font-bold mt-1">{kpis.avgPages}</div>
+          </CardContent>
+        </Card>
+        <Card className={kpis.failedCount > 0 ? 'border-destructive/30' : ''}>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <XCircle className="h-4 w-4 text-destructive" />
+              <span className="text-sm text-muted-foreground">Jobs échoués</span>
+            </div>
+            <div className="text-2xl font-bold mt-1 text-destructive">{kpis.failedCount}</div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -84,8 +147,8 @@ export default function AdminJobs() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-4">
-            <div className="relative flex-1">
+          <div className="flex gap-4 mb-4 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Rechercher par mot-clé ou utilisateur..."
@@ -97,7 +160,15 @@ export default function AdminJobs() {
                 className="pl-10"
               />
             </div>
-            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+            <Select 
+              value={statusFilter} 
+              onValueChange={(v) => { 
+                setStatusFilter(v); 
+                setShowErrorsOnly(false);
+                setPage(1); 
+              }}
+              disabled={showErrorsOnly}
+            >
               <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
@@ -121,6 +192,17 @@ export default function AdminJobs() {
                 <SelectItem value="fort">Fort</SelectItem>
               </SelectContent>
             </Select>
+            <Button 
+              variant={showErrorsOnly ? "destructive" : "outline"}
+              onClick={() => {
+                setShowErrorsOnly(!showErrorsOnly);
+                setStatusFilter("all");
+                setPage(1);
+              }}
+            >
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              {showErrorsOnly ? "Toutes" : "Erreurs seulement"}
+            </Button>
           </div>
 
           <Table>
@@ -241,12 +323,16 @@ export default function AdminJobs() {
                   <Badge variant={getStatusColor(jobDetail.status)}>{jobDetail.status}</Badge>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Pages</p>
+                  <p className="text-sm text-muted-foreground">Pages scannées</p>
                   <p className="font-medium">{jobDetail.pages_scanned} / {jobDetail.pages_target || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Annonces trouvées</p>
                   <p className="font-medium">{jobDetail.ads_found}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Temps total</p>
+                  <p className="font-medium">{getJobDuration(jobDetail) || 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Créé le</p>
@@ -262,15 +348,20 @@ export default function AdminJobs() {
                     </p>
                   </div>
                 )}
-                {jobDetail.ended_at && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Terminé le</p>
-                    <p className="font-medium text-sm">
-                      {format(new Date(jobDetail.ended_at), "dd MMM yyyy HH:mm", { locale: fr })}
-                    </p>
-                  </div>
-                )}
               </div>
+              
+              {/* Error rate indicator */}
+              {jobDetail.status === 'completed' && jobDetail.pages_target && (
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-sm text-muted-foreground">Taux d'erreur pages</p>
+                  <p className="font-medium">
+                    {jobDetail.pages_target > 0 
+                      ? (((jobDetail.pages_target - (jobDetail.pages_scanned || 0)) / jobDetail.pages_target) * 100).toFixed(1)
+                      : 0}%
+                  </p>
+                </div>
+              )}
+              
               {jobDetail.error_message && (
                 <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                   <p className="text-sm text-destructive font-medium">Erreur:</p>
