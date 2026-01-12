@@ -16,7 +16,8 @@ import {
   User, CreditCard, Settings, Zap, Crown, Building2, 
   Calendar, AlertTriangle, Mail, Shield, LogOut, Trash2, 
   Bell, Moon, Sun, Globe, Key, Loader2, Check, Coins,
-  RefreshCw, TrendingUp, TrendingDown, X, Minus, Info
+  RefreshCw, TrendingUp, TrendingDown, X, Minus, Info,
+  ChevronLeft, ChevronRight, History
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays, subDays, subHours } from "date-fns";
@@ -49,14 +50,27 @@ import {
 // MOCK DATA
 // ═══════════════════════════════════════════════════════════════════
 
-const mockUsageHistory = [
-  { id: 1, date: subHours(new Date(), 2), action: "Estimation", cost: 3 },
-  { id: 2, date: subHours(new Date(), 5), action: "Scrap avancé", cost: 20 },
-  { id: 3, date: subDays(new Date(), 1), action: "Estimation", cost: 3 },
-  { id: 4, date: subDays(new Date(), 1), action: "Scrap standard", cost: 5 },
-  { id: 5, date: subDays(new Date(), 2), action: "Estimation", cost: 3 },
-  { id: 6, date: subDays(new Date(), 3), action: "Scrap avancé", cost: 20 },
-];
+// Historique complet simulé (30 entrées)
+const generateFullHistory = () => {
+  const actions = [
+    { action: "Estimation", cost: 3 },
+    { action: "Scrap standard", cost: 5 },
+    { action: "Scrap avancé", cost: 20 },
+  ];
+  
+  return Array.from({ length: 30 }, (_, i) => {
+    const actionData = actions[Math.floor(Math.random() * actions.length)];
+    return {
+      id: i + 1,
+      date: subHours(new Date(), i * 8 + Math.floor(Math.random() * 5)),
+      action: actionData.action,
+      cost: actionData.cost,
+    };
+  }).sort((a, b) => b.date.getTime() - a.date.getTime());
+};
+
+const fullUsageHistory = generateFullHistory();
+const mockUsageHistory = fullUsageHistory.slice(0, 6);
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -149,6 +163,16 @@ export default function MyAccount() {
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [showDowngradeWarning, setShowDowngradeWarning] = useState(false);
   const [pendingDowngrade, setPendingDowngrade] = useState<string | null>(null);
+  
+  // History modal state
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
+  const historyPerPage = 10;
+  const totalHistoryPages = Math.ceil(fullUsageHistory.length / historyPerPage);
+  const paginatedHistory = fullUsageHistory.slice(
+    (historyPage - 1) * historyPerPage, 
+    historyPage * historyPerPage
+  );
   
   // Loading states for mock
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
@@ -636,6 +660,24 @@ export default function MyAccount() {
                   </Table>
                 </div>
               )}
+              
+              {/* Bouton voir l'historique complet */}
+              {mockUsageHistory.length > 0 && (
+                <div className="mt-4 text-center">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2"
+                    onClick={() => {
+                      setHistoryPage(1);
+                      setHistoryModalOpen(true);
+                    }}
+                  >
+                    <History className="h-4 w-4" />
+                    Voir l'historique complet
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.section>
@@ -1004,6 +1046,84 @@ export default function MyAccount() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          MODAL: HISTORIQUE COMPLET
+          ═══════════════════════════════════════════════════════════════════ */}
+      <Dialog open={historyModalOpen} onOpenChange={setHistoryModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" />
+              Historique complet d'utilisation
+            </DialogTitle>
+            <DialogDescription>
+              Toutes vos actions consommatrices de crédits ({fullUsageHistory.length} entrées)
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto">
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead className="text-right">Crédits</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedHistory.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="text-muted-foreground">
+                        {format(item.date, "d MMM yyyy, HH:mm", { locale: fr })}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {item.action === "Estimation" && <TrendingUp className="h-4 w-4 text-blue-500" />}
+                          {item.action === "Scrap standard" && <RefreshCw className="h-4 w-4 text-green-500" />}
+                          {item.action === "Scrap avancé" && <Zap className="h-4 w-4 text-amber-500" />}
+                          {item.action}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-medium text-destructive">
+                        -{item.cost}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+          
+          {/* Pagination */}
+          <div className="flex items-center justify-between pt-4 border-t">
+            <p className="text-sm text-muted-foreground">
+              Page {historyPage} sur {totalHistoryPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                disabled={historyPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Précédent
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setHistoryPage(p => Math.min(totalHistoryPages, p + 1))}
+                disabled={historyPage === totalHistoryPages}
+              >
+                Suivant
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
