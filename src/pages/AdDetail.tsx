@@ -496,7 +496,7 @@ export default function AdDetail() {
           </div>
 
           {/* Sidebar - Sticky */}
-          <div className="lg:sticky lg:top-8 space-y-5 self-start">
+          <div className="lg:sticky lg:top-24 space-y-5 self-start">
             {/* Price & Deal Card */}
             <Card className="border-primary/20">
               <CardContent className="pt-6">
