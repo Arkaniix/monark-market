@@ -20,6 +20,7 @@ import AdminExternal from "@/components/admin/AdminExternal";
 import AdminHealth from "@/components/admin/AdminHealth";
 import AdminLogs from "@/components/admin/AdminLogs";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
+import AdminSupport from "@/components/admin/AdminSupport";
 
 const LOADING_TIMEOUT_MS = 8000;
 
@@ -91,6 +92,8 @@ export default function Admin() {
         return <AdminLogs />;
       case "settings":
         return <AdminSystemSettings />;
+      case "support":
+        return <AdminSupport />;
       default:
         return <AdminDashboard />;
     }
