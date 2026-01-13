@@ -203,7 +203,7 @@ export function NotificationsWidget() {
                     </Link>
                   ))}
                   <Link to="/tracking?tab=watchlist">
-                    <Button variant="outline" size="sm" className="w-full gap-2 mt-2 border-border hover:bg-muted">
+                    <Button variant="outline" size="sm" className="w-full gap-2 mt-2 border-success/30 text-success hover:bg-success/10 hover:text-success dark:border-success/50 dark:hover:bg-success/20">
                       Voir ma watchlist
                       <ArrowRight className="h-3 w-3" />
                     </Button>
