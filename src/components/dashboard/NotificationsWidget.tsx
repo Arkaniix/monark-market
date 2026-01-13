@@ -189,7 +189,7 @@ export function NotificationsWidget() {
                       key={item.id}
                       to={item.target_type === 'model' ? `/models/${item.target_id}` : `/ads/${item.target_id}`}
                     >
-                      <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors text-sm">
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-success/5 border border-success/20 hover:bg-success/10 transition-colors text-sm">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{item.name || `#${item.target_id}`}</p>
                           {item.category && (
