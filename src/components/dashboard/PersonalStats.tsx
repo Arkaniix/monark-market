@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import { useState, useMemo } from "react";
 import { CreditResetInfo } from "@/components/credits/CreditResetInfo";
+import { ActivityHistoryModal } from "./ActivityHistoryModal";
 interface PersonalStatsProps {
   totalScraps: number;
   creditsRemaining: number;
@@ -60,6 +61,7 @@ export function PersonalStats({
   performanceData
 }: PersonalStatsProps) {
   const [timeFilter, setTimeFilter] = useState<'7j' | '30j' | '90j'>('30j');
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
 
   // Générer les données filtrées selon la période sélectionnée
   const filteredData = useMemo(() => {
@@ -263,11 +265,19 @@ export function PersonalStats({
                       </div>
                     </div>)}
                 </div>
-                <Link to="/tracking?tab=notifications">
-                  <Button variant="outline" className="w-full mt-4" size="sm">
-                    Voir l'historique complet
-                  </Button>
-                </Link>
+                <Button 
+                  variant="outline" 
+                  className="w-full mt-4" 
+                  size="sm"
+                  onClick={() => setHistoryModalOpen(true)}
+                >
+                  Voir l'historique complet
+                </Button>
+                <ActivityHistoryModal 
+                  open={historyModalOpen} 
+                  onOpenChange={setHistoryModalOpen} 
+                  activities={recentActivity} 
+                />
               </CardContent>
             </Card>
 
