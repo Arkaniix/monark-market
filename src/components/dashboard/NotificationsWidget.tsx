@@ -184,24 +184,26 @@ export function NotificationsWidget() {
                 </div>
               ) : watchlistData && watchlistData.items.length > 0 ? (
                 <>
-                  {watchlistData.items.slice(0, 3).map((item) => (
-                    <Link
-                      key={item.id}
-                      to={item.target_type === 'model' ? `/models/${item.target_id}` : `/ads/${item.target_id}`}
-                    >
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-success/5 border border-success/20 hover:bg-success/10 transition-colors text-sm">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{item.name || `#${item.target_id}`}</p>
-                          {item.category && (
-                            <p className="text-xs text-muted-foreground">{item.category}</p>
+                  <div className="space-y-2">
+                    {watchlistData.items.slice(0, 3).map((item) => (
+                      <Link
+                        key={item.id}
+                        to={item.target_type === 'model' ? `/models/${item.target_id}` : `/ads/${item.target_id}`}
+                      >
+                        <div className="flex items-center justify-between p-2 rounded-lg bg-success/5 border border-success/20 hover:bg-success/10 transition-colors text-sm">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{item.name || `#${item.target_id}`}</p>
+                            {item.category && (
+                              <p className="text-xs text-muted-foreground">{item.category}</p>
+                            )}
+                          </div>
+                          {item.current_price && (
+                            <span className="font-semibold shrink-0">{item.current_price}€</span>
                           )}
                         </div>
-                        {item.current_price && (
-                          <span className="font-semibold shrink-0">{item.current_price}€</span>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    ))}
+                  </div>
                   <Link to="/tracking?tab=watchlist">
                     <Button variant="outline" size="sm" className="w-full gap-2 mt-2 border-success/30 text-success hover:bg-success/10 hover:text-success dark:border-success/50 dark:hover:bg-success/20">
                       Voir ma watchlist
