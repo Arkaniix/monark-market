@@ -138,8 +138,8 @@ export const PLAN_FEATURES: PlanFeature[] = [
     elite: true,
   },
   {
-    name: "Estimator - Analyse & Recommandation",
-    tooltip: "Analyse interprétée, risques, et bloc décision final",
+    name: "Estimator - Bloc décision final",
+    tooltip: "Recommandation claire avec verdict d'achat",
     starter: false,
     pro: true,
     elite: true,
@@ -479,9 +479,9 @@ function getHighlightedFeatures(planId: string): string[] {
         "500 crédits/mois",
         "20 alertes actives",
         "Scan approfondi (20 cr)",
-        "Estimator : Analyse complète",
+        "Estimator : Décision & Graphiques",
         "Prix achat/revente & marge",
-        "Graphiques interactifs",
+        "Graphiques interactifs 30j/90j",
         "Formation complète",
       ];
     case "elite":
