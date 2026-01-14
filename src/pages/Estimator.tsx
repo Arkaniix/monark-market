@@ -25,7 +25,6 @@ import type { EstimationHistoryItem } from "@/hooks/useEstimationHistory";
 // Import section components
 import SynthesisBanner from "@/components/estimator/SynthesisBanner";
 import IndicatorsSection from "@/components/estimator/IndicatorsSection";
-import AnalysisSection from "@/components/estimator/AnalysisSection";
 import ScenariosSection from "@/components/estimator/ScenariosSection";
 import ChartsSection from "@/components/estimator/ChartsSection";
 import DecisionBlock from "@/components/estimator/DecisionBlock";
@@ -501,7 +500,6 @@ export default function Estimator() {
                   {/* === SECTION 2: PRO+ CONTENT (visible Pro/Elite, locked Starter) === */}
                   {plan !== 'starter' && (
                     <>
-                      <AnalysisSection result={result} plan={plan} limits={estimatorLimits} />
                       <ChartsSection result={result} plan={plan} limits={estimatorLimits} />
                       <DecisionBlock result={result} plan={plan} limits={estimatorLimits} />
                     </>
@@ -524,7 +522,6 @@ export default function Estimator() {
                   {/* === SECTION 4: LOCKED CONTENT FOR LOWER PLANS === */}
                   {plan === 'starter' && (
                     <div className="space-y-6 opacity-80">
-                      <AnalysisSection result={result} plan={plan} limits={estimatorLimits} />
                       <ChartsSection result={result} plan={plan} limits={estimatorLimits} />
                       <DecisionBlock result={result} plan={plan} limits={estimatorLimits} />
                       <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
@@ -703,11 +700,6 @@ export default function Estimator() {
                 {/* Show Pro content if estimation was made with Pro or Elite */}
                 {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && (
                   <>
-                    <AnalysisSection 
-                      result={convertHistoryToResult(viewHistoryItem)} 
-                      plan={viewHistoryItem.plan_at_creation} 
-                      limits={estimatorLimits} 
-                    />
                     <ChartsSection 
                       result={convertHistoryToResult(viewHistoryItem)} 
                       plan={viewHistoryItem.plan_at_creation} 
