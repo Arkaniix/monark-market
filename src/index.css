@@ -102,8 +102,8 @@ All colors MUST be HSL.
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 33% 24%;
-    --input: 217.2 33% 24%;
+    --border: 217.2 33% 17%;
+    --input: 217.2 33% 20%;
     --ring: 217 91% 60%;
     
     --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 50%));
