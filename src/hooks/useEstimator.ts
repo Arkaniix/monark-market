@@ -15,6 +15,7 @@ export interface EstimationRequest {
   condition: string;
   buy_price_input: number;
   region?: string;
+  platform?: string;
   mode_advanced?: boolean;
 }
 
@@ -61,6 +62,7 @@ export function useRunEstimation() {
         state: data.condition, // Map condition -> state
         purchase_price: data.buy_price_input, // Map buy_price_input -> purchase_price
         region: data.region,
+        platform: data.platform,
       };
 
       const result = await provider.runEstimation(providerRequest);
