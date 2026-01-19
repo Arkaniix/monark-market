@@ -76,11 +76,9 @@ export default function ChartsSection({ result, plan, limits }: ChartsSectionPro
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
               Évolution des prix
-              {isStarter && (
-                <Badge variant="outline" className="ml-2 gap-1 text-xs">
-                  <Lock className="h-3 w-3" /> Pro
-                </Badge>
-              )}
+              <Badge variant="outline" className={`ml-2 gap-1 text-xs ${isStarter ? "" : "border-primary/50 text-primary"}`}>
+                <Lock className="h-3 w-3" /> Pro
+              </Badge>
             </CardTitle>
             {canInteract && (
               <div className="flex gap-2">
@@ -181,11 +179,9 @@ export default function ChartsSection({ result, plan, limits }: ChartsSectionPro
           <CardTitle className="text-base flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-accent" />
             Volume des annonces (30j)
-            {isStarter && (
-              <Badge variant="outline" className="ml-2 gap-1 text-xs">
-                <Lock className="h-3 w-3" /> Pro
-              </Badge>
-            )}
+            <Badge variant="outline" className={`ml-2 gap-1 text-xs ${isStarter ? "" : "border-primary/50 text-primary"}`}>
+              <Lock className="h-3 w-3" /> Pro
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
