@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,8 +136,15 @@ export default function Estimator() {
   };
 
   // Pre-fill from URL
+  // Track the last processed URL to detect real changes
+  const lastProcessedUrl = useRef<string>('');
+  
   useEffect(() => {
-    if (prefillApplied) return;
+    const currentUrl = searchParams.toString();
+    
+    // Skip if we've already processed this exact URL
+    if (lastProcessedUrl.current === currentUrl && prefillApplied) return;
+    
     const modelId = searchParams.get('model_id');
     const modelName = searchParams.get('model_name');
     const category = searchParams.get('category');
@@ -150,6 +157,7 @@ export default function Estimator() {
     // Block PC types from URL params
     if (itemType === 'pc' || itemType === 'lot') {
       setIsPCBlocked(true);
+      lastProcessedUrl.current = currentUrl;
       setPrefillApplied(true);
       return;
     }
@@ -184,6 +192,8 @@ export default function Estimator() {
       setCondition(conditionMap[normalized] || 'bon');
     }
     if (platformParam) setPlatform(platformParam);
+    
+    lastProcessedUrl.current = currentUrl;
     setPrefillApplied(true);
   }, [searchParams, prefillApplied]);
 
