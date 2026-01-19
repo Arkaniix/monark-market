@@ -136,11 +136,9 @@ export default function PlatformAnalysisSection({
           <CardTitle className="text-base flex items-center gap-2">
             <Store className="h-5 w-5 text-amber-500" />
             Analyse par plateforme de revente
-            {!isElite && (
-              <Badge variant="outline" className="ml-2 gap-1 text-xs border-amber-500/50 text-amber-600">
-                <Lock className="h-3 w-3" /> Élite
-              </Badge>
-            )}
+            <Badge variant="outline" className="ml-2 gap-1 text-xs border-amber-500/50 text-amber-600">
+              <Lock className="h-3 w-3" /> Élite
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>

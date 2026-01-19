@@ -2,11 +2,27 @@
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, AlertTriangle, XCircle, Cpu, Monitor, MemoryStick, HardDrive } from "lucide-react";
+import { CheckCircle2, AlertTriangle, XCircle, Cpu, Monitor, MemoryStick, HardDrive, Sparkles } from "lucide-react";
 import type { EstimationResultUI } from "@/hooks/useEstimator";
 
 interface SynthesisBannerProps {
   result: EstimationResultUI;
+}
+
+// Badge de plan pour indiquer l'accessibilité
+function PlanBadge({ plan }: { plan: "starter" | "pro" | "elite" }) {
+  const config = {
+    starter: { label: "Starter", className: "border-muted-foreground/50 text-muted-foreground" },
+    pro: { label: "Pro", className: "border-primary/50 text-primary" },
+    elite: { label: "Élite", className: "border-amber-500/50 text-amber-600" },
+  };
+  const { label, className } = config[plan];
+  return (
+    <Badge variant="outline" className={`ml-2 gap-1 text-xs ${className}`}>
+      <Sparkles className="h-3 w-3" />
+      {label}
+    </Badge>
+  );
 }
 
 // Verdict mapping
@@ -74,6 +90,10 @@ export default function SynthesisBanner({ result }: SynthesisBannerProps) {
     >
       <Card className={`border-2 ${verdict.bgClass} shadow-lg`}>
         <CardContent className="py-6">
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Synthèse</h3>
+            <PlanBadge plan="starter" />
+          </div>
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             {/* Composant info */}
             <div className="flex items-center gap-4 flex-1">
