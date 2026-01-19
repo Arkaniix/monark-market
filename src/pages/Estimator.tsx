@@ -184,7 +184,6 @@ export default function Estimator() {
       setCondition(conditionMap[normalized] || 'bon');
     }
     if (platformParam) setPlatform(platformParam);
-    if (platformParam) setPlatform(platformParam);
     setPrefillApplied(true);
   }, [searchParams, prefillApplied]);
 
@@ -202,6 +201,7 @@ export default function Estimator() {
         model_id: selectedModel.id,
         condition,
         buy_price_input: parseFloat(adPrice),
+        platform: platform || undefined,
       });
       setResult({ ...estimation, platform });
       toast({

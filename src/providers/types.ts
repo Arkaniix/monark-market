@@ -388,6 +388,7 @@ export interface EstimationRequest {
   state: string;
   purchase_price: number;
   region?: string;
+  platform?: string;
 }
 
 export interface MarketSnapshot {
