@@ -746,7 +746,7 @@ export default function Estimator() {
 
         {/* History View Modal */}
         <Dialog open={!!viewHistoryItem} onOpenChange={(open) => !open && setViewHistoryItem(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <History className="h-5 w-5" />
@@ -757,7 +757,7 @@ export default function Estimator() {
                 </Badge>
               </DialogTitle>
             </DialogHeader>
-            {viewHistoryItem && (
+            {viewHistoryItem?.results && (
               <div className="space-y-6 mt-4">
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                   <p className="text-sm text-amber-700 dark:text-amber-400">
@@ -766,74 +766,57 @@ export default function Estimator() {
                   </p>
                 </div>
                 
-                {/* Basic info card */}
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Modèle</p>
-                        <p className="font-medium">{viewHistoryItem.model_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Prix affiché</p>
-                        <p className="font-medium">{viewHistoryItem.ad_price}€</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">État</p>
-                        <p className="font-medium">{viewHistoryItem.condition || "Non renseigné"}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Plateforme</p>
-                        <p className="font-medium">{viewHistoryItem.platform || "Non renseignée"}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Synthesis Banner */}
+                <SynthesisBanner result={viewHistoryItem.results} />
 
-                {/* Results based on plan at creation - using v2 enhanced structure */}
-                {viewHistoryItem.results && (
-                  <>
-                    {/* Opportunity & Decision Summary */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Sparkles className="h-4 w-4" />
-                          Score d'opportunité : {viewHistoryItem.results.opportunity.score}/100
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          <div className="p-3 bg-muted/50 rounded-lg">
-                            <p className="text-xs text-muted-foreground">Prix plafond d'achat</p>
-                            <p className="text-lg font-bold">{viewHistoryItem.results.actionable_prices.buy_ceiling}€</p>
-                          </div>
-                          <div className="p-3 bg-muted/50 rounded-lg">
-                            <p className="text-xs text-muted-foreground">Prix de revente cible</p>
-                            <p className="text-lg font-bold">{viewHistoryItem.results.actionable_prices.sell_target}€</p>
-                          </div>
-                          <div className="p-3 bg-muted/50 rounded-lg">
-                            <p className="text-xs text-muted-foreground">Marge estimée</p>
-                            <p className="text-lg font-bold text-green-600">+{viewHistoryItem.results.actionable_prices.margin_pct}%</p>
-                          </div>
-                        </div>
-                        
-                        {/* Decision recommendation */}
-                        <div className="mt-4 pt-4 border-t">
-                          <p className="text-sm font-medium mb-2">
-                            Décision recommandée : <span className="text-primary">{viewHistoryItem.results.decision.label}</span>
-                          </p>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            {viewHistoryItem.results.decision.reasons.map((reason, idx) => (
-                              <li key={idx} className="flex items-start gap-2">
-                                <span className="text-primary">•</span>
-                                {reason}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </>
+                {/* Hypotheses if any */}
+                {viewHistoryItem.results.hypotheses?.length > 0 && (
+                  <HypothesesBanner hypotheses={viewHistoryItem.results.hypotheses} />
+                )}
+
+                {/* Decision Block */}
+                <EnhancedDecisionBlock 
+                  decision={viewHistoryItem.results.decision}
+                  actionablePrices={viewHistoryItem.results.actionable_prices}
+                  adPrice={viewHistoryItem.ad_price}
+                  plan={viewHistoryItem.plan_at_creation as any}
+                />
+
+                {/* Market Data (Pro+) */}
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && (
+                  <EnhancedMarketCard 
+                    market={viewHistoryItem.results.market} 
+                    adPrice={viewHistoryItem.ad_price}
+                    plan={viewHistoryItem.plan_at_creation as any}
+                  />
+                )}
+
+                {/* Negotiation Section (Pro+) */}
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && viewHistoryItem.results.negotiation && (
+                  <EnhancedNegotiationSection 
+                    negotiation={viewHistoryItem.results.negotiation}
+                    adPrice={viewHistoryItem.ad_price}
+                    plan={viewHistoryItem.plan_at_creation as any}
+                  />
+                )}
+
+                {/* Platforms Analysis (Pro+) */}
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && viewHistoryItem.results.platforms && (
+                  <EnhancedPlatformsSection 
+                    platforms={viewHistoryItem.results.platforms}
+                    plan={viewHistoryItem.plan_at_creation as any}
+                    sourcePlatform={viewHistoryItem.platform}
+                    withoutPlatform={viewHistoryItem.options?.withoutPlatform}
+                  />
+                )}
+
+                {/* Scenarios (Elite only) */}
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && viewHistoryItem.results.scenarios && (
+                  <EnhancedScenariosSection 
+                    scenarios={viewHistoryItem.results.scenarios} 
+                    adPrice={viewHistoryItem.ad_price}
+                    plan={viewHistoryItem.plan_at_creation as any}
+                  />
                 )}
               </div>
             )}
