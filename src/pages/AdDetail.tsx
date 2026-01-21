@@ -47,6 +47,7 @@ import { DealCardImage } from "@/components/deals/DealCardImage";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { normalizePlatformKey } from "@/lib/platforms";
 
 export default function AdDetail() {
   const { id } = useParams();
@@ -560,7 +561,7 @@ export default function AdDetail() {
                   </Button>
                 ) : (
                   <Button className="w-full gap-2" variant="secondary" asChild>
-                    <Link to={`/estimator?model_id=${ad.model_id}&model_name=${encodeURIComponent(ad.model_name || '')}&category=${encodeURIComponent(ad.category || '')}&price=${ad.price}&platform=${encodeURIComponent(ad.platform)}&condition=${encodeURIComponent(ad.condition || '')}`}>
+                    <Link to={`/estimator?model_id=${ad.model_id}&model_name=${encodeURIComponent(ad.model_name || '')}&category=${encodeURIComponent(ad.category || '')}&price=${ad.price}&platform=${encodeURIComponent(normalizePlatformKey(ad.platform) || ad.platform)}&condition=${encodeURIComponent(ad.condition || '')}`}>
                       <Calculator className="h-4 w-4" />
                       Estimer
                     </Link>

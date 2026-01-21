@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { EstimationHistoryItem } from "@/hooks/useEstimationHistory";
+import { MARKETPLACE_PLATFORMS, normalizePlatformKey } from "@/lib/platforms";
 
 // Import section components
 import SynthesisBanner from "@/components/estimator/SynthesisBanner";
@@ -32,15 +33,6 @@ import NegotiationSection from "@/components/estimator/NegotiationSection";
 import PlatformAnalysisSection from "@/components/estimator/PlatformAnalysisSection";
 import AdSearchBar from "@/components/estimator/AdSearchBar";
 import ExportCSVButton from "@/components/estimator/ExportCSVButton";
-
-// Available platforms
-const PLATFORMS = [
-  { value: "leboncoin", label: "Leboncoin" },
-  { value: "ebay", label: "eBay" },
-  { value: "fb-marketplace", label: "Facebook Marketplace" },
-  { value: "vinted", label: "Vinted" },
-  { value: "ldlc", label: "LDLC Occasion" },
-];
 
 // Plan hierarchy helper
 const PLAN_HIERARCHY = { starter: 0, pro: 1, elite: 2 };
@@ -131,7 +123,7 @@ export default function Estimator() {
     });
     setModelSearch(ad.model_name);
     setAdPrice(ad.price.toString());
-    setPlatform(ad.platform.toLowerCase().replace(" ", "-"));
+    setPlatform(normalizePlatformKey(ad.platform));
     setCondition(ad.condition?.toLowerCase().replace(" ", "-") || "bon");
   };
 
@@ -191,7 +183,7 @@ export default function Estimator() {
       };
       setCondition(conditionMap[normalized] || 'bon');
     }
-    if (platformParam) setPlatform(platformParam);
+    if (platformParam) setPlatform(normalizePlatformKey(platformParam));
     
     lastProcessedUrl.current = currentUrl;
     setPrefillApplied(true);
@@ -443,7 +435,7 @@ export default function Estimator() {
                               <SelectValue placeholder="Sélectionner..." />
                             </SelectTrigger>
                             <SelectContent>
-                              {PLATFORMS.map(p => (
+                              {MARKETPLACE_PLATFORMS.map(p => (
                                 <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                               ))}
                             </SelectContent>
@@ -652,7 +644,7 @@ export default function Estimator() {
                           setModelSearch(item.model_name);
                           setCondition(item.condition || '');
                           setAdPrice(item.buy_price_input.toString());
-                          setPlatform(item.platform || '');
+                          setPlatform(normalizePlatformKey(item.platform));
                           setActiveTab("estimator");
                         }}
                         title="Réestimer (coûte des crédits)"
