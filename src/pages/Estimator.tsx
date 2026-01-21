@@ -634,6 +634,7 @@ export default function Estimator() {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => {
+                          const nextPlatform = normalizePlatformKey(item.platform);
                           setSelectedModel({
                             id: item.model_id,
                             name: item.model_name,
@@ -644,7 +645,8 @@ export default function Estimator() {
                           setModelSearch(item.model_name);
                           setCondition(item.condition || '');
                           setAdPrice(item.buy_price_input.toString());
-                          setPlatform(normalizePlatformKey(item.platform));
+                          // Don't wipe the current selection if legacy history item has no platform
+                          if (nextPlatform) setPlatform(nextPlatform);
                           setActiveTab("estimator");
                         }}
                         title="Réestimer (coûte des crédits)"
