@@ -489,11 +489,13 @@ export default function Estimator() {
 
                         {/* Input summary chips */}
                         <InputSummaryChips
-                          modelName={selectedModel?.name}
-                          category={selectedModel?.category}
-                          adPrice={adPrice ? parseFloat(adPrice) : undefined}
-                          condition={options.withoutCondition ? undefined : condition}
-                          platform={options.withoutPlatform ? undefined : platform}
+                          modelName={selectedModel?.name || null}
+                          category={selectedModel?.category || null}
+                          adPrice={adPrice}
+                          condition={condition}
+                          platform={platform}
+                          withoutCondition={options.withoutCondition}
+                          withoutPlatform={options.withoutPlatform}
                         />
 
                         {/* Submit buttons */}
