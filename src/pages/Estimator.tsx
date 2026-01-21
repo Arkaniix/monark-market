@@ -31,7 +31,7 @@ import OpportunityScoreCard from "@/components/estimator/OpportunityScoreCard";
 import HypothesesBanner from "@/components/estimator/HypothesesBanner";
 import EnhancedDecisionBlock from "@/components/estimator/EnhancedDecisionBlock";
 import EnhancedMarketCard from "@/components/estimator/EnhancedMarketCard";
-import ChartsSection from "@/components/estimator/ChartsSection";
+
 import EnhancedNegotiationSection from "@/components/estimator/EnhancedNegotiationSection";
 import EnhancedScenariosSection from "@/components/estimator/EnhancedScenariosSection";
 import EnhancedPlatformsSection from "@/components/estimator/EnhancedPlatformsSection";
@@ -642,12 +642,6 @@ export default function Estimator() {
                     plan={plan}
                   />
 
-                  {/* === SECTION 4: CHARTS (Pro+) === */}
-                  <ChartsSection 
-                    result={result as any} 
-                    plan={plan} 
-                    limits={estimatorLimits} 
-                  />
 
                   {/* === SECTION 5: NEGOTIATION (Pro+) === */}
                   {result.negotiation && (
@@ -852,14 +846,6 @@ export default function Estimator() {
                   />
                 )}
 
-                {/* Charts (Pro+) */}
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && (
-                  <ChartsSection
-                    result={viewHistoryItem.results as any}
-                    plan={viewHistoryItem.plan_at_creation as any}
-                    limits={getHistoryEstimatorLimits(viewHistoryItem.plan_at_creation)}
-                  />
-                )}
 
                 {/* Negotiation Section (Pro+) */}
                 {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && viewHistoryItem.results.negotiation && (
