@@ -26,7 +26,7 @@ function PlanBadge({ plan }: { plan: "starter" | "pro" | "elite" }) {
   );
 }
 
-// Map opportunity label to verdict config
+// Map opportunity label to verdict config (handles both English and French labels)
 function getVerdictFromOpportunity(label: string): {
   label: string;
   description: string;
@@ -35,45 +35,51 @@ function getVerdictFromOpportunity(label: string): {
   bgClass: string;
   textClass: string;
 } {
-  switch (label) {
-    case "Excellente":
-      return {
-        label: "Excellente opportunité",
-        description: "Prix très attractif avec un fort potentiel de marge. Achat recommandé.",
-        icon: CheckCircle2,
-        variant: "default",
-        bgClass: "bg-green-500/10 border-green-500/30",
-        textClass: "text-green-600 dark:text-green-400",
-      };
-    case "Bonne":
-      return {
-        label: "Bonne opportunité",
-        description: "Ce composant présente un bon équilibre entre prix, demande et potentiel de revente.",
-        icon: CheckCircle2,
-        variant: "default",
-        bgClass: "bg-green-500/10 border-green-500/30",
-        textClass: "text-green-600 dark:text-green-400",
-      };
-    case "Moyenne":
-      return {
-        label: "Opportunité moyenne",
-        description: "Ce composant peut être rentable, mais des précautions sont nécessaires. La marge est limitée ou le marché est instable.",
-        icon: AlertTriangle,
-        variant: "secondary",
-        bgClass: "bg-amber-500/10 border-amber-500/30",
-        textClass: "text-amber-600 dark:text-amber-400",
-      };
-    case "Faible":
-    default:
-      return {
-        label: "Opportunité risquée",
-        description: "Le prix demandé est trop élevé par rapport au marché. Risque élevé de perte ou de difficulté à revendre.",
-        icon: XCircle,
-        variant: "destructive",
-        bgClass: "bg-destructive/10 border-destructive/30",
-        textClass: "text-destructive",
-      };
+  // Normalize label to handle both English (from type) and French (from UI)
+  const normalizedLabel = label?.toLowerCase() || "";
+  
+  if (normalizedLabel === "excellent" || normalizedLabel === "excellente") {
+    return {
+      label: "Excellente opportunité",
+      description: "Prix très attractif avec un fort potentiel de marge. Achat recommandé.",
+      icon: CheckCircle2,
+      variant: "default",
+      bgClass: "bg-green-500/10 border-green-500/30",
+      textClass: "text-green-600 dark:text-green-400",
+    };
   }
+  
+  if (normalizedLabel === "good" || normalizedLabel === "bonne") {
+    return {
+      label: "Bonne opportunité",
+      description: "Ce composant présente un bon équilibre entre prix, demande et potentiel de revente.",
+      icon: CheckCircle2,
+      variant: "default",
+      bgClass: "bg-green-500/10 border-green-500/30",
+      textClass: "text-green-600 dark:text-green-400",
+    };
+  }
+  
+  if (normalizedLabel === "average" || normalizedLabel === "moyenne") {
+    return {
+      label: "Opportunité moyenne",
+      description: "Ce composant peut être rentable, mais des précautions sont nécessaires. La marge est limitée ou le marché est instable.",
+      icon: AlertTriangle,
+      variant: "secondary",
+      bgClass: "bg-amber-500/10 border-amber-500/30",
+      textClass: "text-amber-600 dark:text-amber-400",
+    };
+  }
+  
+  // Default: poor / faible
+  return {
+    label: "Opportunité risquée",
+    description: "Le prix demandé est trop élevé par rapport au marché. Risque élevé de perte ou de difficulté à revendre.",
+    icon: XCircle,
+    variant: "destructive",
+    bgClass: "bg-destructive/10 border-destructive/30",
+    textClass: "text-destructive",
+  };
 }
 
 // Category icons
