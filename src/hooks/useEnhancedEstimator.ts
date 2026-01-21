@@ -28,6 +28,8 @@ export function useEnhancedEstimation() {
     mutationFn: async (params: {
       modelId: number;
       modelName: string;
+      brand?: string;
+      category?: string;
       adPrice: number;
       condition?: string;
       platform?: string;
@@ -51,6 +53,8 @@ export function useEnhancedEstimation() {
     },
     onSuccess: (result) => {
       setLastResult(result);
+      // Auto-save to history
+      saveToEnhancedHistory(result);
       queryClient.invalidateQueries({ queryKey: ['estimation-history-enhanced'] });
       queryClient.invalidateQueries({ queryKey: ['user-credits'] });
     },
@@ -64,6 +68,41 @@ export function useEnhancedEstimation() {
     result: lastResult,
     reset: () => setLastResult(null),
   };
+}
+
+// Helper to save estimation to enhanced history
+function saveToEnhancedHistory(result: EnhancedEstimationResult) {
+  const storageKey = 'enhanced_estimation_history';
+  const stored = localStorage.getItem(storageKey);
+  let items: EnhancedEstimationHistoryItem[] = [];
+  
+  if (stored) {
+    try {
+      items = JSON.parse(stored);
+    } catch {
+      items = [];
+    }
+  }
+  
+  const historyItem: EnhancedEstimationHistoryItem = {
+    id: `est_${Date.now()}`,
+    created_at: new Date().toISOString(),
+    model_id: result.inputs.model_id,
+    model_name: result.inputs.model_name,
+    brand: result.inputs.brand,
+    category: result.inputs.category,
+    condition: result.inputs.condition,
+    platform: result.inputs.platform,
+    ad_price: result.inputs.ad_price,
+    plan_at_creation: result.meta.plan_at_creation,
+    options: result.inputs.options,
+    results: result,
+  };
+  
+  items.unshift(historyItem);
+  items = items.slice(0, 50); // Keep last 50
+  
+  localStorage.setItem(storageKey, JSON.stringify(items));
 }
 
 // Get estimator stats
@@ -80,8 +119,6 @@ export function useEnhancedEstimatorStats() {
 
 // Enhanced estimation history with new structure
 export function useEnhancedEstimationHistory(page: number = 1, enabled: boolean = true) {
-  const { plan } = useEntitlements();
-  
   return useQuery({
     queryKey: ['estimation-history-enhanced', page],
     queryFn: async (): Promise<{
@@ -90,9 +127,8 @@ export function useEnhancedEstimationHistory(page: number = 1, enabled: boolean 
       page: number;
       page_size: number;
     }> => {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Generate mock history based on stored localStorage or generate new
       const storageKey = 'enhanced_estimation_history';
       const stored = localStorage.getItem(storageKey);
       let items: EnhancedEstimationHistoryItem[] = [];
@@ -105,54 +141,26 @@ export function useEnhancedEstimationHistory(page: number = 1, enabled: boolean 
         }
       }
       
+      const pageSize = 10;
       return {
-        items: items.slice((page - 1) * 10, page * 10),
+        items: items.slice((page - 1) * pageSize, page * pageSize),
         total: items.length,
         page,
-        page_size: 10,
+        page_size: pageSize,
       };
     },
     enabled,
-    staleTime: 60000,
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
   });
 }
 
-// Save estimation to history
-export function useSaveEstimationToHistory() {
+// Clear estimation history (for testing/reset)
+export function useClearEstimationHistory() {
   const queryClient = useQueryClient();
   
-  return useCallback((result: EnhancedEstimationResult) => {
-    const storageKey = 'enhanced_estimation_history';
-    const stored = localStorage.getItem(storageKey);
-    let items: EnhancedEstimationHistoryItem[] = [];
-    
-    if (stored) {
-      try {
-        items = JSON.parse(stored);
-      } catch {
-        items = [];
-      }
-    }
-    
-    const historyItem: EnhancedEstimationHistoryItem = {
-      id: `est_${Date.now()}`,
-      created_at: new Date().toISOString(),
-      model_id: result.inputs.model_id,
-      model_name: result.inputs.model_name,
-      brand: result.inputs.brand,
-      category: result.inputs.category,
-      condition: result.inputs.condition,
-      platform: result.inputs.platform,
-      ad_price: result.inputs.ad_price,
-      plan_at_creation: result.meta.plan_at_creation,
-      options: result.inputs.options,
-      results: result,
-    };
-    
-    items.unshift(historyItem);
-    items = items.slice(0, 50); // Keep last 50
-    
-    localStorage.setItem(storageKey, JSON.stringify(items));
+  return useCallback(() => {
+    localStorage.removeItem('enhanced_estimation_history');
     queryClient.invalidateQueries({ queryKey: ['estimation-history-enhanced'] });
   }, [queryClient]);
 }

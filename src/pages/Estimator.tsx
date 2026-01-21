@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Calculator, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useModelsSearch, useEstimationHistoryEnhanced } from "@/hooks";
+import { useModelsSearch, useEnhancedEstimationHistory } from "@/hooks";
 import type { ModelAutocomplete, DealItem } from "@/providers/types";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { PlanBadge } from "@/components/LockedFeatureOverlay";
@@ -19,7 +19,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { EstimationHistoryItem } from "@/hooks/useEstimationHistory";
+import type { EnhancedEstimationHistoryItem } from "@/types/estimator";
 import { MARKETPLACE_PLATFORMS, normalizePlatformKey } from "@/lib/platforms";
 
 // Import NEW enhanced components
@@ -79,20 +79,26 @@ export default function Estimator() {
   const [result, setResult] = useState<EnhancedEstimationResult | null>(null);
 
   // History modal state
-  const [viewHistoryItem, setViewHistoryItem] = useState<EstimationHistoryItem | null>(null);
+  const [viewHistoryItem, setViewHistoryItem] = useState<EnhancedEstimationHistoryItem | null>(null);
   const [historyPage, setHistoryPage] = useState(1);
 
   // API hooks
   const { models, state: searchState, error: searchError, retry: retrySearch } = useModelsSearch(modelSearch);
   const shouldFetchHistory = activeTab === "history";
   const { 
-    data: historyData, 
-    state: historyState, 
-    error: historyError, 
-    refresh: refreshHistory, 
-    retry: retryHistory, 
-    isLoading: isLoadingHistory 
-  } = useEstimationHistoryEnhanced(historyPage, shouldFetchHistory);
+    data: historyData,
+    isLoading: isLoadingHistory,
+    isError: isHistoryError,
+    error: historyError,
+    refetch: refreshHistory,
+  } = useEnhancedEstimationHistory(historyPage, shouldFetchHistory);
+  
+  // Compute history state for UI
+  const historyState = isLoadingHistory ? "loading" 
+    : isHistoryError ? "error"
+    : historyData?.items?.length === 0 ? "empty"
+    : "success";
+  const retryHistory = refreshHistory;
   
   // NEW: Enhanced estimation hook
   const enhancedEstimation = useEnhancedEstimation();
@@ -231,6 +237,8 @@ export default function Estimator() {
       const estimation = await enhancedEstimation.runEstimation({
         modelId: selectedModel.id,
         modelName: selectedModel.name,
+        brand: selectedModel.brand,
+        category: selectedModel.category,
         adPrice: parseFloat(adPrice),
         condition: options.withoutCondition ? undefined : condition,
         platform: options.withoutPlatform ? undefined : platform,
@@ -629,7 +637,7 @@ export default function Estimator() {
                   <History className="h-5 w-5" />
                   Historique des estimations
                 </CardTitle>
-                <Button variant="outline" size="sm" onClick={refreshHistory} disabled={isLoadingHistory}>
+                <Button variant="outline" size="sm" onClick={() => refreshHistory()} disabled={isLoadingHistory}>
                   <RefreshCw className={`h-4 w-4 ${isLoadingHistory ? 'animate-spin' : ''}`} />
                 </Button>
               </CardHeader>
@@ -656,7 +664,7 @@ export default function Estimator() {
                   <div className="text-center py-12">
                     <AlertCircle className="h-12 w-12 mx-auto mb-4 text-destructive opacity-70" />
                     <p className="text-destructive mb-2">Erreur de chargement</p>
-                    <Button variant="outline" onClick={retryHistory}>
+                    <Button variant="outline" onClick={() => refreshHistory()}>
                       <RefreshCw className="h-4 w-4 mr-2" />Réessayer
                     </Button>
                   </div>
@@ -685,7 +693,7 @@ export default function Estimator() {
                       <p className="text-xs text-muted-foreground">{item.category} • {item.condition || "État inconnu"}</p>
                     </div>
                     <div className="text-sm text-right">
-                      <p className="font-medium">{item.buy_price_input}€</p>
+                      <p className="font-medium">{item.ad_price}€</p>
                       <p className="text-xs text-muted-foreground">
                         <Clock className="h-3 w-3 inline mr-1" />
                         {new Date(item.created_at).toLocaleDateString('fr-FR')}
@@ -715,7 +723,7 @@ export default function Estimator() {
                           });
                           setModelSearch(item.model_name);
                           setCondition(item.condition || '');
-                          setAdPrice(item.buy_price_input.toString());
+                          setAdPrice(item.ad_price.toString());
                           if (nextPlatform) setPlatform(nextPlatform);
                           // Set skip options based on history item
                           setOptions({
@@ -768,7 +776,7 @@ export default function Estimator() {
                       </div>
                       <div>
                         <p className="text-muted-foreground">Prix affiché</p>
-                        <p className="font-medium">{viewHistoryItem.buy_price_input}€</p>
+                        <p className="font-medium">{viewHistoryItem.ad_price}€</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">État</p>
@@ -782,33 +790,47 @@ export default function Estimator() {
                   </CardContent>
                 </Card>
 
-                {/* Results based on plan at creation */}
+                {/* Results based on plan at creation - using v2 enhanced structure */}
                 {viewHistoryItem.results && (
                   <>
+                    {/* Opportunity & Decision Summary */}
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-lg">Résultats</CardTitle>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Sparkles className="h-4 w-4" />
+                          Score d'opportunité : {viewHistoryItem.results.opportunity.score}/100
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           <div className="p-3 bg-muted/50 rounded-lg">
-                            <p className="text-xs text-muted-foreground">Prix d'achat conseillé</p>
-                            <p className="text-lg font-bold">{viewHistoryItem.results.buy_price_recommended}€</p>
+                            <p className="text-xs text-muted-foreground">Prix plafond d'achat</p>
+                            <p className="text-lg font-bold">{viewHistoryItem.results.actionable_prices.buy_ceiling}€</p>
                           </div>
                           <div className="p-3 bg-muted/50 rounded-lg">
-                            <p className="text-xs text-muted-foreground">Prix revente 1 mois</p>
-                            <p className="text-lg font-bold">{viewHistoryItem.results.sell_price_1m}€</p>
+                            <p className="text-xs text-muted-foreground">Prix de revente cible</p>
+                            <p className="text-lg font-bold">{viewHistoryItem.results.actionable_prices.sell_target}€</p>
                           </div>
                           <div className="p-3 bg-muted/50 rounded-lg">
                             <p className="text-xs text-muted-foreground">Marge estimée</p>
-                            <p className="text-lg font-bold text-green-600">+{viewHistoryItem.results.margin_pct}%</p>
+                            <p className="text-lg font-bold text-green-600">+{viewHistoryItem.results.actionable_prices.margin_pct}%</p>
                           </div>
                         </div>
-                        {viewHistoryItem.results.advice && (
-                          <p className="mt-4 text-sm text-muted-foreground border-t pt-4">
-                            💡 {viewHistoryItem.results.advice}
+                        
+                        {/* Decision recommendation */}
+                        <div className="mt-4 pt-4 border-t">
+                          <p className="text-sm font-medium mb-2">
+                            Décision recommandée : <span className="text-primary">{viewHistoryItem.results.decision.label}</span>
                           </p>
-                        )}
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            {viewHistoryItem.results.decision.reasons.map((reason, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <span className="text-primary">•</span>
+                                {reason}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </CardContent>
                     </Card>
                   </>
