@@ -26,38 +26,71 @@ import {
 import LockedFeatureOverlay from "@/components/LockedFeatureOverlay";
 import type { EstimationResultUI } from "@/hooks/useEstimator";
 import type { PlanType, EstimatorFeatures } from "@/hooks/useEntitlements";
+import type { EnhancedEstimationResult } from "@/types/estimator";
 
 interface ChartsSectionProps {
-  result: EstimationResultUI;
+  // Support legacy EstimationResultUI and the new EnhancedEstimationResult
+  result: EstimationResultUI | EnhancedEstimationResult | any;
   plan: PlanType;
   limits: EstimatorFeatures;
 }
 
 export default function ChartsSection({ result, plan, limits }: ChartsSectionProps) {
   const [chartPeriod, setChartPeriod] = useState<"30" | "90">("30");
+
+  const hasEnhancedCharts = !!(result && (result as EnhancedEstimationResult)?.charts?.price?.series_90d);
+  const hasLegacyCharts = !!(result && (result as any)?.trend_90d);
   
   // Préparer les données des graphiques
   const priceChartData = useMemo(() => {
-    if (!result?.trend_90d) return [];
-    
     const dataLength = chartPeriod === "30" ? 30 : 90;
-    const data = result.trend_90d.slice(-dataLength);
-    
-    return data.map((price, i) => ({
-      day: i + 1,
-      prix: price,
-      label: `J-${dataLength - i}`,
-    }));
-  }, [result?.trend_90d, chartPeriod]);
+
+    if (hasEnhancedCharts) {
+      const series = (result as EnhancedEstimationResult).charts.price[
+        chartPeriod === "30" ? "series_30d" : "series_90d"
+      ];
+
+      return (series ?? []).map((pt, i) => ({
+        day: i + 1,
+        prix: pt.value,
+        date: pt.date,
+        label: pt.date,
+      }));
+    }
+
+    if (hasLegacyCharts) {
+      const data = (result as any).trend_90d.slice(-dataLength);
+      return data.map((price: number, i: number) => ({
+        day: i + 1,
+        prix: price,
+        label: `J-${dataLength - i}`,
+      }));
+    }
+
+    return [];
+  }, [hasEnhancedCharts, hasLegacyCharts, result, chartPeriod]);
 
   const volumeChartData = useMemo(() => {
-    if (!result?.volume_30d) return [];
-    return result.volume_30d.map((vol, i) => ({
-      day: i + 1,
-      volume: vol,
-      label: `J-${30 - i}`,
-    }));
-  }, [result?.volume_30d]);
+    if (hasEnhancedCharts) {
+      const series = (result as EnhancedEstimationResult).charts.volume.series_30d;
+      return (series ?? []).map((pt, i) => ({
+        day: i + 1,
+        volume: pt.value,
+        date: pt.date,
+        label: pt.date,
+      }));
+    }
+
+    if ((result as any)?.volume_30d) {
+      return (result as any).volume_30d.map((vol: number, i: number) => ({
+        day: i + 1,
+        volume: vol,
+        label: `J-${30 - i}`,
+      }));
+    }
+
+    return [];
+  }, [hasEnhancedCharts, result]);
 
   const isStarter = plan === "starter";
   const canInteract = limits.chartInteractive;
