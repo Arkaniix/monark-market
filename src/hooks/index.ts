@@ -22,7 +22,7 @@ export {
   useCreateAdAlert,
   useModelsAutocomplete,
   useRunEstimation,
-  useEstimationHistory,
+  useEstimationHistory as useEstimationHistoryLegacy,
   useEstimatorStats,
   useAvailableTasks,
   useMyTasks,
@@ -43,13 +43,28 @@ export {
   type UseModelsSearchResult,
 } from "./useModelsSearch";
 
-// Estimation History - with state management, retry, refresh
+// Estimation History - with state management, retry, refresh (legacy from useEstimationHistory.ts)
 export {
-  useEstimationHistory as useEstimationHistoryEnhanced,
-  type EstimationHistoryItem as EstimationHistoryItemEnhanced,
-  type EstimationHistoryResponse as EstimationHistoryResponseEnhanced,
+  useEstimationHistory,
+  type EstimationHistoryItem,
+  type EstimationHistoryResponse,
   type HistoryState,
 } from "./useEstimationHistory";
+
+// Enhanced Estimation History (v2 - with full result storage)
+export {
+  useEnhancedEstimation,
+  useEnhancedEstimationHistory,
+  useEnhancedEstimatorStats,
+  useClearEstimationHistory,
+  DEFAULT_ESTIMATION_OPTIONS,
+} from "./useEnhancedEstimator";
+
+export type {
+  EnhancedEstimationResult,
+  EnhancedEstimationHistoryItem,
+  EstimationOptions,
+} from "@/types/estimator";
 
 // Entitlements - single source of truth for user permissions
 export {
