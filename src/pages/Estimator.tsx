@@ -429,6 +429,7 @@ export default function Estimator() {
                     <EstimationOptionsBlock
                       options={options}
                       onChange={handleOptionsChange}
+                      plan={plan}
                     />
 
                     <div className="grid md:grid-cols-2 gap-6">
