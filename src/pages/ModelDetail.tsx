@@ -420,10 +420,13 @@ export default function ModelDetail() {
             <TabsList>
               <TabsTrigger value="price">
                 <BarChart3 className="h-4 w-4 mr-2" />
-                Historique des prix
+                Évolution des prix
+              </TabsTrigger>
+              <TabsTrigger value="volume">
+                <Activity className="h-4 w-4 mr-2" />
+                Volume d'annonces
               </TabsTrigger>
               <TabsTrigger value="ads">
-                <Activity className="h-4 w-4 mr-2" />
                 Annonces en cours
               </TabsTrigger>
               {model.specs && (
@@ -688,6 +691,87 @@ export default function ModelDetail() {
                     </span>
                   </p>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Volume Tab */}
+          <TabsContent value="volume">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Volume des annonces</h3>
+                  <Badge variant="outline" className="text-xs">30 derniers jours</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {historyLoading ? (
+                  <div className="h-[250px] flex items-center justify-center">
+                    <p className="text-muted-foreground">Chargement...</p>
+                  </div>
+                ) : priceHistory?.length ? (
+                  <>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <AreaChart data={priceHistory.slice(-30)}>
+                        <defs>
+                          <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0.05} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                        <XAxis
+                          dataKey="date"
+                          tickFormatter={(v) => new Date(v).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })}
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          axisLine={{ stroke: 'hsl(var(--border))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          axisLine={{ stroke: 'hsl(var(--border))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                          width={40}
+                        />
+                        <Tooltip
+                          content={({ active, payload, label }) => {
+                            if (!active || !payload?.length) return null;
+                            const data = payload[0]?.payload;
+                            return (
+                              <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-xl">
+                                <p className="font-semibold text-sm mb-2 pb-2 border-b border-border/50">
+                                  {formatDate(String(label))}
+                                </p>
+                                <div className="flex justify-between items-center gap-4">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+                                    <span className="text-sm">Annonces actives</span>
+                                  </div>
+                                  <span className="font-bold">{data?.ads_count ?? data?.volume ?? 0}</span>
+                                </div>
+                              </div>
+                            );
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="ads_count"
+                          stroke="hsl(var(--accent))"
+                          strokeWidth={2}
+                          fill="url(#colorVolume)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                    <p className="text-xs text-muted-foreground text-center mt-4 pt-3 border-t border-border">
+                      Le volume indique le nombre d'annonces actives pour ce modèle au cours des 30 derniers jours. 
+                      Un volume élevé signifie une bonne liquidité sur le marché.
+                    </p>
+                  </>
+                ) : (
+                  <div className="h-[250px] flex items-center justify-center">
+                    <p className="text-muted-foreground">Aucune donnée de volume disponible</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
