@@ -12,10 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calculator, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useModelsSearch, useEstimationHistoryEnhanced } from "@/hooks";
-import { useRunEstimation, useEstimatorStats, type EstimationResultUI } from "@/hooks/useEstimator";
 import type { ModelAutocomplete, DealItem } from "@/providers/types";
 import { useEntitlements } from "@/hooks/useEntitlements";
-import { PlanBadge, LockedValue } from "@/components/LockedFeatureOverlay";
+import { PlanBadge } from "@/components/LockedFeatureOverlay";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,16 +22,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import type { EstimationHistoryItem } from "@/hooks/useEstimationHistory";
 import { MARKETPLACE_PLATFORMS, normalizePlatformKey } from "@/lib/platforms";
 
-// Import section components
+// Import NEW enhanced components
+import EstimationOptionsBlock from "@/components/estimator/EstimationOptionsBlock";
+import InputSummaryChips from "@/components/estimator/InputSummaryChips";
 import SynthesisBanner from "@/components/estimator/SynthesisBanner";
-import IndicatorsSection from "@/components/estimator/IndicatorsSection";
-import ScenariosSection from "@/components/estimator/ScenariosSection";
+import OpportunityScoreCard from "@/components/estimator/OpportunityScoreCard";
+import HypothesesBanner from "@/components/estimator/HypothesesBanner";
+import EnhancedDecisionBlock from "@/components/estimator/EnhancedDecisionBlock";
+import EnhancedMarketCard from "@/components/estimator/EnhancedMarketCard";
 import ChartsSection from "@/components/estimator/ChartsSection";
-import DecisionBlock from "@/components/estimator/DecisionBlock";
-import NegotiationSection from "@/components/estimator/NegotiationSection";
-import PlatformAnalysisSection from "@/components/estimator/PlatformAnalysisSection";
+import EnhancedNegotiationSection from "@/components/estimator/EnhancedNegotiationSection";
+import EnhancedScenariosSection from "@/components/estimator/EnhancedScenariosSection";
+import EnhancedPlatformsSection from "@/components/estimator/EnhancedPlatformsSection";
+import WhatIfSimulator from "@/components/estimator/WhatIfSimulator";
 import AdSearchBar from "@/components/estimator/AdSearchBar";
 import ExportCSVButton from "@/components/estimator/ExportCSVButton";
+
+// Import enhanced estimator hook
+import { useEnhancedEstimation, DEFAULT_ESTIMATION_OPTIONS } from "@/hooks/useEnhancedEstimator";
+import type { EnhancedEstimationResult, EstimationOptions } from "@/types/estimator";
+import { CONDITION_OPTIONS } from "@/types/estimator";
 
 // Plan hierarchy helper
 const PLAN_HIERARCHY = { starter: 0, pro: 1, elite: 2 };
@@ -41,7 +50,6 @@ const PLAN_HIERARCHY = { starter: 0, pro: 1, elite: 2 };
 function canViewHistoryData(currentPlan: string, planAtCreation: string, requiredPlan: 'pro' | 'elite'): boolean {
   const requiredLevel = PLAN_HIERARCHY[requiredPlan];
   const creationLevel = PLAN_HIERARCHY[planAtCreation as keyof typeof PLAN_HIERARCHY] ?? 0;
-  // User can see data if they had access when created OR have access now
   return creationLevel >= requiredLevel;
 }
 
@@ -64,8 +72,11 @@ export default function Estimator() {
   const [prefillApplied, setPrefillApplied] = useState(false);
   const [isPCBlocked, setIsPCBlocked] = useState(false);
 
-  // Result state
-  const [result, setResult] = useState<EstimationResultUI | null>(null);
+  // NEW: Options state
+  const [options, setOptions] = useState<EstimationOptions>(DEFAULT_ESTIMATION_OPTIONS);
+
+  // Result state - now enhanced
+  const [result, setResult] = useState<EnhancedEstimationResult | null>(null);
 
   // History modal state
   const [viewHistoryItem, setViewHistoryItem] = useState<EstimationHistoryItem | null>(null);
@@ -73,7 +84,6 @@ export default function Estimator() {
 
   // API hooks
   const { models, state: searchState, error: searchError, retry: retrySearch } = useModelsSearch(modelSearch);
-  const { data: stats } = useEstimatorStats();
   const shouldFetchHistory = activeTab === "history";
   const { 
     data: historyData, 
@@ -83,7 +93,9 @@ export default function Estimator() {
     retry: retryHistory, 
     isLoading: isLoadingHistory 
   } = useEstimationHistoryEnhanced(historyPage, shouldFetchHistory);
-  const runEstimation = useRunEstimation();
+  
+  // NEW: Enhanced estimation hook
+  const enhancedEstimation = useEnhancedEstimation();
 
   const getCategoryIcon = (category: string) => {
     switch (category?.toUpperCase()) {
@@ -125,16 +137,15 @@ export default function Estimator() {
     setAdPrice(ad.price.toString());
     setPlatform(normalizePlatformKey(ad.platform));
     setCondition(ad.condition?.toLowerCase().replace(" ", "-") || "bon");
+    // Reset skip options when selecting an ad
+    setOptions(DEFAULT_ESTIMATION_OPTIONS);
   };
 
   // Pre-fill from URL
-  // Track the last processed URL to detect real changes
   const lastProcessedUrl = useRef<string>('');
   
   useEffect(() => {
     const currentUrl = searchParams.toString();
-    
-    // Skip if we've already processed this exact URL
     if (lastProcessedUrl.current === currentUrl && prefillApplied) return;
     
     const modelId = searchParams.get('model_id');
@@ -142,7 +153,6 @@ export default function Estimator() {
     const category = searchParams.get('category');
     const price = searchParams.get('price');
     const conditionParam = searchParams.get('condition');
-    const regionParam = searchParams.get('region');
     const platformParam = searchParams.get('platform');
     const itemType = searchParams.get('item_type');
 
@@ -190,25 +200,46 @@ export default function Estimator() {
   }, [searchParams, prefillApplied]);
 
   const handleCalculate = async () => {
-    if (!selectedModel || !condition || !adPrice) {
+    if (!selectedModel || !adPrice) {
       toast({
         title: "Informations manquantes",
-        description: "Veuillez remplir tous les champs obligatoires",
+        description: "Veuillez remplir le modèle et le prix",
         variant: "destructive"
       });
       return;
     }
-    try {
-      const estimation = await runEstimation.mutateAsync({
-        model_id: selectedModel.id,
-        condition,
-        buy_price_input: parseFloat(adPrice),
-        platform: platform || undefined,
+    
+    // Validate required fields unless skipped
+    if (!options.withoutCondition && !condition) {
+      toast({
+        title: "État manquant",
+        description: "Sélectionnez un état ou cochez 'Estimation sans état'",
+        variant: "destructive"
       });
-      setResult({ ...estimation, platform });
+      return;
+    }
+    if (!options.withoutPlatform && !platform) {
+      toast({
+        title: "Plateforme manquante",
+        description: "Sélectionnez une plateforme ou cochez 'Estimation sans plateforme'",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const estimation = await enhancedEstimation.runEstimation({
+        modelId: selectedModel.id,
+        modelName: selectedModel.name,
+        adPrice: parseFloat(adPrice),
+        condition: options.withoutCondition ? undefined : condition,
+        platform: options.withoutPlatform ? undefined : platform,
+        options,
+      });
+      setResult(estimation);
       toast({
         title: "Estimation réussie",
-        description: `${estimation.credit_cost} crédits déduits`
+        description: `2 crédits déduits`
       });
     } catch (error: any) {
       const message = error?.message || "Une erreur est survenue";
@@ -228,35 +259,7 @@ export default function Estimator() {
     setPlatform("");
     setResult(null);
     setIsPCBlocked(false);
-  };
-
-  // Convert history item to result UI format for viewing
-  const convertHistoryToResult = (item: EstimationHistoryItem): EstimationResultUI => {
-    return {
-      model_id: item.model_id,
-      model_name: item.model_name,
-      category: item.category,
-      condition: item.condition,
-      region: item.region,
-      platform: item.platform,
-      buy_price_input: item.buy_price_input,
-      buy_price_recommended: item.results.buy_price_recommended,
-      sell_price_1m: item.results.sell_price_1m,
-      sell_price_3m: item.results.sell_price_3m,
-      margin_pct: item.results.margin_pct,
-      resell_probability: item.results.resell_probability,
-      risk_level: item.results.risk_level,
-      advice: item.results.advice,
-      badge: item.results.badge,
-      market: {
-        median_price: item.results.market.median_price,
-        var_30d_pct: item.results.market.var_30d_pct,
-        volume_active: item.results.market.volume,
-        rarity_index: item.results.market.rarity_index,
-        trend: item.results.market.trend,
-      },
-      credit_cost: 0,
-    };
+    setOptions(DEFAULT_ESTIMATION_OPTIONS);
   };
 
   // Get badge for plan at creation
@@ -272,6 +275,18 @@ export default function Estimator() {
   };
 
   const canUseEstimator = helpers.canUseEstimator();
+
+  // Check if form is valid
+  const isFormValid = selectedModel && adPrice && 
+    (options.withoutCondition || condition) && 
+    (options.withoutPlatform || platform);
+
+  // Handle options change
+  const handleOptionsChange = (newOptions: EstimationOptions) => {
+    setOptions(newOptions);
+    if (newOptions.withoutPlatform) setPlatform("");
+    if (newOptions.withoutCondition) setCondition("");
+  };
 
   return (
     <div className="min-h-screen py-8">
@@ -316,8 +331,7 @@ export default function Estimator() {
                         <p className="font-medium text-destructive">Estimation non disponible</p>
                         <p className="text-sm text-muted-foreground mt-1">
                           L'estimateur ne prend pas en charge les PC complets ni les lots. 
-                          Pour évaluer un PC, estimez chaque composant individuellement (CPU, GPU, RAM, etc.) 
-                          et additionnez les valeurs.
+                          Pour évaluer un PC, estimez chaque composant individuellement.
                         </p>
                         <Button variant="outline" size="sm" className="mt-3" onClick={handleReset}>
                           Nouvelle estimation
@@ -342,7 +356,13 @@ export default function Estimator() {
                       Formulaire d'estimation
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-6">
+                    {/* NEW: Options block */}
+                    <EstimationOptionsBlock
+                      options={options}
+                      onChange={handleOptionsChange}
+                    />
+
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-4">
                         {/* Model search */}
@@ -413,26 +433,37 @@ export default function Estimator() {
 
                         {/* Condition */}
                         <div>
-                          <Label>État *</Label>
-                          <Select value={condition} onValueChange={setCondition}>
-                            <SelectTrigger className="mt-2">
-                              <SelectValue placeholder="Sélectionner..." />
+                          <Label className={options.withoutCondition ? "text-muted-foreground" : ""}>
+                            État {!options.withoutCondition && "*"}
+                          </Label>
+                          <Select 
+                            value={condition} 
+                            onValueChange={setCondition}
+                            disabled={options.withoutCondition}
+                          >
+                            <SelectTrigger className={`mt-2 ${options.withoutCondition ? "opacity-50" : ""}`}>
+                              <SelectValue placeholder={options.withoutCondition ? "Non renseigné" : "Sélectionner..."} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="neuf">Neuf</SelectItem>
-                              <SelectItem value="comme-neuf">Comme neuf</SelectItem>
-                              <SelectItem value="bon">Bon état</SelectItem>
-                              <SelectItem value="a-reparer">À réparer</SelectItem>
+                              {CONDITION_OPTIONS.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
 
                         {/* Platform */}
                         <div>
-                          <Label>Plateforme de l'annonce *</Label>
-                          <Select value={platform} onValueChange={setPlatform}>
-                            <SelectTrigger className="mt-2">
-                              <SelectValue placeholder="Sélectionner..." />
+                          <Label className={options.withoutPlatform ? "text-muted-foreground" : ""}>
+                            Plateforme de l'annonce {!options.withoutPlatform && "*"}
+                          </Label>
+                          <Select 
+                            value={platform} 
+                            onValueChange={setPlatform}
+                            disabled={options.withoutPlatform}
+                          >
+                            <SelectTrigger className={`mt-2 ${options.withoutPlatform ? "opacity-50" : ""}`}>
+                              <SelectValue placeholder={options.withoutPlatform ? "Non renseignée" : "Sélectionner..."} />
                             </SelectTrigger>
                             <SelectContent>
                               {MARKETPLACE_PLATFORMS.map(p => (
@@ -456,14 +487,23 @@ export default function Estimator() {
                           />
                         </div>
 
+                        {/* Input summary chips */}
+                        <InputSummaryChips
+                          modelName={selectedModel?.name}
+                          category={selectedModel?.category}
+                          adPrice={adPrice ? parseFloat(adPrice) : undefined}
+                          condition={options.withoutCondition ? undefined : condition}
+                          platform={options.withoutPlatform ? undefined : platform}
+                        />
+
                         {/* Submit buttons */}
                         <div className="flex gap-3 pt-2">
                           <Button 
                             onClick={handleCalculate} 
-                            disabled={!selectedModel || !condition || !adPrice || !platform || runEstimation.isPending || !canUseEstimator} 
+                            disabled={!isFormValid || enhancedEstimation.isPending || !canUseEstimator} 
                             className="flex-1 gap-2"
                           >
-                            {runEstimation.isPending ? (
+                            {enhancedEstimation.isPending ? (
                               <><RefreshCw className="h-4 w-4 animate-spin" />Calcul...</>
                             ) : (
                               <><Calculator className="h-4 w-4" />Estimer</>
@@ -478,7 +518,7 @@ export default function Estimator() {
               </motion.div>
             )}
 
-            {/* Results - Reorganized by plan visibility */}
+            {/* Results - NEW enhanced layout */}
             <AnimatePresence mode="wait">
               {result && (
                 <motion.div 
@@ -491,63 +531,89 @@ export default function Estimator() {
                   {/* === EXPORT CSV (Elite only, at top) === */}
                   {plan === 'elite' && (
                     <div className="flex justify-end">
-                      <ExportCSVButton result={result} platform={platform} />
+                      <ExportCSVButton result={result as any} platform={result.inputs.platform || ""} />
                     </div>
                   )}
 
-                  {/* === SECTION 1: VISIBLE FOR ALL PLANS === */}
-                  <SynthesisBanner result={result} />
-                  <IndicatorsSection result={result} plan={plan} limits={estimatorLimits} />
-
-                  {/* === SECTION 2: PRO+ CONTENT (visible Pro/Elite, locked Starter) === */}
-                  {plan !== 'starter' && (
-                    <>
-                      <ChartsSection result={result} plan={plan} limits={estimatorLimits} />
-                      <DecisionBlock result={result} plan={plan} limits={estimatorLimits} />
-                    </>
+                  {/* === HYPOTHESES BANNER (if missing inputs) === */}
+                  {result.hypotheses.length > 0 && (
+                    <HypothesesBanner 
+                      hypotheses={result.hypotheses}
+                      onScrollToForm={() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    />
                   )}
 
-                  {/* === SECTION 3: ELITE CONTENT (visible Elite only) === */}
-                  {plan === 'elite' && (
-                    <>
-                      <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
-                      <NegotiationSection result={result} plan={plan} limits={estimatorLimits} />
-                      <PlatformAnalysisSection 
-                        result={result} 
-                        plan={plan} 
-                        limits={estimatorLimits} 
-                        sourcePlatform={platform}
-                      />
-                    </>
+                  {/* === SECTION 1: SYNTHESIS + OPPORTUNITY SCORE (All plans) === */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <SynthesisBanner result={result as any} />
+                    <OpportunityScoreCard 
+                      opportunity={result.opportunity}
+                      confidence={result.confidence}
+                      tags={result.tags}
+                      plan={plan}
+                    />
+                  </div>
+
+                  {/* === SECTION 2: MARKET DATA (All plans, some locked) === */}
+                  <EnhancedMarketCard
+                    market={result.market}
+                    adPrice={result.inputs.ad_price}
+                    plan={plan}
+                  />
+
+                  {/* === SECTION 3: DECISION BLOCK (Pro+) === */}
+                  <EnhancedDecisionBlock
+                    decision={result.decision}
+                    actionablePrices={result.actionable_prices}
+                    adPrice={result.inputs.ad_price}
+                    plan={plan}
+                  />
+
+                  {/* === SECTION 4: CHARTS (Pro+) === */}
+                  <ChartsSection 
+                    result={result as any} 
+                    plan={plan} 
+                    limits={estimatorLimits} 
+                  />
+
+                  {/* === SECTION 5: NEGOTIATION (Pro+) === */}
+                  {result.negotiation && (
+                    <EnhancedNegotiationSection
+                      negotiation={result.negotiation}
+                      adPrice={result.inputs.ad_price}
+                      plan={plan}
+                      withoutCondition={options.withoutCondition}
+                    />
                   )}
 
-                  {/* === SECTION 4: LOCKED CONTENT FOR LOWER PLANS === */}
-                  {plan === 'starter' && (
-                    <div className="space-y-6 opacity-80">
-                      <ChartsSection result={result} plan={plan} limits={estimatorLimits} />
-                      <DecisionBlock result={result} plan={plan} limits={estimatorLimits} />
-                      <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
-                      <NegotiationSection result={result} plan={plan} limits={estimatorLimits} />
-                      <PlatformAnalysisSection 
-                        result={result} 
-                        plan={plan} 
-                        limits={estimatorLimits} 
-                        sourcePlatform={platform}
-                      />
-                    </div>
+                  {/* === SECTION 6: SCENARIOS (Elite) === */}
+                  {result.scenarios && (
+                    <EnhancedScenariosSection
+                      scenarios={result.scenarios}
+                      adPrice={result.inputs.ad_price}
+                      plan={plan}
+                    />
                   )}
 
-                  {plan === 'pro' && (
-                    <div className="space-y-6 opacity-80">
-                      <ScenariosSection result={result} plan={plan} limits={estimatorLimits} />
-                      <NegotiationSection result={result} plan={plan} limits={estimatorLimits} />
-                      <PlatformAnalysisSection 
-                        result={result} 
-                        plan={plan} 
-                        limits={estimatorLimits} 
-                        sourcePlatform={platform}
-                      />
-                    </div>
+                  {/* === SECTION 7: PLATFORMS (Pro+ basic, Elite full) === */}
+                  {result.platforms && (
+                    <EnhancedPlatformsSection
+                      platforms={result.platforms}
+                      plan={plan}
+                      sourcePlatform={result.inputs.platform}
+                    />
+                  )}
+
+                  {/* === SECTION 8: WHAT-IF SIMULATOR (Elite) === */}
+                  {result.what_if && plan === 'elite' && (
+                    <WhatIfSimulator
+                      whatIf={result.what_if}
+                      adPrice={result.inputs.ad_price}
+                      actionablePrices={result.actionable_prices}
+                      plan={plan}
+                    />
                   )}
                 </motion.div>
               )}
@@ -610,8 +676,11 @@ export default function Estimator() {
                       <div className="flex items-center gap-2">
                         <p className="font-medium truncate">{item.model_name}</p>
                         {getPlanBadge(item.plan_at_creation)}
+                        {item.platform && (
+                          <Badge variant="outline" className="text-xs">{item.platform}</Badge>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground">{item.category} • {item.condition}</p>
+                      <p className="text-xs text-muted-foreground">{item.category} • {item.condition || "État inconnu"}</p>
                     </div>
                     <div className="text-sm text-right">
                       <p className="font-medium">{item.buy_price_input}€</p>
@@ -645,8 +714,12 @@ export default function Estimator() {
                           setModelSearch(item.model_name);
                           setCondition(item.condition || '');
                           setAdPrice(item.buy_price_input.toString());
-                          // Don't wipe the current selection if legacy history item has no platform
                           if (nextPlatform) setPlatform(nextPlatform);
+                          // Set skip options based on history item
+                          setOptions({
+                            withoutPlatform: !item.platform,
+                            withoutCondition: !item.condition,
+                          });
                           setActiveTab("estimator");
                         }}
                         title="Réestimer (coûte des crédits)"
@@ -661,7 +734,7 @@ export default function Estimator() {
           </TabsContent>
         </Tabs>
 
-        {/* History View Modal - Shows data based on plan_at_creation */}
+        {/* History View Modal */}
         <Dialog open={!!viewHistoryItem} onOpenChange={(open) => !open && setViewHistoryItem(null)}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -676,16 +749,6 @@ export default function Estimator() {
             </DialogHeader>
             {viewHistoryItem && (
               <div className="space-y-6 mt-4">
-                {/* Export CSV for Elite estimations */}
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && (
-                  <div className="flex justify-end">
-                    <ExportCSVButton 
-                      result={convertHistoryToResult(viewHistoryItem)} 
-                      platform={viewHistoryItem.platform} 
-                    />
-                  </div>
-                )}
-
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                   <p className="text-sm text-amber-700 dark:text-amber-400">
                     ⚠️ Ces données datent du {new Date(viewHistoryItem.created_at).toLocaleDateString('fr-FR')}. 
@@ -693,56 +756,60 @@ export default function Estimator() {
                   </p>
                 </div>
                 
-                {/* Always show synthesis and basic indicators */}
-                <SynthesisBanner result={convertHistoryToResult(viewHistoryItem)} />
-                <IndicatorsSection 
-                  result={convertHistoryToResult(viewHistoryItem)} 
-                  plan={viewHistoryItem.plan_at_creation} 
-                  limits={estimatorLimits} 
-                />
+                {/* Basic info card */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Modèle</p>
+                        <p className="font-medium">{viewHistoryItem.model_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Prix affiché</p>
+                        <p className="font-medium">{viewHistoryItem.buy_price_input}€</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">État</p>
+                        <p className="font-medium">{viewHistoryItem.condition || "Non renseigné"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Plateforme</p>
+                        <p className="font-medium">{viewHistoryItem.platform || "Non renseignée"}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                {/* Show Pro content if estimation was made with Pro or Elite */}
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && (
+                {/* Results based on plan at creation */}
+                {viewHistoryItem.results && (
                   <>
-                    <ChartsSection 
-                      result={convertHistoryToResult(viewHistoryItem)} 
-                      plan={viewHistoryItem.plan_at_creation} 
-                      limits={estimatorLimits} 
-                    />
-                    <DecisionBlock 
-                      result={convertHistoryToResult(viewHistoryItem)} 
-                      plan={viewHistoryItem.plan_at_creation} 
-                      limits={estimatorLimits} 
-                    />
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Résultats</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          <div className="p-3 bg-muted/50 rounded-lg">
+                            <p className="text-xs text-muted-foreground">Prix d'achat conseillé</p>
+                            <p className="text-lg font-bold">{viewHistoryItem.results.buy_price_recommended}€</p>
+                          </div>
+                          <div className="p-3 bg-muted/50 rounded-lg">
+                            <p className="text-xs text-muted-foreground">Prix revente 1 mois</p>
+                            <p className="text-lg font-bold">{viewHistoryItem.results.sell_price_1m}€</p>
+                          </div>
+                          <div className="p-3 bg-muted/50 rounded-lg">
+                            <p className="text-xs text-muted-foreground">Marge estimée</p>
+                            <p className="text-lg font-bold text-green-600">+{viewHistoryItem.results.margin_pct}%</p>
+                          </div>
+                        </div>
+                        {viewHistoryItem.results.advice && (
+                          <p className="mt-4 text-sm text-muted-foreground border-t pt-4">
+                            💡 {viewHistoryItem.results.advice}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
                   </>
-                )}
-
-                {/* Show Elite content if estimation was made with Elite */}
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && viewHistoryItem.results.scenarios && (
-                  <>
-                    <ScenariosSection 
-                      result={convertHistoryToResult(viewHistoryItem)} 
-                      plan="elite" 
-                      limits={estimatorLimits} 
-                    />
-                  </>
-                )}
-
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && viewHistoryItem.results.negotiation && (
-                  <NegotiationSection 
-                    result={convertHistoryToResult(viewHistoryItem)} 
-                    plan="elite" 
-                    limits={estimatorLimits} 
-                  />
-                )}
-
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && viewHistoryItem.results.platforms && (
-                  <PlatformAnalysisSection 
-                    result={convertHistoryToResult(viewHistoryItem)} 
-                    plan="elite" 
-                    limits={estimatorLimits} 
-                    sourcePlatform={viewHistoryItem.platform}
-                  />
                 )}
               </div>
             )}
