@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useModelsSearch, useEnhancedEstimationHistory } from "@/hooks";
 import type { ModelAutocomplete, DealItem } from "@/providers/types";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import type { EstimatorFeatures, PlanType } from "@/hooks/useEntitlements";
 import { PlanBadge } from "@/components/LockedFeatureOverlay";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -45,6 +46,65 @@ import { CONDITION_OPTIONS } from "@/types/estimator";
 
 // Plan hierarchy helper
 const PLAN_HIERARCHY = { starter: 0, pro: 1, elite: 2 };
+
+function getHistoryEstimatorLimits(planAtCreation: PlanType): EstimatorFeatures {
+  // Only fields used by ChartsSection are chartInteractive + chartPeriods,
+  // but we return the full shape for type safety.
+  if (planAtCreation === "elite") {
+    return {
+      canSeeMedianPrice: true,
+      canSeeVariation30d: true,
+      canSeeVolume: true,
+      canSeeOpportunityLabel: true,
+      canSeeBuyPrice: true,
+      canSeeSellPrice: true,
+      canSeeMargin: true,
+      canSeeProbability: true,
+      canSeeScenarios: true,
+      canExportEstimation: true,
+      canSeeExtendedHistory: true,
+      canSeeAdvancedIndicators: true,
+      chartInteractive: true,
+      chartPeriods: ["7", "30", "90"],
+    };
+  }
+
+  if (planAtCreation === "pro") {
+    return {
+      canSeeMedianPrice: true,
+      canSeeVariation30d: true,
+      canSeeVolume: true,
+      canSeeOpportunityLabel: true,
+      canSeeBuyPrice: true,
+      canSeeSellPrice: true,
+      canSeeMargin: true,
+      canSeeProbability: true,
+      canSeeScenarios: false,
+      canExportEstimation: false,
+      canSeeExtendedHistory: false,
+      canSeeAdvancedIndicators: false,
+      chartInteractive: true,
+      chartPeriods: ["30", "90"],
+    };
+  }
+
+  return {
+    canSeeMedianPrice: true,
+    canSeeVariation30d: true,
+    canSeeVolume: true,
+    canSeeOpportunityLabel: true,
+    canSeeBuyPrice: false,
+    canSeeSellPrice: false,
+    canSeeMargin: false,
+    canSeeProbability: false,
+    canSeeScenarios: false,
+    canExportEstimation: false,
+    canSeeExtendedHistory: false,
+    canSeeAdvancedIndicators: false,
+    chartInteractive: false,
+    chartPeriods: [],
+  };
+}
 
 // Check if user can see data based on plan used at creation
 function canViewHistoryData(currentPlan: string, planAtCreation: string, requiredPlan: 'pro' | 'elite'): boolean {
@@ -791,6 +851,15 @@ export default function Estimator() {
                   />
                 )}
 
+                {/* Charts (Pro+) */}
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && (
+                  <ChartsSection
+                    result={viewHistoryItem.results as any}
+                    plan={viewHistoryItem.plan_at_creation as any}
+                    limits={getHistoryEstimatorLimits(viewHistoryItem.plan_at_creation)}
+                  />
+                )}
+
                 {/* Negotiation Section (Pro+) */}
                 {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && viewHistoryItem.results.negotiation && (
                   <EnhancedNegotiationSection 
@@ -815,6 +884,16 @@ export default function Estimator() {
                   <EnhancedScenariosSection 
                     scenarios={viewHistoryItem.results.scenarios} 
                     adPrice={viewHistoryItem.ad_price}
+                    plan={viewHistoryItem.plan_at_creation as any}
+                  />
+                )}
+
+                {/* What-If (Elite only) */}
+                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && viewHistoryItem.results.what_if && (
+                  <WhatIfSimulator
+                    whatIf={viewHistoryItem.results.what_if}
+                    adPrice={viewHistoryItem.ad_price}
+                    actionablePrices={viewHistoryItem.results.actionable_prices}
                     plan={viewHistoryItem.plan_at_creation as any}
                   />
                 )}
