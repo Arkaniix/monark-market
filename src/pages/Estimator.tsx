@@ -44,8 +44,8 @@ import { useEnhancedEstimation, DEFAULT_ESTIMATION_OPTIONS } from "@/hooks/useEn
 import type { EnhancedEstimationResult, EstimationOptions } from "@/types/estimator";
 import { CONDITION_OPTIONS } from "@/types/estimator";
 
-// Plan hierarchy helper
-const PLAN_HIERARCHY = { starter: 0, pro: 1, elite: 2 };
+// Plan hierarchy helper - used for displaying correct badge in history
+const PLAN_HIERARCHY: Record<string, number> = { starter: 0, pro: 1, elite: 2 };
 
 function getHistoryEstimatorLimits(planAtCreation: PlanType): EstimatorFeatures {
   // Only fields used by ChartsSection are chartInteractive + chartPeriods,
@@ -104,13 +104,6 @@ function getHistoryEstimatorLimits(planAtCreation: PlanType): EstimatorFeatures 
     chartInteractive: false,
     chartPeriods: [],
   };
-}
-
-// Check if user can see data based on plan used at creation
-function canViewHistoryData(currentPlan: string, planAtCreation: string, requiredPlan: 'pro' | 'elite'): boolean {
-  const requiredLevel = PLAN_HIERARCHY[requiredPlan];
-  const creationLevel = PLAN_HIERARCHY[planAtCreation as keyof typeof PLAN_HIERARCHY] ?? 0;
-  return creationLevel >= requiredLevel;
 }
 
 export default function Estimator() {
@@ -654,7 +647,7 @@ export default function Estimator() {
                   )}
 
                   {/* === SECTION 6: SCENARIOS (Elite) === */}
-                  {result.scenarios && (
+                  {result.scenarios && plan === 'elite' && (
                     <EnhancedScenariosSection
                       scenarios={result.scenarios}
                       adPrice={result.inputs.ad_price}
@@ -837,51 +830,49 @@ export default function Estimator() {
                   plan={viewHistoryItem.plan_at_creation as any}
                 />
 
-                {/* Market Data (Pro+) */}
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && (
-                  <EnhancedMarketCard 
-                    market={viewHistoryItem.results.market} 
-                    adPrice={viewHistoryItem.ad_price}
-                    plan={viewHistoryItem.plan_at_creation as any}
-                  />
-                )}
+                {/* Market Data - always show, UI handles locking based on plan_at_creation */}
+                <EnhancedMarketCard 
+                  market={viewHistoryItem.results.market} 
+                  adPrice={viewHistoryItem.ad_price}
+                  plan={viewHistoryItem.plan_at_creation as PlanType}
+                />
 
 
-                {/* Negotiation Section (Pro+) */}
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && viewHistoryItem.results.negotiation && (
+                {/* Negotiation Section - show if data exists, UI handles locking */}
+                {viewHistoryItem.results.negotiation && (
                   <EnhancedNegotiationSection 
                     negotiation={viewHistoryItem.results.negotiation}
                     adPrice={viewHistoryItem.ad_price}
-                    plan={viewHistoryItem.plan_at_creation as any}
+                    plan={viewHistoryItem.plan_at_creation as PlanType}
                   />
                 )}
 
-                {/* Platforms Analysis (Pro+) */}
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'pro') && viewHistoryItem.results.platforms && (
+                {/* Platforms Analysis - show if data exists, UI handles locking */}
+                {viewHistoryItem.results.platforms && (
                   <EnhancedPlatformsSection 
                     platforms={viewHistoryItem.results.platforms}
-                    plan={viewHistoryItem.plan_at_creation as any}
+                    plan={viewHistoryItem.plan_at_creation as PlanType}
                     sourcePlatform={viewHistoryItem.platform}
                     withoutPlatform={viewHistoryItem.options?.withoutPlatform}
                   />
                 )}
 
-                {/* Scenarios (Elite only) */}
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && viewHistoryItem.results.scenarios && (
+                {/* Scenarios (Elite only) - only show if plan_at_creation was elite */}
+                {viewHistoryItem.plan_at_creation === 'elite' && viewHistoryItem.results.scenarios && (
                   <EnhancedScenariosSection 
                     scenarios={viewHistoryItem.results.scenarios} 
                     adPrice={viewHistoryItem.ad_price}
-                    plan={viewHistoryItem.plan_at_creation as any}
+                    plan="elite"
                   />
                 )}
 
-                {/* What-If (Elite only) */}
-                {canViewHistoryData(plan, viewHistoryItem.plan_at_creation, 'elite') && viewHistoryItem.results.what_if && (
+                {/* What-If (Elite only) - only show if plan_at_creation was elite */}
+                {viewHistoryItem.plan_at_creation === 'elite' && viewHistoryItem.results.what_if && (
                   <WhatIfSimulator
                     whatIf={viewHistoryItem.results.what_if}
                     adPrice={viewHistoryItem.ad_price}
                     actionablePrices={viewHistoryItem.results.actionable_prices}
-                    plan={viewHistoryItem.plan_at_creation as any}
+                    plan="elite"
                   />
                 )}
               </div>

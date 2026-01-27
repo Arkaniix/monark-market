@@ -184,6 +184,8 @@ export function generateEnhancedEstimation(
   };
 
   // === Build result ===
+  // IMPORTANT: We generate ALL data regardless of plan, then UI filters based on plan_at_creation
+  // This ensures historical estimations retain full data even after plan changes
   const result: EnhancedEstimationResult = {
     inputs: {
       model_id: request.model_id,
@@ -211,14 +213,11 @@ export function generateEnhancedEstimation(
     negotiation,
     charts,
     platforms,
+    // Always generate all data - UI will filter based on plan_at_creation
+    scenarios: generateScenarios(actionablePrices, modelData, rng),
+    what_if: generateWhatIf(request.ad_price, marketMedian, actionablePrices),
+    listing_reco: generateListingReco(actionablePrices, modelName, modelData.category),
   };
-
-  // === Elite-only features ===
-  if (plan === "elite") {
-    result.scenarios = generateScenarios(actionablePrices, modelData, rng);
-    result.what_if = generateWhatIf(request.ad_price, marketMedian, actionablePrices);
-    result.listing_reco = generateListingReco(actionablePrices, modelName, modelData.category);
-  }
 
   return result;
 }
