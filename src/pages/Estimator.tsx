@@ -44,67 +44,9 @@ import { useEnhancedEstimation, DEFAULT_ESTIMATION_OPTIONS } from "@/hooks/useEn
 import type { EnhancedEstimationResult, EstimationOptions } from "@/types/estimator";
 import { CONDITION_OPTIONS } from "@/types/estimator";
 
-// Plan hierarchy helper - used for displaying correct badge in history
-const PLAN_HIERARCHY: Record<string, number> = { starter: 0, pro: 1, elite: 2 };
-
-function getHistoryEstimatorLimits(planAtCreation: PlanType): EstimatorFeatures {
-  // Only fields used by ChartsSection are chartInteractive + chartPeriods,
-  // but we return the full shape for type safety.
-  if (planAtCreation === "elite") {
-    return {
-      canSeeMedianPrice: true,
-      canSeeVariation30d: true,
-      canSeeVolume: true,
-      canSeeOpportunityLabel: true,
-      canSeeBuyPrice: true,
-      canSeeSellPrice: true,
-      canSeeMargin: true,
-      canSeeProbability: true,
-      canSeeScenarios: true,
-      canExportEstimation: true,
-      canSeeExtendedHistory: true,
-      canSeeAdvancedIndicators: true,
-      chartInteractive: true,
-      chartPeriods: ["7", "30", "90"],
-    };
-  }
-
-  if (planAtCreation === "pro") {
-    return {
-      canSeeMedianPrice: true,
-      canSeeVariation30d: true,
-      canSeeVolume: true,
-      canSeeOpportunityLabel: true,
-      canSeeBuyPrice: true,
-      canSeeSellPrice: true,
-      canSeeMargin: true,
-      canSeeProbability: true,
-      canSeeScenarios: false,
-      canExportEstimation: false,
-      canSeeExtendedHistory: false,
-      canSeeAdvancedIndicators: false,
-      chartInteractive: true,
-      chartPeriods: ["30", "90"],
-    };
-  }
-
-  return {
-    canSeeMedianPrice: true,
-    canSeeVariation30d: true,
-    canSeeVolume: true,
-    canSeeOpportunityLabel: true,
-    canSeeBuyPrice: false,
-    canSeeSellPrice: false,
-    canSeeMargin: false,
-    canSeeProbability: false,
-    canSeeScenarios: false,
-    canExportEstimation: false,
-    canSeeExtendedHistory: false,
-    canSeeAdvancedIndicators: false,
-    chartInteractive: false,
-    chartPeriods: [],
-  };
-}
+// Import history locked section helper
+import HistoryLockedSection, { isFeatureAccessible } from "@/components/estimator/HistoryLockedSection";
+import { Handshake, TrendingUp, BarChart3, Target } from "lucide-react";
 
 export default function Estimator() {
   const { toast } = useToast();
@@ -582,7 +524,7 @@ export default function Estimator() {
               </motion.div>
             )}
 
-            {/* Results - NEW enhanced layout */}
+            {/* Results - Enhanced layout with accessible sections first, locked sections last */}
             <AnimatePresence mode="wait">
               {result && (
                 <motion.div 
@@ -609,6 +551,8 @@ export default function Estimator() {
                     />
                   )}
 
+                  {/* ============ ACCESSIBLE SECTIONS (based on current plan) ============ */}
+
                   {/* === SECTION 1: SYNTHESIS + OPPORTUNITY SCORE (All plans) === */}
                   <div className="grid md:grid-cols-2 gap-6">
                     <SynthesisBanner result={result as any} />
@@ -628,21 +572,31 @@ export default function Estimator() {
                   />
 
                   {/* === SECTION 3: DECISION BLOCK (Pro+) === */}
-                  <EnhancedDecisionBlock
-                    decision={result.decision}
-                    actionablePrices={result.actionable_prices}
-                    adPrice={result.inputs.ad_price}
-                    plan={plan}
-                  />
+                  {plan !== 'starter' && (
+                    <EnhancedDecisionBlock
+                      decision={result.decision}
+                      actionablePrices={result.actionable_prices}
+                      adPrice={result.inputs.ad_price}
+                      plan={plan}
+                    />
+                  )}
 
-
-                  {/* === SECTION 5: NEGOTIATION (Pro+) === */}
-                  {result.negotiation && (
+                  {/* === SECTION 4: NEGOTIATION (Pro+) === */}
+                  {result.negotiation && plan !== 'starter' && (
                     <EnhancedNegotiationSection
                       negotiation={result.negotiation}
                       adPrice={result.inputs.ad_price}
                       plan={plan}
                       withoutCondition={options.withoutCondition}
+                    />
+                  )}
+
+                  {/* === SECTION 5: PLATFORMS (Pro+) === */}
+                  {result.platforms && plan !== 'starter' && (
+                    <EnhancedPlatformsSection
+                      platforms={result.platforms}
+                      plan={plan}
+                      sourcePlatform={result.inputs.platform}
                     />
                   )}
 
@@ -655,8 +609,40 @@ export default function Estimator() {
                     />
                   )}
 
-                  {/* === SECTION 7: PLATFORMS (Pro+ basic, Elite full) === */}
-                  {result.platforms && (
+                  {/* === SECTION 7: WHAT-IF SIMULATOR (Elite) === */}
+                  {result.what_if && plan === 'elite' && (
+                    <WhatIfSimulator
+                      whatIf={result.what_if}
+                      adPrice={result.inputs.ad_price}
+                      actionablePrices={result.actionable_prices}
+                      plan={plan}
+                    />
+                  )}
+
+                  {/* ============ LOCKED SECTIONS (not available with current plan) ============ */}
+                  
+                  {/* Decision Block - Locked for Starter */}
+                  {plan === 'starter' && (
+                    <EnhancedDecisionBlock
+                      decision={result.decision}
+                      actionablePrices={result.actionable_prices}
+                      adPrice={result.inputs.ad_price}
+                      plan={plan}
+                    />
+                  )}
+
+                  {/* Negotiation - Locked for Starter */}
+                  {result.negotiation && plan === 'starter' && (
+                    <EnhancedNegotiationSection
+                      negotiation={result.negotiation}
+                      adPrice={result.inputs.ad_price}
+                      plan={plan}
+                      withoutCondition={options.withoutCondition}
+                    />
+                  )}
+
+                  {/* Platforms - Locked for Starter */}
+                  {result.platforms && plan === 'starter' && (
                     <EnhancedPlatformsSection
                       platforms={result.platforms}
                       plan={plan}
@@ -664,8 +650,17 @@ export default function Estimator() {
                     />
                   )}
 
-                  {/* === SECTION 8: WHAT-IF SIMULATOR (Elite) === */}
-                  {result.what_if && plan === 'elite' && (
+                  {/* Scenarios - Locked for non-Elite */}
+                  {result.scenarios && plan !== 'elite' && (
+                    <EnhancedScenariosSection
+                      scenarios={result.scenarios}
+                      adPrice={result.inputs.ad_price}
+                      plan={plan}
+                    />
+                  )}
+
+                  {/* What-If - Locked for non-Elite */}
+                  {result.what_if && plan !== 'elite' && (
                     <WhatIfSimulator
                       whatIf={result.what_if}
                       adPrice={result.inputs.ad_price}
@@ -805,78 +800,171 @@ export default function Estimator() {
                 </Badge>
               </DialogTitle>
             </DialogHeader>
-            {viewHistoryItem?.results && (
-              <div className="space-y-6 mt-4">
-                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                  <p className="text-sm text-amber-700 dark:text-amber-400">
-                    ⚠️ Ces données datent du {new Date(viewHistoryItem.created_at).toLocaleDateString('fr-FR')}. 
-                    Le marché peut avoir évolué depuis. Pour des données à jour, relancez une estimation (coûte des crédits).
-                  </p>
+            {viewHistoryItem?.results && (() => {
+              const historyPlan = viewHistoryItem.plan_at_creation as PlanType;
+              
+              // Helper to re-estimate with this item's data
+              const handleReEstimate = () => {
+                const nextPlatform = normalizePlatformKey(viewHistoryItem.platform);
+                setSelectedModel({
+                  id: viewHistoryItem.model_id,
+                  name: viewHistoryItem.model_name,
+                  brand: viewHistoryItem.brand || '',
+                  category: viewHistoryItem.category,
+                  family: null
+                });
+                setModelSearch(viewHistoryItem.model_name);
+                setCondition(viewHistoryItem.condition || '');
+                setAdPrice(viewHistoryItem.ad_price.toString());
+                if (nextPlatform) setPlatform(nextPlatform);
+                setOptions({
+                  withoutPlatform: !viewHistoryItem.platform,
+                  withoutCondition: !viewHistoryItem.condition,
+                });
+                setViewHistoryItem(null);
+                setActiveTab("estimator");
+              };
+
+              // Features accessible based on plan at creation
+              const hasDecision = isFeatureAccessible('decision', historyPlan);
+              const hasNegotiation = isFeatureAccessible('negotiation', historyPlan);
+              const hasPlatforms = isFeatureAccessible('platforms', historyPlan);
+              const hasScenarios = isFeatureAccessible('scenarios', historyPlan);
+              const hasWhatIf = isFeatureAccessible('whatIf', historyPlan);
+
+              return (
+                <div className="space-y-6 mt-4">
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      ⚠️ Ces données datent du {new Date(viewHistoryItem.created_at).toLocaleDateString('fr-FR')}. 
+                      Le marché peut avoir évolué depuis. Pour des données à jour, relancez une estimation (coûte des crédits).
+                    </p>
+                  </div>
+                  
+                  {/* ============ ACCESSIBLE SECTIONS (based on plan_at_creation) ============ */}
+                  
+                  {/* Synthesis Banner - Always accessible */}
+                  <SynthesisBanner result={viewHistoryItem.results} />
+
+                  {/* Hypotheses if any - Always accessible */}
+                  {viewHistoryItem.results.hypotheses?.length > 0 && (
+                    <HypothesesBanner hypotheses={viewHistoryItem.results.hypotheses} />
+                  )}
+
+                  {/* Decision Block - Pro+ */}
+                  {hasDecision && (
+                    <EnhancedDecisionBlock 
+                      decision={viewHistoryItem.results.decision}
+                      actionablePrices={viewHistoryItem.results.actionable_prices}
+                      adPrice={viewHistoryItem.ad_price}
+                      plan={historyPlan}
+                    />
+                  )}
+
+                  {/* Market Data - Always show basic, Pro+ for advanced */}
+                  <EnhancedMarketCard 
+                    market={viewHistoryItem.results.market} 
+                    adPrice={viewHistoryItem.ad_price}
+                    plan={historyPlan}
+                  />
+
+                  {/* Negotiation Section - Pro+ */}
+                  {hasNegotiation && viewHistoryItem.results.negotiation && (
+                    <EnhancedNegotiationSection 
+                      negotiation={viewHistoryItem.results.negotiation}
+                      adPrice={viewHistoryItem.ad_price}
+                      plan={historyPlan}
+                    />
+                  )}
+
+                  {/* Platforms Analysis - Pro+ */}
+                  {hasPlatforms && viewHistoryItem.results.platforms && (
+                    <EnhancedPlatformsSection 
+                      platforms={viewHistoryItem.results.platforms}
+                      plan={historyPlan}
+                      sourcePlatform={viewHistoryItem.platform}
+                      withoutPlatform={viewHistoryItem.options?.withoutPlatform}
+                    />
+                  )}
+
+                  {/* Scenarios - Elite only */}
+                  {hasScenarios && viewHistoryItem.results.scenarios && (
+                    <EnhancedScenariosSection 
+                      scenarios={viewHistoryItem.results.scenarios} 
+                      adPrice={viewHistoryItem.ad_price}
+                      plan="elite"
+                    />
+                  )}
+
+                  {/* What-If Simulator - Elite only */}
+                  {hasWhatIf && viewHistoryItem.results.what_if && (
+                    <WhatIfSimulator
+                      whatIf={viewHistoryItem.results.what_if}
+                      adPrice={viewHistoryItem.ad_price}
+                      actionablePrices={viewHistoryItem.results.actionable_prices}
+                      plan="elite"
+                    />
+                  )}
+
+                  {/* ============ LOCKED SECTIONS (not available at plan_at_creation) ============ */}
+                  
+                  {/* Decision Block - Locked for Starter */}
+                  {!hasDecision && (
+                    <HistoryLockedSection
+                      title="Recommandation d'achat"
+                      icon={<Target className="h-5 w-5" />}
+                      planAtCreation={historyPlan}
+                      currentPlan={plan}
+                      onReEstimate={handleReEstimate}
+                    />
+                  )}
+
+                  {/* Negotiation - Locked for Starter */}
+                  {!hasNegotiation && (
+                    <HistoryLockedSection
+                      title="Stratégie de négociation"
+                      icon={<Handshake className="h-5 w-5" />}
+                      planAtCreation={historyPlan}
+                      currentPlan={plan}
+                      onReEstimate={handleReEstimate}
+                    />
+                  )}
+
+                  {/* Platforms - Locked for Starter */}
+                  {!hasPlatforms && (
+                    <HistoryLockedSection
+                      title="Analyse des plateformes"
+                      icon={<BarChart3 className="h-5 w-5" />}
+                      planAtCreation={historyPlan}
+                      currentPlan={plan}
+                      onReEstimate={handleReEstimate}
+                    />
+                  )}
+
+                  {/* Scenarios - Locked for non-Elite */}
+                  {!hasScenarios && (
+                    <HistoryLockedSection
+                      title="Scénarios de revente"
+                      icon={<TrendingUp className="h-5 w-5" />}
+                      planAtCreation={historyPlan}
+                      currentPlan={plan}
+                      onReEstimate={handleReEstimate}
+                    />
+                  )}
+
+                  {/* What-If - Locked for non-Elite */}
+                  {!hasWhatIf && (
+                    <HistoryLockedSection
+                      title="Simulateur What-If"
+                      icon={<Calculator className="h-5 w-5" />}
+                      planAtCreation={historyPlan}
+                      currentPlan={plan}
+                      onReEstimate={handleReEstimate}
+                    />
+                  )}
                 </div>
-                
-                {/* Synthesis Banner */}
-                <SynthesisBanner result={viewHistoryItem.results} />
-
-                {/* Hypotheses if any */}
-                {viewHistoryItem.results.hypotheses?.length > 0 && (
-                  <HypothesesBanner hypotheses={viewHistoryItem.results.hypotheses} />
-                )}
-
-                {/* Decision Block */}
-                <EnhancedDecisionBlock 
-                  decision={viewHistoryItem.results.decision}
-                  actionablePrices={viewHistoryItem.results.actionable_prices}
-                  adPrice={viewHistoryItem.ad_price}
-                  plan={viewHistoryItem.plan_at_creation as any}
-                />
-
-                {/* Market Data - always show, UI handles locking based on plan_at_creation */}
-                <EnhancedMarketCard 
-                  market={viewHistoryItem.results.market} 
-                  adPrice={viewHistoryItem.ad_price}
-                  plan={viewHistoryItem.plan_at_creation as PlanType}
-                />
-
-
-                {/* Negotiation Section - show if data exists, UI handles locking */}
-                {viewHistoryItem.results.negotiation && (
-                  <EnhancedNegotiationSection 
-                    negotiation={viewHistoryItem.results.negotiation}
-                    adPrice={viewHistoryItem.ad_price}
-                    plan={viewHistoryItem.plan_at_creation as PlanType}
-                  />
-                )}
-
-                {/* Platforms Analysis - show if data exists, UI handles locking */}
-                {viewHistoryItem.results.platforms && (
-                  <EnhancedPlatformsSection 
-                    platforms={viewHistoryItem.results.platforms}
-                    plan={viewHistoryItem.plan_at_creation as PlanType}
-                    sourcePlatform={viewHistoryItem.platform}
-                    withoutPlatform={viewHistoryItem.options?.withoutPlatform}
-                  />
-                )}
-
-                {/* Scenarios (Elite only) - only show if plan_at_creation was elite */}
-                {viewHistoryItem.plan_at_creation === 'elite' && viewHistoryItem.results.scenarios && (
-                  <EnhancedScenariosSection 
-                    scenarios={viewHistoryItem.results.scenarios} 
-                    adPrice={viewHistoryItem.ad_price}
-                    plan="elite"
-                  />
-                )}
-
-                {/* What-If (Elite only) - only show if plan_at_creation was elite */}
-                {viewHistoryItem.plan_at_creation === 'elite' && viewHistoryItem.results.what_if && (
-                  <WhatIfSimulator
-                    whatIf={viewHistoryItem.results.what_if}
-                    adPrice={viewHistoryItem.ad_price}
-                    actionablePrices={viewHistoryItem.results.actionable_prices}
-                    plan="elite"
-                  />
-                )}
-              </div>
-            )}
+              );
+            })()}
           </DialogContent>
         </Dialog>
       </div>
