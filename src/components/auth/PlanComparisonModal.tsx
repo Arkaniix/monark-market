@@ -6,7 +6,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { 
   Check, 
   X, 
@@ -20,9 +19,15 @@ import {
   Headphones,
   Crown,
   Sparkles,
-  Star
+  Star,
+  HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PlanComparisonModalProps {
   trigger: React.ReactNode;
@@ -60,6 +65,13 @@ const PLANS = [
   },
 ];
 
+// Tooltips détaillés pour l'Estimator par plan
+const ESTIMATOR_TOOLTIPS = {
+  starter: "Synthèse de base : score d'opportunité, prix médian du marché et recommandation simplifiée (Acheter/Passer).",
+  pro: "Analyse avancée : prix actionnables (plafond d'achat, cible revente, plancher), aide à la négociation, graphiques interactifs 30/90j avec volume, et top 3 plateformes de revente.",
+  elite: "Analyse complète : décomposition du score, scénarios avec probabilités et délais estimés, simulateur What-if pour tester différents prix d'achat, bandes P25-P75 sur graphiques, et export CSV.",
+};
+
 const FEATURES = [
   {
     name: "Crédits mensuels",
@@ -90,6 +102,7 @@ const FEATURES = [
     starter: "Synthèse",
     pro: "Avancé",
     elite: "Complet",
+    hasTooltips: true,
   },
   {
     name: "Scrap avancé",
@@ -121,9 +134,19 @@ const FEATURES = [
   },
 ];
 
-function FeatureValue({ value, planId }: { value: boolean | string; planId: string }) {
-  if (typeof value === "boolean") {
-    return value ? (
+function FeatureValue({ 
+  value, 
+  planId, 
+  hasTooltip,
+  tooltipContent 
+}: { 
+  value: boolean | string; 
+  planId: string;
+  hasTooltip?: boolean;
+  tooltipContent?: string;
+}) {
+  const content = typeof value === "boolean" ? (
+    value ? (
       <div className="flex items-center justify-center">
         <div className="rounded-full bg-green-500/20 p-1">
           <Check className="h-4 w-4 text-green-500" />
@@ -135,9 +158,8 @@ function FeatureValue({ value, planId }: { value: boolean | string; planId: stri
           <X className="h-4 w-4 text-muted-foreground/40" />
         </div>
       </div>
-    );
-  }
-  return (
+    )
+  ) : (
     <span className={cn(
       "text-sm font-semibold",
       planId === "elite" && "text-amber-500",
@@ -146,6 +168,24 @@ function FeatureValue({ value, planId }: { value: boolean | string; planId: stri
       {value}
     </span>
   );
+
+  if (hasTooltip && tooltipContent) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center justify-center gap-1 cursor-help">
+            {content}
+            <HelpCircle className="h-3 w-3 text-muted-foreground/60" />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-[220px] text-xs">
+          {tooltipContent}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return content;
 }
 
 export function PlanComparisonModal({
@@ -254,49 +294,38 @@ export function PlanComparisonModal({
                     </span>
                   </div>
                   <div className="text-center">
-                    <FeatureValue value={feature.starter} planId="starter" />
+                    <FeatureValue 
+                      value={feature.starter} 
+                      planId="starter" 
+                      hasTooltip={feature.hasTooltips}
+                      tooltipContent={feature.hasTooltips ? ESTIMATOR_TOOLTIPS.starter : undefined}
+                    />
                   </div>
                   <div className="text-center">
-                    <FeatureValue value={feature.pro} planId="pro" />
+                    <FeatureValue 
+                      value={feature.pro} 
+                      planId="pro" 
+                      hasTooltip={feature.hasTooltips}
+                      tooltipContent={feature.hasTooltips ? ESTIMATOR_TOOLTIPS.pro : undefined}
+                    />
                   </div>
                   <div className="text-center">
-                    <FeatureValue value={feature.elite} planId="elite" />
+                    <FeatureValue 
+                      value={feature.elite} 
+                      planId="elite" 
+                      hasTooltip={feature.hasTooltips}
+                      tooltipContent={feature.hasTooltips ? ESTIMATOR_TOOLTIPS.elite : undefined}
+                    />
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Selection buttons */}
-          <div className="grid grid-cols-4 gap-3 mt-6">
-            <div />
-            {PLANS.map((plan) => {
-              const isSelected = selectedPlan === plan.id;
-              return (
-                <Button
-                  key={plan.id}
-                  variant={isSelected ? "default" : "outline"}
-                  size="lg"
-                  onClick={() => onSelectPlan(plan.id)}
-                  className={cn(
-                    "w-full font-semibold transition-all",
-                    isSelected && "shadow-lg",
-                    plan.id === "elite" && !isSelected && "border-amber-500/50 text-amber-500 hover:bg-amber-500/10",
-                    plan.id === "pro" && !isSelected && "border-primary/50 text-primary hover:bg-primary/10",
-                  )}
-                >
-                  {isSelected ? (
-                    <span className="flex items-center gap-1.5">
-                      <Check className="h-4 w-4" />
-                      Sélectionné
-                    </span>
-                  ) : (
-                    "Choisir"
-                  )}
-                </Button>
-              );
-            })}
-          </div>
+          {/* Hint text */}
+          <p className="text-center text-xs text-muted-foreground mt-4">
+            Cliquez sur un plan ci-dessus pour le sélectionner
+          </p>
         </div>
       </DialogContent>
     </Dialog>
