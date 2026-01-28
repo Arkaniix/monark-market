@@ -46,7 +46,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <img 
                 src={monarkLogo} 
                 alt="Monark" 
-                className="h-8 w-auto"
+                className="h-10 w-auto"
               />
             </Link>
 

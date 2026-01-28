@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft, Check, Rocket, Award, Users, ExternalLink } from "lucide-react";
+import monarkLogo from "@/assets/logo.png";
 import { PlanComparisonModal } from "@/components/auth/PlanComparisonModal";
 import { z } from "zod";
 import { motion } from "framer-motion";
@@ -244,18 +245,13 @@ export default function Auth() {
       <div className="w-full max-w-6xl grid gap-8 items-start lg:grid-cols-2">
         {/* Left Panel - Marketing Content */}
         <div className="hidden lg:flex flex-col gap-8 p-8">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                <Zap className="h-9 w-9 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Monark
-                </h1>
-                <p className="text-muted-foreground">Votre marketplace hardware intelligent</p>
-              </div>
-            </div>
+          <div className="flex items-center gap-4">
+            <img 
+              src={monarkLogo} 
+              alt="Monark" 
+              className="h-14 w-auto"
+            />
+            <p className="text-muted-foreground">Votre marketplace hardware intelligent</p>
           </div>
 
           <div className="space-y-6">
@@ -299,9 +295,11 @@ export default function Auth() {
         <Card className="w-full shadow-2xl">
           <CardHeader className="text-center space-y-2">
             <div className="flex justify-center mb-2 lg:hidden">
-              <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Zap className="h-7 w-7 text-primary-foreground" />
-              </div>
+              <img 
+                src={monarkLogo} 
+                alt="Monark" 
+                className="h-10 w-auto"
+              />
             </div>
             <CardTitle className="text-2xl lg:text-3xl">
               <span className="lg:hidden">Monark</span>
