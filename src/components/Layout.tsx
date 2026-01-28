@@ -46,7 +46,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <Zap className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                HardwareMarket
+                Monark
               </span>
             </Link>
 
@@ -209,7 +209,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           
           <div className="mt-8 pt-8 border-t text-center">
             <p className="text-sm text-muted-foreground">
-              © 2025 <span className="font-semibold text-foreground">HardwareMarket</span>. Tous droits réservés.
+              © 2025 <span className="font-semibold text-foreground">Monark</span>. Tous droits réservés.
             </p>
           </div>
         </div>

@@ -13,7 +13,7 @@ export default function CGU() {
           <CardContent className="prose prose-sm max-w-none">
             <p>
               Les présentes Conditions Générales d'Utilisation (ci-après "CGU") régissent l'utilisation
-              de la plateforme HardwareMarket (ci-après "la Plateforme"), accessible à l'adresse
+              de la plateforme Monark (ci-après "la Plateforme"), accessible à l'adresse
               [votre-domaine.com].
             </p>
             <p>
@@ -95,7 +95,7 @@ export default function CGU() {
             <p>
               Tous les éléments de la Plateforme (textes, images, logos, bases de données, etc.)
               sont protégés par les droits de propriété intellectuelle et appartiennent à
-              HardwareMarket ou à ses partenaires.
+              Monark ou à ses partenaires.
             </p>
             <p>
               Toute reproduction, représentation, modification ou exploitation non autorisée
@@ -110,7 +110,7 @@ export default function CGU() {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none">
             <p>
-              HardwareMarket s'efforce de fournir des informations exactes et à jour, mais ne
+              Monark s'efforce de fournir des informations exactes et à jour, mais ne
               peut garantir l'exactitude, l'exhaustivité ou la pertinence des données affichées.
             </p>
             <p>
@@ -129,7 +129,7 @@ export default function CGU() {
               Vous pouvez résilier votre compte à tout moment depuis les paramètres de votre compte.
             </p>
             <p>
-              HardwareMarket se réserve le droit de suspendre ou résilier un compte en cas de
+              Monark se réserve le droit de suspendre ou résilier un compte en cas de
               violation des présentes CGU.
             </p>
           </CardContent>
@@ -141,7 +141,7 @@ export default function CGU() {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none">
             <p>
-              HardwareMarket se réserve le droit de modifier les présentes CGU à tout moment.
+              Monark se réserve le droit de modifier les présentes CGU à tout moment.
               Les utilisateurs seront informés de toute modification significative.
             </p>
           </CardContent>
