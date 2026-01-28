@@ -249,9 +249,9 @@ export default function Auth() {
             <img 
               src={monarkLogo} 
               alt="Monark" 
-              className="h-14 w-auto"
+              className="h-20 w-auto"
             />
-            <p className="text-muted-foreground">Votre marketplace hardware intelligent</p>
+            <p className="text-muted-foreground text-lg">Votre marketplace hardware intelligent</p>
           </div>
 
           <div className="space-y-6">
@@ -298,7 +298,7 @@ export default function Auth() {
               <img 
                 src={monarkLogo} 
                 alt="Monark" 
-                className="h-10 w-auto"
+                className="h-14 w-auto"
               />
             </div>
             <CardTitle className="text-2xl lg:text-3xl">
