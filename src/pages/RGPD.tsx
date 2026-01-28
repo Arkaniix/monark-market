@@ -12,8 +12,8 @@ export default function RGPD() {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none">
             <p>
-              Le responsable du traitement des données personnelles est HardwareMarket,
-              joignable à l'adresse email : contact@hardwaremarket.com
+              Le responsable du traitement des données personnelles est Monark,
+              joignable à l'adresse email : contact@monark.fr
             </p>
           </CardContent>
         </Card>
@@ -115,7 +115,7 @@ export default function RGPD() {
               <li><strong>Droit de retirer votre consentement :</strong> à tout moment</li>
             </ul>
             <p>
-              Pour exercer ces droits, contactez-nous à : privacy@hardwaremarket.com
+              Pour exercer ces droits, contactez-nous à : privacy@monark.fr
             </p>
           </CardContent>
         </Card>

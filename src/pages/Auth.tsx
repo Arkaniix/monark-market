@@ -251,7 +251,7 @@ export default function Auth() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  HardwareMarket
+                  Monark
                 </h1>
                 <p className="text-muted-foreground">Votre marketplace hardware intelligent</p>
               </div>
@@ -304,7 +304,7 @@ export default function Auth() {
               </div>
             </div>
             <CardTitle className="text-2xl lg:text-3xl">
-              <span className="lg:hidden">HardwareMarket</span>
+              <span className="lg:hidden">Monark</span>
               <span className="hidden lg:inline">Commencez maintenant</span>
             </CardTitle>
             <CardDescription className="text-base">

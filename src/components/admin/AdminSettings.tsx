@@ -21,12 +21,12 @@ export default function AdminSettings() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="app-name">Nom de l'application</Label>
-            <Input id="app-name" defaultValue="GPUDeal" />
+            <Input id="app-name" defaultValue="Monark" />
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="tagline">Slogan</Label>
-            <Input id="tagline" defaultValue="Les meilleures affaires GPU du marché" />
+            <Input id="tagline" defaultValue="Votre marketplace hardware intelligent" />
           </div>
 
           <Button>

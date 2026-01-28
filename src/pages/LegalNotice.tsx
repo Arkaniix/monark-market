@@ -12,7 +12,7 @@ export default function LegalNotice() {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none">
             <p>
-              <strong>Nom de la société :</strong> HardwareMarket<br />
+              <strong>Nom de la société :</strong> Monark<br />
               <strong>Forme juridique :</strong> [À compléter - SAS, SARL, etc.]<br />
               <strong>Capital social :</strong> [À compléter]<br />
               <strong>Siège social :</strong> [À compléter - Adresse complète]<br />
@@ -22,7 +22,7 @@ export default function LegalNotice() {
             </p>
             <p>
               <strong>Directeur de la publication :</strong> [À compléter - Nom et prénom]<br />
-              <strong>Email :</strong> contact@hardwaremarket.com<br />
+              <strong>Email :</strong> contact@monark.fr<br />
               <strong>Téléphone :</strong> [À compléter]
             </p>
           </CardContent>
@@ -34,7 +34,7 @@ export default function LegalNotice() {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none">
             <p>
-              Le site HardwareMarket est hébergé par :
+              Le site Monark est hébergé par :
             </p>
             <p>
               <strong>Hébergeur :</strong> Lovable (via Supabase)<br />
@@ -49,14 +49,14 @@ export default function LegalNotice() {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none">
             <p>
-              L'ensemble du contenu du site HardwareMarket (structure, textes, logos, images,
+              L'ensemble du contenu du site Monark (structure, textes, logos, images,
               vidéos, bases de données, etc.) est protégé par le droit d'auteur et le droit
               des bases de données.
             </p>
             <p>
               Toute reproduction, représentation, modification, publication, adaptation de
               tout ou partie des éléments du site, quel que soit le moyen ou le procédé utilisé,
-              est interdite, sauf autorisation écrite préalable de HardwareMarket.
+              est interdite, sauf autorisation écrite préalable de Monark.
             </p>
             <p>
               Toute exploitation non autorisée du site ou de l'un des éléments qu'il contient
@@ -73,7 +73,7 @@ export default function LegalNotice() {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none">
             <p>
-              HardwareMarket s'efforce de fournir sur le site des informations aussi précises
+              Monark s'efforce de fournir sur le site des informations aussi précises
               que possible. Toutefois, il ne pourra être tenu responsable des omissions, des
               inexactitudes et des carences dans la mise à jour, qu'elles soient de son fait
               ou du fait des tiers partenaires qui lui fournissent ces informations.
@@ -84,7 +84,7 @@ export default function LegalNotice() {
               le site ne sont pas exhaustifs.
             </p>
             <p>
-              HardwareMarket ne pourra être tenu responsable des dommages directs et indirects
+              Monark ne pourra être tenu responsable des dommages directs et indirects
               causés au matériel de l'utilisateur, lors de l'accès au site, et résultant soit
               de l'utilisation d'un matériel ne répondant pas aux spécifications indiquées,
               soit de l'apparition d'un bug ou d'une incompatibilité.
@@ -109,7 +109,7 @@ export default function LegalNotice() {
             </p>
             <p>
               Pour exercer ces droits ou pour toute question sur le traitement de vos données,
-              vous pouvez nous contacter à l'adresse : privacy@hardwaremarket.com
+              vous pouvez nous contacter à l'adresse : privacy@monark.fr
             </p>
             <p>
               Pour plus d'informations, consultez notre <a href="/rgpd" className="text-primary hover:underline">Politique de confidentialité</a>.
@@ -141,11 +141,11 @@ export default function LegalNotice() {
           <CardContent className="prose prose-sm max-w-none">
             <p>
               Le site peut contenir des liens hypertextes vers d'autres sites internet.
-              HardwareMarket n'a pas de contrôle sur ces sites et décline toute responsabilité
+              Monark n'a pas de contrôle sur ces sites et décline toute responsabilité
               quant à leur contenu.
             </p>
             <p>
-              La mise en place de liens hypertextes vers le site HardwareMarket nécessite
+              La mise en place de liens hypertextes vers le site Monark nécessite
               une autorisation préalable écrite.
             </p>
           </CardContent>
@@ -172,7 +172,7 @@ export default function LegalNotice() {
           </CardHeader>
           <CardContent className="prose prose-sm max-w-none">
             <p>
-              <strong>Conception et développement :</strong> HardwareMarket<br />
+              <strong>Conception et développement :</strong> Monark<br />
               <strong>Hébergement :</strong> Lovable (Supabase)<br />
               <strong>Icônes :</strong> Lucide Icons<br />
               <strong>Framework :</strong> React, TypeScript, Tailwind CSS
@@ -190,7 +190,7 @@ export default function LegalNotice() {
               nous contacter :
             </p>
             <p>
-              <strong>Par email :</strong> contact@hardwaremarket.com<br />
+              <strong>Par email :</strong> contact@monark.fr<br />
               <strong>Par courrier :</strong> [À compléter - Adresse postale complète]
             </p>
           </CardContent>
