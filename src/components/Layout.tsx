@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Search, Radar, Home, Zap, User, Menu, Calculator, Users, GraduationCap, LogOut, Shield, Scale, MessageCircle } from "lucide-react";
+import monarkLogo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
@@ -41,13 +42,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link to={user ? "/" : "/landing"} className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Zap className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Monark
-              </span>
+            <Link to={user ? "/" : "/landing"} className="flex items-center">
+              <img 
+                src={monarkLogo} 
+                alt="Monark" 
+                className="h-8 w-auto"
+              />
             </Link>
 
             {/* Desktop Navigation - Only show for authenticated users */}
