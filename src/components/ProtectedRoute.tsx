@@ -27,7 +27,7 @@ const ProtectedRoute = ({
 
   // If authentication is required and user is not logged in
   if (requiresAuth && !user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/landing" replace />;
   }
 
   // If admin role is required and user is not admin
