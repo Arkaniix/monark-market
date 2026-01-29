@@ -1,9 +1,13 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { apiFetch, getAccessToken, setTokens, clearTokens } from "@/lib/api";
 
-// Check if we're in mock mode
+// Check if we're in mock mode - SECURITY: Mock mode is DISABLED in production builds
 const DATA_PROVIDER = import.meta.env.VITE_DATA_PROVIDER || 'mock';
-const IS_MOCK_MODE = DATA_PROVIDER === 'mock';
+const IS_PRODUCTION = import.meta.env.PROD;
+
+// SECURITY FIX: Force mock mode OFF in production builds regardless of environment variable
+// This prevents authentication bypass if VITE_DATA_PROVIDER is accidentally set to 'mock' in production
+const IS_MOCK_MODE = !IS_PRODUCTION && DATA_PROVIDER === 'mock';
 
 // Mock user accounts for development
 const MOCK_ACCOUNTS: Record<string, { password: string; user: User }> = {
