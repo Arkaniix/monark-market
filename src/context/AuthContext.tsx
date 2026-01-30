@@ -2,12 +2,37 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { apiFetch, getAccessToken, setTokens, clearTokens } from "@/lib/api";
 
 // Check if we're in mock mode - SECURITY: Mock mode is DISABLED in production builds
-const DATA_PROVIDER = import.meta.env.VITE_DATA_PROVIDER || 'mock';
+const ENV_PROVIDER_TYPE = import.meta.env.VITE_DATA_PROVIDER || 'mock';
 const IS_PRODUCTION = import.meta.env.PROD;
+const PROVIDER_OVERRIDE_KEY = 'DATA_PROVIDER_OVERRIDE';
+
+// Check if we're in a dev/lovable environment
+const isDevEnvironment = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return (
+    hostname === 'localhost' ||
+    hostname.includes('lovable.dev') ||
+    hostname.includes('lovableproject.com') ||
+    hostname.includes('127.0.0.1') ||
+    import.meta.env.DEV
+  );
+};
+
+// Get effective provider type (respects localStorage override in dev)
+const getEffectiveProviderType = (): 'api' | 'mock' => {
+  if (isDevEnvironment()) {
+    const override = localStorage.getItem(PROVIDER_OVERRIDE_KEY);
+    if (override === 'mock' || override === 'api') {
+      return override;
+    }
+  }
+  return ENV_PROVIDER_TYPE as 'api' | 'mock';
+};
 
 // SECURITY FIX: Force mock mode OFF in production builds regardless of environment variable
 // This prevents authentication bypass if VITE_DATA_PROVIDER is accidentally set to 'mock' in production
-const IS_MOCK_MODE = !IS_PRODUCTION && DATA_PROVIDER === 'mock';
+const IS_MOCK_MODE = !IS_PRODUCTION && getEffectiveProviderType() === 'mock';
 
 // Mock user accounts for development
 const MOCK_ACCOUNTS: Record<string, { password: string; user: User }> = {
