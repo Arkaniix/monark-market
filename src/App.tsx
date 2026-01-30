@@ -26,9 +26,9 @@ const App = () => {
               <TooltipProvider>
               <Toaster />
               <Sonner />
-              <ApiUnavailableBanner />
-              <DevModeBadge />
               <BrowserRouter>
+                <ApiUnavailableBanner />
+                <DevModeBadge />
                 <ScrollToTop />
                 <Layout>
                   <Routes>
