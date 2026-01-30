@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/context/AuthContext";
 import { ApiException } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIcon, ArrowLeft, Check, Rocket, Award, Users, ExternalLink } from "lucide-react";
-import monarkLogo from "@/assets/logo.png";
+import monarkLogoLight from "@/assets/logo.png";
+import monarkLogoDark from "@/assets/logo-dark-text.png";
 import { PlanComparisonModal } from "@/components/auth/PlanComparisonModal";
 import { z } from "zod";
 import { motion } from "framer-motion";
@@ -68,6 +70,10 @@ export default function Auth() {
     isLoading,
     isMockMode
   } = useAuth();
+  const { resolvedTheme } = useTheme();
+  
+  // Use dark text logo in light mode, white text logo in dark mode
+  const monarkLogo = resolvedTheme === 'dark' ? monarkLogoLight : monarkLogoDark;
   // Force scroll to top on mount
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
