@@ -5,8 +5,6 @@ import { toast } from "sonner";
 export interface SupportTicket {
   id: number;
   user_id: string;
-  user_email: string | null;
-  user_name: string | null;
   subject: string;
   message: string;
   priority: 'low' | 'medium' | 'high';

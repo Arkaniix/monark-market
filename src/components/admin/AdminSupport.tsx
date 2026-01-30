@@ -59,11 +59,7 @@ export default function AdminSupport() {
     if (priorityFilter !== "all" && ticket.priority !== priorityFilter) return false;
     if (searchQuery) {
       const search = searchQuery.toLowerCase();
-      return (
-        ticket.subject.toLowerCase().includes(search) ||
-        ticket.user_name?.toLowerCase().includes(search) ||
-        ticket.user_email?.toLowerCase().includes(search)
-      );
+      return ticket.subject.toLowerCase().includes(search);
     }
     return true;
   }) || [];
@@ -192,8 +188,8 @@ export default function AdminSupport() {
                 {filteredTickets.map((ticket) => (
                   <TableRow key={ticket.id}>
                     <TableCell className="font-mono">#{ticket.id}</TableCell>
-                    <TableCell className="font-medium">
-                      {ticket.user_name || ticket.user_email || 'Utilisateur inconnu'}
+                    <TableCell className="font-medium font-mono text-xs">
+                      {ticket.user_id.slice(0, 8)}...
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">{ticket.subject}</TableCell>
                     <TableCell>
