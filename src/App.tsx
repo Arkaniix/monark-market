@@ -28,7 +28,6 @@ const App = () => {
               <Sonner />
               <BrowserRouter>
                 <ApiUnavailableBanner />
-                <DevModeBadge />
                 <ScrollToTop />
                 <Layout>
                   <Routes>
@@ -46,12 +45,13 @@ const App = () => {
                               <Component />
                             </ProtectedRoute>
                           }
-                        />
-                      );
-                    })}
-                  </Routes>
-                </Layout>
-              </BrowserRouter>
+                      />
+                    );
+                  })}
+                </Routes>
+              </Layout>
+              <DevModeBadge />
+            </BrowserRouter>
               </TooltipProvider>
             </ScrapJobProvider>
           </AuthProvider>

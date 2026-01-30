@@ -18,7 +18,7 @@ export function ApiUnavailableBanner() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-destructive/95 text-destructive-foreground px-4 py-3 shadow-lg">
+    <div className="w-full bg-destructive text-destructive-foreground px-4 py-3 shadow-lg">
       <div className="container mx-auto flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <AlertTriangle className="h-5 w-5 flex-shrink-0" />
