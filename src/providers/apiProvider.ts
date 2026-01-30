@@ -127,7 +127,7 @@ export const apiProvider: DataProvider = {
 
   // Catalog
   async getCategories() {
-    return apiFetch<Category[]>(ENDPOINTS.HARDWARE.CATEGORIES);
+    return apiFetch<Category[]>(ENDPOINTS.CATEGORIES.LIST);
   },
   async getManufacturers(category) {
     throw new ApiFeatureUnavailableError('Catalog Manufacturers', 'Le filtre par fabricant n\'est pas encore disponible via l\'API.');
@@ -141,7 +141,7 @@ export const apiProvider: DataProvider = {
   async getCatalogModels(filters) {
     track('getCatalogModels');
     const query = buildQueryString(filters);
-    return apiFetch<CatalogResponse>(`${ENDPOINTS.HARDWARE.MODELS}${query}`);
+    return apiFetch<CatalogResponse>(`${ENDPOINTS.MODELS.LIST}${query}`);
   },
   async getCatalogSummary() {
     throw new ApiFeatureUnavailableError('Catalog Summary', 'Les statistiques du catalogue ne sont pas encore disponibles via l\'API.');
@@ -149,13 +149,14 @@ export const apiProvider: DataProvider = {
 
   // Model Detail (Hardware)
   async getModelDetail(modelId) {
-    return apiFetch<ModelDetail>(ENDPOINTS.HARDWARE.MODEL_DETAIL(modelId));
+    return apiFetch<ModelDetail>(ENDPOINTS.MODELS.DETAIL(modelId));
   },
   async getModelPriceHistory(modelId, period = '30') {
     return apiFetch<PriceHistoryPoint[]>(`${ENDPOINTS.MARKET.MODEL_HISTORY(modelId)}?period=${period}`);
   },
   async getModelAds(modelId, page = 1, limit = 10) {
-    throw new ApiFeatureUnavailableError('Model Ads', 'La liste des annonces par modèle n\'est pas encore disponible via l\'API.');
+    const query = buildQueryString({ page, limit });
+    return apiFetch<ModelAdsResponse>(`${ENDPOINTS.ADS.BY_MODEL(modelId)}${query}`);
   },
   async getSimilarModels(modelId, limit = 6) {
     throw new ApiFeatureUnavailableError('Similar Models', 'Les modèles similaires ne sont pas encore disponibles via l\'API.');
@@ -164,7 +165,8 @@ export const apiProvider: DataProvider = {
     if (add) {
       return apiPost(ENDPOINTS.WATCHLIST.ADD, { target_type: 'model', target_id: modelId });
     } else {
-      return apiDelete(ENDPOINTS.WATCHLIST.REMOVE_MODEL(modelId));
+      // Use generic remove with the watchlist item id, not model id
+      return apiDelete(ENDPOINTS.WATCHLIST.REMOVE(modelId));
     }
   },
   async createPriceAlert(modelId, threshold) {
@@ -195,7 +197,8 @@ export const apiProvider: DataProvider = {
     return apiFetch<EstimationHistoryResponse>(`${ENDPOINTS.ESTIMATOR.HISTORY}?page=${page}&limit=${limit}`);
   },
   async getEstimatorStats() {
-    return apiFetch<EstimatorStats>(ENDPOINTS.ESTIMATOR.STATS);
+    // Stats endpoint not in current API, use history with aggregation
+    throw new ApiFeatureUnavailableError('Estimator Stats', 'Les statistiques de l\'estimateur ne sont pas encore disponibles via l\'API.');
   },
 
   // Community (v0.18)
@@ -228,12 +231,12 @@ export const apiProvider: DataProvider = {
     return apiPost(ENDPOINTS.TRAINING.COMPLETE_MODULE(moduleId), {});
   },
 
-  // Jobs (v0.18: /v1/scrap/create_job)
+  // Jobs / Scrap
   async startScrap(data) {
-    return apiPost<ScrapStartResponse>(ENDPOINTS.JOBS.CREATE, data);
+    return apiPost<ScrapStartResponse>(ENDPOINTS.SCRAP.CREATE_JOB, data);
   },
   async getJobStatus(jobId) {
-    return apiFetch<JobStatus>(ENDPOINTS.JOBS.STATUS(jobId));
+    return apiFetch<JobStatus>(ENDPOINTS.JOBS.DETAIL(jobId));
   },
   async cancelJob(jobId) {
     return apiPost(ENDPOINTS.JOBS.CANCEL(jobId), {});
