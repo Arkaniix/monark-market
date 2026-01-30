@@ -204,6 +204,29 @@ export async function apiFetch<T>(
     throw new ApiException(errorMessage, response.status, data.detail);
   }
 
+  // Log unexpected response formats for debugging (no sensitive data)
+  if (data !== null && typeof data === 'object') {
+    const hasExpectedShape = (
+      Array.isArray(data) || 
+      'items' in data || 
+      'data' in data ||
+      // Common expected shapes
+      'id' in data ||
+      'user' in data ||
+      'stats' in data ||
+      'total' in data
+    );
+    
+    if (!hasExpectedShape) {
+      console.warn('[API Response] Unexpected format:', {
+        url: url.replace(API_BASE_URL, ''),
+        status: response.status,
+        type: typeof data,
+        keys: Object.keys(data).slice(0, 10),
+      });
+    }
+  }
+
   return data as T;
 }
 

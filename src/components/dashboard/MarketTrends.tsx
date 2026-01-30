@@ -65,7 +65,12 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
     );
   }
 
-  const { summary, marketTrends, topIncreases, topDrops, categoryVariations } = data;
+  // Safe destructuring with fallbacks
+  const summary = data.summary ?? { median_price: 0, volume_total: 0, new_models: 0, offer_demand_ratio: 1, var_30d: 0 };
+  const marketTrends = Array.isArray(data.marketTrends) ? data.marketTrends : [];
+  const topIncreases = Array.isArray(data.topIncreases) ? data.topIncreases : [];
+  const topDrops = Array.isArray(data.topDrops) ? data.topDrops : [];
+  const categoryVariations = Array.isArray(data.categoryVariations) ? data.categoryVariations : [];
 
   // Filter helper
   const matchesCategory = (category: string) => {
@@ -76,7 +81,7 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
     return category === categoryFilter;
   };
 
-  // Filter data based on selected category
+  // Filter data based on selected category (already safe arrays)
   const filteredTopIncreases = topIncreases.filter((m: TopModel) => matchesCategory(m.category));
   const filteredTopDrops = topDrops.filter((m: TopModel) => matchesCategory(m.category));
   const filteredCategoryVariations = categoryVariations.filter((c) => matchesCategory(c.category));
