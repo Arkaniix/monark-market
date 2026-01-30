@@ -1,4 +1,5 @@
-// API Endpoints - All API routes aligned with monark_api_v0.18
+// API Endpoints - All API routes aligned with backend API
+// Last sync: 2026-01-30
 
 // ============= Auth =============
 export const AUTH = {
@@ -6,7 +7,9 @@ export const AUTH = {
   REGISTER: '/v1/auth/register',
   REFRESH: '/v1/auth/refresh',
   LOGOUT: '/v1/auth/logout',
-  ME: '/v1/users/me',
+  LOGOUT_ALL: '/v1/auth/logout_all',
+  FORGOT_PASSWORD: '/v1/auth/forgot_password',
+  RESET_PASSWORD: '/v1/auth/reset_password',
 } as const;
 
 // ============= Dashboard =============
@@ -17,6 +20,12 @@ export const DASHBOARD = {
 // ============= Users =============
 export const USERS = {
   ME: '/v1/users/me',
+  UPDATE_ME: '/v1/users/me', // PATCH
+  ACTIVITY: '/v1/users/me/activity',
+  LOGS: '/v1/users/me/logs',
+  SESSIONS: '/v1/users/me/sessions',
+  REVOKE_SESSION: (sessionToken: string) => `/v1/users/me/sessions/${sessionToken}`,
+  SETTINGS: '/v1/users/me/settings',
 } as const;
 
 // ============= Credits =============
@@ -38,7 +47,7 @@ export const WATCHLIST = {
   LIST: '/v1/watchlist',
   ADD: '/v1/watchlist',
   REMOVE: (id: number) => `/v1/watchlist/${id}`,
-  REMOVE_MODEL: (modelId: number) => `/v1/watchlist/model/${modelId}`,
+  CLEAR: '/v1/watchlist', // DELETE without id
 } as const;
 
 // ============= Alerts =============
@@ -52,33 +61,46 @@ export const ALERTS = {
 // ============= Deals =============
 export const DEALS = {
   LIST: '/v1/deals',
+  FOR_MODEL: (modelId: number) => `/v1/deals/models/${modelId}`,
 } as const;
 
 // ============= Market =============
 export const MARKET = {
   TRENDING: '/v1/market/trending',
-  MODEL_SUMMARY: (modelId: string) => `/v1/market/models/${modelId}/summary`,
-  MODEL_HISTORY: (modelId: string) => `/v1/market/models/${modelId}/history`,
+  MODEL_SUMMARY: (modelId: string | number) => `/v1/market/models/${modelId}/summary`,
+  MODEL_HISTORY: (modelId: string | number) => `/v1/market/models/${modelId}/history`,
+  INGEST_SOLD: '/v1/market/ingest_sold', // POST
 } as const;
 
-// ============= Hardware =============
-export const HARDWARE = {
-  CATEGORIES: '/v1/hardware/categories',
-  MODELS: '/v1/hardware/models',
-  MODEL_DETAIL: (id: string) => `/v1/hardware/models/${id}`,
+// ============= Categories =============
+export const CATEGORIES = {
+  LIST: '/v1/categories',
+} as const;
+
+// ============= Models (Hardware) =============
+export const MODELS = {
+  LIST: '/v1/models',
+  DETAIL: (id: string | number) => `/v1/models/${id}`,
+  SPECS: (id: string | number) => `/v1/models/${id}/specs`,
+  MARKET_STATE: (id: string | number) => `/v1/models/${id}/market_state`,
 } as const;
 
 // ============= Ads =============
 export const ADS = {
-  DETAIL: (id: string) => `/v1/ads/${id}`,
-  PRICE_HISTORY: (id: string) => `/v1/ads/${id}/prices`,
+  LIST: '/v1/ads',
+  SEARCH: '/v1/ads/search',
+  BY_MODEL: (modelId: string | number) => `/v1/ads/model/${modelId}`,
+  DETAIL: (id: string | number) => `/v1/ads/${id}`,
+  PRICE_HISTORY: (id: string | number) => `/v1/ads/${id}/prices`,
 } as const;
 
 // ============= Estimator =============
 export const ESTIMATOR = {
   RUN: '/v1/estimator/run',
+  EVALUATE: '/v1/estimator/evaluate',
   HISTORY: '/v1/estimator/history',
-  STATS: '/v1/estimator/stats',
+  GET_RUN: (runId: string | number) => `/v1/estimator/${runId}`,
+  MODEL_VALUE: (modelId: string | number) => `/v1/estimator/models/${modelId}`,
 } as const;
 
 // ============= Community =============
@@ -88,6 +110,8 @@ export const COMMUNITY = {
   TASKS_AVAILABLE: '/v1/community/tasks/available',
   TASKS_CLAIM: '/v1/community/tasks/claim',
   TASKS_MY: '/v1/community/tasks/my',
+  TASK_COMPLETE: (taskId: number) => `/v1/community/tasks/${taskId}/complete`,
+  TASK_RELEASE: (taskId: number) => `/v1/community/tasks/${taskId}/release`,
 } as const;
 
 // ============= Training =============
@@ -98,10 +122,28 @@ export const TRAINING = {
 
 // ============= Jobs / Scrap =============
 export const JOBS = {
-  CREATE: '/v1/scrap/create_job',
-  STATUS: (id: number) => `/v1/jobs/${id}`,
-  CANCEL: (id: number) => `/v1/jobs/${id}/cancel`,
   LIST: '/v1/jobs',
+  DETAIL: (id: number) => `/v1/jobs/${id}`,
+  CANCEL: (id: number) => `/v1/jobs/${id}/cancel`,
+} as const;
+
+export const SCRAP = {
+  CREATE_JOB: '/v1/scrap/create_job',
+  JOB_DONE: '/v1/scrap/job_done',
+  UPLOAD_BATCH: '/v1/scrap/upload_batch',
+} as const;
+
+// ============= Premium Scrap =============
+export const PREMIUM_SCRAP = {
+  QUOTE: '/v1/premium/scrap/quote',
+  START: '/v1/premium/scrap/start',
+} as const;
+
+// ============= Ingest (Admin) =============
+export const INGEST = {
+  BATCH: (batchId: number) => `/v1/ingest/batch/${batchId}`,
+  RAW: (rawId: number) => `/v1/ingest/raw/${rawId}`,
+  REPROCESS: (batchId: number) => `/v1/ingest/reprocess/${batchId}`,
 } as const;
 
 // ============= Admin =============
@@ -112,7 +154,15 @@ export const ADMIN = {
 
 // ============= Health =============
 export const HEALTH = {
+  ROOT: '/health',
+  LIVE: '/health/live',
   READY: '/health/ready',
+} as const;
+
+// ============= Misc =============
+export const MISC = {
+  PING: '/ping',
+  VERSION: '/version',
 } as const;
 
 // Export all endpoints grouped
@@ -126,12 +176,17 @@ export const ENDPOINTS = {
   ALERTS,
   DEALS,
   MARKET,
-  HARDWARE,
+  CATEGORIES,
+  MODELS,
   ADS,
   ESTIMATOR,
   COMMUNITY,
   TRAINING,
   JOBS,
+  SCRAP,
+  PREMIUM_SCRAP,
+  INGEST,
   ADMIN,
   HEALTH,
+  MISC,
 } as const;
