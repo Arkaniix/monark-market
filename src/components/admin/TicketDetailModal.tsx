@@ -96,8 +96,8 @@ export default function TicketDetailModal({ ticketId, open, onOpenChange }: Tick
             {/* Ticket Info */}
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground">Utilisateur:</span>{" "}
-                <span className="font-medium">{ticket.user_name || ticket.user_email || 'Inconnu'}</span>
+                <span className="text-muted-foreground">ID Utilisateur:</span>{" "}
+                <span className="font-medium font-mono text-xs">{ticket.user_id}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Créé le:</span>{" "}
