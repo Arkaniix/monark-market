@@ -2,8 +2,9 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // ============= Token Management =============
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
+// Use monark_access_token as the primary key (as per spec)
+const ACCESS_TOKEN_KEY = 'monark_access_token';
+const REFRESH_TOKEN_KEY = 'monark_refresh_token';
 
 export function getAccessToken(): string | null {
   return localStorage.getItem(ACCESS_TOKEN_KEY);
@@ -28,6 +29,9 @@ export function clearTokens(): void {
 // Legacy exports for backward compatibility
 export const setAccessToken = (token: string) => setTokens({ access: token });
 export const clearAccessToken = clearTokens;
+
+// Utility to get token (exposed as getToken() per spec)
+export const getToken = getAccessToken;
 
 // ============= Types =============
 export interface ApiError {
@@ -114,6 +118,17 @@ async function handleTokenRefresh(): Promise<boolean> {
   return refreshPromise;
 }
 
+// ============= 401 Redirect Helper =============
+function redirectToLogin(): void {
+  clearTokens();
+  // Only redirect if not already on login/auth pages
+  if (typeof window !== 'undefined' && 
+      !window.location.pathname.includes('/login') && 
+      !window.location.pathname.includes('/auth')) {
+    window.location.href = '/login';
+  }
+}
+
 // ============= Core Fetch Function =============
 export async function apiFetch<T>(
   path: string,
@@ -148,15 +163,26 @@ export async function apiFetch<T>(
   let response = await fetch(url, fetchOptions);
 
   // Handle 401 with refresh token
-  if (response.status === 401 && auth && getRefreshToken()) {
-    const refreshed = await handleTokenRefresh();
-    if (refreshed) {
-      const newToken = getAccessToken();
-      if (newToken) {
-        headers['Authorization'] = `Bearer ${newToken}`;
-        fetchOptions.headers = headers;
-        response = await fetch(url, fetchOptions);
+  if (response.status === 401 && auth) {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      const refreshed = await handleTokenRefresh();
+      if (refreshed) {
+        const newToken = getAccessToken();
+        if (newToken) {
+          headers['Authorization'] = `Bearer ${newToken}`;
+          fetchOptions.headers = headers;
+          response = await fetch(url, fetchOptions);
+        }
+      } else {
+        // Refresh failed - redirect to login
+        redirectToLogin();
+        throw new ApiException('Session expirée. Veuillez vous reconnecter.', 401);
       }
+    } else {
+      // No refresh token - redirect to login
+      redirectToLogin();
+      throw new ApiException('Session expirée. Veuillez vous reconnecter.', 401);
     }
   }
 

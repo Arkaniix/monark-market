@@ -50,6 +50,11 @@ export const routes: RouteConfig[] = [
     requiresAuth: false,
   },
   {
+    path: "/login",
+    component: Auth,
+    requiresAuth: false,
+  },
+  {
     path: "/cgu",
     component: CGU,
     requiresAuth: false,

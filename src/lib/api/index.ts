@@ -3,6 +3,7 @@ export {
   API_BASE_URL,
   getAccessToken,
   getRefreshToken,
+  getToken,
   setTokens,
   clearTokens,
   setAccessToken,
