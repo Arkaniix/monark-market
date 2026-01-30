@@ -182,7 +182,7 @@ export function NotificationsWidget() {
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
-              ) : watchlistData && watchlistData.items.length > 0 ? (
+              ) : watchlistData && Array.isArray(watchlistData.items) && watchlistData.items.length > 0 ? (
                 <>
                   <div className="space-y-2">
                     {watchlistData.items.slice(0, 3).map((item) => (
