@@ -147,58 +147,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshMe]);
 
   const login = async (email: string, password: string) => {
-    // Mock mode: accept any email/password or known accounts
-    if (IS_MOCK_MODE) {
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate network delay
+    // Set loading to true during login to prevent race conditions
+    setIsLoading(true);
+    
+    try {
+      // Mock mode: accept any email/password or known accounts
+      if (IS_MOCK_MODE) {
+        await new Promise(resolve => setTimeout(resolve, 300)); // Simulate network delay
 
-      const knownAccount = MOCK_ACCOUNTS[email.toLowerCase()];
-      let mockUser: User;
+        const knownAccount = MOCK_ACCOUNTS[email.toLowerCase()];
+        let mockUser: User;
 
-      if (knownAccount) {
-        // Check password for known accounts
-        if (knownAccount.password !== password) {
-          throw new Error('Mot de passe incorrect');
+        if (knownAccount) {
+          // Check password for known accounts
+          if (knownAccount.password !== password) {
+            setIsLoading(false);
+            throw new Error('Mot de passe incorrect');
+          }
+          mockUser = knownAccount.user;
+        } else {
+          // Dev mode: accept any email/password, determine admin by email
+          const isAdminEmail = email.toLowerCase().includes('admin');
+          mockUser = {
+            id: `mock-${Date.now()}`,
+            email: email,
+            display_name: email.split('@')[0],
+            role: isAdminEmail ? 'admin' : 'user',
+            is_admin: isAdminEmail,
+            created_at: new Date().toISOString(),
+          };
         }
-        mockUser = knownAccount.user;
-      } else {
-        // Dev mode: accept any email/password, determine admin by email
-        const isAdminEmail = email.toLowerCase().includes('admin');
-        mockUser = {
-          id: `mock-${Date.now()}`,
-          email: email,
-          display_name: email.split('@')[0],
-          role: isAdminEmail ? 'admin' : 'user',
-          is_admin: isAdminEmail,
-          created_at: new Date().toISOString(),
-        };
+
+        const mockToken = generateMockToken(email);
+        setTokens({
+          access: mockToken,
+          refresh: `refresh-${mockToken}`,
+        });
+        localStorage.setItem('mock_current_user', JSON.stringify(mockUser));
+
+        setUser(mockUser);
+        setIsAdmin(mockUser.is_admin || mockUser.role === 'admin');
+        setIsLoading(false);
+        return;
       }
 
-      const mockToken = generateMockToken(email);
-      setTokens({
-        access: mockToken,
-        refresh: `refresh-${mockToken}`,
+      // API mode: call the real login endpoint
+      const response = await apiFetch<LoginResponse>("/v1/auth/login", {
+        method: "POST",
+        body: { email, password },
+        auth: false,
       });
-      localStorage.setItem('mock_current_user', JSON.stringify(mockUser));
 
-      setUser(mockUser);
-      setIsAdmin(mockUser.is_admin || mockUser.role === 'admin');
-      return;
+      setTokens({
+        access: response.access_token,
+        refresh: response.refresh_token,
+      });
+
+      // Fetch user data after login - keep isLoading true during this
+      const userData = await apiFetch<User>("/v1/users/me");
+      setUser(userData);
+      setIsAdmin(userData.is_admin || userData.role === "admin");
+    } catch (error) {
+      // Reset state on error
+      clearTokens();
+      setUser(null);
+      setIsAdmin(false);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-
-    // API mode: call the real login endpoint
-    const response = await apiFetch<LoginResponse>("/v1/auth/login", {
-      method: "POST",
-      body: { email, password },
-      auth: false,
-    });
-
-    setTokens({
-      access: response.access_token,
-      refresh: response.refresh_token,
-    });
-
-    // Fetch user data after login
-    await refreshMe();
   };
 
   const register = async (data: RegisterData) => {
