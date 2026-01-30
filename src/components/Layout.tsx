@@ -1,6 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { Search, Radar, Home, Zap, User, Menu, Calculator, Users, GraduationCap, LogOut, Shield, Scale, MessageCircle } from "lucide-react";
-import monarkLogo from "@/assets/logo.png";
+import { useTheme } from "next-themes";
+import monarkLogoLight from "@/assets/logo.png";
+import monarkLogoDark from "@/assets/logo-dark-text.png";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
@@ -27,6 +29,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { toast } = useToast();
   const { user, isAdmin, logout } = useAuth();
+  const { resolvedTheme } = useTheme();
+  
+  // Use dark text logo in light mode, white text logo in dark mode
+  const monarkLogo = resolvedTheme === 'dark' ? monarkLogoLight : monarkLogoDark;
 
   const handleSignOut = () => {
     logout();
