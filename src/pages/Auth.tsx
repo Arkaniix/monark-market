@@ -14,6 +14,7 @@ import { Zap, Crown, Star, TrendingUp, Eye, EyeOff, ShieldCheck, User as UserIco
 import monarkLogoLight from "@/assets/logo.png";
 import monarkLogoDark from "@/assets/logo-dark-text.png";
 import { PlanComparisonModal } from "@/components/auth/PlanComparisonModal";
+import { ForgotPasswordModal } from "@/components/auth/ForgotPasswordModal";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -342,7 +343,19 @@ export default function Auth() {
                       <Input id="signin-email" type="email" placeholder="votre@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signin-password">Mot de passe</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="signin-password">Mot de passe</Label>
+                        <ForgotPasswordModal
+                          trigger={
+                            <button
+                              type="button"
+                              className="text-xs text-primary hover:underline"
+                            >
+                              Mot de passe oublié ?
+                            </button>
+                          }
+                        />
+                      </div>
                       <div className="relative">
                         <Input id="signin-password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="pr-10" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
