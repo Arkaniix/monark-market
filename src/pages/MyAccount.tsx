@@ -17,7 +17,7 @@ import {
   Calendar, AlertTriangle, Mail, Shield, LogOut, Trash2, 
   Bell, Moon, Sun, Globe, Key, Loader2, Check, Coins,
   RefreshCw, TrendingUp, TrendingDown, X, Minus, Info,
-  ChevronLeft, ChevronRight, History
+  ChevronLeft, ChevronRight, History, Bookmark
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays, subDays, subHours } from "date-fns";
@@ -26,6 +26,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "next-themes";
 import { useMockSubscription, MOCK_PLANS } from "@/hooks/useMockSubscription";
+import { SavedSearchesPanel } from "@/components/account/SavedSearchesPanel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -780,6 +781,23 @@ export default function MyAccount() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </motion.section>
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            SECTION 6: RECHERCHES SAUVEGARDÉES
+            ═══════════════════════════════════════════════════════════════════ */}
+        <motion.section variants={itemVariants}>
+          <SectionHeader 
+            icon={Bookmark} 
+            title="Recherches sauvegardées" 
+            description="Accédez rapidement à vos recherches favorites"
+          />
+          
+          <Card>
+            <CardContent className="pt-6">
+              <SavedSearchesPanel />
             </CardContent>
           </Card>
         </motion.section>
