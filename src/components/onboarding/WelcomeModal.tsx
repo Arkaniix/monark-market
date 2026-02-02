@@ -51,10 +51,15 @@ export function WelcomeModal() {
           <DialogTitle className="text-xl">
             Bienvenue sur Monark ! 🎉
           </DialogTitle>
-          <DialogDescription className="text-base pt-2">
-            Tu débutes dans l'achat-revente de hardware ? Notre{" "}
-            <span className="font-semibold text-foreground">module d'introduction</span>{" "}
-            t'explique tout ce que tu dois savoir pour bien démarrer.
+          <DialogDescription className="text-base pt-2 space-y-2">
+            <span className="block">
+              Monark est un outil puissant avec de nombreuses fonctionnalités.
+            </span>
+            <span className="block">
+              Si tu débutes, notre{" "}
+              <span className="font-semibold text-foreground">module d'introduction</span>{" "}
+              t'explique tout ce que tu dois savoir pour bien démarrer.
+            </span>
           </DialogDescription>
         </DialogHeader>
 
@@ -75,7 +80,7 @@ export function WelcomeModal() {
           </div>
         </div>
 
-        <DialogFooter className="flex-col gap-2 sm:flex-col">
+        <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
           <Button asChild className="w-full gap-2" onClick={handleGoToTraining}>
             <Link to="/training">
               <GraduationCap className="h-4 w-4" />
@@ -85,10 +90,10 @@ export function WelcomeModal() {
           </Button>
           <Button
             variant="ghost"
-            className="w-full text-muted-foreground"
+            className="w-full text-muted-foreground hover:text-foreground"
             onClick={handleClose}
           >
-            Plus tard
+            Plus tard, je connais déjà
           </Button>
         </DialogFooter>
       </DialogContent>

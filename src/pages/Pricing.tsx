@@ -48,7 +48,7 @@ export default function Pricing() {
           </h1>
           <p className="text-lg text-muted-foreground">
             Des plans flexibles pour tous les profils, du débutant au professionnel.
-            Tous les plans incluent la formation complète.
+            Tous les plans incluent l'introduction à la plateforme.
           </p>
         </div>
 
