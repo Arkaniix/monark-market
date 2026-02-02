@@ -30,12 +30,29 @@ export interface Guide {
 }
 
 export const mockUserProgress: UserProgress = {
-  modules_completed: [1, 2],
-  total_modules: 6,
-  hours_spent: 1.5
+  modules_completed: [],
+  total_modules: 7,
+  hours_spent: 0
 };
 
 export const mockTrainingModules: TrainingModule[] = [
+  {
+    id: 0,
+    title: "Premiers pas sur Monark",
+    description: "Découvre l'interface, les fonctionnalités clés et comment tirer le meilleur parti de la plateforme.",
+    duration: "5 min",
+    lessons: [
+      "Présentation de l'interface et navigation",
+      "Comprendre ton tableau de bord personnel",
+      "Comment lancer ton premier scan",
+      "Utiliser le catalogue pour explorer les modèles",
+      "L'Estimator : ton outil d'analyse rapide",
+      "Configurer tes premières alertes",
+      "Les crédits : comment ça marche ?"
+    ],
+    icon: "🚀",
+    completed: false
+  },
   {
     id: 1,
     title: "Comprendre le marché et les opportunités",
@@ -51,7 +68,7 @@ export const mockTrainingModules: TrainingModule[] = [
       "Savoir quand acheter et quand attendre"
     ],
     icon: "📊",
-    completed: true
+    completed: false
   },
   {
     id: 2,
