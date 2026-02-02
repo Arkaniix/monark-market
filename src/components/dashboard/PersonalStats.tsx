@@ -180,15 +180,12 @@ export function PersonalStats({
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-success">{creditsRemaining}</div>
                   {creditsResetDate && <CreditResetInfo resetDate={creditsResetDate} creditsRemaining={creditsRemaining} variant="compact" />}
-                  <div className="flex items-baseline gap-1">
-                    <Link to="/community">
-                      <Button variant="link" size="sm" className="p-0 h-auto text-xs">
-                        Gagner des crédits
-                      </Button>
+                  <div className="flex items-center gap-1">
+                    <Link to="/community" className="text-xs text-primary hover:underline">
+                      Gagner des crédits
                     </Link>
                     <span className="text-muted-foreground text-xs">·</span>
-                    <Link to="/billing" className="inline-flex items-center text-xs text-primary hover:underline">
-                      <ShoppingCart className="h-3 w-3 mr-1" />
+                    <Link to="/billing" className="text-xs text-primary hover:underline">
                       Acheter
                     </Link>
                   </div>
