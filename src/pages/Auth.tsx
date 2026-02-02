@@ -28,7 +28,7 @@ const SIGNUP_PLANS = [{
   name: "Starter",
   price: 9.90,
   credits: 120,
-  features: ["3 alertes", "Scrap standard", "Estimator basique"],
+  features: ["3 alertes", "Estimator synthèse", "Introduction plateforme"],
   icon: Zap,
   popular: false
 }, {
@@ -36,7 +36,7 @@ const SIGNUP_PLANS = [{
   name: "Pro",
   price: 29,
   credits: 500,
-  features: ["20 alertes", "Scrap avancé", "Formation complète"],
+  features: ["20 alertes", "Estimator avancé", "Formation complète"],
   icon: Award,
   popular: true
 }, {
@@ -44,7 +44,7 @@ const SIGNUP_PLANS = [{
   name: "Élite",
   price: 79,
   credits: 1500,
-  features: ["500 alertes", "Export données", "Support prioritaire"],
+  features: ["500 alertes", "Estimator complet", "Support prioritaire"],
   icon: Rocket,
   popular: false
 }];

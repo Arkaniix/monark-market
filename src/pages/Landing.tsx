@@ -10,6 +10,7 @@ import {
   ProductDemoSection,
   HowItWorksSection,
   TargetAudienceSection,
+  TrainingSection,
   FAQSection,
   FinalCTASection,
 } from "@/components/landing";
@@ -89,10 +90,13 @@ export default function Landing() {
       {/* E. Comment ça marche */}
       <HowItWorksSection />
 
-      {/* F. Pour qui / Pas pour qui */}
+      {/* F. Formation */}
+      <TrainingSection />
+
+      {/* G. Pour qui / Pas pour qui */}
       <TargetAudienceSection />
 
-      {/* G. Tarifs */}
+      {/* H. Tarifs */}
       <section id="pricing" className="py-16 md:py-20">
         <div className="container">
           <PricingSection showHeader={true} />
