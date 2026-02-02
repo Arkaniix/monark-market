@@ -7,6 +7,7 @@ import { MarketTrends } from "@/components/dashboard/MarketTrends";
 import { RecommendedActions } from "@/components/dashboard/RecommendedActions";
 import { NotificationsWidget } from "@/components/dashboard/NotificationsWidget";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -96,6 +97,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
+      {/* Modal de bienvenue pour nouveaux utilisateurs */}
+      <WelcomeModal />
+
       {/* Header de bienvenue */}
       <WelcomeHeader
         userName={userName}
