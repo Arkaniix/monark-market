@@ -1731,4 +1731,89 @@ export const mockProvider: DataProvider = {
       },
     };
   },
+
+  // ============= User Settings (Mock) =============
+  async getUserSettings() {
+    await delay();
+    const stored = localStorage.getItem('monark_user_settings');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    // Default settings
+    const defaults = {
+      id: 1,
+      user_id: 1,
+      theme: 'system' as const,
+      locale: 'fr',
+      notify_email: true,
+      notify_push: true,
+      notify_discord: false,
+      alert_default_cooldown_hours: 24,
+      alert_platforms: ['leboncoin', 'vinted', 'ebay'],
+      alert_regions: [],
+      default_category: null,
+      default_sort: 'score',
+      items_per_page: 20,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    localStorage.setItem('monark_user_settings', JSON.stringify(defaults));
+    return defaults;
+  },
+  async updateUserSettings(data) {
+    await delay();
+    const current = await this.getUserSettings();
+    const updated = { ...current, ...data, updated_at: new Date().toISOString() };
+    localStorage.setItem('monark_user_settings', JSON.stringify(updated));
+    return updated;
+  },
+
+  // ============= Saved Searches (Mock) =============
+  async getSavedSearches() {
+    await delay();
+    const stored = localStorage.getItem('monark_saved_searches');
+    const items = stored ? JSON.parse(stored) : [];
+    return { items, total: items.length };
+  },
+  async getSavedSearch(id) {
+    await delay();
+    const { items } = await this.getSavedSearches();
+    const search = items.find((s: any) => s.id === id);
+    if (!search) throw new Error('Saved search not found');
+    return search;
+  },
+  async createSavedSearch(data) {
+    await delay();
+    const { items } = await this.getSavedSearches();
+    const newSearch = {
+      id: Date.now(),
+      user_id: 1,
+      name: data.name,
+      search_type: data.search_type,
+      filters: data.filters || {},
+      notify_on_new: data.notify_on_new || false,
+      last_run_at: null,
+      results_count: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    items.push(newSearch);
+    localStorage.setItem('monark_saved_searches', JSON.stringify(items));
+    return newSearch;
+  },
+  async updateSavedSearch(id, data) {
+    await delay();
+    const { items } = await this.getSavedSearches();
+    const index = items.findIndex((s: any) => s.id === id);
+    if (index === -1) throw new Error('Saved search not found');
+    items[index] = { ...items[index], ...data, updated_at: new Date().toISOString() };
+    localStorage.setItem('monark_saved_searches', JSON.stringify(items));
+    return items[index];
+  },
+  async deleteSavedSearch(id) {
+    await delay();
+    const { items } = await this.getSavedSearches();
+    const filtered = items.filter((s: any) => s.id !== id);
+    localStorage.setItem('monark_saved_searches', JSON.stringify(filtered));
+  },
 };

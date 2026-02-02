@@ -26,6 +26,9 @@ export const USERS = {
   SESSIONS: '/v1/users/me/sessions',
   REVOKE_SESSION: (sessionToken: string) => `/v1/users/me/sessions/${sessionToken}`,
   SETTINGS: '/v1/users/me/settings',
+  UPDATE_SETTINGS: '/v1/users/me/settings', // PATCH
+  SAVED_SEARCHES: '/v1/users/me/saved_searches',
+  SAVED_SEARCH_DETAIL: (id: number) => `/v1/users/me/saved_searches/${id}`,
 } as const;
 
 // ============= Credits =============

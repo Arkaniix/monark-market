@@ -268,6 +268,31 @@ export const apiProvider: DataProvider = {
     return apiPost('/v1/credits/consume', { amount, reason });
   },
 
+  // User Settings
+  async getUserSettings() {
+    return apiFetch(ENDPOINTS.USERS.SETTINGS);
+  },
+  async updateUserSettings(data) {
+    return apiPut(ENDPOINTS.USERS.UPDATE_SETTINGS, data);
+  },
+
+  // Saved Searches
+  async getSavedSearches() {
+    return apiFetch(ENDPOINTS.USERS.SAVED_SEARCHES);
+  },
+  async getSavedSearch(id) {
+    return apiFetch(ENDPOINTS.USERS.SAVED_SEARCH_DETAIL(id));
+  },
+  async createSavedSearch(data) {
+    return apiPost(ENDPOINTS.USERS.SAVED_SEARCHES, data);
+  },
+  async updateSavedSearch(id, data) {
+    return apiPut(ENDPOINTS.USERS.SAVED_SEARCH_DETAIL(id), data);
+  },
+  async deleteSavedSearch(id) {
+    return apiDelete(ENDPOINTS.USERS.SAVED_SEARCH_DETAIL(id));
+  },
+
   // Admin
   async getUserRole() {
     return apiFetch<{ user_id: string; role: string }>('/v1/users/me/role');

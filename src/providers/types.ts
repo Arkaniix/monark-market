@@ -884,6 +884,17 @@ export interface DataProvider {
   subscribe(planId: string): Promise<void>;
   consumeCredits(amount: number, reason: string): Promise<void>;
   
+  // User Settings
+  getUserSettings(): Promise<import('@/types/userSettings').UserSettings>;
+  updateUserSettings(data: import('@/types/userSettings').UpdateUserSettingsPayload): Promise<import('@/types/userSettings').UserSettings>;
+  
+  // Saved Searches
+  getSavedSearches(): Promise<import('@/types/userSettings').SavedSearchesResponse>;
+  getSavedSearch(id: number): Promise<import('@/types/userSettings').SavedSearch>;
+  createSavedSearch(data: import('@/types/userSettings').CreateSavedSearchPayload): Promise<import('@/types/userSettings').SavedSearch>;
+  updateSavedSearch(id: number, data: import('@/types/userSettings').UpdateSavedSearchPayload): Promise<import('@/types/userSettings').SavedSearch>;
+  deleteSavedSearch(id: number): Promise<void>;
+  
   // Admin
   getUserRole(): Promise<{ user_id: string; role: string }>;
   getAdminUsers(page?: number, limit?: number, search?: string): Promise<AdminUsersResponse>;
