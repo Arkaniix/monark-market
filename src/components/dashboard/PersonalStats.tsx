@@ -180,7 +180,7 @@ export function PersonalStats({
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-success">{creditsRemaining}</div>
                   {creditsResetDate && <CreditResetInfo resetDate={creditsResetDate} creditsRemaining={creditsRemaining} variant="compact" />}
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <Link to="/community">
                       <Button variant="link" size="sm" className="p-0 h-auto text-xs">
                         Gagner des crédits
