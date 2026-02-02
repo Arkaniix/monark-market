@@ -108,7 +108,14 @@ export function useNotifications(limit?: number) {
   const provider = useDataProvider();
   return useQuery({
     queryKey: ["notifications", limit],
-    queryFn: () => provider.getNotifications(limit),
+    queryFn: async () => {
+      try {
+        return await provider.getNotifications(limit);
+      } catch {
+        // Feature not available in API - return empty response
+        return { items: [], unread_count: 0 };
+      }
+    },
   });
 }
 
@@ -178,7 +185,14 @@ export function useManufacturers(category?: string) {
   const provider = useDataProvider();
   return useQuery({
     queryKey: ["catalog", "manufacturers", category],
-    queryFn: () => provider.getManufacturers(category),
+    queryFn: async () => {
+      try {
+        return await provider.getManufacturers(category);
+      } catch {
+        // Feature not available in API - return empty array
+        return [] as string[];
+      }
+    },
     staleTime: 1000 * 60 * 30,
   });
 }
@@ -187,7 +201,14 @@ export function useBrands(category?: string) {
   const provider = useDataProvider();
   return useQuery({
     queryKey: ["catalog", "brands", category],
-    queryFn: () => provider.getBrands(category),
+    queryFn: async () => {
+      try {
+        return await provider.getBrands(category);
+      } catch {
+        // Feature not available in API - return empty array
+        return [] as string[];
+      }
+    },
     staleTime: 1000 * 60 * 30,
   });
 }
@@ -196,7 +217,14 @@ export function useFamilies(manufacturer?: string) {
   const provider = useDataProvider();
   return useQuery({
     queryKey: ["catalog", "families", manufacturer],
-    queryFn: () => provider.getFamilies(manufacturer),
+    queryFn: async () => {
+      try {
+        return await provider.getFamilies(manufacturer);
+      } catch {
+        // Feature not available in API - return empty array
+        return [] as string[];
+      }
+    },
     enabled: !!manufacturer && manufacturer !== 'all',
     staleTime: 1000 * 60 * 30,
   });
@@ -214,7 +242,19 @@ export function useCatalogSummary() {
   const provider = useDataProvider();
   return useQuery({
     queryKey: ["catalog", "summary"],
-    queryFn: () => provider.getCatalogSummary(),
+    queryFn: async () => {
+      try {
+        return await provider.getCatalogSummary();
+      } catch {
+        // Feature not available in API - return default summary
+        return {
+          total_models: 0,
+          total_active_ads: 0,
+          categories_count: 0,
+          avg_price_change_7d: 0,
+        };
+      }
+    },
     staleTime: 1000 * 60 * 10,
   });
 }
@@ -339,7 +379,14 @@ export function useModelsAutocomplete(search: string) {
   const provider = useDataProvider();
   return useQuery({
     queryKey: ["models", "autocomplete", search],
-    queryFn: () => provider.getModelsAutocomplete(search),
+    queryFn: async () => {
+      try {
+        return await provider.getModelsAutocomplete(search);
+      } catch {
+        // Feature not available in API - return empty array
+        return [] as import("@/providers/types").ModelAutocomplete[];
+      }
+    },
     enabled: search.length >= 2,
     staleTime: 1000 * 60 * 5,
   });
@@ -369,7 +416,18 @@ export function useEstimatorStats() {
   const provider = useDataProvider();
   return useQuery({
     queryKey: ["estimator", "stats"],
-    queryFn: () => provider.getEstimatorStats(),
+    queryFn: async () => {
+      try {
+        return await provider.getEstimatorStats();
+      } catch {
+        // Feature not available in API - return default stats
+        return {
+          total_estimations: 0,
+          avg_accuracy: 0,
+          models_covered: 0,
+        };
+      }
+    },
     staleTime: 1000 * 60 * 5,
   });
 }
