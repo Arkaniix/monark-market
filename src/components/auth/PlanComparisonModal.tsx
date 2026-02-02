@@ -112,7 +112,14 @@ const FEATURES = [
     elite: true,
   },
   {
-    name: "Formation complète",
+    name: "Introduction plateforme",
+    icon: GraduationCap,
+    starter: true,
+    pro: true,
+    elite: true,
+  },
+  {
+    name: "Formation avancée",
     icon: GraduationCap,
     starter: false,
     pro: true,

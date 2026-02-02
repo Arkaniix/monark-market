@@ -124,8 +124,15 @@ export const PLAN_FEATURES: PlanFeature[] = [
     elite: true,
   },
   {
-    name: "Formation complète",
-    tooltip: "Accès à tous les modules de formation",
+    name: "Introduction plateforme",
+    tooltip: "Module d'onboarding pour apprendre à utiliser Monark",
+    starter: true,
+    pro: true,
+    elite: true,
+  },
+  {
+    name: "Formation avancée",
+    tooltip: "Accès à tous les modules de formation approfondis",
     starter: false,
     pro: true,
     elite: true,
@@ -472,7 +479,7 @@ function getHighlightedFeatures(planId: string): string[] {
         "3 alertes actives",
         "Scan rapide (5 cr)",
         "Estimator : Synthèse & Indicateurs",
-        "Accès communauté",
+        "Introduction plateforme",
       ];
     case "pro":
       return [
@@ -482,7 +489,7 @@ function getHighlightedFeatures(planId: string): string[] {
         "Estimator : Décision & Graphiques",
         "Prix achat/revente & marge",
         "Graphiques interactifs 30j/90j",
-        "Formation complète",
+        "Formation avancée",
       ];
     case "elite":
       return [
