@@ -1,4 +1,4 @@
-import { Database, Cloud, X } from "lucide-react";
+import { Database, Cloud, X, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDataProviderStatus } from "@/providers/DataContext";
 import {
@@ -7,9 +7,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
+
+const WELCOME_MODAL_KEY = "monark_welcome_modal_seen";
 
 export function DevModeBadge() {
   const { isMockMode, isDevMode, switchToApi, switchToMock, clearOverride } = useDataProviderStatus();
+  const { toast } = useToast();
 
   // Only show in dev mode
   if (!isDevMode) {
@@ -17,6 +21,14 @@ export function DevModeBadge() {
   }
 
   const hasOverride = typeof window !== 'undefined' && localStorage.getItem('DATA_PROVIDER_OVERRIDE');
+
+  const resetWelcomeModal = () => {
+    localStorage.removeItem(WELCOME_MODAL_KEY);
+    toast({
+      title: "Modale réinitialisée",
+      description: "La fenêtre de bienvenue s'affichera au prochain chargement du dashboard.",
+    });
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-40">
@@ -52,6 +64,24 @@ export function DevModeBadge() {
               >
                 → {isMockMode ? 'API' : 'Mock'}
               </Button>
+
+              {isMockMode && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={resetWelcomeModal}
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Revoir la modale de bienvenue</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
 
               {hasOverride && (
                 <Button
