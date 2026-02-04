@@ -185,6 +185,8 @@ export interface CatalogModel {
   var_30d_pct: number | null;
   volume: number;
   liquidity: number;
+  /** Alternative liquidity field from API */
+  liquidity_score?: number;
   ads_count: number;
   last_scan_at?: string | null;
   aliases?: string[];

@@ -226,6 +226,10 @@ export default function Catalog() {
       });
     }
   };
+  // Helper to get liquidity value from model (handles both field names)
+  const getModelLiquidity = (model: { liquidity?: number; liquidity_score?: number }) => 
+    (model.liquidity ?? model.liquidity_score ?? 0);
+
   const getLiquidityLabel = (liquidity: number) => {
     if (liquidity >= 0.75) return "Se vend vite";
     if (liquidity >= 0.5) return "Demande correcte";
@@ -484,30 +488,30 @@ export default function Catalog() {
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <div className="inline-flex items-center gap-2 cursor-help">
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="text-xs text-muted-foreground">Liquidité:</span>
-                                        <span className={`text-xs font-semibold ${
-                                          model.liquidity >= 0.7 ? 'text-green-500' : 
-                                          model.liquidity >= 0.4 ? 'text-amber-500' : 'text-red-500'
-                                        }`}>
-                                          {Math.round(model.liquidity * 100)}%
-                                        </span>
+                                      <div className="inline-flex items-center gap-2 cursor-help">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-xs text-muted-foreground">Liquidité:</span>
+                                          <span className={`text-xs font-semibold ${
+                                            getModelLiquidity(model) >= 0.7 ? 'text-green-500' : 
+                                            getModelLiquidity(model) >= 0.4 ? 'text-amber-500' : 'text-red-500'
+                                          }`}>
+                                            {Math.round(getModelLiquidity(model) * 100)}%
+                                          </span>
+                                        </div>
+                                        <div className="w-20 h-2.5 bg-muted rounded-full overflow-hidden border border-border/50 relative">
+                                          <div 
+                                            className={`h-full rounded-full transition-all ${
+                                              getModelLiquidity(model) >= 0.7 ? 'bg-gradient-to-r from-green-500 to-green-400' : 
+                                              getModelLiquidity(model) >= 0.4 ? 'bg-gradient-to-r from-amber-500 to-amber-400' : 'bg-gradient-to-r from-red-500 to-red-400'
+                                            }`}
+                                            style={{ width: `${Math.round(getModelLiquidity(model) * 100)}%` }}
+                                          />
+                                        </div>
                                       </div>
-                                      <div className="w-20 h-2.5 bg-muted rounded-full overflow-hidden border border-border/50 relative">
-                                        <div 
-                                          className={`h-full rounded-full transition-all ${
-                                            model.liquidity >= 0.7 ? 'bg-gradient-to-r from-green-500 to-green-400' : 
-                                            model.liquidity >= 0.4 ? 'bg-gradient-to-r from-amber-500 to-amber-400' : 'bg-gradient-to-r from-red-500 to-red-400'
-                                          }`}
-                                          style={{ width: `${Math.round(model.liquidity * 100)}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-[220px] text-sm">
-                                    {getLiquidityTooltip(model.liquidity)}
-                                  </TooltipContent>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-[220px] text-sm">
+                                      {getLiquidityTooltip(getModelLiquidity(model))}
+                                    </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
                               <Badge variant="outline" className="text-xs px-2 py-0.5">{model.ads_count} ann.</Badge>

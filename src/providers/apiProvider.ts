@@ -128,7 +128,17 @@ export const apiProvider: DataProvider = {
 
   // Catalog
   async getCategories() {
-    return apiFetch<Category[]>(ENDPOINTS.CATEGORIES.LIST);
+    const response = await apiFetch<Array<{
+      id: number;
+      name: string;
+      slug?: string;
+    }>>(ENDPOINTS.CATEGORIES.LIST);
+    
+    return (response ?? []).map(c => ({
+      id: c.id,
+      name: c.name,
+      count: 0,
+    }));
   },
   async getManufacturers(category) {
     const query = category ? buildQueryString({ category }) : '';
@@ -208,7 +218,22 @@ export const apiProvider: DataProvider = {
 
   // Community (v0.18)
   async getAvailableTasks() {
-    return apiFetch<AvailableTasksResponse>(ENDPOINTS.COMMUNITY.TASKS_AVAILABLE);
+    const response = await apiFetch<{ tasks: any[] }>(ENDPOINTS.COMMUNITY.TASKS_AVAILABLE);
+    
+    return {
+      active: (response.tasks?.length ?? 0) > 0,
+      tasks: (response.tasks ?? []).map(t => ({
+        ...t,
+        type: t.type || 'list-only',
+        pages_estimate: t.pages_estimate || 5,
+      })),
+      summary: {
+        pending_missions: response.tasks?.length ?? 0,
+        estimated_pages: (response.tasks?.length ?? 0) * 5,
+        coverage_7d_pct: 0.75,
+        credits_distributed_30d: 0,
+      },
+    };
   },
   async getMyTasks() {
     return apiFetch<MyTasksResponse>(ENDPOINTS.COMMUNITY.TASKS_MY);
@@ -220,7 +245,44 @@ export const apiProvider: DataProvider = {
     return apiFetch<CommunityStats>(ENDPOINTS.COMMUNITY.STATS);
   },
   async getLeaderboard(period) {
-    return apiFetch<LeaderboardResponse>(`${ENDPOINTS.COMMUNITY.LEADERBOARD}?period=${period}`);
+    const response = await apiFetch<{
+      entries: Array<{
+        user_id: number;
+        username: string | null;
+        display_name: string | null;
+        total_jobs: number;
+        total_credits: number;
+        rank: number;
+      }>;
+      current_user_rank: number | null;
+    }>(`${ENDPOINTS.COMMUNITY.LEADERBOARD}?period=${period}`);
+    
+    return {
+      items: (response.entries ?? []).map(e => ({
+        rank: e.rank,
+        user: e.username || `User #${e.user_id}`,
+        user_display: e.display_name || e.username || `User #${e.user_id}`,
+        missions: e.total_jobs,
+        pages: 0,
+        credits: e.total_credits,
+        quality: 0,
+        quality_score: 0,
+        badge: e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : null,
+      })),
+      entries: (response.entries ?? []).map(e => ({
+        rank: e.rank,
+        user: e.username || `User #${e.user_id}`,
+        user_display: e.display_name || e.username || `User #${e.user_id}`,
+        missions: e.total_jobs,
+        pages: 0,
+        credits: e.total_credits,
+        quality: 0,
+        quality_score: 0,
+        badge: e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : null,
+      })),
+      period: period,
+      user_rank: response.current_user_rank ?? undefined,
+    };
   },
 
   // Trends
@@ -230,7 +292,41 @@ export const apiProvider: DataProvider = {
 
   // Training
   async getTrainingData() {
-    return apiFetch<TrainingData>(ENDPOINTS.TRAINING.DATA);
+    const response = await apiFetch<{
+      modules: Array<{
+        id: number;
+        code: string;
+        title: string;
+        description: string;
+        content: string;
+        order_index: number;
+        duration_minutes: number;
+        is_premium: boolean;
+        is_completed: boolean;
+        completed_at: string | null;
+      }>;
+      total_modules: number;
+      completed_count: number;
+      progress_percent: number;
+    }>(ENDPOINTS.TRAINING.DATA);
+    
+    return {
+      progress: {
+        modules_completed: response.modules.filter(m => m.is_completed).map(m => m.id),
+        total_modules: response.total_modules,
+        hours_spent: 0,
+      },
+      modules: response.modules.map(m => ({
+        id: m.id,
+        title: m.title,
+        description: m.description,
+        duration: `${m.duration_minutes} min`,
+        completed: m.is_completed,
+        lessons: m.content ? m.content.split('\n').filter(l => l.trim()) : [],
+        icon: '📚',
+      })),
+      faq: [],
+    };
   },
   async completeModule(moduleId) {
     return apiPost(ENDPOINTS.TRAINING.COMPLETE_MODULE(moduleId), {});
@@ -252,7 +348,12 @@ export const apiProvider: DataProvider = {
 
   // Credits & Billing (v0.18)
   async getUserCredits() {
-    return apiFetch<UserCredits>(ENDPOINTS.CREDITS.BALANCE);
+    const response = await apiFetch<{ balance: number }>(ENDPOINTS.CREDITS.BALANCE);
+    return {
+      credits_remaining: response.balance ?? 0,
+      plan_name: 'Starter',
+      credits_reset_date: undefined,
+    };
   },
   async getSubscriptionPlans() {
     return apiFetch<SubscriptionPlan[]>(ENDPOINTS.BILLING.PLANS);
