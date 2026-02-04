@@ -242,7 +242,40 @@ export const apiProvider: DataProvider = {
     return apiPost<ClaimTaskResponse>(ENDPOINTS.COMMUNITY.TASKS_CLAIM, data);
   },
   async getCommunityStats() {
-    return apiFetch<CommunityStats>(ENDPOINTS.COMMUNITY.STATS);
+    const response = await apiFetch<{
+      total_community_jobs?: number;
+      total_community_ads_ingested?: number;
+      total_community_credits_awarded?: number;
+      contributors_count?: number;
+      // Also handle legacy fields
+      total_contributors?: number;
+      total_missions_30d?: number;
+      total_missions_completed?: number;
+      total_pages_30d?: number;
+      total_pages_scanned?: number;
+      total_credits_30d?: number;
+      total_credits_distributed?: number;
+      total_ads_found?: number;
+      coverage_7d_pct?: number;
+      active_contributors_today?: number;
+      your_rank?: number;
+      your_percentile?: number;
+    }>(ENDPOINTS.COMMUNITY.STATS);
+    
+    return {
+      total_contributors: response.contributors_count ?? response.total_contributors ?? 0,
+      total_missions_30d: response.total_community_jobs ?? response.total_missions_30d ?? 0,
+      total_missions_completed: response.total_community_jobs ?? response.total_missions_completed ?? 0,
+      total_pages_30d: response.total_community_ads_ingested ?? response.total_pages_30d ?? 0,
+      total_pages_scanned: response.total_community_ads_ingested ?? response.total_pages_scanned ?? 0,
+      total_credits_30d: response.total_community_credits_awarded ?? response.total_credits_30d ?? 0,
+      total_credits_distributed: response.total_community_credits_awarded ?? response.total_credits_distributed ?? 0,
+      total_ads_found: response.total_community_ads_ingested ?? response.total_ads_found ?? 0,
+      coverage_7d_pct: response.coverage_7d_pct ?? 0.75,
+      active_contributors_today: response.active_contributors_today ?? 0,
+      your_rank: response.your_rank ?? 0,
+      your_percentile: response.your_percentile ?? 0,
+    };
   },
   async getLeaderboard(period) {
     const response = await apiFetch<{
@@ -349,9 +382,19 @@ export const apiProvider: DataProvider = {
   // Credits & Billing (v0.18)
   async getUserCredits() {
     const response = await apiFetch<{ balance: number }>(ENDPOINTS.CREDITS.BALANCE);
+    
+    // Try to get plan name from subscription
+    let planName = 'Starter';
+    try {
+      const sub = await apiFetch<UserSubscription | null>(ENDPOINTS.BILLING.SUBSCRIPTIONS);
+      if (sub?.plan?.name) planName = sub.plan.name;
+    } catch {
+      // Ignore if no subscription or error
+    }
+    
     return {
       credits_remaining: response.balance ?? 0,
-      plan_name: 'Starter',
+      plan_name: planName,
       credits_reset_date: undefined,
     };
   },
@@ -404,25 +447,28 @@ export const apiProvider: DataProvider = {
     return apiFetch<{ user_id: string; role: string }>('/v1/users/me/role');
   },
   async getAdminUsers(page = 1, limit = 20, search) {
+    const offset = (page - 1) * limit;
     const params = new URLSearchParams();
-    params.append('page', page.toString());
     params.append('limit', limit.toString());
+    params.append('offset', offset.toString());
     if (search) params.append('search', search);
     return apiFetch<AdminUsersResponse>(`/v1/admin/users?${params.toString()}`);
   },
   async getAdminJobs(page = 1, limit = 20, filters) {
+    const offset = (page - 1) * limit;
     const params = new URLSearchParams();
-    params.append('page', page.toString());
     params.append('limit', limit.toString());
+    params.append('offset', offset.toString());
     if (filters?.status && filters.status !== 'all') params.append('status', filters.status);
     if (filters?.type && filters.type !== 'all') params.append('type', filters.type);
     if (filters?.search) params.append('search', filters.search);
     return apiFetch<AdminJobsResponse>(`/v1/admin/jobs?${params.toString()}`);
   },
   async getAdminLogs(page = 1, limit = 50, filters) {
+    const offset = (page - 1) * limit;
     const params = new URLSearchParams();
-    params.append('page', page.toString());
     params.append('limit', limit.toString());
+    params.append('offset', offset.toString());
     if (filters?.level && filters.level !== 'all') params.append('level', filters.level);
     if (filters?.search) params.append('search', filters.search);
     return apiFetch<AdminLogsResponse>(`/v1/admin/logs?${params.toString()}`);
