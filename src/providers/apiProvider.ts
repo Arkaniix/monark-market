@@ -128,73 +128,76 @@ export const apiProvider: DataProvider = {
 
   // Catalog
   async getCategories() {
-    const response = await apiFetch<Array<{
-      id: number;
-      name: string;
-      slug?: string;
-    }>>(ENDPOINTS.CATEGORIES.LIST);
-    
-    return (response ?? []).map(c => ({
-      id: c.id,
-      name: c.name,
-      count: 0,
+    const response = await apiFetch<any>(ENDPOINTS.CATEGORIES.LIST);
+    // GARDE CRITIQUE - transforme la réponse en tableau sécurisé
+    return (response || []).map((c: any) => ({
+      id: c?.id || 0,
+      name: c?.name || '',
+      count: c?.count || 0,
     }));
   },
   async getManufacturers(category) {
     const query = category ? buildQueryString({ category }) : '';
     const response = await apiFetch<any>(`${ENDPOINTS.CATALOG.MANUFACTURERS}${query}`);
-    return (response || []).map((item: any) => typeof item === 'string' ? item : item.name);
+    // GARDE CRITIQUE - transforme [{name}] -> string[] avec protection null
+    return (response || []).map((item: any) => typeof item === 'string' ? item : (item?.name || ''));
   },
   async getBrands(category) {
     const query = category ? buildQueryString({ category }) : '';
     const response = await apiFetch<any>(`${ENDPOINTS.CATALOG.BRANDS}${query}`);
-    return (response || []).map((item: any) => typeof item === 'string' ? item : item.name);
+    // GARDE CRITIQUE
+    return (response || []).map((item: any) => typeof item === 'string' ? item : (item?.name || ''));
   },
   async getFamilies(manufacturer) {
     const query = manufacturer ? buildQueryString({ manufacturer }) : '';
     const response = await apiFetch<any>(`${ENDPOINTS.CATALOG.FAMILIES}${query}`);
-    return (response || []).map((item: any) => typeof item === 'string' ? item : item.name);
+    // GARDE CRITIQUE
+    return (response || []).map((item: any) => typeof item === 'string' ? item : (item?.name || ''));
   },
   async getCatalogModels(filters) {
     track('getCatalogModels');
     const query = buildQueryString(filters);
     const response = await apiFetch<any>(`${ENDPOINTS.MODELS.LIST}${query}`);
     
+    // GARDE CRITIQUE - protection contre undefined
+    const items = response?.items || [];
+    
     return {
-      items: (response.items || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        brand: null,
-        manufacturer: item.manufacturer,
-        family: item.family,
-        category: `Category ${item.category_id}`,
-        median_price: 0,
-        fair_value_30d: null,
-        price_median_30d: null,
-        var_7d_pct: 0,
-        var_30d_pct: null,
-        volume: 0,
-        liquidity: 0,
-        liquidity_score: 0,
-        ads_count: 0,
-        aliases: item.aliases || [],
+      items: items.map((item: any) => ({
+        id: item?.id || 0,
+        name: item?.name || '',
+        brand: item?.brand || null,
+        manufacturer: item?.manufacturer || null,
+        family: item?.family || null,
+        category: item?.category || `Category ${item?.category_id || 0}`,
+        median_price: item?.median_price || 0,
+        fair_value_30d: item?.fair_value_30d || null,
+        price_median_30d: item?.price_median_30d || null,
+        var_7d_pct: item?.var_7d_pct || 0,
+        var_30d_pct: item?.var_30d_pct || null,
+        volume: item?.volume || 0,
+        liquidity: item?.liquidity || 0,
+        liquidity_score: item?.liquidity_score || 0,
+        ads_count: item?.ads_count || 0,
+        aliases: item?.aliases || [],
       })),
-      total: response.total || 0,
-      page: Math.floor((response.offset || 0) / (response.limit || 20)) + 1,
-      page_size: response.limit || 20,
-      total_pages: Math.ceil((response.total || 0) / (response.limit || 20)),
+      total: response?.total || 0,
+      page: Math.floor((response?.offset || 0) / (response?.limit || 20)) + 1,
+      page_size: response?.limit || 20,
+      total_pages: Math.ceil((response?.total || 1) / (response?.limit || 20)),
     };
   },
   async getCatalogSummary() {
     const response = await apiFetch<any>(ENDPOINTS.CATALOG.SUMMARY);
+    // GARDE CRITIQUE - protection contre undefined
     return {
-      total_models: response.models || 0,
-      total_brands: response.brands || 0,
-      categories_count: response.categories || 0,
-      last_update: response.last_updated_at || new Date().toISOString(),
-      median_price_global: 0,
-      avg_variation: 0,
-      total_ads: 0,
+      total_models: response?.models || response?.total_models || 0,
+      total_brands: response?.brands || response?.total_brands || 0,
+      categories_count: response?.categories || response?.categories_count || 0,
+      last_update: response?.last_updated_at || response?.last_update || new Date().toISOString(),
+      median_price_global: response?.median_price_global || 0,
+      avg_variation: response?.avg_variation || 0,
+      total_ads: response?.total_ads || 0,
     };
   },
 
@@ -267,17 +270,18 @@ export const apiProvider: DataProvider = {
   async getAvailableTasks() {
     const response = await apiFetch<any>(ENDPOINTS.COMMUNITY.TASKS_AVAILABLE);
     
-    const items = response.items || [];
+    // GARDE CRITIQUE - protection contre undefined
+    const items = response?.items || [];
     return {
       active: items.length > 0,
       tasks: items.map((t: any) => ({
         ...t,
-        type: t.type || 'list-only',
-        pages_estimate: t.pages_estimate || 5,
+        type: t?.type || 'list-only',
+        pages_estimate: t?.pages_estimate || 5,
       })),
       summary: {
-        pending_missions: response.total || items.length,
-        estimated_pages: (response.total || items.length) * 5,
+        pending_missions: response?.total || items.length,
+        estimated_pages: (response?.total || items.length) * 5,
         coverage_7d_pct: 0.75,
         credits_distributed_30d: 0,
       },
@@ -328,32 +332,26 @@ export const apiProvider: DataProvider = {
   async getLeaderboard(period) {
     const response = await apiFetch<any>(`${ENDPOINTS.COMMUNITY.LEADERBOARD}?period=${period}`);
     
-    const items = response.items || response.entries || [];
+    // GARDE CRITIQUE - protection contre undefined
+    const items = response?.items || response?.entries || [];
+    
+    const mappedEntries = items.map((e: any) => ({
+      rank: e?.rank || 0,
+      user: e?.username || `User #${e?.user_id || 0}`,
+      user_display: e?.display_name || e?.username || `User #${e?.user_id || 0}`,
+      missions: e?.total_jobs || 0,
+      pages: 0,
+      credits: e?.total_credits || 0,
+      quality: 0,
+      quality_score: 0,
+      badge: (e?.rank && e.rank <= 3) ? ['🥇', '🥈', '🥉'][e.rank - 1] : null,
+    }));
+    
     return {
-      items: items.map((e: any) => ({
-        rank: e.rank || 0,
-        user: e.username || `User #${e.user_id}`,
-        user_display: e.display_name || e.username || `User #${e.user_id}`,
-        missions: e.total_jobs || 0,
-        pages: 0,
-        credits: e.total_credits || 0,
-        quality: 0,
-        quality_score: 0,
-        badge: e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : null,
-      })),
-      entries: items.map((e: any) => ({
-        rank: e.rank || 0,
-        user: e.username || `User #${e.user_id}`,
-        user_display: e.display_name || e.username || `User #${e.user_id}`,
-        missions: e.total_jobs || 0,
-        pages: 0,
-        credits: e.total_credits || 0,
-        quality: 0,
-        quality_score: 0,
-        badge: e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : null,
-      })),
+      items: mappedEntries,
+      entries: mappedEntries,
       period: period,
-      current_user_rank: response.current_user_rank,
+      current_user_rank: response?.current_user_rank || null,
     };
   },
 
@@ -366,21 +364,22 @@ export const apiProvider: DataProvider = {
   async getTrainingData() {
     const response = await apiFetch<any>(ENDPOINTS.TRAINING.DATA);
     
-    const modules = response.modules || [];
+    // GARDE CRITIQUE - protection contre undefined
+    const modules = response?.modules || [];
     return {
       progress: {
-        modules_completed: modules.filter((m: any) => m.is_completed).map((m: any) => m.id),
-        total_modules: response.total_modules || modules.length,
-        hours_spent: Math.round(modules.reduce((acc: number, m: any) => acc + (m.duration_minutes || 0), 0) / 60),
+        modules_completed: modules.filter((m: any) => m?.is_completed).map((m: any) => m?.id),
+        total_modules: response?.total_modules || modules.length,
+        hours_spent: Math.round(modules.reduce((acc: number, m: any) => acc + (m?.duration_minutes || 0), 0) / 60),
       },
       modules: modules.map((m: any) => ({
-        id: m.id,
-        title: m.title,
-        description: m.description,
-        duration: `${m.duration_minutes || 0} min`,
-        completed: m.is_completed || false,
+        id: m?.id || 0,
+        title: m?.title || '',
+        description: m?.description || '',
+        duration: `${m?.duration_minutes || 0} min`,
+        completed: m?.is_completed || false,
         lessons: [],
-        icon: m.category === 'estimator' ? '📊' : m.category === 'market' ? '📈' : '📚',
+        icon: m?.category === 'estimator' ? '📊' : m?.category === 'market' ? '📈' : '📚',
       })),
       faq: [],
     };
@@ -406,10 +405,11 @@ export const apiProvider: DataProvider = {
   // Credits & Billing (v0.18)
   async getUserCredits() {
     const response = await apiFetch<any>(ENDPOINTS.CREDITS.BALANCE);
+    // GARDE CRITIQUE - utilise ?? pour gérer null et undefined
     return {
-      credits_remaining: response.balance || 0,
-      plan_name: 'Starter',
-      credits_reset_date: undefined,
+      credits_remaining: response?.balance ?? response?.credits_remaining ?? 0,
+      plan_name: response?.plan_name || 'Starter',
+      credits_reset_date: response?.credits_reset_date,
     };
   },
   async getSubscriptionPlans() {
