@@ -142,23 +142,60 @@ export const apiProvider: DataProvider = {
   },
   async getManufacturers(category) {
     const query = category ? buildQueryString({ category }) : '';
-    return apiFetch<string[]>(`${ENDPOINTS.CATALOG.MANUFACTURERS}${query}`);
+    const response = await apiFetch<any>(`${ENDPOINTS.CATALOG.MANUFACTURERS}${query}`);
+    return (response || []).map((item: any) => typeof item === 'string' ? item : item.name);
   },
   async getBrands(category) {
     const query = category ? buildQueryString({ category }) : '';
-    return apiFetch<string[]>(`${ENDPOINTS.CATALOG.BRANDS}${query}`);
+    const response = await apiFetch<any>(`${ENDPOINTS.CATALOG.BRANDS}${query}`);
+    return (response || []).map((item: any) => typeof item === 'string' ? item : item.name);
   },
   async getFamilies(manufacturer) {
     const query = manufacturer ? buildQueryString({ manufacturer }) : '';
-    return apiFetch<string[]>(`${ENDPOINTS.CATALOG.FAMILIES}${query}`);
+    const response = await apiFetch<any>(`${ENDPOINTS.CATALOG.FAMILIES}${query}`);
+    return (response || []).map((item: any) => typeof item === 'string' ? item : item.name);
   },
   async getCatalogModels(filters) {
     track('getCatalogModels');
     const query = buildQueryString(filters);
-    return apiFetch<CatalogResponse>(`${ENDPOINTS.MODELS.LIST}${query}`);
+    const response = await apiFetch<any>(`${ENDPOINTS.MODELS.LIST}${query}`);
+    
+    return {
+      items: (response.items || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        brand: null,
+        manufacturer: item.manufacturer,
+        family: item.family,
+        category: `Category ${item.category_id}`,
+        median_price: 0,
+        fair_value_30d: null,
+        price_median_30d: null,
+        var_7d_pct: 0,
+        var_30d_pct: null,
+        volume: 0,
+        liquidity: 0,
+        liquidity_score: 0,
+        ads_count: 0,
+        aliases: item.aliases || [],
+      })),
+      total: response.total || 0,
+      page: Math.floor((response.offset || 0) / (response.limit || 20)) + 1,
+      page_size: response.limit || 20,
+      total_pages: Math.ceil((response.total || 0) / (response.limit || 20)),
+    };
   },
   async getCatalogSummary() {
-    return apiFetch<CatalogSummary>(ENDPOINTS.CATALOG.SUMMARY);
+    const response = await apiFetch<any>(ENDPOINTS.CATALOG.SUMMARY);
+    return {
+      total_models: response.models || 0,
+      total_brands: response.brands || 0,
+      categories_count: response.categories || 0,
+      last_update: response.last_updated_at || new Date().toISOString(),
+      median_price_global: 0,
+      avg_variation: 0,
+      total_ads: 0,
+    };
   },
 
   // Model Detail (Hardware)
@@ -213,23 +250,34 @@ export const apiProvider: DataProvider = {
     return apiFetch<EstimationHistoryResponse>(`${ENDPOINTS.ESTIMATOR.HISTORY}?page=${page}&limit=${limit}`);
   },
   async getEstimatorStats() {
-    return apiFetch<EstimatorStats>(ENDPOINTS.ESTIMATOR.STATS);
+    try {
+      return await apiFetch<EstimatorStats>(ENDPOINTS.ESTIMATOR.STATS);
+    } catch (error) {
+      console.warn('EstimatorStats endpoint error, using defaults');
+      return {
+        total_runs: 0,
+        runs_this_month: 0,
+        distinct_models: 0,
+        favorite_category: null,
+      };
+    }
   },
 
   // Community (v0.18)
   async getAvailableTasks() {
-    const response = await apiFetch<{ tasks: any[] }>(ENDPOINTS.COMMUNITY.TASKS_AVAILABLE);
+    const response = await apiFetch<any>(ENDPOINTS.COMMUNITY.TASKS_AVAILABLE);
     
+    const items = response.items || [];
     return {
-      active: (response.tasks?.length ?? 0) > 0,
-      tasks: (response.tasks ?? []).map(t => ({
+      active: items.length > 0,
+      tasks: items.map((t: any) => ({
         ...t,
         type: t.type || 'list-only',
         pages_estimate: t.pages_estimate || 5,
       })),
       summary: {
-        pending_missions: response.tasks?.length ?? 0,
-        estimated_pages: (response.tasks?.length ?? 0) * 5,
+        pending_missions: response.total || items.length,
+        estimated_pages: (response.total || items.length) * 5,
         coverage_7d_pct: 0.75,
         credits_distributed_30d: 0,
       },
@@ -278,43 +326,34 @@ export const apiProvider: DataProvider = {
     };
   },
   async getLeaderboard(period) {
-    const response = await apiFetch<{
-      entries: Array<{
-        user_id: number;
-        username: string | null;
-        display_name: string | null;
-        total_jobs: number;
-        total_credits: number;
-        rank: number;
-      }>;
-      current_user_rank: number | null;
-    }>(`${ENDPOINTS.COMMUNITY.LEADERBOARD}?period=${period}`);
+    const response = await apiFetch<any>(`${ENDPOINTS.COMMUNITY.LEADERBOARD}?period=${period}`);
     
+    const items = response.items || response.entries || [];
     return {
-      items: (response.entries ?? []).map(e => ({
-        rank: e.rank,
+      items: items.map((e: any) => ({
+        rank: e.rank || 0,
         user: e.username || `User #${e.user_id}`,
         user_display: e.display_name || e.username || `User #${e.user_id}`,
-        missions: e.total_jobs,
+        missions: e.total_jobs || 0,
         pages: 0,
-        credits: e.total_credits,
+        credits: e.total_credits || 0,
         quality: 0,
         quality_score: 0,
         badge: e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : null,
       })),
-      entries: (response.entries ?? []).map(e => ({
-        rank: e.rank,
+      entries: items.map((e: any) => ({
+        rank: e.rank || 0,
         user: e.username || `User #${e.user_id}`,
         user_display: e.display_name || e.username || `User #${e.user_id}`,
-        missions: e.total_jobs,
+        missions: e.total_jobs || 0,
         pages: 0,
-        credits: e.total_credits,
+        credits: e.total_credits || 0,
         quality: 0,
         quality_score: 0,
         badge: e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : null,
       })),
       period: period,
-      user_rank: response.current_user_rank ?? undefined,
+      current_user_rank: response.current_user_rank,
     };
   },
 
@@ -325,38 +364,23 @@ export const apiProvider: DataProvider = {
 
   // Training
   async getTrainingData() {
-    const response = await apiFetch<{
-      modules: Array<{
-        id: number;
-        code: string;
-        title: string;
-        description: string;
-        content: string;
-        order_index: number;
-        duration_minutes: number;
-        is_premium: boolean;
-        is_completed: boolean;
-        completed_at: string | null;
-      }>;
-      total_modules: number;
-      completed_count: number;
-      progress_percent: number;
-    }>(ENDPOINTS.TRAINING.DATA);
+    const response = await apiFetch<any>(ENDPOINTS.TRAINING.DATA);
     
+    const modules = response.modules || [];
     return {
       progress: {
-        modules_completed: response.modules.filter(m => m.is_completed).map(m => m.id),
-        total_modules: response.total_modules,
-        hours_spent: 0,
+        modules_completed: modules.filter((m: any) => m.is_completed).map((m: any) => m.id),
+        total_modules: response.total_modules || modules.length,
+        hours_spent: Math.round(modules.reduce((acc: number, m: any) => acc + (m.duration_minutes || 0), 0) / 60),
       },
-      modules: response.modules.map(m => ({
+      modules: modules.map((m: any) => ({
         id: m.id,
         title: m.title,
         description: m.description,
-        duration: `${m.duration_minutes} min`,
-        completed: m.is_completed,
-        lessons: m.content ? m.content.split('\n').filter(l => l.trim()) : [],
-        icon: '📚',
+        duration: `${m.duration_minutes || 0} min`,
+        completed: m.is_completed || false,
+        lessons: [],
+        icon: m.category === 'estimator' ? '📊' : m.category === 'market' ? '📈' : '📚',
       })),
       faq: [],
     };
@@ -381,20 +405,10 @@ export const apiProvider: DataProvider = {
 
   // Credits & Billing (v0.18)
   async getUserCredits() {
-    const response = await apiFetch<{ balance: number }>(ENDPOINTS.CREDITS.BALANCE);
-    
-    // Try to get plan name from subscription
-    let planName = 'Starter';
-    try {
-      const sub = await apiFetch<UserSubscription | null>(ENDPOINTS.BILLING.SUBSCRIPTIONS);
-      if (sub?.plan?.name) planName = sub.plan.name;
-    } catch {
-      // Ignore if no subscription or error
-    }
-    
+    const response = await apiFetch<any>(ENDPOINTS.CREDITS.BALANCE);
     return {
-      credits_remaining: response.balance ?? 0,
-      plan_name: planName,
+      credits_remaining: response.balance || 0,
+      plan_name: 'Starter',
       credits_reset_date: undefined,
     };
   },
@@ -447,12 +461,28 @@ export const apiProvider: DataProvider = {
     return apiFetch<{ user_id: string; role: string }>('/v1/users/me/role');
   },
   async getAdminUsers(page = 1, limit = 20, search) {
-    const offset = (page - 1) * limit;
     const params = new URLSearchParams();
+    params.append('page', page.toString());
     params.append('limit', limit.toString());
-    params.append('offset', offset.toString());
     if (search) params.append('search', search);
-    return apiFetch<AdminUsersResponse>(`/v1/admin/users?${params.toString()}`);
+    
+    const response = await apiFetch<any>(`/v1/admin/users?${params.toString()}`);
+    
+    return {
+      items: (response.items || []).map((u: any) => ({
+        id: String(u.id),
+        email: u.email,
+        display_name: u.display_name,
+        role: u.role,
+        credits_remaining: 0,
+        plan_name: u.role,
+        created_at: u.created_at,
+        last_sign_in_at: u.last_login,
+      })),
+      total: response.total || 0,
+      page: response.page || page,
+      page_size: response.page_size || limit,
+    };
   },
   async getAdminJobs(page = 1, limit = 20, filters) {
     const offset = (page - 1) * limit;
