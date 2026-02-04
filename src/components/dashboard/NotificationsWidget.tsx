@@ -31,8 +31,8 @@ export function NotificationsWidget() {
     }
   };
 
-  const handleMarkRead = (id: string) => {
-    markRead.mutate(id);
+  const handleMarkRead = (id: string | number) => {
+    markRead.mutate(String(id));
   };
 
   return (

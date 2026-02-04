@@ -81,19 +81,24 @@ export interface UpdateAlertPayload {
 }
 
 // ============= Notifications =============
+export type NotificationType = 'info' | 'success' | 'warning' | 'alert' | 'price_drop' | 'deal_found';
+
 export interface Notification {
-  id: string;
-  type: string;
+  id: string | number;
+  user_id?: number;
+  type: NotificationType | string;
   title: string;
   message: string;
   is_read: boolean;
   created_at: string;
-  link?: string;
+  link?: string | null;
 }
 
 export interface NotificationsResponse {
   items: Notification[];
   total: number;
+  limit?: number;
+  offset?: number;
   unread_count: number;
 }
 
@@ -483,8 +488,13 @@ export interface EstimationHistoryResponse {
 }
 
 export interface EstimatorStats {
-  last_recalc: string;
-  total_estimations: number;
+  total_runs: number;
+  runs_this_month: number;
+  distinct_models: number;
+  favorite_category: string | null;
+  // Legacy fields for backward compatibility
+  last_recalc?: string;
+  total_estimations?: number;
 }
 
 // ============= Community =============

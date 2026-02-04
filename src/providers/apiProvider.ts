@@ -1,5 +1,5 @@
-// API Provider - wraps real API calls (aligned with monark_api_v0.18)
-import { apiFetch, apiPost, apiPut, apiDelete, ApiFeatureUnavailableError, ENDPOINTS } from "@/lib/api";
+// API Provider - wraps real API calls (aligned with monark_api_v1.0)
+import { apiFetch, apiPost, apiPut, apiDelete, apiPatch, ENDPOINTS } from "@/lib/api";
 import { trackEndpointCall } from "@/lib/debugTracker";
 import type {
   DataProvider,
@@ -98,18 +98,19 @@ export const apiProvider: DataProvider = {
     return apiDelete(ENDPOINTS.ALERTS.DELETE(id));
   },
 
-  // Notifications - NOT IMPLEMENTED in v0.18
-  async getNotifications(limit) {
-    throw new ApiFeatureUnavailableError('Notifications', 'Les notifications ne sont pas encore disponibles via l\'API.');
+  // Notifications (v0.19+)
+  async getNotifications(limit = 20) {
+    const query = buildQueryString({ limit });
+    return apiFetch<NotificationsResponse>(`${ENDPOINTS.NOTIFICATIONS.LIST}${query}`);
   },
   async markNotificationRead(id) {
-    throw new ApiFeatureUnavailableError('Notifications', 'Les notifications ne sont pas encore disponibles via l\'API.');
+    return apiPatch(ENDPOINTS.NOTIFICATIONS.MARK_READ(Number(id)), {});
   },
   async markAllNotificationsRead() {
-    throw new ApiFeatureUnavailableError('Notifications', 'Les notifications ne sont pas encore disponibles via l\'API.');
+    return apiPost(ENDPOINTS.NOTIFICATIONS.READ_ALL, {});
   },
   async deleteNotification(id) {
-    throw new ApiFeatureUnavailableError('Notifications', 'Les notifications ne sont pas encore disponibles via l\'API.');
+    return apiDelete(ENDPOINTS.NOTIFICATIONS.DELETE(Number(id)));
   },
 
   // Deals
@@ -130,13 +131,16 @@ export const apiProvider: DataProvider = {
     return apiFetch<Category[]>(ENDPOINTS.CATEGORIES.LIST);
   },
   async getManufacturers(category) {
-    throw new ApiFeatureUnavailableError('Catalog Manufacturers', 'Le filtre par fabricant n\'est pas encore disponible via l\'API.');
+    const query = category ? buildQueryString({ category }) : '';
+    return apiFetch<string[]>(`${ENDPOINTS.CATALOG.MANUFACTURERS}${query}`);
   },
   async getBrands(category) {
-    throw new ApiFeatureUnavailableError('Catalog Brands', 'Le filtre par marque n\'est pas encore disponible via l\'API.');
+    const query = category ? buildQueryString({ category }) : '';
+    return apiFetch<string[]>(`${ENDPOINTS.CATALOG.BRANDS}${query}`);
   },
   async getFamilies(manufacturer) {
-    throw new ApiFeatureUnavailableError('Catalog Families', 'Le filtre par famille n\'est pas encore disponible via l\'API.');
+    const query = manufacturer ? buildQueryString({ manufacturer }) : '';
+    return apiFetch<string[]>(`${ENDPOINTS.CATALOG.FAMILIES}${query}`);
   },
   async getCatalogModels(filters) {
     track('getCatalogModels');
@@ -144,7 +148,7 @@ export const apiProvider: DataProvider = {
     return apiFetch<CatalogResponse>(`${ENDPOINTS.MODELS.LIST}${query}`);
   },
   async getCatalogSummary() {
-    throw new ApiFeatureUnavailableError('Catalog Summary', 'Les statistiques du catalogue ne sont pas encore disponibles via l\'API.');
+    return apiFetch<CatalogSummary>(ENDPOINTS.CATALOG.SUMMARY);
   },
 
   // Model Detail (Hardware)
@@ -159,7 +163,8 @@ export const apiProvider: DataProvider = {
     return apiFetch<ModelAdsResponse>(`${ENDPOINTS.ADS.BY_MODEL(modelId)}${query}`);
   },
   async getSimilarModels(modelId, limit = 6) {
-    throw new ApiFeatureUnavailableError('Similar Models', 'Les modèles similaires ne sont pas encore disponibles via l\'API.');
+    const query = buildQueryString({ limit });
+    return apiFetch(`${ENDPOINTS.MODELS.SIMILAR(modelId)}${query}`);
   },
   async toggleModelWatchlist(modelId, add) {
     if (add) {
@@ -188,7 +193,8 @@ export const apiProvider: DataProvider = {
 
   // Estimator
   async getModelsAutocomplete(search) {
-    throw new ApiFeatureUnavailableError('Models Autocomplete', 'L\'autocomplétion des modèles n\'est pas encore disponible via l\'API.');
+    const query = buildQueryString({ q: search });
+    return apiFetch<ModelAutocomplete[]>(`${ENDPOINTS.MODELS.AUTOCOMPLETE}${query}`);
   },
   async runEstimation(data) {
     return apiPost<EstimationResult>(ENDPOINTS.ESTIMATOR.RUN, data);
@@ -197,8 +203,7 @@ export const apiProvider: DataProvider = {
     return apiFetch<EstimationHistoryResponse>(`${ENDPOINTS.ESTIMATOR.HISTORY}?page=${page}&limit=${limit}`);
   },
   async getEstimatorStats() {
-    // Stats endpoint not in current API, use history with aggregation
-    throw new ApiFeatureUnavailableError('Estimator Stats', 'Les statistiques de l\'estimateur ne sont pas encore disponibles via l\'API.');
+    return apiFetch<EstimatorStats>(ENDPOINTS.ESTIMATOR.STATS);
   },
 
   // Community (v0.18)

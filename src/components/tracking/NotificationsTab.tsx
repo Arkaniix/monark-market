@@ -172,7 +172,7 @@ export function NotificationsTab({
   const handleNotificationClick = (notification: Notification) => {
     // Marquer comme lu si non lu
     if (!notification.is_read) {
-      markNotificationRead.mutate(notification.id);
+      markNotificationRead.mutate(String(notification.id));
     }
 
     // Navigation selon le lien ou le type
@@ -234,7 +234,7 @@ export function NotificationsTab({
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                   {!isRead && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => {
                 e.stopPropagation();
-                markNotificationRead.mutate(notification.id);
+                markNotificationRead.mutate(String(notification.id));
               }} title="Marquer comme lu">
                     <CheckCircle2 className="h-4 w-4" />
                   </Button>}
@@ -246,7 +246,7 @@ export function NotificationsTab({
                   </Button>}
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={e => {
                 e.stopPropagation();
-                deleteNotification.mutate(notification.id);
+                deleteNotification.mutate(String(notification.id));
               }} title="Supprimer">
                     <Trash2 className="h-4 w-4" />
                   </Button>

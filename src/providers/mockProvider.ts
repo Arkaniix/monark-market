@@ -1288,6 +1288,10 @@ export const mockProvider: DataProvider = {
   async getEstimatorStats() {
     await delay();
     return {
+      total_runs: 12480,
+      runs_this_month: 847,
+      distinct_models: 156,
+      favorite_category: 'GPU',
       last_recalc: 'il y a 3 h',
       total_estimations: 12480,
     };
