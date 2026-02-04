@@ -1,4 +1,6 @@
 // API Client - Core HTTP client with token management
+// Aligned with backend FastAPI (https://api.monark-market.fr/v1)
+// Last sync: 2026-02-04
 export const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // ============= Token Management =============

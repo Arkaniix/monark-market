@@ -1,5 +1,5 @@
 // API Endpoints - All API routes aligned with backend API
-// Last sync: 2026-01-30
+// Last sync: 2026-02-04
 
 // ============= Auth =============
 export const AUTH = {
@@ -80,12 +80,22 @@ export const CATEGORIES = {
   LIST: '/v1/categories',
 } as const;
 
+// ============= Catalog (extended) =============
+export const CATALOG = {
+  SUMMARY: '/v1/catalog/summary',
+  MANUFACTURERS: '/v1/catalog/manufacturers',
+  BRANDS: '/v1/catalog/brands',
+  FAMILIES: '/v1/catalog/families',
+} as const;
+
 // ============= Models (Hardware) =============
 export const MODELS = {
   LIST: '/v1/models',
   DETAIL: (id: string | number) => `/v1/models/${id}`,
   SPECS: (id: string | number) => `/v1/models/${id}/specs`,
   MARKET_STATE: (id: string | number) => `/v1/models/${id}/market_state`,
+  SIMILAR: (id: string | number) => `/v1/models/${id}/similar`,
+  AUTOCOMPLETE: '/v1/models/autocomplete',
 } as const;
 
 // ============= Ads =============
@@ -104,6 +114,15 @@ export const ESTIMATOR = {
   HISTORY: '/v1/estimator/history',
   GET_RUN: (runId: string | number) => `/v1/estimator/${runId}`,
   MODEL_VALUE: (modelId: string | number) => `/v1/estimator/models/${modelId}`,
+  STATS: '/v1/estimator/stats',
+} as const;
+
+// ============= Notifications =============
+export const NOTIFICATIONS = {
+  LIST: '/v1/notifications',
+  MARK_READ: (id: number) => `/v1/notifications/${id}/read`,
+  READ_ALL: '/v1/notifications/read_all',
+  DELETE: (id: number) => `/v1/notifications/${id}`,
 } as const;
 
 // ============= Community =============
@@ -180,9 +199,11 @@ export const ENDPOINTS = {
   DEALS,
   MARKET,
   CATEGORIES,
+  CATALOG,
   MODELS,
   ADS,
   ESTIMATOR,
+  NOTIFICATIONS,
   COMMUNITY,
   TRAINING,
   JOBS,
