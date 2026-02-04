@@ -90,8 +90,9 @@ export default function Community() {
 
   // Quick claim - claim first available high priority task
   const handleQuickClaim = async () => {
-    const highPriorityTask = availableData?.tasks.find(t => t.priority === 'high');
-    const task = highPriorityTask || availableData?.tasks[0];
+    const tasks = availableData?.tasks || [];
+    const highPriorityTask = tasks.find(t => t.priority === 'high');
+    const task = highPriorityTask || tasks[0];
     if (task) {
       await handleClaimTask(task);
     } else {
@@ -221,9 +222,9 @@ export default function Community() {
             <div className="space-y-3 md:space-y-4">
               <div className={`p-3 md:p-4 rounded-lg border ${buttonState.disabled ? "bg-muted border-border" : "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800"}`}>
                 <p className="text-sm font-medium mb-1">{buttonState.reason}</p>
-                {!buttonState.disabled && availableData?.tasks[0] && (
+                {!buttonState.disabled && (availableData?.tasks || [])[0] && (
                   <p className="text-xs text-muted-foreground">
-                    Modèle prioritaire : {availableData.tasks[0].model_name}
+                    Modèle prioritaire : {(availableData?.tasks || [])[0].model_name}
                   </p>
                 )}
               </div>
@@ -268,13 +269,13 @@ export default function Community() {
             <CardContent>
               {loadingAvailable ? (
                 <CommunityTasksSkeleton />
-              ) : availableData?.tasks.length === 0 ? (
+              ) : (availableData?.tasks || []).length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
                   Aucune mission disponible pour le moment.
                 </p>
               ) : (
                 <div className="space-y-2 md:space-y-3">
-                  {availableData?.tasks.map(task => (
+                  {(availableData?.tasks || []).map(task => (
                     <div 
                       key={task.id} 
                       className="p-3 md:p-4 border rounded-lg hover:border-primary transition-colors cursor-pointer group" 
@@ -351,14 +352,14 @@ export default function Community() {
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <p className="text-xs md:text-sm text-muted-foreground">Crédits ce mois-ci</p>
                     <p className="text-xl md:text-2xl font-bold text-green-600">
-                      +{myTasksData?.tasks.filter(t => t.status === "completed" || t.status === "done").reduce((acc, t) => acc + t.credits_earned, 0) ?? 0}
+                      +{(myTasksData?.tasks || []).filter(t => t.status === "completed" || t.status === "done").reduce((acc, t) => acc + (t.credits_earned || 0), 0)}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <p className="text-xs text-muted-foreground">Missions</p>
                       <p className="text-lg md:text-xl font-semibold">
-                        {myTasksData?.tasks.filter(t => t.status === "completed" || t.status === "done").length ?? 0}
+                        {(myTasksData?.tasks || []).filter(t => t.status === "completed" || t.status === "done").length}
                       </p>
                     </div>
                     {userLimits && (
@@ -394,13 +395,13 @@ export default function Community() {
             <CardContent>
               {loadingMyTasks ? (
                 <MyTasksSkeleton />
-              ) : myTasksData?.tasks.length === 0 ? (
+              ) : (myTasksData?.tasks || []).length === 0 ? (
                 <p className="text-center text-muted-foreground py-6">
                   Aucune mission effectuée.
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {myTasksData?.tasks.slice(0, 5).map(task => {
+                  {(myTasksData?.tasks || []).slice(0, 5).map(task => {
                     const StatusIcon = taskStatusIcon[task.status];
                     return (
                       <div 
@@ -451,13 +452,13 @@ export default function Community() {
                 <TabsContent value={leaderboardPeriod} className="mt-0">
                   {loadingLeaderboard ? (
                     <LeaderboardSkeleton />
-                  ) : leaderboardData?.entries.length === 0 ? (
+                  ) : (leaderboardData?.entries || []).length === 0 ? (
                     <p className="text-center text-muted-foreground py-6">
                       Aucune donnée disponible.
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {leaderboardData?.entries.slice(0, 5).map(entry => (
+                      {(leaderboardData?.entries || []).slice(0, 5).map(entry => (
                         <div key={entry.rank} className="p-2.5 md:p-3 border rounded-lg hover:border-primary transition-colors">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 md:gap-3 min-w-0">

@@ -288,45 +288,42 @@ export const apiProvider: DataProvider = {
     };
   },
   async getMyTasks() {
-    return apiFetch<MyTasksResponse>(ENDPOINTS.COMMUNITY.TASKS_MY);
+    const response = await apiFetch<any>(ENDPOINTS.COMMUNITY.TASKS_MY);
+    
+    // L'API retourne un tableau directement, pas un objet
+    const tasks = Array.isArray(response) ? response : (response?.items || response?.tasks || []);
+    
+    return {
+      items: tasks,
+      tasks: tasks,
+      total: tasks.length,
+      user_limits: response?.user_limits || {
+        max_comm_jobs_per_day: 5,
+        used_today: 0,
+        cooldown_minutes: 0,
+        cooldown_remaining: 0,
+      },
+    };
   },
   async claimTask(data) {
     return apiPost<ClaimTaskResponse>(ENDPOINTS.COMMUNITY.TASKS_CLAIM, data);
   },
   async getCommunityStats() {
-    const response = await apiFetch<{
-      total_community_jobs?: number;
-      total_community_ads_ingested?: number;
-      total_community_credits_awarded?: number;
-      contributors_count?: number;
-      // Also handle legacy fields
-      total_contributors?: number;
-      total_missions_30d?: number;
-      total_missions_completed?: number;
-      total_pages_30d?: number;
-      total_pages_scanned?: number;
-      total_credits_30d?: number;
-      total_credits_distributed?: number;
-      total_ads_found?: number;
-      coverage_7d_pct?: number;
-      active_contributors_today?: number;
-      your_rank?: number;
-      your_percentile?: number;
-    }>(ENDPOINTS.COMMUNITY.STATS);
+    const response = await apiFetch<any>(ENDPOINTS.COMMUNITY.STATS);
     
     return {
-      total_contributors: response.contributors_count ?? response.total_contributors ?? 0,
-      total_missions_30d: response.total_community_jobs ?? response.total_missions_30d ?? 0,
-      total_missions_completed: response.total_community_jobs ?? response.total_missions_completed ?? 0,
-      total_pages_30d: response.total_community_ads_ingested ?? response.total_pages_30d ?? 0,
-      total_pages_scanned: response.total_community_ads_ingested ?? response.total_pages_scanned ?? 0,
-      total_credits_30d: response.total_community_credits_awarded ?? response.total_credits_30d ?? 0,
-      total_credits_distributed: response.total_community_credits_awarded ?? response.total_credits_distributed ?? 0,
-      total_ads_found: response.total_community_ads_ingested ?? response.total_ads_found ?? 0,
-      coverage_7d_pct: response.coverage_7d_pct ?? 0.75,
-      active_contributors_today: response.active_contributors_today ?? 0,
-      your_rank: response.your_rank ?? 0,
-      your_percentile: response.your_percentile ?? 0,
+      total_contributors: response?.contributors_count ?? response?.total_contributors ?? 0,
+      total_missions_30d: response?.total_community_jobs ?? response?.total_missions_30d ?? 0,
+      total_missions_completed: response?.total_community_jobs ?? response?.total_missions_completed ?? 0,
+      total_pages_30d: response?.total_community_ads_ingested ?? response?.total_pages_30d ?? 0,
+      total_pages_scanned: response?.total_community_ads_ingested ?? response?.total_pages_scanned ?? 0,
+      total_credits_30d: response?.total_community_credits_awarded ?? response?.total_credits_30d ?? 0,
+      total_credits_distributed: response?.total_community_credits_awarded ?? response?.total_credits_distributed ?? 0,
+      total_ads_found: response?.total_community_ads_ingested ?? response?.total_ads_found ?? 0,
+      coverage_7d_pct: response?.coverage_7d_pct ?? 0.75,
+      active_contributors_today: response?.active_contributors_today ?? 0,
+      your_rank: response?.your_rank ?? 0,
+      your_percentile: response?.your_percentile ?? 0,
     };
   },
   async getLeaderboard(period) {
