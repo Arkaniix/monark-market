@@ -203,10 +203,58 @@ export const apiProvider: DataProvider = {
 
   // Model Detail (Hardware)
   async getModelDetail(modelId) {
-    return apiFetch<ModelDetail>(ENDPOINTS.MODELS.DETAIL(modelId));
+    const response = await apiFetch<any>(ENDPOINTS.MODELS.DETAIL(modelId));
+    
+    const model = response?.model || response;
+    const category = response?.category;
+    const specs = response?.specs;
+    
+    let marketData = {
+      median_price: 0, price_p25: 0, price_p75: 0,
+      var_7d_pct: 0, var_30d_pct: 0, var_90d_pct: 0,
+      volume: 0, ads_count: 0, median_days_to_sell: 0,
+    };
+    
+    try {
+      const summary = await apiFetch<any>(ENDPOINTS.MARKET.MODEL_SUMMARY(modelId));
+      if (summary) {
+        marketData = {
+          median_price: summary.price_median || 0,
+          price_p25: summary.price_p25 || 0,
+          price_p75: summary.price_p75 || 0,
+          var_7d_pct: summary.var_7d_pct || 0,
+          var_30d_pct: summary.var_30d_pct || 0,
+          var_90d_pct: summary.var_90d_pct || 0,
+          volume: summary.ads_count || 0,
+          ads_count: summary.ads_count || 0,
+          median_days_to_sell: summary.median_days_to_sell || 0,
+        };
+      }
+    } catch (e) { console.warn('No market data for model', modelId); }
+    
+    return {
+      id: model?.id || 0,
+      name: model?.name || '',
+      brand: model?.manufacturer || '',
+      manufacturer: model?.manufacturer || null,
+      family: model?.family || null,
+      category: category?.name || '',
+      aliases: model?.aliases || [],
+      specs: specs || {},
+      market: marketData,
+      is_in_watchlist: false,
+    };
   },
   async getModelPriceHistory(modelId, period = '30') {
-    return apiFetch<PriceHistoryPoint[]>(`${ENDPOINTS.MARKET.MODEL_HISTORY(modelId)}?period=${period}`);
+    const response = await apiFetch<any>(`${ENDPOINTS.MARKET.MODEL_HISTORY(modelId)}?period=${period}`);
+    const points = response?.points || response || [];
+    return points.map((p: any) => ({
+      date: p?.date || '',
+      price_median: p?.price_median || p?.fair_value_30d || 0,
+      price_p25: p?.price_p25 || 0,
+      price_p75: p?.price_p75 || 0,
+      volume: p?.ads_count || 0,
+    }));
   },
   async getModelAds(modelId, page = 1, limit = 10) {
     const query = buildQueryString({ page, limit });
@@ -214,7 +262,16 @@ export const apiProvider: DataProvider = {
   },
   async getSimilarModels(modelId, limit = 6) {
     const query = buildQueryString({ limit });
-    return apiFetch(`${ENDPOINTS.MODELS.SIMILAR(modelId)}${query}`);
+    const response = await apiFetch<any>(`${ENDPOINTS.MODELS.SIMILAR(modelId)}${query}`);
+    return (response || []).map((m: any) => ({
+      id: m?.id || 0,
+      name: m?.name || '',
+      brand: m?.manufacturer || '',
+      category: '',
+      median_price: 0,
+      var_30d_pct: 0,
+      similarity_reason: m?.why_similar || 'generation',
+    }));
   },
   async toggleModelWatchlist(modelId, add) {
     if (add) {
