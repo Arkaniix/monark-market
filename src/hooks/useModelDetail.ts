@@ -18,6 +18,7 @@ export function useModelDetail(modelId: string | undefined) {
         category: model.category,
         aliases: model.aliases,
         specs: model.specs,
+        images: model.images || [],
         kpi: {
           median_30d: model.market.median_price,
           var_7d_pct: model.market.var_7d_pct,

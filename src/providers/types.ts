@@ -262,6 +262,8 @@ export interface ModelDetail {
   category: string;
   aliases: string[];
   specs: ModelSpecs;
+  /** Array of image URLs for the model gallery */
+  images?: string[];
   market: {
     median_price: number;
     price_p25: number;

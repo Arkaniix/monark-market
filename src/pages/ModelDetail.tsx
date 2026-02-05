@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { 
   TrendingUp, TrendingDown, Bell, Heart, Clock, 
-  ExternalLink, Activity, BarChart3, MapPin, Sparkles, ImageOff, Info
+  ExternalLink, Activity, BarChart3, MapPin, Sparkles, Info
 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
@@ -27,6 +27,7 @@ import {
 } from "@/hooks/useModelDetail";
 import { CreateAlertModal, AlertTarget } from "@/components/alerts/CreateAlertModal";
 import { ModelDetailSkeleton } from "@/components/model/ModelDetailSkeleton";
+import { ImageGallery } from "@/components/model/ImageGallery";
 import { ModelCardImage } from "@/components/catalog/ModelCardImage";
 import { toast } from "@/hooks/use-toast";
 
@@ -177,21 +178,30 @@ export default function ModelDetail() {
           animate={{ opacity: 1, y: 0 }}
           className="flex gap-6 items-start"
         >
-          {/* Image générique */}
-          <div className="hidden sm:block flex-shrink-0 w-32 lg:w-40 rounded-xl overflow-hidden border border-border/50 shadow-sm">
-            <ModelCardImage
-              imageUrl={null}
-              modelName={model.name}
-              brand={model.brand}
-              category={model.category}
-              aspectRatio="1/1"
-              size="lg"
-            />
-            <div className="bg-muted/50 text-center py-1 border-t border-border/30">
-              <span className="text-[9px] text-muted-foreground/60 italic">
-                Image non contractuelle
-              </span>
-            </div>
+          {/* Galerie d'images */}
+          <div className="hidden sm:block flex-shrink-0 w-[400px]">
+            {model.images && model.images.length > 0 ? (
+              <ImageGallery 
+                images={model.images} 
+                modelName={`${model.brand} ${model.name}`} 
+              />
+            ) : (
+              <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm">
+                <ModelCardImage
+                  imageUrl={null}
+                  modelName={model.name}
+                  brand={model.brand}
+                  category={model.category}
+                  aspectRatio="4/3"
+                  size="lg"
+                />
+                <div className="bg-muted/50 text-center py-1 border-t border-border/30">
+                  <span className="text-[9px] text-muted-foreground/60 italic">
+                    Image non contractuelle
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Titre & Badges */}
