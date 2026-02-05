@@ -241,6 +241,7 @@ export const apiProvider: DataProvider = {
       category: category?.name || '',
       aliases: model?.aliases || [],
       specs: specs || {},
+      images: response?.images || model?.images || [],
       market: marketData,
       is_in_watchlist: false,
     };
