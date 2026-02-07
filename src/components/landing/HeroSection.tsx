@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Target, TrendingUp, Shield, Rocket } from "lucide-react";
@@ -26,7 +25,7 @@ export function HeroSection({ onScrollToPricing }: HeroSectionProps) {
         >
           <Badge variant="secondary" className="mb-6 gap-2">
             <Rocket className="h-3.5 w-3.5" />
-            Accès anticipé — Lancement en cours
+            En développement — Bientôt disponible
           </Badge>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent leading-tight">
@@ -53,11 +52,9 @@ export function HeroSection({ onScrollToPricing }: HeroSectionProps) {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-            <Link to="/auth?tab=signup">
-              <Button size="lg" className="gap-2 min-w-[160px]">
-                S'inscrire
-              </Button>
-            </Link>
+            <Button size="lg" className="gap-2 min-w-[160px]" disabled>
+              Bientôt disponible
+            </Button>
             <Button size="lg" variant="outline" asChild>
               <a href="#pricing" onClick={onScrollToPricing}>
                 Voir les tarifs
@@ -66,7 +63,7 @@ export function HeroSection({ onScrollToPricing }: HeroSectionProps) {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            ✓ Sans engagement • ✓ Annulation à tout moment • ✓ Support 7j/7
+            Inscriptions bientôt ouvertes • Restez informés
           </p>
         </motion.div>
       </div>

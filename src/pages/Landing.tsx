@@ -64,6 +64,11 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen">
+      {/* Bandeau développement */}
+      <div className="bg-primary text-primary-foreground text-center py-3 px-4 text-sm font-medium">
+        🚧 Ce projet est en cours de développement et n'est pas encore accessible au public. Restez connectés !
+      </div>
+
       {maintenanceMode && (
         <Alert className="bg-warning/10 border-warning/50 rounded-none border-x-0 border-t-0">
           <Construction className="h-5 w-5 text-warning" />
