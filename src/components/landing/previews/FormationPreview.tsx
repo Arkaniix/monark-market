@@ -73,7 +73,10 @@ export function FormationPreview() {
     <>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Parcours de formation</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Parcours de formation</span>
+            <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed">Exemple fictif</Badge>
+          </div>
           <Badge className="bg-accent/10 text-accent border-0 text-xs">2 niveaux</Badge>
         </div>
         <div className="space-y-2.5">

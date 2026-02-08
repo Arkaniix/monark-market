@@ -107,6 +107,7 @@ export function CataloguePreview() {
           <div className="flex-1 bg-background/50 border rounded-lg px-3 py-1.5 text-xs text-muted-foreground flex items-center gap-2">
             <Search className="h-3 w-3" /> Rechercher un modèle…
           </div>
+          <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed whitespace-nowrap">Exemple fictif</Badge>
           <div className="bg-background/50 border rounded-lg px-2.5 py-1.5">
             <Filter className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
