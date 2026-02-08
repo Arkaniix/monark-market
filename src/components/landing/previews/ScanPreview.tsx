@@ -77,6 +77,7 @@ export function ScanPreview() {
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-accent animate-pulse" />
             <span className="text-sm font-medium">Scan en cours…</span>
+            <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed">Exemple fictif</Badge>
           </div>
           <Badge variant="outline" className="text-xs">leboncoin</Badge>
         </div>
@@ -151,11 +152,6 @@ export function ScanPreview() {
                   <TrendingDown className="h-4 w-4 text-warning flex-shrink-0" />
                   <span className="text-muted-foreground">Historique prix :</span>
                   <span className="font-medium">{selected.priceHistory}</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-sm">
-                  <Star className="h-4 w-4 text-warning flex-shrink-0" />
-                  <span className="text-muted-foreground">Vendeur :</span>
-                  <span className="font-medium">{selected.seller}</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-sm">
                   <Truck className="h-4 w-4 text-muted-foreground flex-shrink-0" />

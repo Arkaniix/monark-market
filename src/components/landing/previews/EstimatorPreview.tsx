@@ -19,6 +19,7 @@ export function EstimatorPreview() {
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-primary" />
             <span className="text-sm font-medium group-hover:text-primary transition-colors">Estimation</span>
+            <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed">Exemple fictif</Badge>
           </div>
           <Badge variant="outline" className="text-xs">RTX 4070</Badge>
         </div>

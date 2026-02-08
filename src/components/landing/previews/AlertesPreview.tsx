@@ -5,7 +5,10 @@ export function AlertesPreview() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Alertes actives</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Alertes actives</span>
+          <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed">Exemple fictif</Badge>
+        </div>
         <Badge className="bg-primary/10 text-primary border-0 text-xs">3 alertes</Badge>
       </div>
       <div className="space-y-2.5">

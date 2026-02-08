@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Star, MapPin, Clock, TrendingDown, ShieldCheck, Truck, BarChart3 } from "lucide-react";
+import { ShoppingBag, Star, MapPin, Clock, ShieldCheck, Truck, BarChart3 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -81,7 +81,10 @@ export function AnnoncesPreview() {
     <>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Annonces récentes</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Annonces récentes</span>
+            <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed">Exemple fictif</Badge>
+          </div>
           <div className="flex gap-1">
             {["Tous", "GPU", "CPU"].map((f) => (
               <Badge key={f} variant={f === "GPU" ? "default" : "outline"} className="text-[10px] cursor-pointer">{f}</Badge>
@@ -140,10 +143,6 @@ export function AnnoncesPreview() {
                 </div>
               </div>
 
-              <div className="bg-muted/30 rounded-lg p-3 text-sm text-muted-foreground italic">
-                "{selected.description}"
-              </div>
-
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2.5 text-sm">
                   <ShieldCheck className="h-4 w-4 text-accent flex-shrink-0" />
@@ -159,11 +158,6 @@ export function AnnoncesPreview() {
                   <BarChart3 className="h-4 w-4 text-warning flex-shrink-0" />
                   <span className="text-muted-foreground">vs Médiane :</span>
                   <span className="font-medium">{selected.priceVsMedian}</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-sm">
-                  <Star className="h-4 w-4 text-warning flex-shrink-0" />
-                  <span className="text-muted-foreground">Vendeur :</span>
-                  <span className="font-medium">{selected.seller}</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-sm">
                   <Truck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
