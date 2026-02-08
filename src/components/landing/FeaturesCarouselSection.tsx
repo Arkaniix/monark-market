@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,15 +83,22 @@ const features: Feature[] = [
 
 export function FeaturesCarouselSection() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const activeFeature = features[activeIndex];
 
-  const goToPrev = () => {
-    setActiveIndex((prev) => (prev === 0 ? features.length - 1 : prev - 1));
-  };
-
-  const goToNext = () => {
+  const goToNext = useCallback(() => {
     setActiveIndex((prev) => (prev === features.length - 1 ? 0 : prev + 1));
-  };
+  }, []);
+
+  const goToPrev = useCallback(() => {
+    setActiveIndex((prev) => (prev === 0 ? features.length - 1 : prev - 1));
+  }, []);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(goToNext, 6000);
+    return () => clearInterval(timer);
+  }, [isPaused, goToNext]);
 
   return (
     <section className="py-16 md:py-20 bg-muted/30">
@@ -126,8 +133,11 @@ export function FeaturesCarouselSection() {
           ))}
         </div>
 
-        {/* Carousel content */}
-        <div className="max-w-5xl mx-auto">
+        <div
+          className="max-w-5xl mx-auto"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             {/* Preview card */}
             <div className="relative order-2 lg:order-1">
