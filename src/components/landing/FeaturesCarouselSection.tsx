@@ -84,7 +84,12 @@ const features: Feature[] = [
 export function FeaturesCarouselSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
   const activeFeature = features[activeIndex];
+
+  const resetTimer = useCallback(() => {
+    setResetKey((k) => k + 1);
+  }, []);
 
   const goToNext = useCallback(() => {
     setActiveIndex((prev) => (prev === features.length - 1 ? 0 : prev + 1));
@@ -94,11 +99,26 @@ export function FeaturesCarouselSection() {
     setActiveIndex((prev) => (prev === 0 ? features.length - 1 : prev - 1));
   }, []);
 
+  const handlePrev = useCallback(() => {
+    goToPrev();
+    resetTimer();
+  }, [goToPrev, resetTimer]);
+
+  const handleNext = useCallback(() => {
+    goToNext();
+    resetTimer();
+  }, [goToNext, resetTimer]);
+
+  const handleSelect = useCallback((i: number) => {
+    setActiveIndex(i);
+    resetTimer();
+  }, [resetTimer]);
+
   useEffect(() => {
     if (isPaused) return;
     const timer = setInterval(goToNext, 6000);
     return () => clearInterval(timer);
-  }, [isPaused, goToNext]);
+  }, [isPaused, goToNext, resetKey]);
 
   return (
     <section className="py-16 md:py-20 bg-muted/30">
@@ -120,7 +140,7 @@ export function FeaturesCarouselSection() {
           {features.map((feature, i) => (
             <button
               key={feature.id}
-              onClick={() => setActiveIndex(i)}
+              onClick={() => handleSelect(i)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 i === activeIndex
                   ? "bg-primary text-primary-foreground shadow-md"
@@ -188,21 +208,21 @@ export function FeaturesCarouselSection() {
 
           {/* Navigation */}
           <div className="flex items-center justify-center gap-4 mt-8">
-            <Button variant="outline" size="icon" onClick={goToPrev} className="rounded-full h-10 w-10">
+            <Button variant="outline" size="icon" onClick={handlePrev} className="rounded-full h-10 w-10">
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <div className="flex gap-1.5">
               {features.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveIndex(i)}
+                  onClick={() => handleSelect(i)}
                   className={`h-2 rounded-full transition-all ${
                     i === activeIndex ? "w-6 bg-primary" : "w-2 bg-muted-foreground/30"
                   }`}
                 />
               ))}
             </div>
-            <Button variant="outline" size="icon" onClick={goToNext} className="rounded-full h-10 w-10">
+            <Button variant="outline" size="icon" onClick={handleNext} className="rounded-full h-10 w-10">
               <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
