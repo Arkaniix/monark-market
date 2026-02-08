@@ -182,29 +182,29 @@ export function FeaturesCarouselSection() {
                     {activeFeature.description}
                   </p>
                 </div>
-
-                {/* Navigation */}
-                <div className="flex items-center gap-4">
-                  <Button variant="outline" size="icon" onClick={goToPrev} className="rounded-full h-10 w-10">
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                  <div className="flex gap-1.5">
-                    {features.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setActiveIndex(i)}
-                        className={`h-2 rounded-full transition-all ${
-                          i === activeIndex ? "w-6 bg-primary" : "w-2 bg-muted-foreground/30"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <Button variant="outline" size="icon" onClick={goToNext} className="rounded-full h-10 w-10">
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
-                </div>
               </motion.div>
             </AnimatePresence>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex items-center justify-center gap-4 mt-8">
+            <Button variant="outline" size="icon" onClick={goToPrev} className="rounded-full h-10 w-10">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex gap-1.5">
+              {features.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveIndex(i)}
+                  className={`h-2 rounded-full transition-all ${
+                    i === activeIndex ? "w-6 bg-primary" : "w-2 bg-muted-foreground/30"
+                  }`}
+                />
+              ))}
+            </div>
+            <Button variant="outline" size="icon" onClick={goToNext} className="rounded-full h-10 w-10">
+              <ChevronRight className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </div>
