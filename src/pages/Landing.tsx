@@ -5,9 +5,9 @@ import { Construction } from "lucide-react";
 import { PricingSection } from "@/components/pricing/PricingTable";
 import {
   HeroSection,
+  FeaturesCarouselSection,
   ProblemSolutionSection,
   ValueCardsSection,
-  ProductDemoSection,
   HowItWorksSection,
   TargetAudienceSection,
   TrainingSection,
@@ -83,14 +83,14 @@ export default function Landing() {
       {/* A. Hero */}
       <HeroSection onScrollToPricing={scrollToPricing} />
 
-      {/* B. Problème → Solution */}
+      {/* B. Fonctionnalités */}
+      <FeaturesCarouselSection />
+
+      {/* C. Problème → Solution */}
       <ProblemSolutionSection />
 
-      {/* C. Ce que vous obtenez */}
+      {/* D. Ce que vous obtenez */}
       <ValueCardsSection />
-
-      {/* D. Démo produit */}
-      <ProductDemoSection />
 
       {/* E. Comment ça marche */}
       <HowItWorksSection />
