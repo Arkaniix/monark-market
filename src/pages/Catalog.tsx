@@ -449,10 +449,14 @@ export default function Catalog() {
                               <CardTitle className="text-base font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem]">
                                 {model.name}
                               </CardTitle>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {model.brand}{model.manufacturer ? ` • ${model.manufacturer}` : ''}
-                                {model.family ? ` • ${model.family}` : ''}
-                              </p>
+                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                <span className="text-xs font-medium text-foreground/70">{model.brand}</span>
+                                {model.manufacturer && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-normal border-primary/30 text-primary/80">
+                                    {model.manufacturer}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                             <Badge variant="secondary" className="text-xs px-2 py-0.5 shrink-0">{model.category}</Badge>
                           </div>
