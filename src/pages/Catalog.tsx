@@ -451,6 +451,7 @@ export default function Catalog() {
                               </CardTitle>
                               <p className="text-sm text-muted-foreground mt-1">
                                 {model.brand}{model.manufacturer ? ` • ${model.manufacturer}` : ''}
+                                {model.family ? ` • ${model.family}` : ''}
                               </p>
                             </div>
                             <Badge variant="secondary" className="text-xs px-2 py-0.5 shrink-0">{model.category}</Badge>

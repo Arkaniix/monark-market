@@ -174,6 +174,7 @@ export const apiProvider: DataProvider = {
         manufacturer: item?.manufacturer || null,
         family: item?.family || null,
         category: item?.category || `Category ${item?.category_id || 0}`,
+        image_url: item?.image_url || null,
         median_price: item?.median_price || 0,
         fair_value_30d: item?.fair_value_30d || null,
         price_median_30d: item?.price_median_30d || null,
