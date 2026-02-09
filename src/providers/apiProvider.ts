@@ -156,7 +156,11 @@ export const apiProvider: DataProvider = {
   },
   async getCatalogModels(filters) {
     track('getCatalogModels');
-    const query = buildQueryString(filters);
+    // Convert page/limit to offset/limit for the API
+    const { page, limit, ...rest } = filters;
+    const apiLimit = limit || 24;
+    const apiOffset = ((page || 1) - 1) * apiLimit;
+    const query = buildQueryString({ ...rest, limit: apiLimit, offset: apiOffset });
     const response = await apiFetch<any>(`${ENDPOINTS.MODELS.LIST}${query}`);
     
     // GARDE CRITIQUE - protection contre undefined
