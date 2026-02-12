@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { ScanPreview } from "./previews/ScanPreview";
+import { MarketScorePreview } from "./previews/MarketScorePreview";
 import { AlertesPreview } from "./previews/AlertesPreview";
 import { CataloguePreview } from "./previews/CataloguePreview";
 import { EstimatorPreview } from "./previews/EstimatorPreview";
@@ -44,7 +45,7 @@ const features: Feature[] = [
     subtitle: "Un score 0-10 sur chaque annonce",
     description: "Évaluation instantanée de chaque annonce par rapport au marché. Gratuit sur le plan Free, enrichi avec verdict et données détaillées sur les plans payants.",
     icon: Gauge,
-    preview: <ScanPreview />,
+    preview: <MarketScorePreview />,
   },
   {
     id: "alertes",
