@@ -123,7 +123,7 @@ export default function OpportunityScoreCard({
               <span className="text-sm font-medium">Décomposition du score</span>
               {!isElite && (
                 <Badge variant="outline" className="gap-1 text-xs">
-                  <Crown className="h-3 w-3" /> Élite
+                  <Crown className="h-3 w-3" /> Pro
                 </Badge>
               )}
             </div>

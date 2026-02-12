@@ -69,7 +69,7 @@ export default function NegotiationSection({ result, plan, limits }: Negotiation
             <HandCoins className="h-5 w-5 text-amber-500" />
             Prix de négociation
             <Badge variant="outline" className="ml-2 gap-1 text-xs border-amber-500/50 text-amber-600">
-              <Lock className="h-3 w-3" /> Élite
+              <Lock className="h-3 w-3" /> Pro
             </Badge>
           </CardTitle>
         </CardHeader>

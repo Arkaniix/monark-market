@@ -51,7 +51,7 @@ export interface EstimationHistoryItem {
   region?: string;
   platform?: string;
   buy_price: number;
-  plan_at_creation: "starter" | "pro" | "elite";
+  plan_at_creation: "free" | "standard" | "pro";
   results: {
     buy_price_recommended: number;
     sell_price_1m: number;
@@ -248,7 +248,7 @@ export const mockEstimationHistory: EstimationHistoryItem[] = [
     condition: "bon",
     platform: "leboncoin",
     buy_price: 260,
-    plan_at_creation: "elite",
+    plan_at_creation: "pro",
     results: {
       buy_price_recommended: 252,
       sell_price_1m: 286,
@@ -296,7 +296,7 @@ export const mockEstimationHistory: EstimationHistoryItem[] = [
     condition: "comme-neuf",
     platform: "ebay",
     buy_price: 255,
-    plan_at_creation: "pro",
+    plan_at_creation: "standard",
     results: {
       buy_price_recommended: 243,
       sell_price_1m: 275,
@@ -326,7 +326,7 @@ export const mockEstimationHistory: EstimationHistoryItem[] = [
     condition: "neuf",
     platform: "ldlc",
     buy_price: 108,
-    plan_at_creation: "starter",
+    plan_at_creation: "free",
     results: {
       buy_price_recommended: 103,
       sell_price_1m: 117,

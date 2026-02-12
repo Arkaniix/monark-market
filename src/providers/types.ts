@@ -441,7 +441,7 @@ export interface EstimationHistoryItem {
   platform?: string;
   buy_price: number;
   /** Plan active when estimation was created - determines what data user can see */
-  plan_at_creation: 'starter' | 'pro' | 'elite';
+  plan_at_creation: 'free' | 'standard' | 'pro';
   // Stored results from when estimation was run
   results: {
     buy_price_recommended: number;

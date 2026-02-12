@@ -300,12 +300,12 @@ export default function Estimator() {
   // Get badge for plan at creation
   const getPlanBadge = (planAtCreation: string) => {
     switch (planAtCreation) {
-      case 'elite':
-        return <Badge variant="secondary" className="gap-1 text-xs"><Crown className="h-3 w-3" />Élite</Badge>;
       case 'pro':
-        return <Badge variant="outline" className="text-xs">Pro</Badge>;
+        return <Badge variant="secondary" className="gap-1 text-xs"><Crown className="h-3 w-3" />Pro</Badge>;
+      case 'standard':
+        return <Badge variant="outline" className="text-xs">Standard</Badge>;
       default:
-        return <Badge variant="outline" className="text-xs opacity-60">Starter</Badge>;
+        return <Badge variant="outline" className="text-xs opacity-60">Free</Badge>;
     }
   };
 

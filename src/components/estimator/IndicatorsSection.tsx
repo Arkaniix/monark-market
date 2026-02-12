@@ -303,11 +303,11 @@ export default function IndicatorsSection({ result, plan, limits }: IndicatorsSe
       )}
 
       {/* Message Pro */}
-      {plan === "pro" && (
+      {plan === "standard" && (
         <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
           <p className="text-sm text-muted-foreground text-center">
             ✅ Avec ces données, vous pouvez acheter et revendre sans être à l'aveugle. 
-            <a href="/pricing" className="text-primary hover:underline ml-1">Passez au plan Élite</a> pour accéder aux scénarios de revente et à l'analyse stratégique.
+            <a href="/pricing" className="text-primary hover:underline ml-1">Passez au plan Pro</a> pour accéder aux scénarios de revente et à l'analyse stratégique.
           </p>
         </div>
       )}

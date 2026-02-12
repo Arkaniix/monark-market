@@ -193,40 +193,30 @@ export default function MyAccount() {
   
   const plans = [
     { 
-      id: "starter", 
-      name: "Starter", 
-      price: 9.99, 
-      credits: 120,
-      features: ["3 alertes actives", "Scrap standard", "Catalogue complet"],
+      id: "standard", 
+      name: "Standard", 
+      price: 11.99, 
+      credits: 200,
+      features: ["10 alertes actives", "Estimator complet", "Formation avancée"],
+      isPopular: true,
       hasAdvancedScrap: false,
-      hasAdvancedStats: false,
+      hasAdvancedStats: true,
       hasExport: false,
     },
     { 
       id: "pro", 
       name: "Pro", 
-      price: 29, 
-      credits: 500,
-      features: ["20 alertes actives", "Scrap avancé", "Historique 90j", "Stats détaillées"],
-      isPopular: true,
-      hasAdvancedScrap: true,
-      hasAdvancedStats: true,
-      hasExport: false,
-    },
-    { 
-      id: "elite", 
-      name: "Élite", 
-      price: 79, 
-      credits: 1500,
-      features: ["500 Alertes", "Tout illimité", "Export données", "Support prioritaire"],
-      hasAdvancedScrap: true,
+      price: 24.99, 
+      credits: 800,
+      features: ["100 alertes", "Scénarios + export", "Support prioritaire"],
+      hasAdvancedScrap: false,
       hasAdvancedStats: true,
       hasExport: true,
     },
   ];
 
-  const currentPlanData = plans.find(p => p.id === currentPlan)!;
-  const planOrder = { starter: 1, pro: 2, elite: 3 };
+  const currentPlanData = plans.find(p => p.id === currentPlan) || plans[0];
+  const planOrder = { free: 0, standard: 1, pro: 2 };
 
   // ═══════════════════════════════════════════════════════════════════
   // HANDLERS
@@ -234,9 +224,9 @@ export default function MyAccount() {
 
   const getPlanIcon = (planName: string) => {
     switch (planName.toLowerCase()) {
-      case "starter": return <Zap className="h-5 w-5" />;
+      case "free": return <CreditCard className="h-5 w-5" />;
+      case "standard": return <Zap className="h-5 w-5" />;
       case "pro": return <Crown className="h-5 w-5" />;
-      case "elite": case "élite": return <Building2 className="h-5 w-5" />;
       default: return <CreditCard className="h-5 w-5" />;
     }
   };

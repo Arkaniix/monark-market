@@ -14,7 +14,7 @@ export interface EstimationHistoryItem {
   platform?: string;
   buy_price_input: number;
   /** Plan active when estimation was created - determines what data user can see */
-  plan_at_creation: 'starter' | 'pro' | 'elite';
+  plan_at_creation: 'free' | 'standard' | 'pro';
   // Stored results from the estimation
   results: {
     buy_price_recommended: number;
@@ -174,7 +174,7 @@ export function useEstimationHistory(page: number = 1, autoFetch: boolean = true
           region: item.region,
           platform: item.platform,
           buy_price_input: item.buy_price,
-          plan_at_creation: item.plan_at_creation || 'starter',
+          plan_at_creation: item.plan_at_creation || 'free',
           results: {
             ...results,
             negotiation: item.results?.negotiation,
