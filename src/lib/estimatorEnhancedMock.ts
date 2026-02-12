@@ -331,7 +331,7 @@ function calculateOpportunityScore(
     opportunity: {
       score,
       label: getOpportunityLabel(score),
-      components: plan === "elite" ? components : [], // Only Elite sees decomposition
+      components: plan === "pro" ? components : [], // Only Pro sees decomposition
     },
     components,
   };
@@ -576,8 +576,8 @@ function generatePlatformsAnalysis(
       is_recommended: false,
     };
     
-    // Elite gets extra details
-    if (plan === "elite") {
+    // Pro gets extra details
+    if (plan === "pro") {
       platform.reason = config.reason;
       platform.constraints = config.constraints;
     }
@@ -591,8 +591,8 @@ function generatePlatformsAnalysis(
   // Mark recommended
   platforms[0].is_recommended = true;
   
-  // Limit for non-elite
-  const limitedPlatforms = plan === "elite" ? platforms : platforms.slice(0, 3);
+  // Limit for non-pro
+  const limitedPlatforms = plan === "pro" ? platforms : platforms.slice(0, 3);
   
   return {
     platforms: limitedPlatforms,

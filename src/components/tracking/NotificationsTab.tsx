@@ -109,7 +109,7 @@ export function NotificationsTab({
   const {
     plan
   } = useEntitlements();
-  const isPro = plan === 'pro' || plan === 'elite';
+  const isPro = plan === 'pro';
 
   // Mutations
   const markNotificationRead = useMarkNotificationRead();

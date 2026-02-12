@@ -71,7 +71,7 @@ export default function EnhancedScenariosSection({
   adPrice,
   plan 
 }: EnhancedScenariosSectionProps) {
-  const isElite = plan === "elite";
+  const isElite = plan === "pro";
   const TimingIcon = getTimingIcon(scenarios.timing.status);
 
   return (
@@ -85,13 +85,13 @@ export default function EnhancedScenariosSection({
           <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
             Scénarios de revente
-            <PlanBadge plan="elite" />
+            <PlanBadge plan="pro" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <LockedFeatureOverlay
             isLocked={!isElite}
-            requiredPlan="elite"
+            requiredPlan="pro"
             featureName="Scénarios de revente"
           >
             {/* Timing & Saturation */}

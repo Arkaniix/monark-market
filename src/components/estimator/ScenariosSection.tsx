@@ -131,7 +131,7 @@ export default function ScenariosSection({ result, plan, limits }: ScenariosSect
         <CardContent>
           <LockedFeatureOverlay
             isLocked={!limits.canSeeScenarios}
-            requiredPlan="elite"
+            requiredPlan="pro"
             featureName="Scénarios de revente"
           >
             <div className="space-y-6">

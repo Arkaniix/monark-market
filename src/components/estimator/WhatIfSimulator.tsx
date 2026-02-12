@@ -75,7 +75,7 @@ export default function WhatIfSimulator({
   actionablePrices,
   plan 
 }: WhatIfSimulatorProps) {
-  const isElite = plan === "elite";
+  const isElite = plan === "pro";
   const [sliderValue, setSliderValue] = useState(adPrice);
   const [inputValue, setInputValue] = useState(adPrice.toString());
 
@@ -118,13 +118,13 @@ export default function WhatIfSimulator({
           <CardTitle className="text-lg flex items-center gap-2">
             <Calculator className="h-5 w-5" />
             Simulateur "Et si..."
-            <PlanBadge plan="elite" />
+            <PlanBadge plan="pro" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <LockedFeatureOverlay
             isLocked={!isElite}
-            requiredPlan="elite"
+            requiredPlan="pro"
             featureName="Simulateur What-If"
           >
             <div className="space-y-6">

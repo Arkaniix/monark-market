@@ -149,7 +149,7 @@ export default function IndicatorsSection({ result, plan, limits }: IndicatorsSe
           <CardTitle className="text-base flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
             Prix recommandés pour l'achat-revente
-            {plan === "starter" && (
+            {plan === "standard" && (
               <Badge variant="outline" className="ml-2 gap-1 text-xs">
                 <Lock className="h-3 w-3" /> Pro
               </Badge>
@@ -293,7 +293,7 @@ export default function IndicatorsSection({ result, plan, limits }: IndicatorsSe
       </div>
 
       {/* Message pédagogique Starter */}
-      {plan === "starter" && (
+      {plan === "standard" && (
         <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
           <p className="text-sm text-muted-foreground text-center">
             💡 Les données affichées donnent une vision globale du marché mais ne suffisent pas pour optimiser une opération d'achat-revente. 

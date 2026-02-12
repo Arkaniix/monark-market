@@ -44,13 +44,11 @@ export default function EnhancedPlatformsSection({
   sourcePlatform,
   withoutPlatform 
 }: EnhancedPlatformsSectionProps) {
-  const isPro = plan === "pro" || plan === "elite";
-  const isElite = plan === "elite";
+  const isPro = plan === "pro";
+  const isProPlan = plan === "pro";
   
-  // Pro shows top 3, Elite shows all
-  const displayPlatforms = isElite 
-    ? platforms.platforms 
-    : platforms.platforms.slice(0, 3);
+  // Pro shows all platforms
+  const displayPlatforms = platforms.platforms;
 
   return (
     <motion.div
@@ -64,7 +62,7 @@ export default function EnhancedPlatformsSection({
             <Store className="h-5 w-5 text-primary" />
             Où revendre ?
             <PlanBadge plan="pro" />
-            {isElite && <Badge variant="outline" className="text-xs gap-1"><Crown className="h-3 w-3" /> Complet</Badge>}
+            {isProPlan && <Badge variant="outline" className="text-xs gap-1"><Crown className="h-3 w-3" /> Complet</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -138,7 +136,7 @@ export default function EnhancedPlatformsSection({
                       </div>
                       
                       {/* Elite: show reason */}
-                      {isElite && platform.reason && (
+                      {isProPlan && platform.reason && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {platform.reason}
                         </p>
@@ -168,7 +166,7 @@ export default function EnhancedPlatformsSection({
                   </div>
                   
                   {/* Elite: show constraints */}
-                  {isElite && platform.constraints && platform.constraints.length > 0 && (
+                  {isProPlan && platform.constraints && platform.constraints.length > 0 && (
                     <div className="mt-3 pt-3 border-t flex flex-wrap gap-2">
                       {platform.constraints.map((constraint, j) => (
                         <Badge key={j} variant="outline" className="text-xs">
@@ -182,11 +180,11 @@ export default function EnhancedPlatformsSection({
             </div>
 
             {/* Pro users: show upgrade hint */}
-            {!isElite && platforms.platforms.length > 3 && (
+            {!isProPlan && platforms.platforms.length > 3 && (
               <div className="mt-4 text-center">
                 <Badge variant="outline" className="gap-1">
                   <Crown className="h-3 w-3" />
-                  {platforms.platforms.length - 3} plateformes supplémentaires avec Élite
+                  {platforms.platforms.length - 3} plateformes supplémentaires avec Pro
                 </Badge>
               </div>
             )}

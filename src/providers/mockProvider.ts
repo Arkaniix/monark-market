@@ -1539,7 +1539,7 @@ export const mockProvider: DataProvider = {
     return Object.values(MOCK_PLANS).map(plan => ({
       id: plan.id,
       name: plan.displayName,
-      description: plan.name === 'starter' 
+      description: plan.name === 'standard' 
         ? 'Pour découvrir l\'outil' 
         : plan.name === 'pro' 
           ? 'Pour les utilisateurs réguliers'
@@ -1577,7 +1577,7 @@ export const mockProvider: DataProvider = {
       plan: {
         id: plan.id,
         name: plan.displayName,
-        description: plan.name === 'starter' 
+        description: plan.name === 'standard' 
           ? 'Pour découvrir l\'outil' 
           : plan.name === 'pro' 
             ? 'Pour les utilisateurs réguliers'
@@ -1638,12 +1638,12 @@ export const mockProvider: DataProvider = {
   async subscribe(planId) {
     await delay();
     // Use centralized plan change
-    const planName = planId === 'plan-elite' || planId === 'elite' 
-      ? 'elite' 
-      : planId === 'plan-pro' || planId === 'pro' 
-        ? 'pro' 
-        : 'starter';
-    changeMockPlan(planName);
+    const planName = planId === 'plan-pro' || planId === 'pro' || planId === 'plan-elite' || planId === 'elite'
+      ? 'pro' 
+      : planId === 'plan-standard' || planId === 'standard' || planId === 'plan-starter' || planId === 'starter'
+        ? 'standard'
+        : 'free';
+    changeMockPlan(planName as any);
     console.log(`[MockProvider] Changed plan to: ${planName}`);
   },
   async consumeCredits(amount: number, reason: string) {

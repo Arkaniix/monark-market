@@ -105,7 +105,7 @@ export default function Tracking() {
                 value={(activeAlertsCount / maxAlerts) * 100} 
                 className={`h-1 mt-3 ${alertsLimitReached ? '[&>div]:bg-amber-500' : ''}`}
               />
-              {alertsLimitReached && plan !== "elite" && (
+              {alertsLimitReached && plan !== "pro" && (
                 <Link 
                   to="/account?tab=subscription" 
                   className="text-xs text-primary hover:underline mt-2 flex items-center gap-1"

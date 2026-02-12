@@ -37,108 +37,40 @@ interface PlanComparisonModalProps {
 
 const PLANS = [
   {
-    id: "starter",
-    name: "Starter",
-    price: "9,99€",
-    description: "Pour débuter",
-    recommended: false,
+    id: "standard",
+    name: "Standard",
+    price: "11,99€",
+    description: "Pour les acheteurs réguliers",
+    recommended: true,
     icon: Star,
-    gradient: "from-slate-500 to-slate-600",
+    gradient: "from-primary to-primary/80",
   },
   {
     id: "pro",
     name: "Pro",
-    price: "29€",
-    description: "Le plus populaire",
-    recommended: true,
-    icon: Sparkles,
-    gradient: "from-primary to-primary/80",
-  },
-  {
-    id: "elite",
-    name: "Élite",
-    price: "79€",
-    description: "Pour les experts",
+    price: "24,99€",
+    description: "Pour les revendeurs et pros",
     recommended: false,
     icon: Crown,
     gradient: "from-amber-500 to-amber-600",
   },
 ];
 
-// Tooltips détaillés pour l'Estimator par plan
 const ESTIMATOR_TOOLTIPS = {
-  starter: "Synthèse de base : score d'opportunité, prix médian du marché et recommandation simplifiée (Acheter/Passer).",
-  pro: "Analyse avancée : prix actionnables (plafond d'achat, cible revente, plancher), aide à la négociation, graphiques interactifs 30/90j avec volume, et top 3 plateformes de revente.",
-  elite: "Analyse complète : décomposition du score, scénarios avec probabilités et délais estimés, simulateur What-if pour tester différents prix d'achat, bandes P25-P75 sur graphiques, et export CSV.",
+  standard: "Analyse complète : prix actionnables, aide à la négociation, graphiques interactifs 30/90j avec volume.",
+  pro: "Analyse complète + scénarios avec probabilités et délais, simulateur What-if, export CSV.",
 };
 
 const FEATURES = [
-  {
-    name: "Crédits mensuels",
-    icon: Zap,
-    starter: "120",
-    pro: "500",
-    elite: "1 500",
-    highlight: true,
-  },
-  {
-    name: "Alertes actives",
-    icon: Bell,
-    starter: "3",
-    pro: "20",
-    elite: "500",
-    highlight: true,
-  },
-  {
-    name: "Base annonces + Catalogue",
-    icon: Database,
-    starter: true,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Estimator",
-    icon: Calculator,
-    starter: "Synthèse",
-    pro: "Avancé",
-    elite: "Complet",
-    hasTooltips: true,
-  },
-  {
-    name: "Scrap avancé",
-    icon: Search,
-    starter: false,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Introduction plateforme",
-    icon: GraduationCap,
-    starter: true,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Formation avancée",
-    icon: GraduationCap,
-    starter: false,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Export CSV",
-    icon: Download,
-    starter: false,
-    pro: false,
-    elite: true,
-  },
-  {
-    name: "Support prioritaire",
-    icon: Headphones,
-    starter: false,
-    pro: false,
-    elite: true,
-  },
+  { name: "Crédits mensuels", icon: Zap, standard: "200", pro: "800", highlight: true },
+  { name: "Alertes actives", icon: Bell, standard: "10", pro: "100", highlight: true },
+  { name: "Base annonces + Catalogue", icon: Database, standard: true, pro: true },
+  { name: "Estimator", icon: Calculator, standard: "Complet", pro: "Complet+", hasTooltips: true },
+  { name: "Introduction plateforme", icon: GraduationCap, standard: true, pro: true },
+  { name: "Formation avancée", icon: GraduationCap, standard: true, pro: true },
+  { name: "Scénarios + Négociation", icon: Search, standard: false, pro: true },
+  { name: "Export CSV", icon: Download, standard: false, pro: true },
+  { name: "Support prioritaire", icon: Headphones, standard: false, pro: true },
 ];
 
 function FeatureValue({ 
@@ -169,8 +101,8 @@ function FeatureValue({
   ) : (
     <span className={cn(
       "text-sm font-semibold",
-      planId === "elite" && "text-amber-500",
-      planId === "pro" && "text-primary",
+      planId === "pro" && "text-amber-500",
+      planId === "standard" && "text-primary",
     )}>
       {value}
     </span>
@@ -215,7 +147,7 @@ export function PlanComparisonModal({
 
         <div className="p-6">
           {/* Plan cards header */}
-          <div className="grid grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-3 gap-3 mb-6">
             <div className="flex items-end pb-2">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Fonctionnalités
@@ -254,8 +186,8 @@ export function PlanComparisonModal({
                   <div className="flex items-baseline justify-center gap-0.5">
                     <span className={cn(
                       "text-2xl font-bold",
-                      plan.id === "elite" && "text-amber-500",
-                      plan.id === "pro" && "text-primary",
+                      plan.id === "pro" && "text-amber-500",
+                      plan.id === "standard" && "text-primary",
                     )}>
                       {plan.price}
                     </span>
@@ -278,7 +210,7 @@ export function PlanComparisonModal({
                 <div
                   key={feature.name}
                   className={cn(
-                    "grid grid-cols-4 gap-3 py-3.5 px-4 items-center",
+                    "grid grid-cols-3 gap-3 py-3.5 px-4 items-center",
                     index % 2 === 0 ? "bg-muted/20" : "bg-background",
                     index !== FEATURES.length - 1 && "border-b border-border/50"
                   )}
@@ -302,10 +234,10 @@ export function PlanComparisonModal({
                   </div>
                   <div className="text-center">
                     <FeatureValue 
-                      value={feature.starter} 
-                      planId="starter" 
+                      value={feature.standard} 
+                      planId="standard" 
                       hasTooltip={feature.hasTooltips}
-                      tooltipContent={feature.hasTooltips ? ESTIMATOR_TOOLTIPS.starter : undefined}
+                      tooltipContent={feature.hasTooltips ? ESTIMATOR_TOOLTIPS.standard : undefined}
                     />
                   </div>
                   <div className="text-center">
@@ -314,14 +246,6 @@ export function PlanComparisonModal({
                       planId="pro" 
                       hasTooltip={feature.hasTooltips}
                       tooltipContent={feature.hasTooltips ? ESTIMATOR_TOOLTIPS.pro : undefined}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <FeatureValue 
-                      value={feature.elite} 
-                      planId="elite" 
-                      hasTooltip={feature.hasTooltips}
-                      tooltipContent={feature.hasTooltips ? ESTIMATOR_TOOLTIPS.elite : undefined}
                     />
                   </div>
                 </div>

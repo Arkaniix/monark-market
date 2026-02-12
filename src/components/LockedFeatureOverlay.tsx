@@ -16,16 +16,14 @@ import {
 
 const PLAN_LABELS: Record<PlanType, string> = {
   free: "Free",
-  starter: "Starter",
+  standard: "Standard",
   pro: "Pro",
-  elite: "Élite",
 };
 
 const PLAN_ICONS: Record<PlanType, typeof Crown> = {
   free: Sparkles,
-  starter: Sparkles,
+  standard: Sparkles,
   pro: Crown,
-  elite: Crown,
 };
 
 // ============= Main Overlay Component =============
@@ -134,7 +132,7 @@ export default function LockedFeatureOverlay({
           <p className="text-sm text-muted-foreground mb-4">
             Disponible avec le plan{" "}
             <span className="font-medium text-primary">{PLAN_LABELS[requiredPlan]}</span>
-            {requiredPlan !== "starter" && " et supérieur"}
+            {requiredPlan !== "standard" && " et supérieur"}
           </p>
 
           <Button asChild size="sm" className="gap-2">
@@ -265,9 +263,8 @@ export function PlanBadge({ plan, className, showIcon = true }: PlanBadgeProps) 
   return (
     <span className={cn(
       "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full",
-      plan === "elite" && "bg-amber-500/10 text-amber-600 dark:text-amber-400",
       plan === "pro" && "bg-primary/10 text-primary",
-      plan === "starter" && "bg-muted text-muted-foreground",
+      plan === "standard" && "bg-muted text-muted-foreground",
       className
     )}>
       {showIcon && <PlanIcon className="h-3 w-3" />}
@@ -295,7 +292,6 @@ export function UpgradeBadge({ requiredPlan, featureName, className }: UpgradeBa
               className={cn(
                 "gap-1 cursor-pointer hover:bg-primary/10 transition-colors",
                 requiredPlan === "pro" && "border-primary/50 text-primary",
-                requiredPlan === "elite" && "border-amber-500/50 text-amber-600 dark:text-amber-400",
                 className
               )}
             >

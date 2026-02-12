@@ -577,7 +577,7 @@ export default function Estimator() {
                   className="space-y-6"
                 >
                   {/* === EXPORT CSV (Elite only, at top) === */}
-                  {plan === 'elite' && (
+                  {plan === 'pro' && (
                     <div className="flex justify-end">
                       <ExportCSVButton result={result as any} platform={result.inputs.platform || ""} />
                     </div>
@@ -614,7 +614,7 @@ export default function Estimator() {
                   />
 
                   {/* === SECTION 3: DECISION BLOCK (Pro+) === */}
-                  {plan !== 'starter' && (
+                  {plan !== 'standard' && plan !== 'free' && (
                     <EnhancedDecisionBlock
                       decision={result.decision}
                       actionablePrices={result.actionable_prices}
@@ -624,7 +624,7 @@ export default function Estimator() {
                   )}
 
                   {/* === SECTION 4: NEGOTIATION (Pro+) === */}
-                  {result.negotiation && plan !== 'starter' && (
+                  {result.negotiation && plan !== 'standard' && plan !== 'free' && (
                     <EnhancedNegotiationSection
                       negotiation={result.negotiation}
                       adPrice={result.inputs.ad_price}
@@ -634,7 +634,7 @@ export default function Estimator() {
                   )}
 
                   {/* === SECTION 5: PLATFORMS (Pro+) === */}
-                  {result.platforms && plan !== 'starter' && (
+                  {result.platforms && plan !== 'standard' && plan !== 'free' && (
                     <EnhancedPlatformsSection
                       platforms={result.platforms}
                       plan={plan}
@@ -643,7 +643,7 @@ export default function Estimator() {
                   )}
 
                   {/* === SECTION 6: SCENARIOS (Elite) === */}
-                  {result.scenarios && plan === 'elite' && (
+                  {result.scenarios && plan === 'pro' && (
                     <EnhancedScenariosSection
                       scenarios={result.scenarios}
                       adPrice={result.inputs.ad_price}
@@ -652,7 +652,7 @@ export default function Estimator() {
                   )}
 
                   {/* === SECTION 7: WHAT-IF SIMULATOR (Elite) === */}
-                  {result.what_if && plan === 'elite' && (
+                  {result.what_if && plan === 'pro' && (
                     <WhatIfSimulator
                       whatIf={result.what_if}
                       adPrice={result.inputs.ad_price}
@@ -664,7 +664,7 @@ export default function Estimator() {
                   {/* ============ LOCKED SECTIONS (not available with current plan) ============ */}
                   
                   {/* Decision Block - Locked for Starter */}
-                  {plan === 'starter' && (
+                  {(plan === 'standard' || plan === 'free') && (
                     <EnhancedDecisionBlock
                       decision={result.decision}
                       actionablePrices={result.actionable_prices}
@@ -674,7 +674,7 @@ export default function Estimator() {
                   )}
 
                   {/* Negotiation - Locked for Starter */}
-                  {result.negotiation && plan === 'starter' && (
+                  {result.negotiation && (plan === 'standard' || plan === 'free') && (
                     <EnhancedNegotiationSection
                       negotiation={result.negotiation}
                       adPrice={result.inputs.ad_price}
@@ -684,7 +684,7 @@ export default function Estimator() {
                   )}
 
                   {/* Platforms - Locked for Starter */}
-                  {result.platforms && plan === 'starter' && (
+                  {result.platforms && (plan === 'standard' || plan === 'free') && (
                     <EnhancedPlatformsSection
                       platforms={result.platforms}
                       plan={plan}
@@ -693,7 +693,7 @@ export default function Estimator() {
                   )}
 
                   {/* Scenarios - Locked for non-Elite */}
-                  {result.scenarios && plan !== 'elite' && (
+                  {result.scenarios && plan !== 'pro' && (
                     <EnhancedScenariosSection
                       scenarios={result.scenarios}
                       adPrice={result.inputs.ad_price}
@@ -702,7 +702,7 @@ export default function Estimator() {
                   )}
 
                   {/* What-If - Locked for non-Elite */}
-                  {result.what_if && plan !== 'elite' && (
+                  {result.what_if && plan !== 'pro' && (
                     <WhatIfSimulator
                       whatIf={result.what_if}
                       adPrice={result.inputs.ad_price}
@@ -934,7 +934,7 @@ export default function Estimator() {
                     <EnhancedScenariosSection 
                       scenarios={viewHistoryItem.results.scenarios} 
                       adPrice={viewHistoryItem.ad_price}
-                      plan="elite"
+                      plan="pro"
                     />
                   )}
 
@@ -944,7 +944,7 @@ export default function Estimator() {
                       whatIf={viewHistoryItem.results.what_if}
                       adPrice={viewHistoryItem.ad_price}
                       actionablePrices={viewHistoryItem.results.actionable_prices}
-                      plan="elite"
+                      plan="pro"
                     />
                   )}
 

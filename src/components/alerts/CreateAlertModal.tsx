@@ -429,7 +429,7 @@ export function CreateAlertModal({
               <span className="text-sm">
                 Limite atteinte ({activeAlertsCount}/{maxAlerts}). L'alerte sera créée inactive.
               </span>
-              {plan !== "elite" && (
+              {plan !== "pro" && (
                 <Button asChild variant="link" size="sm" className="p-0 h-auto text-primary">
                   <Link to="/account?tab=subscription">
                     <Crown className="h-3 w-3 mr-1" />

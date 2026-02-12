@@ -59,7 +59,7 @@ export default function OpportunityScoreCard({
   tags, 
   plan 
 }: OpportunityScoreCardProps) {
-  const isElite = plan === "elite";
+  const isElite = plan === "pro";
   const showDecomposition = isElite && opportunity.components.length > 0;
 
   return (
@@ -130,7 +130,7 @@ export default function OpportunityScoreCard({
             
             <LockedFeatureOverlay
               isLocked={!isElite}
-              requiredPlan="elite"
+              requiredPlan="pro"
               featureName="Décomposition du score"
             >
               <div className="grid gap-3">

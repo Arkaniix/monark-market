@@ -283,7 +283,7 @@ export default function MyAccount() {
     setShowDowngradeWarning(false);
     setPendingDowngrade(null);
     
-    await changePlan(targetPlan as "starter" | "pro" | "elite");
+    await changePlan(targetPlan as "standard" | "pro");
     
     setPlanModalOpen(false);
     const targetName = plans.find(p => p.id === targetPlan)?.name || targetPlan;
