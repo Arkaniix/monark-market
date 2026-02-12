@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { useUserCredits, useUserSubscription, useAlerts, useWatchlist } from "./useProviderData";
 
 // ============= Types =============
-export type PlanType = "free" | "starter" | "pro" | "elite";
+export type PlanType = "free" | "standard" | "pro";
 export type AnalysisType = "quick" | "deep" | "passive";
 export type CreditActionType = "analysis_quick" | "analysis_deep" | "estimator" | "alert" | "export";
 
@@ -102,9 +102,8 @@ export interface Entitlements {
 
 // ============= Plan Configuration =============
 // Free: 0€/mois, 20 crédits (découverte Lens)
-// Starter: 9.90€/mois, 120 crédits, 3 alertes
-// Pro: 29€/mois, 500 crédits, 20 alertes
-// Elite: 79€/mois, 1500 crédits, 500 alertes
+// Standard: 11.99€/mois, 200 crédits, 10 alertes
+// Pro: 24.99€/mois, 800 crédits, 100 alertes
 
 const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   free: {
@@ -120,7 +119,7 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessApiAccess: false,
     canAccessTraining: false,
     canAccessAdsDatabase: false,
-    canAccessCatalog: true, // Le catalogue reste gratuit (vitrine)
+    canAccessCatalog: true,
     estimator: {
       canSeeMedianPrice: false,
       canSeeVariation30d: false,
@@ -138,44 +137,13 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
       chartPeriods: [],
     },
   },
-  starter: {
-    maxAlerts: 3,
-    maxWatchlistItems: 5,
-    maxEstimationsPerDay: 40,
-    maxScrapPagesPerJob: 10,
-    maxJobsPerDay: 24,
+  standard: {
+    maxAlerts: 10,
+    maxWatchlistItems: 15,
+    maxEstimationsPerDay: 66,
+    maxScrapPagesPerJob: 0,
+    maxJobsPerDay: 0,
     canScrapStrong: false,
-    canExport: false,
-    canAccessAdvancedStats: false,
-    canAccessPrioritySupport: false,
-    canAccessApiAccess: false,
-    canAccessTraining: false,
-    canAccessAdsDatabase: true,
-    canAccessCatalog: true,
-    estimator: {
-      canSeeMedianPrice: true,
-      canSeeVariation30d: true,
-      canSeeVolume: true,
-      canSeeOpportunityLabel: true,
-      canSeeBuyPrice: false,
-      canSeeSellPrice: false,
-      canSeeMargin: false,
-      canSeeProbability: false,
-      canSeeScenarios: false,
-      canExportEstimation: false,
-      canSeeExtendedHistory: false,
-      canSeeAdvancedIndicators: false,
-      chartInteractive: false,
-      chartPeriods: [],
-    },
-  },
-  pro: {
-    maxAlerts: 20,
-    maxWatchlistItems: 20,
-    maxEstimationsPerDay: 166,
-    maxScrapPagesPerJob: 50,
-    maxJobsPerDay: 100,
-    canScrapStrong: true,
     canExport: false,
     canAccessAdvancedStats: true,
     canAccessPrioritySupport: false,
@@ -200,13 +168,13 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
       chartPeriods: ['30', '90'],
     },
   },
-  elite: {
-    maxAlerts: 500,
-    maxWatchlistItems: 200,
+  pro: {
+    maxAlerts: 100,
+    maxWatchlistItems: 999,
     maxEstimationsPerDay: -1,
-    maxScrapPagesPerJob: 100,
-    maxJobsPerDay: -1,
-    canScrapStrong: true,
+    maxScrapPagesPerJob: 0,
+    maxJobsPerDay: 0,
+    canScrapStrong: false,
     canExport: true,
     canAccessAdvancedStats: true,
     canAccessPrioritySupport: true,
@@ -235,9 +203,8 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
 
 const PLAN_DISPLAY_NAMES: Record<PlanType, string> = {
   free: "Free",
-  starter: "Starter",
+  standard: "Standard",
   pro: "Pro",
-  elite: "Élite",
 };
 
 // ============= Analysis Cost Configuration =============
@@ -258,18 +225,12 @@ function normalizePlanName(planName: string | undefined | null): PlanType {
   
   const normalized = planName.toLowerCase().trim();
   
-  if (normalized.includes("elite") || normalized.includes("élite")) {
-    return "elite";
-  }
-  if (normalized.includes("pro")) {
-    return "pro";
-  }
-  if (normalized.includes("starter")) {
-    return "starter";
-  }
-  if (normalized.includes("free") || normalized === "") {
-    return "free";
-  }
+  if (normalized.includes("pro")) return "pro";
+  if (normalized.includes("standard")) return "standard";
+  // Rétrocompatibilité avec les anciens plans
+  if (normalized.includes("elite") || normalized.includes("élite")) return "pro";
+  if (normalized.includes("starter")) return "standard";
+  if (normalized.includes("free") || normalized === "") return "free";
   return "free";
 }
 
@@ -392,7 +353,7 @@ export function useCanCreateAlert(): { allowed: boolean; reason?: string; isLoad
     return {
       allowed: false,
       reason: limits.maxAlerts === 0 
-        ? "Les alertes nécessitent un plan Starter ou supérieur."
+        ? "Les alertes nécessitent un plan Standard ou supérieur."
         : `Limite atteinte (${currentAlerts}/${limits.maxAlerts} alertes). Passez au plan supérieur.`,
       isLoading: false,
     };
@@ -444,7 +405,7 @@ export function useCanAddToWatchlist(): { allowed: boolean; reason?: string; isL
     return {
       allowed: false,
       reason: limits.maxWatchlistItems === 0
-        ? "La watchlist nécessite un plan Starter ou supérieur."
+        ? "La watchlist nécessite un plan Standard ou supérieur."
         : `Limite atteinte (${currentWatchlistItems}/${limits.maxWatchlistItems} items). Passez au plan supérieur.`,
       isLoading: false,
     };
@@ -463,7 +424,7 @@ export function useCanExport(): { allowed: boolean; reason?: string; isLoading: 
   if (!helpers.canExportData()) {
     return {
       allowed: false,
-      reason: "L'export de données nécessite un plan Élite.",
+      reason: "L'export de données nécessite un plan Pro.",
       isLoading: false,
     };
   }

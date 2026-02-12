@@ -88,61 +88,20 @@ export const MOCK_PLANS: Record<PlanType, MockPlanConfig> = {
       chartPeriods: [],
     },
   },
-  starter: {
-    id: "plan-starter",
-    name: "starter",
-    displayName: "Starter",
-    price: 9.99,
-    creditsPerCycle: 120,
+  standard: {
+    id: "plan-standard",
+    name: "standard",
+    displayName: "Standard",
+    price: 11.99,
+    creditsPerCycle: 200,
     limits: {
-      maxAlerts: 3,
-      maxWatchlistItems: 10,
-      maxEstimationsPerDay: 40,
-      maxScrapPagesPerJob: 10,
-      maxJobsPerDay: 24,
-      maxCommJobsPerDay: 5,
+      maxAlerts: 10,
+      maxWatchlistItems: 15,
+      maxEstimationsPerDay: 66,
+      maxScrapPagesPerJob: 0,
+      maxJobsPerDay: 0,
+      maxCommJobsPerDay: 0,
       canScrapStrong: false,
-      canExport: false,
-      canAccessAdvancedStats: false,
-      canAccessPrioritySupport: false,
-      canAccessApiAccess: false,
-      canAccessTraining: false,
-      canAccessAdsDatabase: true,
-      canAccessCatalog: true,
-    },
-    estimatorFeatures: {
-      // Visible
-      canSeeMedianPrice: true,
-      canSeeVariation30d: true,
-      canSeeVolume: true,
-      canSeeOpportunityLabel: true,
-      // Masqué/flouté
-      canSeeBuyPrice: false,
-      canSeeSellPrice: false,
-      canSeeMargin: false,
-      canSeeProbability: false,
-      canSeeScenarios: false,
-      canExportEstimation: false,
-      canSeeExtendedHistory: false,
-      canSeeAdvancedIndicators: false,
-      chartInteractive: false,
-      chartPeriods: [],
-    },
-  },
-  pro: {
-    id: "plan-pro",
-    name: "pro",
-    displayName: "Pro",
-    price: 29,
-    creditsPerCycle: 500,
-    limits: {
-      maxAlerts: 20,
-      maxWatchlistItems: 50,
-      maxEstimationsPerDay: 166,
-      maxScrapPagesPerJob: 50,
-      maxJobsPerDay: 100,
-      maxCommJobsPerDay: 10,
-      canScrapStrong: true,
       canExport: false,
       canAccessAdvancedStats: true,
       canAccessPrioritySupport: false,
@@ -152,7 +111,6 @@ export const MOCK_PLANS: Record<PlanType, MockPlanConfig> = {
       canAccessCatalog: true,
     },
     estimatorFeatures: {
-      // Tout visible
       canSeeMedianPrice: true,
       canSeeVariation30d: true,
       canSeeVolume: true,
@@ -161,7 +119,6 @@ export const MOCK_PLANS: Record<PlanType, MockPlanConfig> = {
       canSeeSellPrice: true,
       canSeeMargin: true,
       canSeeProbability: true,
-      // Limité
       canSeeScenarios: false,
       canExportEstimation: false,
       canSeeExtendedHistory: false,
@@ -170,20 +127,20 @@ export const MOCK_PLANS: Record<PlanType, MockPlanConfig> = {
       chartPeriods: ['30', '90'],
     },
   },
-  elite: {
-    id: "plan-elite",
-    name: "elite",
-    displayName: "Élite",
-    price: 79,
-    creditsPerCycle: 1500,
+  pro: {
+    id: "plan-pro",
+    name: "pro",
+    displayName: "Pro",
+    price: 24.99,
+    creditsPerCycle: 800,
     limits: {
-      maxAlerts: 500,
-      maxWatchlistItems: 200,
-      maxEstimationsPerDay: -1, // illimité (500 estimations)
-      maxScrapPagesPerJob: 100,
-      maxJobsPerDay: -1, // illimité
-      maxCommJobsPerDay: -1, // illimité
-      canScrapStrong: true,
+      maxAlerts: 100,
+      maxWatchlistItems: 999,
+      maxEstimationsPerDay: -1,
+      maxScrapPagesPerJob: 0,
+      maxJobsPerDay: 0,
+      maxCommJobsPerDay: 0,
+      canScrapStrong: false,
       canExport: true,
       canAccessAdvancedStats: true,
       canAccessPrioritySupport: true,
@@ -193,7 +150,6 @@ export const MOCK_PLANS: Record<PlanType, MockPlanConfig> = {
       canAccessCatalog: true,
     },
     estimatorFeatures: {
-      // Tout visible
       canSeeMedianPrice: true,
       canSeeVariation30d: true,
       canSeeVolume: true,
@@ -202,14 +158,15 @@ export const MOCK_PLANS: Record<PlanType, MockPlanConfig> = {
       canSeeSellPrice: true,
       canSeeMargin: true,
       canSeeProbability: true,
-      canSeeScenarios: true, // Plus tard
+      canSeeScenarios: true,
       canExportEstimation: true,
       canSeeExtendedHistory: true,
-      canSeeAdvancedIndicators: true, // volatilité, vitesse de vente
+      canSeeAdvancedIndicators: true,
       chartInteractive: true,
       chartPeriods: ['7', '30', '90'],
     },
   },
+  // Note: "elite" key removed - old elite is now "pro"
 };
 
 // ============= Action Costs =============
@@ -332,14 +289,14 @@ function getCycleDates(): { start: string; end: string } {
   };
 }
 
-// Default initial state (Starter plan for demo)
+// Default initial state (Standard plan for demo)
 function getDefaultState(): MockSubscriptionState {
   const cycleDates = getCycleDates();
   return {
-    planName: "starter",
+    planName: "standard",
     status: "active",
-    creditsRemaining: 85, // Partially used for demo (120 - 35)
-    creditsFromPlan: 120,
+    creditsRemaining: 150, // Partially used for demo (200 - 50)
+    creditsFromPlan: 200,
     creditsFromRecharge: 0,
     creditsResetDate: getNextResetDate(),
     cycleStartDate: cycleDates.start,
@@ -463,12 +420,12 @@ export function addMockCredits(amount: number, source: "community" | "recharge" 
 export function purchaseMockRecharge(packageId: string): { success: boolean; state: MockSubscriptionState; error?: string } {
   const state = getMockSubscriptionState();
   
-  // Check if subscription is active (not starter for recharges)
-  if (state.planName === "starter") {
+  // Check if subscription is active
+  if (state.planName === "free") {
     return {
       success: false,
       state,
-      error: "Un abonnement actif (Pro ou Elite) est requis pour acheter des recharges.",
+      error: "Un abonnement actif (Standard ou Pro) est requis pour acheter des recharges.",
     };
   }
   
@@ -573,18 +530,18 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
     case "new_user":
       state = {
         ...state,
-        planName: "starter",
-        creditsRemaining: 120,
-        creditsFromPlan: 120,
+        planName: "standard",
+        creditsRemaining: 200,
+        creditsFromPlan: 200,
       };
       break;
       
     case "low_credits":
       state = {
         ...state,
-        planName: "starter",
+        planName: "standard",
         creditsRemaining: 8,
-        creditsFromPlan: 120,
+        creditsFromPlan: 200,
       };
       break;
       
@@ -593,7 +550,7 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
         ...state,
         planName: "pro",
         creditsRemaining: 0,
-        creditsFromPlan: 500,
+        creditsFromPlan: 800,
       };
       break;
       
@@ -601,17 +558,17 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
       state = {
         ...state,
         planName: "pro",
-        creditsRemaining: 350,
-        creditsFromPlan: 500,
+        creditsRemaining: 600,
+        creditsFromPlan: 800,
       };
       break;
       
     case "elite_user":
       state = {
         ...state,
-        planName: "elite",
-        creditsRemaining: 1500,
-        creditsFromPlan: 1500,
+        planName: "pro",
+        creditsRemaining: 800,
+        creditsFromPlan: 800,
       };
       break;
       
@@ -621,7 +578,7 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
         ...state,
         planName: "pro",
         creditsRemaining: 180,
-        creditsFromPlan: 500,
+        creditsFromPlan: 800,
         creditsResetDate: nearResetDate.toISOString(),
       };
       break;
@@ -629,9 +586,9 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
     case "limit_reached":
       state = {
         ...state,
-        planName: "starter",
+        planName: "standard",
         creditsRemaining: 25,
-        creditsFromPlan: 120,
+        creditsFromPlan: 200,
       };
       break;
   }

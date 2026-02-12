@@ -121,7 +121,7 @@ export default function PlatformAnalysisSection({
   limits, 
   sourcePlatform 
 }: PlatformAnalysisSectionProps) {
-  const isElite = plan === "elite";
+  const isElite = plan === "pro";
   const platforms = generatePlatformData(result, sourcePlatform);
   const bestPlatform = platforms[0];
   
@@ -144,7 +144,7 @@ export default function PlatformAnalysisSection({
         <CardContent>
           <LockedFeatureOverlay
             isLocked={!limits.canSeeScenarios}
-            requiredPlan="elite"
+            requiredPlan="pro"
             featureName="Analyse par plateforme"
           >
             <div className="space-y-4">

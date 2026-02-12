@@ -69,7 +69,7 @@ export default function EnhancedDecisionBlock({
 }: EnhancedDecisionBlockProps) {
   const config = getDecisionConfig(decision.action);
   const DecisionIcon = config.icon;
-  const isStarter = plan === "starter";
+  const isStarter = plan === "standard";
 
   return (
     <motion.div

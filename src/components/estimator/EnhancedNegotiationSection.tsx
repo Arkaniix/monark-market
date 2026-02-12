@@ -20,7 +20,7 @@ export default function EnhancedNegotiationSection({
   plan,
   withoutCondition 
 }: EnhancedNegotiationSectionProps) {
-  const isPro = plan === "pro" || plan === "elite";
+  const isPro = plan === "pro";
 
   return (
     <motion.div

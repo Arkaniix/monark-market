@@ -283,9 +283,8 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
               Vue d'ensemble
             </span>
             <Badge variant="outline" className="gap-1 text-xs">
-              {plan === "starter" && <Bell className="h-3 w-3" />}
+              {plan === "standard" && <Bell className="h-3 w-3" />}
               {plan === "pro" && <Crown className="h-3 w-3 text-primary" />}
-              {plan === "elite" && <Crown className="h-3 w-3 text-amber-500" />}
               {plan.charAt(0).toUpperCase() + plan.slice(1)}
             </Badge>
           </CardTitle>
@@ -315,7 +314,7 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
                     `${maxAlerts - activeAlertsCount} disponibles`
                   )}
                 </span>
-                {activeAlertsCount >= maxAlerts && plan !== "elite" && (
+                {activeAlertsCount >= maxAlerts && plan !== "pro" && (
                   <Link to="/account?tab=subscription" className="text-primary hover:underline flex items-center gap-1">
                     <Crown className="h-3 w-3" />
                     Augmenter

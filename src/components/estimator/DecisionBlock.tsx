@@ -104,7 +104,7 @@ export default function DecisionBlock({ result, plan, limits }: DecisionBlockPro
   const DecisionIcon = decision.icon;
   const justification = getJustification(result, decision.verdict);
   const profile = getTargetProfile(result);
-  const isStarter = plan === "starter";
+  const isStarter = plan === "standard";
 
   return (
     <motion.div

@@ -55,7 +55,7 @@ function calculateNegotiationPrices(result: EstimationResultUI) {
 
 export default function NegotiationSection({ result, plan, limits }: NegotiationSectionProps) {
   const prices = calculateNegotiationPrices(result);
-  const isElite = plan === "elite";
+  const isElite = plan === "pro";
   
   return (
     <motion.div
@@ -76,7 +76,7 @@ export default function NegotiationSection({ result, plan, limits }: Negotiation
         <CardContent>
           <LockedFeatureOverlay
             isLocked={!limits.canSeeScenarios}
-            requiredPlan="elite"
+            requiredPlan="pro"
             featureName="Prix de négociation"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

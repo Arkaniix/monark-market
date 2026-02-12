@@ -92,7 +92,7 @@ export default function ChartsSection({ result, plan, limits }: ChartsSectionPro
     return [];
   }, [hasEnhancedCharts, result]);
 
-  const isStarter = plan === "starter";
+  const isStarter = plan === "standard";
   const canInteract = limits.chartInteractive;
 
   return (

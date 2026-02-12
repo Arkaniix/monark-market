@@ -34,36 +34,27 @@ export const PLANS: PlanConfig[] = [
     displayName: "Free",
     price: 0,
     creditsPerMonth: 20,
-    description: "Pour découvrir Monark Lens",
+    description: "Découvrir Monark Lens",
     icon: Eye,
   },
   {
-    id: "starter",
-    name: "Starter",
-    displayName: "Starter",
-    price: 9.99,
-    creditsPerMonth: 120,
-    description: "Pour découvrir le marché",
+    id: "standard",
+    name: "Standard",
+    displayName: "Standard",
+    price: 11.99,
+    creditsPerMonth: 200,
+    description: "Pour les acheteurs réguliers",
+    popular: true,
     icon: Zap,
   },
   {
     id: "pro",
     name: "Pro",
     displayName: "Pro",
-    price: 29,
-    creditsPerMonth: 500,
-    description: "Pour les revendeurs actifs",
-    popular: true,
+    price: 24.99,
+    creditsPerMonth: 800,
+    description: "Pour les revendeurs et pros",
     icon: Award,
-  },
-  {
-    id: "elite",
-    name: "Elite",
-    displayName: "Élite",
-    price: 79,
-    creditsPerMonth: 1500,
-    description: "Pour les professionnels",
-    icon: Rocket,
   },
 ];
 
@@ -71,33 +62,32 @@ export interface PlanFeature {
   name: string;
   tooltip?: string;
   free: string | boolean | number;
-  starter: string | boolean | number;
+  standard: string | boolean | number;
   pro: string | boolean | number;
-  elite: string | boolean | number;
 }
 
 export const PLAN_FEATURES: PlanFeature[] = [
-  { name: "Crédits mensuels", free: "20", starter: "120", pro: "500", elite: "1500" },
-  { name: "Market Score (via extension)", tooltip: "Score 0-10 gratuit sur chaque annonce", free: "Score seul", starter: true, pro: true, elite: true },
-  { name: "Verdict + valeur marché", tooltip: "Verdict textuel et comparaison prix vs marché", free: false, starter: true, pro: true, elite: true },
-  { name: "Analyse rapide (5 cr.)", tooltip: "Médian, écart, tendance, volume, liquidité dans l'overlay", free: false, starter: true, pro: true, elite: true },
-  { name: "Analyse approfondie (20 cr.)", tooltip: "Redirige vers l'Estimator avec données pré-remplies", free: false, starter: false, pro: true, elite: true },
-  { name: "Accès catalogue composants", tooltip: "Base de données des composants hardware", free: true, starter: true, pro: true, elite: true },
-  { name: "Pages détail modèles", free: true, starter: true, pro: true, elite: true },
-  { name: "Alertes prix actives", free: false, starter: "3", pro: "20", elite: "500" },
-  { name: "Watchlist", free: false, starter: "5 items", pro: "20 items", elite: "Illimité" },
-  { name: "Estimator - Synthèse & Indicateurs", free: false, starter: true, pro: true, elite: true },
-  { name: "Estimator - Bloc décision final", free: false, starter: false, pro: true, elite: true },
-  { name: "Estimator - Prix achat/revente", free: false, starter: false, pro: true, elite: true },
-  { name: "Estimator - Graphiques interactifs", free: false, starter: false, pro: true, elite: true },
-  { name: "Introduction plateforme", tooltip: "Module 1 de formation", free: true, starter: true, pro: true, elite: true },
-  { name: "Formation avancée", free: false, starter: false, pro: true, elite: true },
-  { name: "Tendances marché avancées", free: false, starter: false, pro: true, elite: true },
-  { name: "Estimator - Scénarios comparatifs", free: false, starter: false, pro: false, elite: true },
-  { name: "Estimator - Négociation & Plateformes", free: false, starter: false, pro: false, elite: true },
-  { name: "Historique étendu", free: false, starter: false, pro: false, elite: true },
-  { name: "Export de données", free: false, starter: false, pro: false, elite: true },
-  { name: "Priorité d'analyse", free: false, starter: false, pro: false, elite: true },
+  { name: "Crédits mensuels", free: "20", standard: "200", pro: "800" },
+  { name: "Market Score (via extension)", tooltip: "Score 0-10 sur chaque annonce consultée avec l'extension", free: "Score seul", standard: true, pro: true },
+  { name: "Verdict + valeur marché", tooltip: "Verdict textuel et comparaison prix annonce vs marché", free: false, standard: true, pro: true },
+  { name: "Analyse rapide (5 cr.)", tooltip: "Médian, écart, tendance, volume, liquidité dans l'overlay", free: false, standard: true, pro: true },
+  { name: "Analyse approfondie (20 cr.)", tooltip: "Redirige vers l'Estimator avec données pré-remplies", free: false, standard: true, pro: true },
+  { name: "Accès catalogue composants", tooltip: "Base de données de tous les composants référencés", free: true, standard: true, pro: true },
+  { name: "Pages détail modèles", free: true, standard: true, pro: true },
+  { name: "Alertes prix actives", free: false, standard: "10", pro: "100" },
+  { name: "Watchlist", free: false, standard: "15 items", pro: "Illimité" },
+  { name: "Estimator - Synthèse & Indicateurs", free: false, standard: true, pro: true },
+  { name: "Estimator - Bloc décision final", free: false, standard: true, pro: true },
+  { name: "Estimator - Prix achat/revente", free: false, standard: true, pro: true },
+  { name: "Estimator - Graphiques interactifs", free: false, standard: true, pro: true },
+  { name: "Introduction plateforme", tooltip: "Module de formation d'introduction", free: true, standard: true, pro: true },
+  { name: "Formation avancée", free: false, standard: true, pro: true },
+  { name: "Tendances marché avancées", free: false, standard: true, pro: true },
+  { name: "Estimator - Scénarios comparatifs", free: false, standard: false, pro: true },
+  { name: "Estimator - Négociation & Plateformes", free: false, standard: false, pro: true },
+  { name: "Historique étendu", free: false, standard: false, pro: true },
+  { name: "Export de données", free: false, standard: false, pro: true },
+  { name: "Priorité d'analyse", free: false, standard: false, pro: true },
 ];
 
 interface PricingTableProps {
@@ -187,7 +177,7 @@ function PricingCards({
   };
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+    <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
       {PLANS.map((plan) => {
         const isCurrentPlan = effectiveCurrentPlan === plan.id;
         const PlanIcon = plan.icon;
@@ -280,7 +270,7 @@ function PricingComparisonTable({ currentPlan }: { currentPlan?: string }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full max-w-6xl mx-auto border-collapse">
+      <table className="w-full max-w-5xl mx-auto border-collapse">
         <thead>
           <tr>
             <th className="text-left p-4 border-b bg-muted/30 rounded-tl-lg">
@@ -336,14 +326,11 @@ function PricingComparisonTable({ currentPlan }: { currentPlan?: string }) {
               <td className="p-4 text-center">
                 <FeatureValue value={feature.free} />
               </td>
-              <td className="p-4 text-center">
-                <FeatureValue value={feature.starter} />
-              </td>
               <td className={cn("p-4 text-center", "bg-primary/5")}>
-                <FeatureValue value={feature.pro} highlight />
+                <FeatureValue value={feature.standard} highlight />
               </td>
               <td className="p-4 text-center">
-                <FeatureValue value={feature.elite} />
+                <FeatureValue value={feature.pro} />
               </td>
             </tr>
           ))}
@@ -375,38 +362,30 @@ function getHighlightedFeatures(planId: string): string[] {
       return [
         "20 crédits/mois",
         "Market Score gratuit (extension)",
-        "Accès catalogue composants",
-        "Collecte passive = gagner des crédits",
+        "Accès catalogue complet",
+        "Collecte passive 1 cr/annonce",
         "Introduction plateforme",
-        "Communauté & leaderboard",
       ];
-    case "starter":
+    case "standard":
       return [
-        "120 crédits/mois",
-        "Verdict + valeur marché (extension)",
-        "Analyse rapide (5 cr.)",
-        "3 alertes actives",
-        "Estimator : Synthèse & Indicateurs",
-        "Introduction plateforme",
+        "200 crédits/mois",
+        "Verdict + valeur marché",
+        "Analyse rapide + approfondie",
+        "Estimator complet (décision, prix, graphiques)",
+        "10 alertes + 15 watchlist",
+        "Formation avancée + tendances",
+        "Collecte passive 2 cr/annonce",
       ];
     case "pro":
       return [
-        "500 crédits/mois",
-        "20 alertes actives",
-        "Analyse approfondie (20 cr.)",
-        "Estimator : Décision & Graphiques",
-        "Prix achat/revente & marge",
-        "Formation avancée",
-      ];
-    case "elite":
-      return [
-        "1500 crédits/mois",
-        "500 alertes actives",
-        "Scénarios comparatifs",
-        "Négociation & Plateformes",
-        "Historique étendu",
-        "Export des données",
-        "Priorité d'analyse",
+        "800 crédits/mois",
+        "Tout Standard inclus",
+        "Scénarios comparatifs + négociation",
+        "Historique étendu + export CSV",
+        "100 alertes + watchlist illimitée",
+        "Missions premium exclusives",
+        "Collecte passive 3 cr/annonce",
+        "Support prioritaire",
       ];
     default:
       return [];

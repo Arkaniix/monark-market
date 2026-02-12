@@ -6,23 +6,20 @@ import type { PlanType } from "@/hooks/useEntitlements";
 
 const PLAN_LABELS: Record<PlanType, string> = {
   free: "Free",
-  starter: "Starter",
+  standard: "Standard",
   pro: "Pro",
-  elite: "Élite",
 };
 
 const NEXT_PLAN: Record<PlanType, PlanType> = {
-  free: "starter",
-  starter: "pro",
-  pro: "elite",
-  elite: "elite",
+  free: "standard",
+  standard: "pro",
+  pro: "pro",
 };
 
 const PLAN_LIMITS: Record<PlanType, number> = {
   free: 0,
-  starter: 3,
-  pro: 20,
-  elite: 500,
+  standard: 10,
+  pro: 100,
 };
 
 interface AlertLimitModalProps {
@@ -42,7 +39,7 @@ export function AlertLimitModal({
 }: AlertLimitModalProps) {
   const nextPlan = NEXT_PLAN[currentPlan];
   const nextPlanLimit = PLAN_LIMITS[nextPlan];
-  const isMaxPlan = currentPlan === "elite";
+  const isMaxPlan = currentPlan === "pro";
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -92,23 +89,11 @@ export function AlertLimitModal({
                   <>
                     <li className="flex items-center gap-2">
                       <Crown className="h-4 w-4 text-primary" />
-                      <span>Scrap fort pour analyses approfondies</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Crown className="h-4 w-4 text-primary" />
                       <span>Export de données</span>
                     </li>
-                  </>
-                )}
-                {nextPlan === "elite" && (
-                  <>
                     <li className="flex items-center gap-2">
                       <Crown className="h-4 w-4 text-primary" />
                       <span>Support prioritaire</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Crown className="h-4 w-4 text-primary" />
-                      <span>Accès API</span>
                     </li>
                   </>
                 )}

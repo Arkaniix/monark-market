@@ -34,8 +34,8 @@ export function AccountSummary({ onLaunchScrap }: AccountSummaryProps) {
   } = useEntitlements();
 
   // Calculate credit percentage based on plan credits
-  // Starter: 120, Pro: 500, Elite: 1500
-  const maxCreditsForPlan = plan === "starter" ? 120 : plan === "pro" ? 500 : 1500;
+  // Standard: 200, Pro: 800
+  const maxCreditsForPlan = plan === "standard" ? 200 : plan === "pro" ? 800 : 20;
   const creditPercentage = Math.min((creditsRemaining / maxCreditsForPlan) * 100, 100);
   const isCreditsLow = creditPercentage < 20;
 
@@ -57,17 +57,17 @@ export function AccountSummary({ onLaunchScrap }: AccountSummaryProps) {
 
   const getPlanIcon = () => {
     switch (plan) {
-      case "starter": return <Zap className="h-5 w-5" />;
+      case "standard": return <Zap className="h-5 w-5" />;
       case "pro": return <Crown className="h-5 w-5" />;
-      case "elite": return <Building2 className="h-5 w-5" />;
+      default: return <Zap className="h-5 w-5" />;
     }
   };
 
   const getPlanColor = () => {
     switch (plan) {
-      case "starter": return "bg-muted text-muted-foreground";
+      case "standard": return "bg-muted text-muted-foreground";
       case "pro": return "bg-primary text-primary-foreground";
-      case "elite": return "bg-gradient-to-r from-amber-500 to-orange-500 text-white";
+      default: return "bg-muted text-muted-foreground";
     }
   };
 
@@ -118,11 +118,11 @@ export function AccountSummary({ onLaunchScrap }: AccountSummaryProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                {plan === "starter" && "Accès aux fonctionnalités essentielles"}
-                {plan === "pro" && "Scrap avancé, exports et statistiques"}
-                {plan === "elite" && "Accès complet et illimité"}
+                {plan === "standard" && "Accès aux fonctionnalités essentielles"}
+                {plan === "pro" && "Accès complet et analyses avancées"}
+                {plan === "free" && "Découverte Monark Lens"}
               </p>
-              {plan !== "elite" && (
+              {plan !== "pro" && (
                 <Button variant="outline" size="sm" className="w-full gap-2" asChild>
                   <Link to="/pricing">
                     <ArrowUpRight className="h-4 w-4" />
@@ -239,7 +239,7 @@ export function AccountSummary({ onLaunchScrap }: AccountSummaryProps) {
                 <Progress value={watchlistPercentage} className="h-1" />
               )}
 
-              {isAlertsNearLimit && plan !== "elite" && (
+              {isAlertsNearLimit && plan !== "pro" && (
                 <Button variant="outline" size="sm" className="w-full gap-2" asChild>
                   <Link to="/pricing">
                     <ArrowUpRight className="h-4 w-4" />

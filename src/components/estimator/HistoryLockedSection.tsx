@@ -9,9 +9,8 @@ import type { PlanType } from "@/hooks/useEntitlements";
 
 const PLAN_LABELS: Record<PlanType, string> = {
   free: "Free",
-  starter: "Starter",
+  standard: "Standard",
   pro: "Pro",
-  elite: "Élite",
 };
 
 interface HistoryLockedSectionProps {
@@ -37,10 +36,8 @@ export default function HistoryLockedSection({
   children,
   className,
 }: HistoryLockedSectionProps) {
-  const isDowngrade = planAtCreation === 'elite' && currentPlan !== 'elite' ||
-                       planAtCreation === 'pro' && currentPlan === 'starter';
-  const isUpgrade = currentPlan === 'elite' && planAtCreation !== 'elite' ||
-                    currentPlan === 'pro' && planAtCreation === 'starter';
+  const isDowngrade = planAtCreation === 'pro' && currentPlan !== 'pro';
+  const isUpgrade = currentPlan === 'pro' && planAtCreation !== 'pro';
 
   return (
     <Card className={cn("border-dashed border-muted-foreground/30 bg-muted/10", className)}>
@@ -136,12 +133,12 @@ export function isFeatureAccessible(
   planAtCreation: PlanType
 ): boolean {
   const featureMap: Record<string, PlanType[]> = {
-    scenarios: ['elite'],
-    whatIf: ['elite'],
-    negotiation: ['pro', 'elite'],
-    platforms: ['pro', 'elite'],
-    decision: ['pro', 'elite'],
-    advancedMarket: ['pro', 'elite'],
+    scenarios: ['pro'],
+    whatIf: ['pro'],
+    negotiation: ['pro'],
+    platforms: ['pro'],
+    decision: ['pro'],
+    advancedMarket: ['pro'],
   };
 
   return featureMap[feature]?.includes(planAtCreation) ?? false;
@@ -151,7 +148,7 @@ export function isFeatureAccessible(
  * Get plan hierarchy level (for comparison)
  */
 export function getPlanLevel(plan: PlanType): number {
-  const levels: Record<PlanType, number> = { free: -1, starter: 0, pro: 1, elite: 2 };
+  const levels: Record<PlanType, number> = { free: -1, standard: 0, pro: 1 };
   return levels[plan] ?? -1;
 }
 

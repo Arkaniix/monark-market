@@ -15,7 +15,7 @@ interface EstimationOptionsBlockProps {
 }
 
 export default function EstimationOptionsBlock({ options, onChange, plan }: EstimationOptionsBlockProps) {
-  const isLocked = plan === "starter";
+  const isLocked = plan === "standard";
 
   return (
     <Card className="border-dashed border-muted-foreground/30 bg-muted/20 relative">
