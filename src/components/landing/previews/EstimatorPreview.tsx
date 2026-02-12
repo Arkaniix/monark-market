@@ -62,7 +62,7 @@ export function EstimatorPreview() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Estimation — RTX 4070
-              <Badge className="bg-primary/10 text-primary border-0 text-xs">Élite</Badge>
+              <Badge className="bg-primary/10 text-primary border-0 text-xs">Pro</Badge>
             </DialogTitle>
             <DialogDescription>Analyse complète avec tous les indicateurs</DialogDescription>
           </DialogHeader>

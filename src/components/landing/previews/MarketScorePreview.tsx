@@ -90,7 +90,7 @@ export function MarketScorePreview() {
       </div>
 
       <div className="text-center text-xs text-muted-foreground">
-        Score gratuit sur le plan Free • Détails complets dès Starter
+        Score gratuit sur le plan Free • Détails complets dès Standard
       </div>
     </div>
   );

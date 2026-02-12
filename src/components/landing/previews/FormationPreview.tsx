@@ -123,7 +123,7 @@ export function FormationPreview() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selected?.title}
-              <Badge className="bg-primary/10 text-primary border-0 text-xs">Élite</Badge>
+              <Badge className="bg-primary/10 text-primary border-0 text-xs">Pro</Badge>
             </DialogTitle>
             <DialogDescription>{selected?.subtitle}</DialogDescription>
           </DialogHeader>
@@ -165,7 +165,7 @@ export function FormationPreview() {
               <div className="bg-accent/10 border border-accent/20 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <BookOpen className="h-4 w-4 text-accent" />
-                  <span className="text-sm font-medium text-accent">Accès Élite</span>
+                  <span className="text-sm font-medium text-accent">Accès Pro</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Accès complet à tous les modules, quiz interactifs, exercices pratiques et certificat de complétion.
