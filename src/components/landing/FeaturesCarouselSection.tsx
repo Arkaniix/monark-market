@@ -1,22 +1,21 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
   ChevronRight,
-  Search,
+  Eye,
   Bell,
   BookOpen,
   Calculator,
   LayoutGrid,
-  ShoppingBag,
+  Gauge,
 } from "lucide-react";
 
 import { ScanPreview } from "./previews/ScanPreview";
 import { AlertesPreview } from "./previews/AlertesPreview";
 import { CataloguePreview } from "./previews/CataloguePreview";
-import { AnnoncesPreview } from "./previews/AnnoncesPreview";
 import { EstimatorPreview } from "./previews/EstimatorPreview";
 import { FormationPreview } from "./previews/FormationPreview";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,11 +31,19 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    id: "scan",
-    title: "Scanner intelligent",
-    subtitle: "Récupérez les annonces automatiquement",
-    description: "Lancez un scan sur les principales plateformes et récupérez les données des annonces en quelques clics. Prix, état, localisation — tout est centralisé.",
-    icon: Search,
+    id: "lens",
+    title: "Monark Lens",
+    subtitle: "Analysez chaque annonce en un coup d'œil",
+    description: "L'extension Chrome qui affiche un Market Score, un verdict et la valeur marché directement sur les annonces Leboncoin, eBay et Vinted. Sans quitter la page.",
+    icon: Eye,
+    preview: <ScanPreview />,
+  },
+  {
+    id: "market-score",
+    title: "Market Score",
+    subtitle: "Un score 0-10 sur chaque annonce",
+    description: "Évaluation instantanée de chaque annonce par rapport au marché. Gratuit sur le plan Free, enrichi avec verdict et données détaillées sur les plans payants.",
+    icon: Gauge,
     preview: <ScanPreview />,
   },
   {
@@ -56,18 +63,10 @@ const features: Feature[] = [
     preview: <CataloguePreview />,
   },
   {
-    id: "annonces",
-    title: "Liste des annonces",
-    subtitle: "Le marché en temps réel",
-    description: "Accédez à toutes les annonces récupérées, filtrées et scorées. Identifiez les meilleures affaires grâce au score d'opportunité et aux indicateurs de prix.",
-    icon: ShoppingBag,
-    preview: <AnnoncesPreview />,
-  },
-  {
     id: "estimator",
     title: "Estimator",
     subtitle: "Votre copilote d'achat-revente",
-    description: "Entrez les caractéristiques d'un produit, obtenez un score d'opportunité, une décision recommandée et des scénarios de revente — en quelques secondes.",
+    description: "Analyse approfondie pré-remplie depuis l'extension Lens. Score d'opportunité, décision recommandée, scénarios de revente — en quelques secondes.",
     icon: Calculator,
     preview: <EstimatorPreview />,
   },
@@ -131,11 +130,10 @@ export function FeaturesCarouselSection() {
             Tout ce dont vous avez besoin, en un seul outil
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Découvrez les fonctionnalités clés de Monark pour analyser, suivre et optimiser vos achats-reventes.
+            Découvrez les fonctionnalités clés de Monark Lens pour analyser, suivre et optimiser vos achats-reventes.
           </p>
         </div>
 
-        {/* Feature selector pills */}
         <div className="flex flex-wrap justify-center gap-2 mb-10">
           {features.map((feature, i) => (
             <button
@@ -159,7 +157,6 @@ export function FeaturesCarouselSection() {
           onMouseLeave={() => setIsPaused(false)}
         >
           <div className="grid lg:grid-cols-2 gap-8 items-center">
-            {/* Preview card */}
             <div className="relative order-2 lg:order-1">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -178,7 +175,6 @@ export function FeaturesCarouselSection() {
               </AnimatePresence>
             </div>
 
-            {/* Description */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeFeature.id + "-desc"}
@@ -206,7 +202,6 @@ export function FeaturesCarouselSection() {
             </AnimatePresence>
           </div>
 
-          {/* Navigation */}
           <div className="flex items-center justify-center gap-4 mt-8">
             <Button variant="outline" size="icon" onClick={handlePrev} className="rounded-full h-10 w-10">
               <ChevronLeft className="h-5 w-5" />

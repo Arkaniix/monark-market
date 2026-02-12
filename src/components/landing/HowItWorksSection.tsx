@@ -1,25 +1,25 @@
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Cpu, CheckCircle } from "lucide-react";
+import { Download, Eye, CheckCircle } from "lucide-react";
 
 const steps = [
   {
     number: "1",
-    icon: FileText,
-    title: "Décrivez le produit",
-    description: "Modèle, état, plateforme d'achat. Quelques champs suffisent.",
+    icon: Download,
+    title: "Installez l'extension",
+    description: "Ajoutez Monark Lens à Chrome en un clic. Gratuit, sans compte requis pour commencer.",
   },
   {
     number: "2",
-    icon: Cpu,
-    title: "Analysez le marché",
-    description: "L'outil récupère les données et calcule les indicateurs clés.",
+    icon: Eye,
+    title: "Naviguez normalement",
+    description: "Parcourez Leboncoin, eBay ou Vinted. L'overlay Lens apparaît automatiquement sur chaque annonce.",
   },
   {
     number: "3",
     icon: CheckCircle,
-    title: "Prenez votre décision",
-    description: "Recommandation, prix cible, scénarios : tout pour agir.",
+    title: "Décidez en confiance",
+    description: "Market Score, verdict, prix du marché : tout ce qu'il faut pour acheter au bon prix.",
   },
 ];
 
@@ -58,7 +58,6 @@ export function HowItWorksSection() {
               <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
               <p className="text-sm text-muted-foreground">{step.description}</p>
 
-              {/* Connector line */}
               {i < steps.length - 1 && (
                 <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-primary/50 to-accent/50" />
               )}

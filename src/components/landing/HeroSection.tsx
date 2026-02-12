@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Target, TrendingUp, Shield, Rocket } from "lucide-react";
+import { Target, TrendingUp, Shield, Rocket, Eye, Download } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const benefits = [
-  { icon: Target, text: "Estimation basée sur les données réelles" },
+  { icon: Eye, text: "Market Score instantané sur chaque annonce" },
   { icon: TrendingUp, text: "Tendances et indicateurs de marché" },
   { icon: Shield, text: "Décision éclairée, risque maîtrisé" },
 ];
@@ -25,18 +26,18 @@ export function HeroSection({ onScrollToPricing }: HeroSectionProps) {
         >
           <Badge variant="secondary" className="mb-6 gap-2">
             <Rocket className="h-3.5 w-3.5" />
-            En développement — Bientôt disponible
+            Extension Chrome — Monark Lens
           </Badge>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent leading-tight">
-            Achetez au bon prix.
+            Analysez chaque annonce.
             <br />
-            Revendez avec confiance.
+            Achetez au bon prix.
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            L'outil d'analyse pour les revendeurs de hardware et acheteurs malins. 
-            Estimez la valeur réelle d'un produit grâce aux données du marché.
+            L'extension Chrome qui enrichit vos annonces sur Leboncoin, eBay et Vinted
+            avec un Market Score, des données de marché et un verdict instantané.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 mb-8">
@@ -52,8 +53,11 @@ export function HeroSection({ onScrollToPricing }: HeroSectionProps) {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-            <Button size="lg" className="gap-2 min-w-[160px]" disabled>
-              Bientôt disponible
+            <Button size="lg" className="gap-2 min-w-[200px]" asChild>
+              <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer">
+                <Download className="h-5 w-5" />
+                Installer Monark Lens
+              </a>
             </Button>
             <Button size="lg" variant="outline" asChild>
               <a href="#pricing" onClick={onScrollToPricing}>
@@ -63,7 +67,7 @@ export function HeroSection({ onScrollToPricing }: HeroSectionProps) {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            Inscriptions bientôt ouvertes • Restez informés
+            Gratuit pour commencer • 20 crédits/mois offerts
           </p>
         </motion.div>
       </div>
