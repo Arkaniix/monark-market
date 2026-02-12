@@ -156,10 +156,42 @@ export default function Estimator() {
     const conditionParam = searchParams.get('condition');
     const platformParam = searchParams.get('platform');
     const itemType = searchParams.get('item_type');
+    
+    // Lens extension params
+    const lensComponentId = searchParams.get('component');
+    const lensPrice = searchParams.get('price');
+    const lensSource = searchParams.get('source');
 
     // Block PC types from URL params
     if (itemType === 'pc' || itemType === 'lot') {
       setIsPCBlocked(true);
+      lastProcessedUrl.current = currentUrl;
+      setPrefillApplied(true);
+      return;
+    }
+
+    // Handle Lens extension pre-fill
+    if (lensComponentId && lensSource === 'lens') {
+      setSelectedModel({
+        id: parseInt(lensComponentId, 10),
+        name: modelName || `Composant #${lensComponentId}`,
+        brand: '',
+        category: category || '',
+        family: null
+      });
+      setModelSearch(modelName || `Composant #${lensComponentId}`);
+      if (lensPrice) setAdPrice(lensPrice);
+      if (platformParam) setPlatform(normalizePlatformKey(platformParam));
+      if (conditionParam) {
+        const normalized = conditionParam.toLowerCase().trim();
+        const conditionMap: Record<string, string> = {
+          'neuf': 'neuf', 'comme_neuf': 'comme-neuf', 'comme-neuf': 'comme-neuf',
+          'comme neuf': 'comme-neuf', 'bon': 'bon', 'bon état': 'bon',
+          'bon-etat': 'bon', 'correct': 'bon', 'satisfaisant': 'bon',
+          'à_réparer': 'a-reparer', 'a-reparer': 'a-reparer', 'à réparer': 'a-reparer',
+        };
+        setCondition(conditionMap[normalized] || 'bon');
+      }
       lastProcessedUrl.current = currentUrl;
       setPrefillApplied(true);
       return;
@@ -311,6 +343,16 @@ export default function Estimator() {
           </div>
           <PlanBadge plan={plan} />
         </motion.div>
+
+        {/* Lens pre-fill banner */}
+        {searchParams.get('source') === 'lens' && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
+              <Badge className="bg-primary text-primary-foreground">Lens</Badge>
+              <span className="text-sm font-medium">Analyse lancée depuis Monark Lens</span>
+            </div>
+          </motion.div>
+        )}
 
         <Tabs value={activeTab} onValueChange={v => setActiveTab(v as "estimator" | "history")} className="mb-8">
           <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">

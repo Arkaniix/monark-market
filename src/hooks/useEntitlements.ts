@@ -3,14 +3,17 @@ import { useMemo } from "react";
 import { useUserCredits, useUserSubscription, useAlerts, useWatchlist } from "./useProviderData";
 
 // ============= Types =============
-export type PlanType = "starter" | "pro" | "elite";
-export type ScrapType = "faible" | "fort" | "communautaire";
-export type CreditActionType = "scrap_faible" | "scrap_fort" | "estimator" | "alert" | "export";
+export type PlanType = "free" | "starter" | "pro" | "elite";
+export type AnalysisType = "quick" | "deep" | "passive";
+export type CreditActionType = "analysis_quick" | "analysis_deep" | "estimator" | "alert" | "export";
+
+// Legacy aliases for backward compatibility
+export type ScrapType = AnalysisType;
 
 // Credit costs per action type
 export const CREDIT_COSTS: Record<CreditActionType, number> = {
-  scrap_faible: 5,
-  scrap_fort: 20,
+  analysis_quick: 5,
+  analysis_deep: 20,
   estimator: 3,
   alert: 0, // Free
   export: 0, // Free but plan-gated
@@ -57,7 +60,9 @@ export interface PlanLimits {
 
 export interface EntitlementHelpers {
   canUseEstimator: () => boolean;
-  canScrap: (type: ScrapType) => boolean;
+  canAnalyze: (type: AnalysisType) => boolean;
+  /** @deprecated Use canAnalyze instead */
+  canScrap: (type: AnalysisType) => boolean;
   canCreateAlert: () => boolean;
   canActivateAlert: () => boolean;
   getActiveAlertsCount: () => number;
@@ -68,7 +73,9 @@ export interface EntitlementHelpers {
   canAccessAdsDatabase: () => boolean;
   canAccessCatalog: () => boolean;
   hasEnoughCredits: (required: number) => boolean;
-  getScrapCost: (type: ScrapType, pages: number) => number;
+  getAnalysisCost: (type: AnalysisType) => number;
+  /** @deprecated Use getAnalysisCost instead */
+  getScrapCost: (type: AnalysisType, pages: number) => number;
 }
 
 export interface Entitlements {
@@ -94,15 +101,46 @@ export interface Entitlements {
 }
 
 // ============= Plan Configuration =============
-// Selon le modèle économique:
+// Free: 0€/mois, 20 crédits (découverte Lens)
 // Starter: 9.90€/mois, 120 crédits, 3 alertes
 // Pro: 29€/mois, 500 crédits, 20 alertes
 // Elite: 79€/mois, 1500 crédits, 500 alertes
 
 const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
+  free: {
+    maxAlerts: 0,
+    maxWatchlistItems: 0,
+    maxEstimationsPerDay: 0,
+    maxScrapPagesPerJob: 0,
+    maxJobsPerDay: 0,
+    canScrapStrong: false,
+    canExport: false,
+    canAccessAdvancedStats: false,
+    canAccessPrioritySupport: false,
+    canAccessApiAccess: false,
+    canAccessTraining: false,
+    canAccessAdsDatabase: false,
+    canAccessCatalog: true, // Le catalogue reste gratuit (vitrine)
+    estimator: {
+      canSeeMedianPrice: false,
+      canSeeVariation30d: false,
+      canSeeVolume: false,
+      canSeeOpportunityLabel: false,
+      canSeeBuyPrice: false,
+      canSeeSellPrice: false,
+      canSeeMargin: false,
+      canSeeProbability: false,
+      canSeeScenarios: false,
+      canExportEstimation: false,
+      canSeeExtendedHistory: false,
+      canSeeAdvancedIndicators: false,
+      chartInteractive: false,
+      chartPeriods: [],
+    },
+  },
   starter: {
     maxAlerts: 3,
-    maxWatchlistItems: 10,
+    maxWatchlistItems: 5,
     maxEstimationsPerDay: 40,
     maxScrapPagesPerJob: 10,
     maxJobsPerDay: 24,
@@ -112,16 +150,13 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessPrioritySupport: false,
     canAccessApiAccess: false,
     canAccessTraining: false,
-    // Starter has access to databases
     canAccessAdsDatabase: true,
     canAccessCatalog: true,
     estimator: {
-      // Visible
       canSeeMedianPrice: true,
       canSeeVariation30d: true,
       canSeeVolume: true,
       canSeeOpportunityLabel: true,
-      // Masqué/flouté
       canSeeBuyPrice: false,
       canSeeSellPrice: false,
       canSeeMargin: false,
@@ -136,7 +171,7 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   },
   pro: {
     maxAlerts: 20,
-    maxWatchlistItems: 50,
+    maxWatchlistItems: 20,
     maxEstimationsPerDay: 166,
     maxScrapPagesPerJob: 50,
     maxJobsPerDay: 100,
@@ -149,7 +184,6 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessAdsDatabase: true,
     canAccessCatalog: true,
     estimator: {
-      // Tout visible
       canSeeMedianPrice: true,
       canSeeVariation30d: true,
       canSeeVolume: true,
@@ -158,7 +192,6 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
       canSeeSellPrice: true,
       canSeeMargin: true,
       canSeeProbability: true,
-      // Limité
       canSeeScenarios: false,
       canExportEstimation: false,
       canSeeExtendedHistory: false,
@@ -182,7 +215,6 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessAdsDatabase: true,
     canAccessCatalog: true,
     estimator: {
-      // Tout visible
       canSeeMedianPrice: true,
       canSeeVariation30d: true,
       canSeeVolume: true,
@@ -202,16 +234,17 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
 };
 
 const PLAN_DISPLAY_NAMES: Record<PlanType, string> = {
+  free: "Free",
   starter: "Starter",
   pro: "Pro",
   elite: "Élite",
 };
 
-// ============= Scrap Cost Configuration (legacy - kept for compatibility) =============
-const SCRAP_COSTS: Record<ScrapType, { base: number; perPage: number }> = {
-  faible: { base: CREDIT_COSTS.scrap_faible, perPage: 0 },
-  fort: { base: CREDIT_COSTS.scrap_fort, perPage: 0 },
-  communautaire: { base: 0, perPage: 0 }, // Free but limited
+// ============= Analysis Cost Configuration =============
+const ANALYSIS_COSTS: Record<AnalysisType, number> = {
+  quick: CREDIT_COSTS.analysis_quick,
+  deep: CREDIT_COSTS.analysis_deep,
+  passive: 0, // Passive navigation earns credits
 };
 
 // Helper to get action cost
@@ -221,7 +254,7 @@ export function getActionCost(action: CreditActionType): number {
 
 // ============= Helper to normalize plan name =============
 function normalizePlanName(planName: string | undefined | null): PlanType {
-  if (!planName) return "starter";
+  if (!planName) return "free";
   
   const normalized = planName.toLowerCase().trim();
   
@@ -231,7 +264,13 @@ function normalizePlanName(planName: string | undefined | null): PlanType {
   if (normalized.includes("pro")) {
     return "pro";
   }
-  return "starter";
+  if (normalized.includes("starter")) {
+    return "starter";
+  }
+  if (normalized.includes("free") || normalized === "") {
+    return "free";
+  }
+  return "free";
 }
 
 // ============= Main Hook =============
@@ -250,7 +289,7 @@ export function useEntitlements(): Entitlements {
     if (credits?.plan_name) {
       return normalizePlanName(credits.plan_name);
     }
-    return "starter";
+    return "free";
   }, [subscription, credits]);
   
   // Get limits for current plan
@@ -262,7 +301,6 @@ export function useEntitlements(): Entitlements {
   const creditsRemaining = credits?.credits_remaining ?? 0;
   const creditsResetDate = credits?.credits_reset_date ?? subscription?.credits_reset_date ?? null;
   
-  // Create helper functions
   // Count only active alerts
   const activeAlertsCount = useMemo(() => {
     return alertsData?.items?.filter(a => a.is_active)?.length ?? 0;
@@ -271,27 +309,33 @@ export function useEntitlements(): Entitlements {
   // Create helper functions
   const helpers = useMemo<EntitlementHelpers>(() => ({
     canUseEstimator: () => {
-      // Everyone can use estimator if they have credits or it's within daily limit
+      if (plan === "free") return false;
       return creditsRemaining > 0 || limits.maxEstimationsPerDay === -1;
     },
     
-    canScrap: (type: ScrapType) => {
-      if (type === "fort" && !limits.canScrapStrong) {
-        return false;
-      }
-      const cost = SCRAP_COSTS[type];
-      const minCreditsNeeded = cost.base + cost.perPage;
-      return creditsRemaining >= minCreditsNeeded || type === "communautaire";
+    canAnalyze: (type: AnalysisType) => {
+      if (type === "deep" && !limits.canScrapStrong) return false;
+      if (type === "passive") return true;
+      const cost = ANALYSIS_COSTS[type];
+      return creditsRemaining >= cost;
+    },
+
+    // Legacy alias
+    canScrap: (type: AnalysisType) => {
+      if (type === "deep" && !limits.canScrapStrong) return false;
+      if (type === "passive") return true;
+      const cost = ANALYSIS_COSTS[type];
+      return creditsRemaining >= cost;
     },
     
     canCreateAlert: () => {
-      // Can create alert if under total alerts limit
+      if (limits.maxAlerts === 0) return false;
       if (limits.maxAlerts === -1) return true;
       return currentAlerts < limits.maxAlerts;
     },
 
     canActivateAlert: () => {
-      // Can activate if active alerts count is under limit
+      if (limits.maxAlerts === 0) return false;
       if (limits.maxAlerts === -1) return true;
       return activeAlertsCount < limits.maxAlerts;
     },
@@ -299,6 +343,7 @@ export function useEntitlements(): Entitlements {
     getActiveAlertsCount: () => activeAlertsCount,
     
     canAddToWatchlist: () => {
+      if (limits.maxWatchlistItems === 0) return false;
       if (limits.maxWatchlistItems === -1) return true;
       return currentWatchlistItems < limits.maxWatchlistItems;
     },
@@ -315,11 +360,11 @@ export function useEntitlements(): Entitlements {
     
     hasEnoughCredits: (required: number) => creditsRemaining >= required,
     
-    getScrapCost: (type: ScrapType, pages: number) => {
-      const cost = SCRAP_COSTS[type];
-      return cost.base + (cost.perPage * pages);
-    },
-  }), [creditsRemaining, limits, currentAlerts, currentWatchlistItems, activeAlertsCount]);
+    getAnalysisCost: (type: AnalysisType) => ANALYSIS_COSTS[type],
+
+    // Legacy alias
+    getScrapCost: (type: AnalysisType, _pages: number) => ANALYSIS_COSTS[type],
+  }), [creditsRemaining, limits, currentAlerts, currentWatchlistItems, activeAlertsCount, plan]);
   
   return {
     plan,
@@ -346,7 +391,9 @@ export function useCanCreateAlert(): { allowed: boolean; reason?: string; isLoad
   if (!helpers.canCreateAlert()) {
     return {
       allowed: false,
-      reason: `Limite atteinte (${currentAlerts}/${limits.maxAlerts} alertes). Passez au plan supérieur.`,
+      reason: limits.maxAlerts === 0 
+        ? "Les alertes nécessitent un plan Starter ou supérieur."
+        : `Limite atteinte (${currentAlerts}/${limits.maxAlerts} alertes). Passez au plan supérieur.`,
       isLoading: false,
     };
   }
@@ -354,24 +401,24 @@ export function useCanCreateAlert(): { allowed: boolean; reason?: string; isLoad
   return { allowed: true, isLoading: false };
 }
 
-export function useCanScrap(type: ScrapType): { allowed: boolean; reason?: string; cost: number; isLoading: boolean } {
+export function useCanAnalyze(type: AnalysisType): { allowed: boolean; reason?: string; cost: number; isLoading: boolean } {
   const { helpers, limits, creditsRemaining, isLoading } = useEntitlements();
-  const cost = helpers.getScrapCost(type, 1); // Base cost for 1 page
+  const cost = helpers.getAnalysisCost(type);
   
   if (isLoading) {
     return { allowed: false, cost, isLoading: true };
   }
   
-  if (type === "fort" && !limits.canScrapStrong) {
+  if (type === "deep" && !limits.canScrapStrong) {
     return {
       allowed: false,
-      reason: "Le scrap fort nécessite un plan Pro ou supérieur.",
+      reason: "L'analyse approfondie nécessite un plan Pro ou supérieur.",
       cost,
       isLoading: false,
     };
   }
   
-  if (!helpers.canScrap(type)) {
+  if (!helpers.canAnalyze(type)) {
     return {
       allowed: false,
       reason: `Crédits insuffisants (${creditsRemaining} restants, ${cost} requis).`,
@@ -383,6 +430,9 @@ export function useCanScrap(type: ScrapType): { allowed: boolean; reason?: strin
   return { allowed: true, cost, isLoading: false };
 }
 
+/** @deprecated Use useCanAnalyze instead */
+export const useCanScrap = useCanAnalyze;
+
 export function useCanAddToWatchlist(): { allowed: boolean; reason?: string; isLoading: boolean } {
   const { helpers, limits, currentWatchlistItems, isLoading } = useEntitlements();
   
@@ -393,7 +443,9 @@ export function useCanAddToWatchlist(): { allowed: boolean; reason?: string; isL
   if (!helpers.canAddToWatchlist()) {
     return {
       allowed: false,
-      reason: `Limite atteinte (${currentWatchlistItems}/${limits.maxWatchlistItems} items). Passez au plan supérieur.`,
+      reason: limits.maxWatchlistItems === 0
+        ? "La watchlist nécessite un plan Starter ou supérieur."
+        : `Limite atteinte (${currentWatchlistItems}/${limits.maxWatchlistItems} items). Passez au plan supérieur.`,
       isLoading: false,
     };
   }
@@ -411,7 +463,7 @@ export function useCanExport(): { allowed: boolean; reason?: string; isLoading: 
   if (!helpers.canExportData()) {
     return {
       allowed: false,
-      reason: "L'export de données nécessite un plan Pro ou supérieur.",
+      reason: "L'export de données nécessite un plan Élite.",
       isLoading: false,
     };
   }

@@ -15,12 +15,14 @@ import {
 // ============= Configuration =============
 
 const PLAN_LABELS: Record<PlanType, string> = {
+  free: "Free",
   starter: "Starter",
   pro: "Pro",
   elite: "Élite",
 };
 
 const PLAN_ICONS: Record<PlanType, typeof Crown> = {
+  free: Sparkles,
   starter: Sparkles,
   pro: Crown,
   elite: Crown,

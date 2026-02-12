@@ -73,8 +73,8 @@ export function AccountSummary({ onLaunchScrap }: AccountSummaryProps) {
 
   // Action costs for display
   const actionCosts: { action: CreditActionType; label: string; cost: number }[] = [
-    { action: "scrap_faible", label: "Scrap standard", cost: CREDIT_COSTS.scrap_faible },
-    { action: "scrap_fort", label: "Scrap avancé", cost: CREDIT_COSTS.scrap_fort },
+    { action: "analysis_quick", label: "Analyse rapide", cost: CREDIT_COSTS.analysis_quick },
+    { action: "analysis_deep", label: "Analyse approfondie", cost: CREDIT_COSTS.analysis_deep },
     { action: "estimator", label: "Estimation", cost: CREDIT_COSTS.estimator },
   ];
 

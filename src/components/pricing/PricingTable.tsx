@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X, Zap, Award, Rocket, Info, RefreshCw, Loader2 } from "lucide-react";
+import { Check, X, Zap, Award, Rocket, Info, RefreshCw, Loader2, Eye } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -28,6 +28,15 @@ export interface PlanConfig {
 }
 
 export const PLANS: PlanConfig[] = [
+  {
+    id: "free",
+    name: "Free",
+    displayName: "Free",
+    price: 0,
+    creditsPerMonth: 20,
+    description: "Pour découvrir Monark Lens",
+    icon: Eye,
+  },
   {
     id: "starter",
     name: "Starter",
@@ -61,145 +70,34 @@ export const PLANS: PlanConfig[] = [
 export interface PlanFeature {
   name: string;
   tooltip?: string;
+  free: string | boolean | number;
   starter: string | boolean | number;
   pro: string | boolean | number;
   elite: string | boolean | number;
 }
 
 export const PLAN_FEATURES: PlanFeature[] = [
-  {
-    name: "Crédits mensuels",
-    tooltip: "Crédits remis à zéro chaque mois (non cumulables)",
-    starter: "120",
-    pro: "500",
-    elite: "1500",
-  },
-  {
-    name: "Accès base annonces",
-    tooltip: "Consultez toutes les annonces scannées et leurs détails",
-    starter: true,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Accès catalogue composants",
-    tooltip: "Explorez la base de données des composants hardware",
-    starter: true,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Scan rapide",
-    tooltip: "Analyse rapide des premières pages (5 crédits)",
-    starter: true,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Accès communauté",
-    tooltip: "Participer à la collecte communautaire pour gagner des crédits",
-    starter: true,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Estimator - Synthèse & Indicateurs",
-    tooltip: "Voir le verdict global, prix médian et variation",
-    starter: true,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Alertes actives",
-    tooltip: "Nombre d'alertes pouvant être actives simultanément",
-    starter: "3",
-    pro: "20",
-    elite: "500",
-  },
-  {
-    name: "Scan approfondi",
-    tooltip: "Analyse complète avec plus de données (20 crédits)",
-    starter: false,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Introduction plateforme",
-    tooltip: "Module d'onboarding pour apprendre à utiliser Monark",
-    starter: true,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Formation avancée",
-    tooltip: "Accès à tous les modules de formation approfondis",
-    starter: false,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Tendances avancées",
-    tooltip: "Accès aux statistiques et tendances du marché",
-    starter: false,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Estimator - Bloc décision final",
-    tooltip: "Recommandation claire avec verdict d'achat",
-    starter: false,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Estimator - Prix achat/revente",
-    tooltip: "Voir les prix d'achat et revente conseillés avec marge",
-    starter: false,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Estimator - Graphiques interactifs",
-    tooltip: "Graphiques 30j/90j complets et interactifs",
-    starter: false,
-    pro: true,
-    elite: true,
-  },
-  {
-    name: "Estimator - Scénarios comparatifs",
-    tooltip: "Comparaison prudent/équilibré/agressif",
-    starter: false,
-    pro: false,
-    elite: true,
-  },
-  {
-    name: "Estimator - Négociation & Plateformes",
-    tooltip: "Prix cibles et probabilités par plateforme",
-    starter: false,
-    pro: false,
-    elite: true,
-  },
-  {
-    name: "Historique étendu",
-    tooltip: "Accès à l'historique complet des prix",
-    starter: false,
-    pro: false,
-    elite: true,
-  },
-  {
-    name: "Export de données",
-    tooltip: "Télécharger vos données en CSV/Excel",
-    starter: false,
-    pro: false,
-    elite: true,
-  },
-  {
-    name: "Priorité d'analyse",
-    tooltip: "Vos scans sont traités en priorité",
-    starter: false,
-    pro: false,
-    elite: true,
-  },
+  { name: "Crédits mensuels", free: "20", starter: "120", pro: "500", elite: "1500" },
+  { name: "Market Score (via extension)", tooltip: "Score 0-10 gratuit sur chaque annonce", free: "Score seul", starter: true, pro: true, elite: true },
+  { name: "Verdict + valeur marché", tooltip: "Verdict textuel et comparaison prix vs marché", free: false, starter: true, pro: true, elite: true },
+  { name: "Analyse rapide (5 cr.)", tooltip: "Médian, écart, tendance, volume, liquidité dans l'overlay", free: false, starter: true, pro: true, elite: true },
+  { name: "Analyse approfondie (20 cr.)", tooltip: "Redirige vers l'Estimator avec données pré-remplies", free: false, starter: false, pro: true, elite: true },
+  { name: "Accès catalogue composants", tooltip: "Base de données des composants hardware", free: true, starter: true, pro: true, elite: true },
+  { name: "Pages détail modèles", free: true, starter: true, pro: true, elite: true },
+  { name: "Alertes prix actives", free: false, starter: "3", pro: "20", elite: "500" },
+  { name: "Watchlist", free: false, starter: "5 items", pro: "20 items", elite: "Illimité" },
+  { name: "Estimator - Synthèse & Indicateurs", free: false, starter: true, pro: true, elite: true },
+  { name: "Estimator - Bloc décision final", free: false, starter: false, pro: true, elite: true },
+  { name: "Estimator - Prix achat/revente", free: false, starter: false, pro: true, elite: true },
+  { name: "Estimator - Graphiques interactifs", free: false, starter: false, pro: true, elite: true },
+  { name: "Introduction plateforme", tooltip: "Module 1 de formation", free: true, starter: true, pro: true, elite: true },
+  { name: "Formation avancée", free: false, starter: false, pro: true, elite: true },
+  { name: "Tendances marché avancées", free: false, starter: false, pro: true, elite: true },
+  { name: "Estimator - Scénarios comparatifs", free: false, starter: false, pro: false, elite: true },
+  { name: "Estimator - Négociation & Plateformes", free: false, starter: false, pro: false, elite: true },
+  { name: "Historique étendu", free: false, starter: false, pro: false, elite: true },
+  { name: "Export de données", free: false, starter: false, pro: false, elite: true },
+  { name: "Priorité d'analyse", free: false, starter: false, pro: false, elite: true },
 ];
 
 interface PricingTableProps {
@@ -259,7 +157,6 @@ function PricingCards({
 
   const handlePlanSelect = async (planId: string) => {
     if (!user) {
-      // Not logged in, redirect to auth
       navigate("/auth");
       return;
     }
@@ -290,7 +187,7 @@ function PricingCards({
   };
 
   return (
-    <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
       {PLANS.map((plan) => {
         const isCurrentPlan = effectiveCurrentPlan === plan.id;
         const PlanIcon = plan.icon;
@@ -331,8 +228,8 @@ function PricingCards({
             <CardContent className="flex-1 flex flex-col">
               <div className="text-center mb-6">
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-bold">{plan.price}€</span>
-                  <span className="text-muted-foreground">/mois</span>
+                  <span className="text-4xl font-bold">{plan.price === 0 ? "Gratuit" : `${plan.price}€`}</span>
+                  {plan.price > 0 && <span className="text-muted-foreground">/mois</span>}
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
                   {plan.creditsPerMonth} crédits/mois
@@ -383,24 +280,24 @@ function PricingComparisonTable({ currentPlan }: { currentPlan?: string }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full max-w-5xl mx-auto border-collapse">
+      <table className="w-full max-w-6xl mx-auto border-collapse">
         <thead>
           <tr>
             <th className="text-left p-4 border-b bg-muted/30 rounded-tl-lg">
               <span className="font-semibold">Fonctionnalités</span>
             </th>
-            {PLANS.map((plan) => (
+            {PLANS.map((plan, idx) => (
               <th 
                 key={plan.id} 
                 className={cn(
-                  "p-4 border-b text-center min-w-[140px]",
+                  "p-4 border-b text-center min-w-[120px]",
                   plan.popular && "bg-primary/5",
-                  plan.id === "elite" && "rounded-tr-lg"
+                  idx === PLANS.length - 1 && "rounded-tr-lg"
                 )}
               >
                 <div className="flex flex-col items-center gap-1">
                   <span className="font-bold text-lg">{plan.displayName}</span>
-                  <span className="text-2xl font-bold">{plan.price}€</span>
+                  <span className="text-2xl font-bold">{plan.price === 0 ? "0€" : `${plan.price}€`}</span>
                   <span className="text-xs text-muted-foreground">/mois</span>
                   {effectiveCurrentPlan === plan.id && (
                     <Badge variant="secondary" className="mt-1 text-xs">Actuel</Badge>
@@ -437,6 +334,9 @@ function PricingComparisonTable({ currentPlan }: { currentPlan?: string }) {
                 </div>
               </td>
               <td className="p-4 text-center">
+                <FeatureValue value={feature.free} />
+              </td>
+              <td className="p-4 text-center">
                 <FeatureValue value={feature.starter} />
               </td>
               <td className={cn("p-4 text-center", "bg-primary/5")}>
@@ -471,13 +371,21 @@ function FeatureValue({ value, highlight }: { value: string | boolean | number; 
 
 function getHighlightedFeatures(planId: string): string[] {
   switch (planId) {
+    case "free":
+      return [
+        "20 crédits/mois",
+        "Market Score gratuit (extension)",
+        "Accès catalogue composants",
+        "Collecte passive = gagner des crédits",
+        "Introduction plateforme",
+        "Communauté & leaderboard",
+      ];
     case "starter":
       return [
         "120 crédits/mois",
-        "Accès base annonces",
-        "Accès catalogue composants",
+        "Verdict + valeur marché (extension)",
+        "Analyse rapide (5 cr.)",
         "3 alertes actives",
-        "Scan rapide (5 cr)",
         "Estimator : Synthèse & Indicateurs",
         "Introduction plateforme",
       ];
@@ -485,10 +393,9 @@ function getHighlightedFeatures(planId: string): string[] {
       return [
         "500 crédits/mois",
         "20 alertes actives",
-        "Scan approfondi (20 cr)",
+        "Analyse approfondie (20 cr.)",
         "Estimator : Décision & Graphiques",
         "Prix achat/revente & marge",
-        "Graphiques interactifs 30j/90j",
         "Formation avancée",
       ];
     case "elite":
