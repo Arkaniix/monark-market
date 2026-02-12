@@ -15,14 +15,14 @@ const trainingFeatures = [
     icon: Video,
     title: "Modules avancés",
     description: "Stratégies de revente, négociation, analyse approfondie du marché.",
-    included: "Pro & Élite",
+    included: "Standard & Pro",
     highlight: false,
   },
   {
     icon: Award,
     title: "Méthodologie complète",
     description: "Observer → Analyser → Agir : une approche structurée pour maximiser vos gains.",
-    included: "Pro & Élite",
+    included: "Standard & Pro",
     highlight: false,
   },
 ];

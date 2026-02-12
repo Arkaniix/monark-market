@@ -138,7 +138,7 @@ export function CataloguePreview() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selected?.name}
-              <Badge className="bg-primary/10 text-primary border-0 text-xs">Élite</Badge>
+              <Badge className="bg-primary/10 text-primary border-0 text-xs">Pro</Badge>
             </DialogTitle>
             <DialogDescription>{selected?.brand} — Fiche modèle complète</DialogDescription>
           </DialogHeader>

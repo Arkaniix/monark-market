@@ -126,7 +126,7 @@ export function AnnoncesPreview() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selected?.title}
-              <Badge className="bg-primary/10 text-primary border-0 text-xs">Élite</Badge>
+              <Badge className="bg-primary/10 text-primary border-0 text-xs">Pro</Badge>
             </DialogTitle>
             <DialogDescription>{selected?.platform} • {selected?.location}</DialogDescription>
           </DialogHeader>
@@ -167,7 +167,7 @@ export function AnnoncesPreview() {
               </div>
 
               <div className="bg-accent/10 border border-accent/20 rounded-lg p-3">
-                <div className="text-sm font-medium text-accent mb-1">Recommandation Élite</div>
+                <div className="text-sm font-medium text-accent mb-1">Recommandation Pro</div>
                 <p className="text-xs text-muted-foreground">{selected.recommendation}</p>
               </div>
             </div>

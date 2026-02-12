@@ -126,7 +126,7 @@ export function ScanPreview() {
           ))}
         </div>
         <div className="text-center text-xs text-muted-foreground">
-          Score gratuit sur toutes les annonces • Verdict détaillé dès Starter
+          Score gratuit sur toutes les annonces • Verdict détaillé dès Standard
         </div>
       </div>
 
