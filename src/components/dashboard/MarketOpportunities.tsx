@@ -2,27 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { 
-  Flame, 
-  TrendingUp, 
-  TrendingDown, 
-  MapPin,
-  Package,
+import {
+  TrendingUp,
+  TrendingDown,
   BarChart3,
-  ExternalLink
+  ExternalLink,
+  Eye
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-interface Deal {
-  id: number;
-  title: string;
-  price: number;
-  fairValue: number;
-  deviationPct: number;
-  city: string;
-  condition: string;
-  category: string;
-}
 
 interface Trend {
   name: string;
@@ -31,10 +18,16 @@ interface Trend {
 }
 
 interface MarketOpportunitiesProps {
-  topDeals: Deal[];
   risingTrends: Trend[];
   fallingTrends: Trend[];
   dailyVolume: number;
+  recentAnalyses?: Array<{
+    id: number;
+    title: string;
+    score: number;
+    verdict: string;
+    date: string;
+  }>;
 }
 
 const itemVariants = {
@@ -42,121 +35,97 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
-export function MarketOpportunities({ 
-  topDeals, 
-  risingTrends, 
+export function MarketOpportunities({
+  risingTrends,
   fallingTrends,
-  dailyVolume
+  dailyVolume,
+  recentAnalyses = []
 }: MarketOpportunitiesProps) {
-  // Couleurs neutres pour les catégories (pas de connotation positive/négative)
-  const getCategoryColor = () => {
-    return "bg-secondary text-secondary-foreground";
-  };
+  const getCategoryColor = () => "bg-secondary text-secondary-foreground";
 
-  const lastUpdate = "il y a 3h";
-  const isHotDeal = (deviationPct: number) => Math.abs(deviationPct) > 15;
+  const getScoreColor = (score: number) => {
+    if (score >= 7) return "text-success bg-success/10 border-success/30";
+    if (score >= 4) return "text-warning bg-warning/10 border-warning/30";
+    return "text-destructive bg-destructive/10 border-destructive/30";
+  };
 
   return (
     <section className="py-8 bg-gradient-to-b from-background to-muted/20">
       <div className="container">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">Opportunités & Marché</h2>
-          <p className="text-muted-foreground">Les meilleures affaires et tendances du moment</p>
+          <h2 className="text-2xl font-bold mb-2">Analyses récentes & Marché</h2>
+          <p className="text-muted-foreground">Vos dernières analyses Lens et tendances du moment</p>
         </div>
 
         <div className="space-y-6">
-          {/* Meilleures opportunités */}
+          {/* Dernières analyses Lens */}
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Flame className="h-5 w-5 text-warning" />
+                    <Eye className="h-5 w-5 text-primary" />
                     <div>
-                      <CardTitle>Meilleures opportunités du moment</CardTitle>
-                      <p className="text-xs text-muted-foreground mt-1">Données actualisées {lastUpdate}</p>
+                      <CardTitle>Dernières analyses Lens</CardTitle>
+                      <p className="text-xs text-muted-foreground mt-1">Annonces analysées via l'extension</p>
                     </div>
                   </div>
-                  <Link to="/deals">
+                  <Link to="/estimator">
                     <Button variant="outline" size="sm">
-                      Voir tout
+                      Estimator
                       <ExternalLink className="h-4 w-4 ml-2" />
                     </Button>
                   </Link>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {topDeals.slice(0, 6).map((deal) => (
-                    <Link key={deal.id} to={`/ad/${deal.id}`}>
-                      <Card className="hover:border-primary/50 transition-all hover:shadow-md cursor-pointer h-full">
+                {recentAnalyses.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {recentAnalyses.slice(0, 6).map((analysis) => (
+                      <Card key={analysis.id} className="hover:border-primary/50 transition-all hover:shadow-md h-full">
                         <CardContent className="p-4">
                           <div className="space-y-3">
-                            {/* En-tête */}
                             <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <Badge className={getCategoryColor()}>
-                                  {deal.category}
-                                </Badge>
-                                {isHotDeal(deal.deviationPct) && (
-                                  <span className="text-success animate-pulse">🔥</span>
-                                )}
-                              </div>
-                              <Badge variant="outline" className="text-xs text-muted-foreground">
-                                Score: {Math.round((1 + deal.deviationPct / 100) * 100)}
+                              <Badge className={`${getScoreColor(analysis.score)} border`}>
+                                Score: {analysis.score}/10
                               </Badge>
                             </div>
-
-                            {/* Titre */}
                             <h3 className="font-semibold text-sm line-clamp-2 leading-tight">
-                              {deal.title}
+                              {analysis.title}
                             </h3>
-
-                            {/* Prix et économie */}
-                            <div className="space-y-1">
-                              <div className="flex items-baseline gap-2">
-                                <span className="text-2xl font-bold text-primary">
-                                  {deal.price} €
-                                </span>
-                                <span className="text-sm text-muted-foreground line-through">
-                                  {deal.fairValue} €
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 text-success text-sm font-medium">
-                                <TrendingDown className="h-4 w-4" />
-                                Économie de {Math.abs(deal.deviationPct).toFixed(1)}%
-                              </div>
-                            </div>
-
-                            {/* Localisation et état */}
-                            <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {deal.city}
-                              </div>
-                              <Badge variant="secondary" className="text-xs">
-                                {deal.condition}
-                              </Badge>
-                            </div>
+                            <p className="text-xs text-muted-foreground">{analysis.verdict}</p>
+                            <p className="text-xs text-muted-foreground/60">{analysis.date}</p>
                           </div>
                         </CardContent>
                       </Card>
-                    </Link>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Eye className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-muted-foreground mb-2">Aucune analyse récente</p>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Installez l'extension Monark Lens pour analyser des annonces sur Leboncoin, eBay et Vinted
+                    </p>
+                    <Button variant="outline" size="sm" asChild>
+                      <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer">
+                        Installer Monark Lens
+                      </a>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
 
           {/* Tendances du marché */}
-          <motion.div 
-            variants={itemVariants} 
-            initial="hidden" 
+          <motion.div
+            variants={itemVariants}
+            initial="hidden"
             animate="visible"
             transition={{ delay: 0.2 }}
             className="grid lg:grid-cols-3 gap-6"
           >
-            {/* Top hausses */}
             <Card className="border-success/20">
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -171,11 +140,9 @@ export function MarketOpportunities({
                       <div className="h-full w-1 bg-success rounded-full" />
                       <div className="flex-1">
                         <p className="font-medium text-sm">{trend.name}</p>
-                        <Badge className={getCategoryColor()} variant="outline">
-                          {trend.category}
-                        </Badge>
+                        <Badge className={getCategoryColor()} variant="outline">{trend.category}</Badge>
                       </div>
-                      <div className="flex items-center gap-1 text-success font-bold" title={`+${trend.change}% sur les 7 derniers jours`}>
+                      <div className="flex items-center gap-1 text-success font-bold">
                         <TrendingUp className="h-4 w-4" />
                         +{trend.change}%
                       </div>
@@ -185,7 +152,6 @@ export function MarketOpportunities({
               </CardContent>
             </Card>
 
-            {/* Top baisses - Rouge pour signaler la baisse (opportunité d'achat) */}
             <Card className="border-destructive/20">
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -200,11 +166,9 @@ export function MarketOpportunities({
                       <div className="h-full w-1 bg-destructive rounded-full" />
                       <div className="flex-1">
                         <p className="font-medium text-sm">{trend.name}</p>
-                        <Badge className={getCategoryColor()} variant="outline">
-                          {trend.category}
-                        </Badge>
+                        <Badge className={getCategoryColor()} variant="outline">{trend.category}</Badge>
                       </div>
-                      <div className="flex items-center gap-1 text-destructive font-bold" title={`${trend.change}% sur les 7 derniers jours`}>
+                      <div className="flex items-center gap-1 text-destructive font-bold">
                         <TrendingDown className="h-4 w-4" />
                         {trend.change}%
                       </div>
@@ -214,7 +178,6 @@ export function MarketOpportunities({
               </CardContent>
             </Card>
 
-            {/* Volume du jour - Couleur neutre (information) */}
             <Card className="border-border">
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -225,9 +188,9 @@ export function MarketOpportunities({
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">Volume d'annonces</p>
+                    <p className="text-sm text-muted-foreground mb-2">Annonces analysées (communauté)</p>
                     <div className="text-4xl font-bold text-foreground">{dailyVolume.toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground mt-1">annonces aujourd'hui</p>
+                    <p className="text-xs text-muted-foreground mt-1">cette semaine</p>
                   </div>
                   <div className="pt-4 border-t space-y-2">
                     <div className="flex justify-between text-sm">
