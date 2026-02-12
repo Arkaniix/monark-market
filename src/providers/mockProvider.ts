@@ -1195,10 +1195,10 @@ export const mockProvider: DataProvider = {
 
     // Get current plan to save with history
     const subscriptionState = getMockSubscriptionState();
-    const currentPlan = subscriptionState.planName as 'starter' | 'pro' | 'elite';
+    const currentPlan = subscriptionState.planName as 'free' | 'standard' | 'pro';
 
-    // Calculate Elite-only data if on Elite plan
-    const negotiation = currentPlan === 'elite' ? {
+    // Calculate Pro-only data if on Pro plan
+    const negotiation = currentPlan === 'pro' ? {
       buy_aggressive: Math.round(result.estimate.buy_price * 0.88),
       buy_negotiable: Math.round(result.estimate.buy_price * 0.95),
       buy_max: Math.round(result.estimate.buy_price * 1.02),
@@ -1207,14 +1207,14 @@ export const mockProvider: DataProvider = {
       sell_premium: Math.round(result.estimate.sell_price_30d * 1.08),
     } : undefined;
 
-    const platforms = currentPlan === 'elite' ? [
+    const platforms = currentPlan === 'pro' ? [
       { name: 'Leboncoin', importance: 0.85, sell_probability: 0.72, recommended_price: result.estimate.sell_price_30d, avg_days_to_sell: 8 },
       { name: 'eBay', importance: 0.65, sell_probability: 0.58, recommended_price: Math.round(result.estimate.sell_price_30d * 1.05), avg_days_to_sell: 12 },
       { name: 'Facebook Marketplace', importance: 0.55, sell_probability: 0.48, recommended_price: Math.round(result.estimate.sell_price_30d * 0.98), avg_days_to_sell: 6 },
       { name: 'Vinted', importance: 0.35, sell_probability: 0.32, recommended_price: Math.round(result.estimate.sell_price_30d * 0.92), avg_days_to_sell: 15 },
     ] : undefined;
 
-    const scenarios = currentPlan === 'elite' ? {
+    const scenarios = currentPlan === 'pro' ? {
       quick: { price: Math.round(result.estimate.sell_price_30d * 0.92), margin: Math.round((result.estimate.sell_price_30d * 0.92 - data.purchase_price) / data.purchase_price * 100 * 10) / 10, days: 3 },
       optimal: { price: result.estimate.sell_price_30d, margin: result.estimate.profit_margin_pct, days: 10 },
       long: { price: Math.round(result.estimate.sell_price_30d * 1.1), margin: Math.round((result.estimate.sell_price_30d * 1.1 - data.purchase_price) / data.purchase_price * 100 * 10) / 10, days: 25 },

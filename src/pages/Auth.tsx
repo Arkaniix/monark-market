@@ -25,27 +25,27 @@ const discordSchema = z.string().max(100, "L'identifiant Discord doit contenir m
 
 // Plan configuration for signup
 const SIGNUP_PLANS = [{
-  id: "starter",
-  name: "Starter",
-  price: 9.90,
-  credits: 120,
-  features: ["3 alertes", "Estimator synthèse", "Introduction plateforme"],
+  id: "free",
+  name: "Free",
+  price: 0,
+  credits: 20,
+  features: ["Market Score gratuit", "Catalogue complet", "Introduction plateforme"],
   icon: Zap,
   popular: false
 }, {
-  id: "pro",
-  name: "Pro",
-  price: 29,
-  credits: 500,
-  features: ["20 alertes", "Estimator avancé", "Formation complète"],
+  id: "standard",
+  name: "Standard",
+  price: 11.99,
+  credits: 200,
+  features: ["10 alertes", "Estimator complet", "Formation avancée"],
   icon: Award,
   popular: true
 }, {
-  id: "elite",
-  name: "Élite",
-  price: 79,
-  credits: 1500,
-  features: ["500 alertes", "Estimator complet", "Support prioritaire"],
+  id: "pro",
+  name: "Pro",
+  price: 24.99,
+  credits: 800,
+  features: ["100 alertes", "Scénarios + export", "Support prioritaire"],
   icon: Rocket,
   popular: false
 }];

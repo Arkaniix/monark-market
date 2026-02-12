@@ -9,7 +9,7 @@ const FAQ_ITEMS = [{
   answer: "Non, les crédits sont remis à zéro à chaque nouveau cycle mensuel. Les crédits non utilisés et ceux gagnés via la collecte communautaire ne sont pas reportés au mois suivant."
 }, {
   question: "Puis-je acheter des crédits supplémentaires ?",
-  answer: "Oui, vous pouvez acheter des recharges ponctuelles si vous avez un abonnement actif (Pro ou Elite). Ces crédits expirent également à la fin de votre cycle mensuel."
+  answer: "Oui, vous pouvez acheter des recharges ponctuelles si vous avez un abonnement actif (Standard ou Pro). Ces crédits expirent également à la fin de votre cycle mensuel."
 }, {
   question: "Comment fonctionne la collecte communautaire ?",
   answer: "En participant aux missions de collecte communautaire, vous gagnez des crédits (jusqu'à 20 par mission). Ces crédits sont ajoutés à votre solde mais expirent aussi au reset mensuel."

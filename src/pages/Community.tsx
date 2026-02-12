@@ -129,7 +129,7 @@ export default function Community() {
 
   const faqs = [
     { id: "1", question: "Pourquoi le bouton est grisé ?", answer: "Le bouton est désactivé s'il n'y a pas de mission disponible ou si tu as atteint ta limite quotidienne." },
-    { id: "2", question: "Combien de crédits je gagne ?", answer: "En navigation passive : 1 cr./annonce (Free/Starter), 2 cr./annonce (Pro), 3 cr./annonce (Elite). Les missions semi-actives rapportent 10-15 crédits." },
+    { id: "2", question: "Combien de crédits je gagne ?", answer: "En navigation passive : 1 cr./annonce (Free), 2 cr./annonce (Standard), 3 cr./annonce (Pro). Les missions semi-actives rapportent 10-15 crédits." },
     { id: "3", question: "Comment fonctionne la collecte passive ?", answer: "Avec l'extension Monark Lens activée, tu gagnes des crédits automatiquement en naviguant sur les sites de petites annonces." },
     { id: "4", question: "Puis-je faire plusieurs missions à la suite ?", answer: "Oui, dans la limite de ta limite quotidienne et en respectant le cooldown entre chaque mission." },
   ];

@@ -11,11 +11,11 @@ interface SynthesisBannerProps {
 }
 
 // Badge de plan pour indiquer l'accessibilité
-function PlanBadge({ plan }: { plan: "starter" | "pro" | "elite" }) {
+function PlanBadge({ plan }: { plan: "free" | "standard" | "pro" }) {
   const config = {
-    starter: { label: "Starter", className: "border-muted-foreground/50 text-muted-foreground" },
-    pro: { label: "Pro", className: "border-primary/50 text-primary" },
-    elite: { label: "Élite", className: "border-amber-500/50 text-amber-600" },
+    free: { label: "Free", className: "border-muted-foreground/50 text-muted-foreground" },
+    standard: { label: "Standard", className: "border-primary/50 text-primary" },
+    pro: { label: "Pro", className: "border-amber-500/50 text-amber-600" },
   };
   const { label, className } = config[plan];
   return (
@@ -129,7 +129,7 @@ export default function SynthesisBanner({ result }: SynthesisBannerProps) {
         <CardContent className="py-6">
           <div className="flex items-center gap-2 mb-4">
             <h3 className="text-sm font-medium text-muted-foreground">Synthèse</h3>
-            <PlanBadge plan="starter" />
+            <PlanBadge plan="free" />
           </div>
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             {/* Composant info */}

@@ -82,7 +82,7 @@ export interface EstimatorRun {
   // Detailed results (JSON)
   detailed_results: Record<string, unknown> | null;
   // Plan info
-  plan_at_creation: 'starter' | 'pro' | 'elite';
+  plan_at_creation: 'free' | 'standard' | 'pro';
   credits_consumed: number;
   // Timestamps
   created_at: string;
