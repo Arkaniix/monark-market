@@ -9,28 +9,36 @@ import {
 
 const faqs = [
   {
-    question: "D'où viennent les données utilisées ?",
-    answer: "Les données proviennent d'annonces publiques sur les principales plateformes d'occasion françaises (LeBonCoin, etc.). Nous agrégeons ces informations pour calculer des indicateurs statistiques : médiane, tendance, volume. La qualité des résultats dépend de la disponibilité et de la fraîcheur des données.",
+    question: "Qu'est-ce que Monark Lens exactement ?",
+    answer: "Monark Lens est une extension Chrome qui enrichit les annonces sur Leboncoin, eBay et Vinted avec un Market Score (0-10), un verdict textuel et la valeur marché estimée. Elle fonctionne en overlay : vous naviguez normalement, et les données apparaissent directement sur les annonces.",
   },
   {
-    question: "Les estimations sont-elles fiables à 100% ?",
-    answer: "Non, et nous ne prétendons pas le contraire. L'outil fournit une aide à la décision basée sur des données réelles, mais le marché de l'occasion est par nature variable. Les prix dépendent de l'état exact du produit, de la localisation, de la négociation. Utilisez nos indicateurs comme un point de départ, pas comme une vérité absolue.",
+    question: "D'où viennent les données utilisées ?",
+    answer: "Les données proviennent des annonces publiques analysées par notre communauté d'utilisateurs via l'extension Lens. Nous agrégeons ces informations pour calculer des indicateurs statistiques : médiane, tendance, volume, liquidité. Plus la communauté est active, plus les données sont précises et à jour.",
+  },
+  {
+    question: "Le Market Score est-il fiable à 100% ?",
+    answer: "Non, et nous ne prétendons pas le contraire. Le Market Score est une aide à la décision basée sur des données réelles, mais le marché de l'occasion est par nature variable. Les prix dépendent de l'état exact du produit, de la localisation, de la négociation. Utilisez nos indicateurs comme un point de départ, pas comme une vérité absolue.",
+  },
+  {
+    question: "L'extension collecte-t-elle mes données personnelles ?",
+    answer: "Non. Monark Lens ne collecte aucune donnée personnelle, mot de passe ou information de paiement. L'extension lit uniquement les informations publiques des annonces (prix, titre, état) pour calculer le Market Score. Aucune donnée de navigation hors des plateformes supportées n'est traitée. Nous respectons le RGPD.",
+  },
+  {
+    question: "Quelle est la différence entre analyse rapide et approfondie ?",
+    answer: "L'analyse rapide (5 crédits) affiche dans l'overlay Lens le prix médian, l'écart au marché, la tendance et le volume. L'analyse approfondie (20 crédits) redirige vers l'Estimator sur monark-market.fr avec toutes les données pré-remplies : scénarios de revente, négociation, graphiques interactifs.",
+  },
+  {
+    question: "Comment fonctionnent les crédits et les missions ?",
+    answer: "Chaque plan inclut un quota mensuel de crédits. En plus, vous gagnez des crédits automatiquement en naviguant avec l'extension (1 à 3 crédits par annonce enrichie selon votre plan). Des missions semi-actives proposent aussi des récompenses bonus (ex: naviguer 20 annonces GPU cette semaine).",
   },
   {
     question: "Y a-t-il un engagement de durée ?",
-    answer: "Non. Tous nos abonnements sont mensuels et sans engagement. Vous pouvez annuler à tout moment depuis votre espace compte, et vous conservez l'accès jusqu'à la fin de la période payée.",
+    answer: "Non. Tous nos abonnements sont mensuels et sans engagement. Vous pouvez annuler à tout moment depuis votre espace compte, et vous conservez l'accès jusqu'à la fin de la période payée. Le plan Free est gratuit sans limite de durée.",
   },
   {
-    question: "Que se passe-t-il si je n'utilise pas tous mes crédits ?",
-    answer: "Les crédits non utilisés ne sont pas reportés au mois suivant. Chaque cycle mensuel remet votre compteur à zéro. C'est pourquoi nous recommandons de choisir un plan adapté à votre usage réel.",
-  },
-  {
-    question: "Comment fonctionne le support ?",
-    answer: "Le support est disponible 7j/7 par email et via le formulaire de contact intégré. Les utilisateurs Élite bénéficient d'un traitement prioritaire. Nous nous engageons à répondre sous 24h ouvrées.",
-  },
-  {
-    question: "Mes données personnelles sont-elles protégées ?",
-    answer: "Oui. Nous respectons le RGPD et ne revendons aucune donnée. Vos informations de paiement sont traitées par Stripe, leader mondial du paiement en ligne. Vous pouvez demander la suppression de votre compte et de vos données à tout moment.",
+    question: "Sur quels navigateurs fonctionne Monark Lens ?",
+    answer: "Monark Lens est disponible sur Google Chrome et les navigateurs basés sur Chromium (Edge, Brave, Opera). Une version Firefox est envisagée selon la demande. L'extension fonctionne sur desktop uniquement.",
   },
 ];
 
