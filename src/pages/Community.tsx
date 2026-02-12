@@ -54,8 +54,8 @@ export default function Community() {
     }
     return {
       disabled: false,
-      label: "🔥 Lancer une collecte communautaire",
-      reason: "Prêt à contribuer !"
+      label: "🔥 Lancer une mission Lens",
+      reason: "Prêt à naviguer !"
     };
   };
   const buttonState = getButtonState();
@@ -128,9 +128,9 @@ export default function Community() {
   };
 
   const faqs = [
-    { id: "1", question: "Pourquoi le bouton est grisé ?", answer: "Le bouton est désactivé s'il n'y a pas de besoin urgent de données ou si tu as atteint ta limite quotidienne de missions." },
-    { id: "2", question: "Combien de crédits je gagne ?", answer: "En général +1 crédit par mission 'list-only' et +2 pour les missions 'open-on-new'. Les crédits dépendent aussi de la qualité et du volume scanné." },
-    { id: "3", question: "Que faire si je vois un captcha ?", answer: "Résous-le normalement ! Ne recharge pas la page trop rapidement. L'extension attend que tu valides le captcha." },
+    { id: "1", question: "Pourquoi le bouton est grisé ?", answer: "Le bouton est désactivé s'il n'y a pas de mission disponible ou si tu as atteint ta limite quotidienne." },
+    { id: "2", question: "Combien de crédits je gagne ?", answer: "En navigation passive : 1 cr./annonce (Free/Starter), 2 cr./annonce (Pro), 3 cr./annonce (Elite). Les missions semi-actives rapportent 10-15 crédits." },
+    { id: "3", question: "Comment fonctionne la collecte passive ?", answer: "Avec l'extension Monark Lens activée, tu gagnes des crédits automatiquement en naviguant sur les sites de petites annonces." },
     { id: "4", question: "Puis-je faire plusieurs missions à la suite ?", answer: "Oui, dans la limite de ta limite quotidienne et en respectant le cooldown entre chaque mission." },
   ];
 
@@ -149,7 +149,7 @@ export default function Community() {
               <div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">🤝 Communauté</h1>
                 <p className="text-sm md:text-base text-muted-foreground">
-                  Aide à mettre le marché à jour
+                  Missions de navigation & collecte passive via Monark Lens
                 </p>
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function Community() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            Contribue au rafraîchissement des données et gagne des crédits.
+            Contribue via tes missions Lens et gagne des crédits.
           </p>
         </motion.div>
 
@@ -212,10 +212,10 @@ export default function Community() {
           <CardHeader className="pb-2 md:pb-4">
             <CardTitle className="flex items-center gap-2 text-base md:text-lg">
               <Flame className="w-5 h-5 md:w-6 md:h-6 text-orange-500" />
-              Collecte communautaire
+              Missions Lens
             </CardTitle>
             <CardDescription className="text-xs md:text-sm">
-              Lance une mission pour contribuer aux données du marché
+              Lance une mission de navigation pour enrichir les données du marché
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
@@ -510,15 +510,15 @@ export default function Community() {
                 <ul className="space-y-2 text-xs md:text-sm">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Respect des plateformes : pas d'automatisation serveur, captcha humain</span>
+                    <span>Navigation naturelle : l'extension collecte passivement pendant ta navigation</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Vitesse : respecte les délais entre pages pour éviter les blocages</span>
+                    <span>Missions semi-actives : navigue sur les catégories demandées pour des bonus</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Plage & périmètre : ne pas déborder (reste sur la fourchette indiquée)</span>
+                    <span>Missions Premium (Elite) : comble les trous de données sur des composants rares</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />

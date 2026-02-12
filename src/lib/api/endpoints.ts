@@ -143,19 +143,21 @@ export const TRAINING = {
 } as const;
 
 // ============= Jobs / Scrap =============
+// DEPRECATED - Lens pivot
 export const JOBS = {
   LIST: '/v1/jobs',
   DETAIL: (id: number) => `/v1/jobs/${id}`,
   CANCEL: (id: number) => `/v1/jobs/${id}/cancel`,
 } as const;
 
+// DEPRECATED - Lens pivot
 export const SCRAP = {
   CREATE_JOB: '/v1/scrap/create_job',
   JOB_DONE: '/v1/scrap/job_done',
   UPLOAD_BATCH: '/v1/scrap/upload_batch',
 } as const;
 
-// ============= Premium Scrap =============
+// DEPRECATED - Lens pivot
 export const PREMIUM_SCRAP = {
   QUOTE: '/v1/premium/scrap/quote',
   START: '/v1/premium/scrap/start',
@@ -166,6 +168,29 @@ export const INGEST = {
   BATCH: (batchId: number) => `/v1/ingest/batch/${batchId}`,
   RAW: (rawId: number) => `/v1/ingest/raw/${rawId}`,
   REPROCESS: (batchId: number) => `/v1/ingest/reprocess/${batchId}`,
+} as const;
+
+// ============= Lens (Extension) =============
+export const LENS = {
+  SCORE: '/v1/lens/score',
+  QUICK: '/v1/lens/quick',
+} as const;
+
+// ============= Signals =============
+export const SIGNALS = {
+  INGEST: '/v1/signals/ingest',
+} as const;
+
+// ============= Missions =============
+export const MISSIONS = {
+  ACTIVE: '/v1/missions/active',
+  PROGRESS: '/v1/missions/progress',
+} as const;
+
+// ============= Config (Extension) =============
+export const CONFIG = {
+  SELECTORS: '/v1/config/selectors',
+  COMPONENT_DB: '/v1/config/component-db',
 } as const;
 
 // ============= Admin =============
@@ -210,6 +235,10 @@ export const ENDPOINTS = {
   SCRAP,
   PREMIUM_SCRAP,
   INGEST,
+  LENS,
+  SIGNALS,
+  MISSIONS,
+  CONFIG,
   ADMIN,
   HEALTH,
   MISC,

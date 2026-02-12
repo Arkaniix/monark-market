@@ -5,18 +5,21 @@ import { Bell, Crown, AlertTriangle } from "lucide-react";
 import type { PlanType } from "@/hooks/useEntitlements";
 
 const PLAN_LABELS: Record<PlanType, string> = {
+  free: "Free",
   starter: "Starter",
   pro: "Pro",
   elite: "Élite",
 };
 
 const NEXT_PLAN: Record<PlanType, PlanType> = {
+  free: "starter",
   starter: "pro",
   pro: "elite",
   elite: "elite",
 };
 
 const PLAN_LIMITS: Record<PlanType, number> = {
+  free: 0,
   starter: 3,
   pro: 20,
   elite: 500,

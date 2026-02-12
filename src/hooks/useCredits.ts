@@ -52,7 +52,7 @@ export interface UseCreditActionResult {
 // Tooltip text explaining non-cumulative credits
 export const CREDIT_RESET_EXPLANATION = 
   "Les crédits sont remis à zéro à chaque nouveau cycle mensuel. " +
-  "Les crédits non utilisés et ceux gagnés via le scrap communautaire " +
+  "Les crédits non utilisés et ceux gagnés via les missions Lens " +
   "ne sont pas reportés au mois suivant.";
 
 export function useCredits(): UseCreditActionResult {

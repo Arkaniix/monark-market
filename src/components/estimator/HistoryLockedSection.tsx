@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import type { PlanType } from "@/hooks/useEntitlements";
 
 const PLAN_LABELS: Record<PlanType, string> = {
+  free: "Free",
   starter: "Starter",
   pro: "Pro",
   elite: "Élite",
@@ -150,8 +151,8 @@ export function isFeatureAccessible(
  * Get plan hierarchy level (for comparison)
  */
 export function getPlanLevel(plan: PlanType): number {
-  const levels: Record<PlanType, number> = { starter: 0, pro: 1, elite: 2 };
-  return levels[plan] ?? 0;
+  const levels: Record<PlanType, number> = { free: -1, starter: 0, pro: 1, elite: 2 };
+  return levels[plan] ?? -1;
 }
 
 /**

@@ -3,14 +3,11 @@ import { Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
-import Deals from "./pages/Deals";
 import Tracking from "./pages/Tracking";
 import Catalog from "./pages/Catalog";
 import ModelDetail from "./pages/ModelDetail";
 import PCDetail from "./pages/PCDetail";
 import Estimator from "./pages/Estimator";
-import AdDetail from "./pages/AdDetail";
-import JobDetail from "./pages/JobDetail";
 import Community from "./pages/Community";
 import CommunityHistory from "./pages/CommunityHistory";
 import CommunityLeaderboard from "./pages/CommunityLeaderboard";
@@ -82,11 +79,6 @@ export const routes: RouteConfig[] = [
     requiresAuth: true,
   },
   {
-    path: "/deals",
-    component: Deals,
-    requiresAuth: true,
-  },
-  {
     path: "/tracking",
     component: Tracking,
     requiresAuth: true,
@@ -120,21 +112,6 @@ export const routes: RouteConfig[] = [
   {
     path: "/estimator",
     component: Estimator,
-    requiresAuth: true,
-  },
-  {
-    path: "/ad/:id",
-    component: AdDetail,
-    requiresAuth: true,
-  },
-  {
-    path: "/ads/:id",
-    component: AdDetail,
-    requiresAuth: true,
-  },
-  {
-    path: "/jobs/:id",
-    component: JobDetail,
     requiresAuth: true,
   },
   {
