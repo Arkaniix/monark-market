@@ -1,26 +1,25 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, Download, GraduationCap, Search } from "lucide-react";
+import { Check, Download, GraduationCap, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import ScrapModal from "@/components/ScrapModal";
+
 interface WelcomeHeaderProps {
   userName?: string;
-  lastScrapDate?: string;
+  lastAnalysisDate?: string;
   planName: string;
   creditsRemaining: number;
 }
+
 export function WelcomeHeader({
   userName = "Utilisateur",
-  lastScrapDate,
+  lastAnalysisDate,
   planName,
   creditsRemaining
 }: WelcomeHeaderProps) {
-  const [scrapModalOpen, setScrapModalOpen] = useState(false);
-
-  // Mock extension detection state - can be toggled for demo
   const [extensionDetected] = useState(false);
+
   const formatDate = (date?: string) => {
     if (!date) return "jamais";
     const d = new Date(date);
@@ -32,44 +31,11 @@ export function WelcomeHeader({
     return d.toLocaleDateString('fr-FR');
   };
 
-  // Statut du scan (peut être récupéré via API)
-  const scanStatus = 'available' as 'available' | 'waiting' | 'paused';
-  const getStatusConfig = () => {
-    switch (scanStatus) {
-      case 'available':
-        return {
-          color: 'bg-success',
-          label: 'Disponible',
-          pulse: true
-        };
-      case 'waiting':
-        return {
-          color: 'bg-warning',
-          label: 'En attente',
-          pulse: false
-        };
-      case 'paused':
-        return {
-          color: 'bg-destructive',
-          label: 'En pause',
-          pulse: false
-        };
-    }
-  };
-  const statusConfig = getStatusConfig();
-  return <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 border-b">
+  return (
+    <section className="bg-gradient-to-br from-primary/10 via-background to-accent/10 border-b">
       <div className="container py-6">
-        <motion.div initial={{
-        opacity: 0,
-        y: 20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        duration: 0.5
-      }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            {/* Message de bienvenue */}
             <div className="space-y-3">
               <div className="relative inline-block">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 blur-2xl opacity-50" />
@@ -78,10 +44,9 @@ export function WelcomeHeader({
                 </h1>
               </div>
               <p className="text-muted-foreground text-lg">
-                Ta dernière analyse remonte à <span className="font-semibold text-foreground">{formatDate(lastScrapDate)}</span>
+                Ta dernière analyse remonte à <span className="font-semibold text-foreground">{formatDate(lastAnalysisDate)}</span>
               </p>
               <div className="flex items-center gap-3 flex-wrap">
-                
                 <Badge variant="outline" className="text-sm px-3 py-1.5">
                   Abonnement : {planName}
                 </Badge>
@@ -91,37 +56,31 @@ export function WelcomeHeader({
               </div>
             </div>
 
-            {/* Actions rapides */}
             <div className="flex flex-wrap gap-3">
-              <Button size="lg" className="gap-2 relative group" onClick={() => setScrapModalOpen(true)}>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <div className={`h-2 w-2 rounded-full ${statusConfig.color} ${statusConfig.pulse ? 'animate-pulse' : ''}`} />
-                  </div>
-                  <Search className="h-5 w-5" />
-                  Lancer un scan
-                </div>
+              <Button size="lg" className="gap-2" asChild>
+                <Link to="/estimator">
+                  <Eye className="h-5 w-5" />
+                  Lancer une analyse
+                </Link>
               </Button>
-              
-              {/* Extension indicator - mock state */}
-              {extensionDetected ? <Button size="lg" variant="outline" className="gap-2 text-success border-success/30 bg-success/10 hover:bg-success/20 cursor-default">
+
+              {extensionDetected ? (
+                <Button size="lg" variant="outline" className="gap-2 text-success border-success/30 bg-success/10 hover:bg-success/20 cursor-default">
                   <Check className="h-5 w-5" />
-                  Extension OK
-                </Button> : <Button size="lg" variant="outline" className="gap-2" asChild>
+                  Extension Lens OK
+                </Button>
+              ) : (
+                <Button size="lg" variant="outline" className="gap-2" asChild>
                   <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer">
                     <Download className="h-5 w-5" />
-                    Télécharger l'extension
+                    Installer Monark Lens
                   </a>
-                </Button>}
-              
-              <Button size="lg" variant="secondary" className="gap-2" asChild>
-                
-              </Button>
+                </Button>
+              )}
             </div>
           </div>
         </motion.div>
       </div>
-      
-      <ScrapModal open={scrapModalOpen} onOpenChange={setScrapModalOpen} />
-    </section>;
+    </section>
+  );
 }

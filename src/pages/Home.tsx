@@ -42,15 +42,15 @@ export default function Home() {
     );
   }
 
-  // Transform API data for components (with fallbacks for missing data)
   const userName = data?.user?.display_name || user?.display_name || "Utilisateur";
-  const lastScrapDate = data?.last_scrap_date || undefined;
-  
+  const lastAnalysisDate = data?.last_scrap_date || undefined;
+
   const userStats = {
     creditsRemaining: data?.stats?.credits_remaining ?? 0,
     creditsResetDate: data?.stats?.credits_reset_date ?? null,
     planName: data?.stats?.plan_name ?? "Free",
-    totalScraps: data?.stats?.total_scraps ?? 0,
+    totalAnalyses: data?.stats?.total_scraps ?? 0,
+    averageScore: (data?.stats as any)?.average_score ?? 6.4,
     watchlistCount: data?.stats?.watchlist_count ?? 0,
     estimatedGains: data?.stats?.estimated_gains ?? 0,
   };
@@ -64,20 +64,17 @@ export default function Home() {
 
   const performanceData = data?.performance_data ?? [];
 
-  const topDeals = (data?.top_deals ?? []).map((deal) => ({
-    id: deal.id,
-    title: deal.title,
-    price: deal.price,
-    fairValue: deal.fair_value,
-    deviationPct: deal.deviation_pct,
-    city: deal.city,
-    condition: deal.condition,
-    category: deal.category,
-  }));
-
   const risingTrends = data?.trends?.rising ?? [];
   const fallingTrends = data?.trends?.falling ?? [];
   const dailyVolume = data?.market?.daily_volume ?? 0;
+
+  const recentAnalyses = (data?.top_deals ?? []).slice(0, 6).map((deal) => ({
+    id: deal.id,
+    title: deal.title,
+    score: Math.min(10, Math.max(0, Math.round((1 + (deal.deviation_pct || 0) / 100) * 10) / 1)),
+    verdict: (deal.deviation_pct || 0) < -10 ? "Bonne affaire" : (deal.deviation_pct || 0) > 5 ? "Au-dessus du marché" : "Prix correct",
+    date: "Récemment",
+  }));
 
   const watchlistItems = data?.watchlist ?? [];
   const alerts = data?.alerts ?? [];
@@ -97,44 +94,38 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Modal de bienvenue pour nouveaux utilisateurs */}
       <WelcomeModal />
 
-      {/* Header de bienvenue */}
       <WelcomeHeader
         userName={userName}
-        lastScrapDate={lastScrapDate}
+        lastAnalysisDate={lastAnalysisDate}
         planName={userStats.planName}
         creditsRemaining={userStats.creditsRemaining}
       />
 
-      {/* Widget notifications, alertes, watchlist */}
       <NotificationsWidget />
 
-      {/* Vue globale personnelle */}
       <PersonalStats
-        totalScraps={userStats.totalScraps}
+        totalAnalyses={userStats.totalAnalyses}
+        averageScore={userStats.averageScore}
         creditsRemaining={userStats.creditsRemaining}
         creditsResetDate={userStats.creditsResetDate}
-        opportunitiesDetected={topDeals.length}
+        opportunitiesDetected={recentAnalyses.length}
         alertsTriggered={alerts.length}
         potentialSavings={userStats.estimatedGains}
         recentActivity={recentActivity}
         performanceData={performanceData}
       />
 
-      {/* Tendances globales du marché */}
       <MarketTrends data={trendsData} isLoading={trendsLoading} />
 
-      {/* Opportunités & Marché */}
       <MarketOpportunities
-        topDeals={topDeals}
         risingTrends={risingTrends}
         fallingTrends={fallingTrends}
         dailyVolume={dailyVolume}
+        recentAnalyses={recentAnalyses}
       />
 
-      {/* Actions recommandées */}
       <RecommendedActions
         watchlistItems={watchlistItems}
         alerts={alerts}
