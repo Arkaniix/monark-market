@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Eye, TrendingDown, MapPin, Star, ShieldCheck, Truck } from "lucide-react";
+import { Eye, Gauge, TrendingDown, MapPin, ShieldCheck, BarChart3 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,109 +9,124 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-interface ScannedItem {
+interface AnalyzedItem {
   title: string;
   price: string;
-  time: string;
+  platform: string;
+  score: number;
+  verdict: string;
+  marketPrice: string;
   condition: string;
   location: string;
-  score: number;
-  platform: string;
-  priceHistory: string;
-  seller: string;
-  shipping: string;
+  deviation: string;
+  recommendation: string;
 }
 
-const scannedItems: ScannedItem[] = [
+const analyzedItems: AnalyzedItem[] = [
   {
     title: "RTX 4070 Super",
     price: "520 €",
-    time: "il y a 2 min",
+    platform: "Leboncoin",
+    score: 8.7,
+    verdict: "Bonne affaire",
+    marketPrice: "580 €",
     condition: "Très bon état",
     location: "Paris (75)",
-    score: 87,
-    platform: "Leboncoin",
-    priceHistory: "-15 € en 3 jours",
-    seller: "Particulier • inscrit depuis 2021",
-    shipping: "Mondial Relay, Colissimo",
+    deviation: "-10% sous le marché",
+    recommendation: "Prix inférieur de 10% à la médiane. Vendeur fiable. Bonne opportunité avec potentiel de revente estimé à +60 €.",
   },
   {
     title: "RTX 4060 Ti",
     price: "340 €",
-    time: "il y a 5 min",
+    platform: "Leboncoin",
+    score: 9.2,
+    verdict: "Excellente affaire",
+    marketPrice: "395 €",
     condition: "Comme neuf",
     location: "Lyon (69)",
-    score: 92,
-    platform: "Leboncoin",
-    priceHistory: "Stable depuis 7 jours",
-    seller: "Particulier • inscrit depuis 2019",
-    shipping: "Remise en main propre",
+    deviation: "-14% sous le marché",
+    recommendation: "Top affaire ! Prix très compétitif pour l'état annoncé. Forte demande sur ce modèle.",
   },
   {
     title: "RX 7800 XT",
     price: "430 €",
-    time: "il y a 8 min",
+    platform: "eBay",
+    score: 5.4,
+    verdict: "Prix correct",
+    marketPrice: "420 €",
     condition: "Bon état",
     location: "Marseille (13)",
-    score: 74,
-    platform: "eBay",
-    priceHistory: "+10 € en 5 jours",
-    seller: "Pro • 98.5% avis positifs",
-    shipping: "Colissimo, Chronopost",
+    deviation: "+2% au-dessus",
+    recommendation: "Prix légèrement au-dessus du marché. Négocier à 400 € serait une meilleure affaire.",
   },
 ];
 
-function ScoreColor({ score }: { score: number }) {
-  if (score >= 85) return <span className="text-accent font-bold">{score}/100</span>;
-  if (score >= 70) return <span className="text-warning font-bold">{score}/100</span>;
-  return <span className="text-destructive font-bold">{score}/100</span>;
+function ScoreDisplay({ score }: { score: number }) {
+  const color = score >= 7 ? "text-accent" : score >= 4 ? "text-warning" : "text-destructive";
+  return <span className={`font-bold ${color}`}>{score}/10</span>;
+}
+
+function VerdictBadge({ verdict }: { verdict: string }) {
+  const isGood = verdict.includes("Bonne") || verdict.includes("Excellente");
+  return (
+    <Badge className={isGood ? "bg-success/10 text-success border-success/30 border" : "bg-muted text-muted-foreground"}>
+      {verdict}
+    </Badge>
+  );
 }
 
 export function ScanPreview() {
-  const [selected, setSelected] = useState<ScannedItem | null>(null);
+  const [selected, setSelected] = useState<AnalyzedItem | null>(null);
 
   return (
     <>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-accent animate-pulse" />
-            <span className="text-sm font-medium">Scan en cours…</span>
+            <Eye className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Overlay Monark Lens</span>
             <Badge variant="outline" className="text-[9px] text-muted-foreground border-dashed">Exemple fictif</Badge>
           </div>
-          <Badge variant="outline" className="text-xs">leboncoin</Badge>
+          <Badge variant="outline" className="text-xs">Chrome Extension</Badge>
         </div>
         <div className="bg-background/50 rounded-lg p-3 border space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-xs text-muted-foreground">Pages scannées</span>
-            <span className="text-sm font-semibold">24 / 30</span>
+            <span className="text-xs text-muted-foreground">Annonces analysées aujourd'hui</span>
+            <span className="text-sm font-semibold">47 annonces</span>
           </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div className="h-full w-[80%] bg-gradient-to-r from-primary to-accent rounded-full transition-all" />
+          <div className="flex gap-2">
+            <Badge variant="secondary" className="text-xs">12 bonnes affaires</Badge>
+            <Badge variant="outline" className="text-xs">3 alertes déclenchées</Badge>
           </div>
         </div>
         <div className="space-y-2">
-          {scannedItems.map((item, i) => (
+          {analyzedItems.map((item, i) => (
             <button
               key={i}
               onClick={() => setSelected(item)}
               className="w-full flex items-center justify-between bg-background/50 rounded-lg p-2.5 border hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer text-left group"
             >
-              <div>
-                <div className="text-sm font-medium group-hover:text-primary transition-colors">{item.title}</div>
-                <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> {item.time}
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium group-hover:text-primary transition-colors">{item.title}</span>
+                  <VerdictBadge verdict={item.verdict} />
+                </div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                  {item.platform} · {item.location}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-primary">{item.price}</span>
-                <Eye className="h-3.5 w-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="text-right flex-shrink-0">
+                <div className="font-semibold text-primary">{item.price}</div>
+                <div className="flex items-center gap-1 justify-end">
+                  <Gauge className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-[10px] font-medium"><ScoreDisplay score={item.score} /></span>
+                </div>
               </div>
             </button>
           ))}
         </div>
         <div className="text-center text-xs text-muted-foreground">
-          156 annonces récupérées • 3 nouvelles bonnes affaires
+          Score gratuit sur toutes les annonces • Verdict détaillé dès Starter
         </div>
       </div>
 
@@ -120,51 +135,49 @@ export function ScanPreview() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selected?.title}
-              <Badge className="bg-primary/10 text-primary border-0 text-xs">Élite</Badge>
+              <Badge className="bg-primary/10 text-primary border-0 text-xs">Analyse Lens</Badge>
             </DialogTitle>
-            <DialogDescription>Données complètes récupérées par le scanner</DialogDescription>
+            <DialogDescription>{selected?.platform} · {selected?.location}</DialogDescription>
           </DialogHeader>
           {selected && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                  <div className="text-xs text-muted-foreground">Prix</div>
+                  <div className="text-xs text-muted-foreground">Prix annonce</div>
                   <div className="text-lg font-bold text-primary">{selected.price}</div>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                  <div className="text-xs text-muted-foreground">Score d'opportunité</div>
-                  <div className="text-lg"><ScoreColor score={selected.score} /></div>
+                  <div className="text-xs text-muted-foreground">Market Score</div>
+                  <div className="text-lg"><ScoreDisplay score={selected.score} /></div>
                 </div>
               </div>
 
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2.5 text-sm">
+                  <Gauge className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="text-muted-foreground">Verdict :</span>
+                  <VerdictBadge verdict={selected.verdict} />
+                </div>
+                <div className="flex items-center gap-2.5 text-sm">
+                  <BarChart3 className="h-4 w-4 text-warning flex-shrink-0" />
+                  <span className="text-muted-foreground">Valeur marché :</span>
+                  <span className="font-medium">{selected.marketPrice}</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-sm">
+                  <TrendingDown className="h-4 w-4 text-success flex-shrink-0" />
+                  <span className="text-muted-foreground">Écart :</span>
+                  <span className="font-medium">{selected.deviation}</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-sm">
                   <ShieldCheck className="h-4 w-4 text-accent flex-shrink-0" />
                   <span className="text-muted-foreground">État :</span>
                   <span className="font-medium">{selected.condition}</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-sm">
-                  <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span className="text-muted-foreground">Localisation :</span>
-                  <span className="font-medium">{selected.location}</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-sm">
-                  <TrendingDown className="h-4 w-4 text-warning flex-shrink-0" />
-                  <span className="text-muted-foreground">Historique prix :</span>
-                  <span className="font-medium">{selected.priceHistory}</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-sm">
-                  <Truck className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">Livraison :</span>
-                  <span className="font-medium">{selected.shipping}</span>
-                </div>
               </div>
 
               <div className="bg-accent/10 border border-accent/20 rounded-lg p-3">
-                <div className="text-sm font-medium text-accent mb-1">Analyse Élite</div>
-                <p className="text-xs text-muted-foreground">
-                  Prix inférieur de 8% à la médiane du marché. Vendeur fiable avec historique cohérent. Bonne opportunité d'achat avec potentiel de revente estimé à +60 €.
-                </p>
+                <div className="text-sm font-medium text-accent mb-1">Analyse Monark Lens</div>
+                <p className="text-xs text-muted-foreground">{selected.recommendation}</p>
               </div>
             </div>
           )}

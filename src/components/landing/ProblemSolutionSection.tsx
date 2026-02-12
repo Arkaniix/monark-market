@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, HelpCircle, TrendingDown, Search, Calculator, LineChart } from "lucide-react";
+import { Clock, HelpCircle, TrendingDown, Eye, Calculator, LineChart } from "lucide-react";
 
 const problems = [
   {
@@ -22,9 +22,9 @@ const problems = [
 
 const solutions = [
   {
-    icon: Search,
-    title: "Scan automatisé",
-    description: "Récupérez les données des annonces en quelques clics.",
+    icon: Eye,
+    title: "Market Score instantané",
+    description: "Un score 0-10 s'affiche sur chaque annonce grâce à l'extension Lens.",
   },
   {
     icon: Calculator,
@@ -40,10 +40,7 @@ const solutions = [
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
 const itemVariants = {
@@ -56,7 +53,6 @@ export function ProblemSolutionSection() {
     <section className="py-16 md:py-20">
       <div className="container">
         <div className="grid md:grid-cols-2 gap-12 md:gap-16">
-          {/* Problems */}
           <div>
             <h2 className="text-2xl md:text-3xl font-bold mb-2 text-destructive/80">
               Le problème
@@ -80,9 +76,7 @@ export function ProblemSolutionSection() {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">{problem.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {problem.description}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{problem.description}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -91,13 +85,12 @@ export function ProblemSolutionSection() {
             </motion.div>
           </div>
 
-          {/* Solutions */}
           <div>
             <h2 className="text-2xl md:text-3xl font-bold mb-2 text-primary">
               Notre solution
             </h2>
             <p className="text-muted-foreground mb-8">
-              Ce que Monark vous apporte concrètement.
+              Ce que Monark Lens vous apporte concrètement.
             </p>
             <motion.div
               variants={containerVariants}
@@ -115,9 +108,7 @@ export function ProblemSolutionSection() {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">{solution.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {solution.description}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{solution.description}</p>
                       </div>
                     </CardContent>
                   </Card>
