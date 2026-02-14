@@ -75,7 +75,7 @@ export function useMockSubscription(): UseMockSubscriptionResult {
 
   // Derived values
   const plan = state.planName;
-  const planConfig = useMemo(() => MOCK_PLANS[plan], [plan]);
+  const planConfig = useMemo(() => MOCK_PLANS[plan] || MOCK_PLANS.standard, [plan]);
   const planDisplayName = planConfig.displayName;
   const creditsRemaining = state.creditsRemaining;
   const creditsMax = planConfig.creditsPerCycle;
