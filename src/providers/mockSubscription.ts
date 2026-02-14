@@ -305,12 +305,22 @@ function getDefaultState(): MockSubscriptionState {
   };
 }
 
+// Migrate legacy plan names to new 3-plan model
+function migratePlanName(name: string): PlanType {
+  if (name === 'starter') return 'standard';
+  if (name === 'elite') return 'pro';
+  if (name in MOCK_PLANS) return name as PlanType;
+  return 'standard'; // safe fallback
+}
+
 // Get current state from localStorage
 export function getMockSubscriptionState(): MockSubscriptionState {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const state = JSON.parse(stored) as MockSubscriptionState;
+      // Migrate legacy plan names
+      state.planName = migratePlanName(state.planName);
       // Check if reset is needed (past reset date)
       if (new Date(state.creditsResetDate) < new Date()) {
         return resetCredits(state);
