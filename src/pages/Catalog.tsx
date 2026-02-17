@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, TrendingUp, TrendingDown, LayoutGrid, List, RotateCcw, Layers } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, LayoutGrid, List, RotateCcw } from "lucide-react";
+import { VariantsBadge } from "@/components/catalog/VariantsBadge";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCategories, useManufacturers, useBrands, useFamilies, useCatalogModels, useAddModelToWatchlist, type CatalogFilters } from "@/hooks/useCatalog";
@@ -457,10 +458,7 @@ export default function Catalog() {
                                   </Badge>
                                 )}
                                 {model.variants_count != null && model.variants_count > 0 && (
-                                  <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                                    <Layers className="h-3 w-3" />
-                                    {model.variants_count} var.
-                                  </span>
+                                  <VariantsBadge variantsCount={model.variants_count} />
                                 )}
                               </div>
                             </div>

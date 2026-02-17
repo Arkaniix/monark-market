@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { TrendingUp, TrendingDown, Package, Layers } from "lucide-react";
+import { TrendingUp, TrendingDown, Package } from "lucide-react";
+import { VariantsBadge } from "./VariantsBadge";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,10 +82,7 @@ export function ModelListRow({
             <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               <Badge variant="secondary" className="text-xs px-2 py-0.5">{model.category}</Badge>
               {model.variants_count != null && model.variants_count > 0 && (
-                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                  <Layers className="h-3 w-3" />
-                  {model.variants_count} var.
-                </span>
+                <VariantsBadge variantsCount={model.variants_count} />
               )}
             </div>
           </div>
