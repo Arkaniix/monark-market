@@ -793,9 +793,9 @@ export const MOCK_CATEGORIES = [
 ];
 
 export const MOCK_BRANDS_BY_CATEGORY: Record<string, string[]> = {
-  GPU: ['NVIDIA', 'AMD', 'Intel'],
+  GPU: ['ASUS', 'MSI', 'Gigabyte', 'EVGA', 'Sapphire', 'XFX', 'Zotac', 'PowerColor', 'Palit', 'PNY', 'Gainward', 'Inno3D', 'KFA2', 'Colorful'],
   CPU: ['AMD', 'Intel'],
-  RAM: ['G.Skill', 'Corsair', 'Kingston', 'Crucial'],
+  RAM: ['G.Skill', 'Corsair', 'Kingston', 'Crucial', 'TeamGroup'],
   SSD: ['Samsung', 'WD', 'Crucial', 'Kingston', 'Seagate'],
   Motherboard: ['ASUS', 'MSI', 'Gigabyte', 'ASRock'],
 };

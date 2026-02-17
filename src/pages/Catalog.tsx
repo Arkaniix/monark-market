@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, TrendingUp, TrendingDown, LayoutGrid, List, RotateCcw } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, LayoutGrid, List, RotateCcw, Layers } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCategories, useManufacturers, useBrands, useFamilies, useCatalogModels, useAddModelToWatchlist, type CatalogFilters } from "@/hooks/useCatalog";
@@ -455,6 +455,12 @@ export default function Catalog() {
                                   <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-normal border-primary/30 text-primary/80">
                                     {model.manufacturer}
                                   </Badge>
+                                )}
+                                {model.variants_count != null && model.variants_count > 0 && (
+                                  <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                    <Layers className="h-3 w-3" />
+                                    {model.variants_count} var.
+                                  </span>
                                 )}
                               </div>
                             </div>

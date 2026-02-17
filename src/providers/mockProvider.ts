@@ -259,6 +259,66 @@ function delay(ms: number = 200): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Generate mock GPU constructor variants
+function generateMockVariants(modelName: string, modelId: number): import('./types').ModelVariant[] {
+  const variantBrands = ['ASUS', 'MSI', 'Gigabyte', 'EVGA', 'Zotac', 'PNY', 'Palit', 'Gainward', 'Sapphire', 'PowerColor', 'XFX', 'Inno3D', 'KFA2', 'Colorful'];
+  const variantSuffixes: Record<string, string[]> = {
+    ASUS: ['TUF GAMING OC', 'ROG Strix OC', 'Dual OC', 'ProArt'],
+    MSI: ['Ventus 2X', 'Gaming X Trio', 'Suprim X', 'Mech 2X'],
+    Gigabyte: ['WINDFORCE OC', 'EAGLE OC', 'AORUS Master', 'Gaming OC'],
+    EVGA: ['XC3 Ultra', 'FTW3 Ultra', 'SC Gaming'],
+    Zotac: ['Twin Edge OC', 'AMP Extreme', 'Trinity OC'],
+    PNY: ['Verto OC', 'XLR8 Epic-X', 'Uprising'],
+    Palit: ['GameRock OC', 'JetStream', 'Dual OC'],
+    Gainward: ['Phantom GS', 'Phoenix', 'Ghost'],
+    Sapphire: ['Nitro+', 'Pulse', 'Toxic'],
+    PowerColor: ['Red Devil', 'Fighter', 'Hellhound'],
+    XFX: ['Speedster MERC 319', 'Speedster SWFT 210', 'Speedster QICK 308'],
+    'Inno3D': ['iChill X3', 'Twin X2 OC', 'Frostbite'],
+    KFA2: ['SG OC', 'EX Gamer', 'HOF'],
+    Colorful: ['iGame Ultra W OC', 'Tomahawk', 'Battle Ax'],
+  };
+  const colors = ['Black', 'Black', 'Black', 'Black/Silver', 'White', 'Black/Red'];
+
+  // Determine which brands to use based on manufacturer
+  const isAMD = modelName.includes('RX');
+  const isIntel = modelName.includes('Arc');
+  let brands: string[];
+  if (isAMD) {
+    brands = ['Sapphire', 'PowerColor', 'XFX', 'ASUS', 'MSI', 'Gigabyte', 'Palit', 'Gainward'];
+  } else if (isIntel) {
+    brands = ['ASUS', 'MSI', 'Gigabyte', 'Inno3D'];
+  } else {
+    // NVIDIA
+    brands = ['ASUS', 'MSI', 'Gigabyte', 'EVGA', 'Zotac', 'PNY', 'Palit', 'Gainward', 'Inno3D', 'KFA2', 'Colorful'];
+  }
+
+  // Use modelId as seed for deterministic variant count
+  const variantCount = 4 + (modelId % 8); // 4 to 11 variants
+  const result: import('./types').ModelVariant[] = [];
+
+  for (let i = 0; i < variantCount; i++) {
+    const brand = brands[i % brands.length];
+    const suffixes = variantSuffixes[brand] || ['OC'];
+    const suffix = suffixes[i % suffixes.length];
+    const baseClock = 1800 + (modelId % 5) * 50;
+    const boostClock = 2400 + (modelId % 7) * 30 + (i % 3) * 40;
+
+    result.push({
+      brand,
+      variant_name: suffix,
+      boost_clock_mhz: boostClock,
+      core_clock_mhz: baseClock,
+      memory_gb: 8 + Math.floor(modelId % 4) * 4,
+      length_mm: 220 + (i % 6) * 20 + (modelId % 4) * 10,
+      color: colors[i % colors.length],
+      price_usd: 400 + (modelId % 10) * 50 + (i % 4) * 30,
+    });
+  }
+
+  return result;
+}
+
 function track(endpoint: string) {
   trackEndpointCall(endpoint, 'mock');
 }
@@ -790,6 +850,7 @@ export const mockProvider: DataProvider = {
       liquidity: m.liquidity,
       ads_count: m.ads_count,
       last_scan_at: m.last_scan_at,
+      variants_count: m.category === 'GPU' ? 4 + (m.id % 8) : 0,
     }));
 
     // Apply filters only if they have meaningful values (use centralized isValidFilter)
@@ -952,6 +1013,8 @@ export const mockProvider: DataProvider = {
         tdp_w: model.category === 'RAM' ? undefined : 50 + (model.id % 10) * 10,
         release_date: '2022-01-15',
       },
+      variants: model.category === 'GPU' ? generateMockVariants(model.name, model.id) : [],
+      variants_count: model.category === 'GPU' ? generateMockVariants(model.name, model.id).length : 0,
       market: {
         median_price: model.median_price,
         price_p25: Math.round(model.median_price * 0.85),
