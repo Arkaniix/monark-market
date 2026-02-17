@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { 
   TrendingUp, TrendingDown, Bell, Heart, Clock, 
-  ExternalLink, Activity, BarChart3, MapPin, Sparkles, Info
+  ExternalLink, Activity, BarChart3, MapPin, Sparkles, Info, Layers
 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
@@ -29,6 +29,7 @@ import { CreateAlertModal, AlertTarget } from "@/components/alerts/CreateAlertMo
 import { ModelDetailSkeleton } from "@/components/model/ModelDetailSkeleton";
 import { ImageGallery } from "@/components/model/ImageGallery";
 import { ModelCardImage } from "@/components/catalog/ModelCardImage";
+import { VariantsSection } from "@/components/model/VariantsSection";
 import { toast } from "@/hooks/use-toast";
 
 export default function ModelDetail() {
@@ -1046,6 +1047,22 @@ export default function ModelDetail() {
           )}
           </Tabs>
         </section>
+
+        {/* Constructor Variants Section */}
+        {model.variants && model.variants.length > 0 && (
+          <motion.section
+            id="variants"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="scroll-mt-8"
+          >
+            <VariantsSection
+              variants={model.variants}
+              variantsCount={model.variants_count || model.variants.length}
+            />
+          </motion.section>
+        )}
 
         {/* Modèles similaires - Section d'exploration */}
         {similarModels && similarModels.length > 0 && (

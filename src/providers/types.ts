@@ -191,6 +191,8 @@ export interface CatalogModel {
   last_scan_at?: string | null;
   aliases?: string[];
   image_url?: string | null;
+  /** Number of constructor variants (e.g. ASUS TUF, MSI Ventus) */
+  variants_count?: number;
 }
 
 export interface CatalogResponse {
@@ -251,6 +253,17 @@ export interface ModelSpecs {
   release_date?: string;
 }
 
+export interface ModelVariant {
+  brand: string;
+  variant_name: string;
+  boost_clock_mhz?: number | null;
+  core_clock_mhz?: number | null;
+  memory_gb?: number | null;
+  length_mm?: number | null;
+  color?: string | null;
+  price_usd?: number | null;
+}
+
 export interface ModelDetail {
   id: number;
   name: string;
@@ -264,6 +277,9 @@ export interface ModelDetail {
   specs: ModelSpecs;
   /** Array of image URLs for the model gallery */
   images?: string[];
+  /** Constructor variants (e.g. ASUS TUF, MSI Ventus) */
+  variants?: ModelVariant[];
+  variants_count?: number;
   market: {
     median_price: number;
     price_p25: number;
