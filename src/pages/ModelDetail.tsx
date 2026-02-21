@@ -186,6 +186,25 @@ export default function ModelDetail() {
                 images={model.images} 
                 modelName={`${model.brand} ${model.name}`} 
               />
+            ) : model.image_url ? (
+              <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm">
+                <div className="aspect-[4/3] bg-muted/30">
+                  <img
+                    src={model.image_url}
+                    alt={`${model.brand} ${model.name}`}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-muted-foreground text-sm">' + model.name + '</div>';
+                    }}
+                  />
+                </div>
+                <div className="bg-muted/50 text-center py-1 border-t border-border/30">
+                  <span className="text-[9px] text-muted-foreground/60 italic">
+                    Image non contractuelle
+                  </span>
+                </div>
+              </div>
             ) : (
               <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm">
                 <ModelCardImage

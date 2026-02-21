@@ -247,8 +247,12 @@ export const apiProvider: DataProvider = {
       category: category?.name || '',
       aliases: model?.aliases || [],
       specs: specs || {},
+      image_url: model?.image_url || null,
       images: response?.images || model?.images || [],
-      variants: response?.variants || [],
+      variants: (response?.variants || []).map((v: any, i: number) => ({
+        ...v,
+        id: v?.id ?? i + 1,
+      })),
       variants_count: response?.variants_count || 0,
       market: marketData,
       is_in_watchlist: false,

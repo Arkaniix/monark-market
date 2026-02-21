@@ -967,6 +967,7 @@ export const mockProvider: DataProvider = {
       family: model.family,
       category: model.category,
       aliases: model.aliases || [],
+      image_url: model.image_url || null,
       specs: model.category === 'GPU' ? {
         // Architecture
         chip: ['AD104', 'AD103', 'AD102', 'GA106', 'GA104', 'GA102'][model.id % 6],
