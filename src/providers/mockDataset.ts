@@ -294,6 +294,7 @@ export interface InternalModel {
   ads_count: number;
   last_scan_at: string;
   aliases: string[];
+  image_url?: string | null;
 }
 
 // ============= Generate Models =============

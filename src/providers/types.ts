@@ -254,6 +254,7 @@ export interface ModelSpecs {
 }
 
 export interface ModelVariant {
+  id?: number;
   brand: string;
   variant_name: string;
   boost_clock_mhz?: number | null;
@@ -262,6 +263,7 @@ export interface ModelVariant {
   length_mm?: number | null;
   color?: string | null;
   price_usd?: number | null;
+  image_url?: string | null;
 }
 
 export interface ModelDetail {
@@ -275,6 +277,8 @@ export interface ModelDetail {
   category: string;
   aliases: string[];
   specs: ModelSpecs;
+  /** Primary image URL */
+  image_url?: string | null;
   /** Array of image URLs for the model gallery */
   images?: string[];
   /** Constructor variants (e.g. ASUS TUF, MSI Ventus) */

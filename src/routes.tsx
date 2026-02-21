@@ -6,6 +6,7 @@ import Auth from "./pages/Auth";
 import Tracking from "./pages/Tracking";
 import Catalog from "./pages/Catalog";
 import ModelDetail from "./pages/ModelDetail";
+import VariantDetail from "./pages/VariantDetail";
 import PCDetail from "./pages/PCDetail";
 import Estimator from "./pages/Estimator";
 import Community from "./pages/Community";
@@ -102,6 +103,11 @@ export const routes: RouteConfig[] = [
   {
     path: "/models/:id",
     component: ModelDetail,
+    requiresAuth: true,
+  },
+  {
+    path: "/variants/:id",
+    component: VariantDetail,
     requiresAuth: true,
   },
   {

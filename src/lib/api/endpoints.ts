@@ -98,6 +98,11 @@ export const MODELS = {
   AUTOCOMPLETE: '/v1/models/autocomplete',
 } as const;
 
+// ============= Variants =============
+export const VARIANTS = {
+  DETAIL: (id: string | number) => `/v1/variants/${id}`,
+} as const;
+
 // ============= Ads =============
 export const ADS = {
   LIST: '/v1/ads',
@@ -226,6 +231,7 @@ export const ENDPOINTS = {
   CATEGORIES,
   CATALOG,
   MODELS,
+  VARIANTS,
   ADS,
   ESTIMATOR,
   NOTIFICATIONS,

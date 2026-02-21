@@ -18,6 +18,7 @@ export function useModelDetail(modelId: string | undefined) {
         category: model.category,
         aliases: model.aliases,
         specs: model.specs,
+        image_url: model.image_url || null,
         images: model.images || [],
         variants: model.variants || [],
         variants_count: model.variants_count || 0,

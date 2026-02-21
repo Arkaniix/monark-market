@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +17,7 @@ type SortKey = "brand" | "variant_name" | "boost_clock_mhz" | "length_mm" | "pri
 type SortDir = "asc" | "desc";
 
 export function VariantsSection({ variants, variantsCount }: VariantsSectionProps) {
+  const navigate = useNavigate();
   const [sortKey, setSortKey] = useState<SortKey>("brand");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [brandFilter, setBrandFilter] = useState("all");
@@ -120,8 +122,14 @@ export function VariantsSection({ variants, variantsCount }: VariantsSectionProp
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((v, i) => (
-                <TableRow key={`${v.brand}-${v.variant_name}-${i}`} className="hover:bg-muted/40">
+              {filtered.map((v, i) => {
+                const variantId = v.id ?? i + 1;
+                return (
+                <TableRow
+                  key={`${v.brand}-${v.variant_name}-${i}`}
+                  className="hover:bg-muted/40 cursor-pointer"
+                  onClick={() => navigate(`/variants/${variantId}`)}
+                >
                   <TableCell>
                     <Badge variant="outline" className="text-xs font-medium">
                       {v.brand}
@@ -141,7 +149,8 @@ export function VariantsSection({ variants, variantsCount }: VariantsSectionProp
                     {fmtPrice(v.price_usd)}
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
               {filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
