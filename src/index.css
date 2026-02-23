@@ -48,6 +48,9 @@ All colors MUST be HSL.
     --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 98%));
     
+    --accent-lime: 75 100% 50%;
+    --accent-violet: 263 70% 58%;
+
     --chart-1: 217 91% 60%;
     --chart-2: 142 76% 36%;
     --chart-3: 38 92% 50%;
@@ -110,6 +113,9 @@ All colors MUST be HSL.
     --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
     --gradient-card: linear-gradient(180deg, hsl(217.2 33% 17%), hsl(217.2 33% 14%));
     
+    --accent-lime: 75 100% 50%;
+    --accent-violet: 263 70% 58%;
+
     --chart-1: 217 91% 65%;
     --chart-2: 142 76% 45%;
     --chart-3: 38 92% 55%;

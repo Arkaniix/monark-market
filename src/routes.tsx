@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Tracking from "./pages/Tracking";
+import LensHistory from "./pages/LensHistory";
 import Catalog from "./pages/Catalog";
 import ModelDetail from "./pages/ModelDetail";
 import VariantDetail from "./pages/VariantDetail";
@@ -82,6 +83,11 @@ export const routes: RouteConfig[] = [
   {
     path: "/tracking",
     component: Tracking,
+    requiresAuth: true,
+  },
+  {
+    path: "/lens-history",
+    component: LensHistory,
     requiresAuth: true,
   },
   // Redirection legacy /trends -> / (tendances sur Home)

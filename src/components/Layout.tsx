@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, Radar, Home, Puzzle, User, Menu, Calculator, Users, GraduationCap, LogOut, Shield, Scale, MessageCircle } from "lucide-react";
+import { Search, Radar, Home, Eye, User, Menu, Calculator, Users, GraduationCap, LogOut, Shield, Scale, MessageCircle } from "lucide-react";
 import { useTheme } from "next-themes";
 import monarkLogoLight from "@/assets/logo.png";
 import monarkLogoDark from "@/assets/logo-dark-text.png";
@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 const navigation = [
   { name: "Accueil", href: "/", icon: Home },
   { name: "Suivi", href: "/tracking", icon: Radar },
+  { name: "Historique Lens", href: "/lens-history", icon: Eye },
   { name: "Catalogue", href: "/catalog", icon: Search },
   { name: "Estimator", href: "/estimator", icon: Calculator },
   { name: "Communauté", href: "/community", icon: Users },
