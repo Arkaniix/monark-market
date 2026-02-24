@@ -1,11 +1,15 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Eye, Search, RotateCcw, Bookmark, Bell, Zap, FlaskConical, Loader2, ExternalLink, TrendingUp, TrendingDown, BarChart3, Droplets, ScanSearch, Award, Clock } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search, RotateCcw, Bookmark, Bell, Zap, FlaskConical, Loader2,
+  ExternalLink, TrendingUp, TrendingDown, BarChart3, Droplets,
+  ScanSearch, Award, Clock, MapPin, ChevronDown, ChevronUp, Eye,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -105,133 +109,120 @@ const MOCK_HISTORY: LensEntry[] = [
 ];
 
 // ── Helpers ──
-const PLATFORM_STYLES: Record<string, string> = {
-  Leboncoin: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
-  eBay: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  Vinted: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20",
-  "Facebook Marketplace": "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+const PLATFORM_COLORS: Record<string, string> = {
+  Leboncoin: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  eBay: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  Vinted: "bg-teal-500/10 text-teal-400 border-teal-500/20",
+  "Facebook Marketplace": "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
 };
 
-const TYPE_LABELS: Record<string, string> = { PC_COMPLET: "PC COMPLET", COMPOSANT: "COMPOSANT", LOT: "LOT" };
-
-const VERDICT_STYLES: Record<string, string> = {
-  BONNE_AFFAIRE: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
-  PRIX_CORRECT: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  SUREVALUE: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+const VERDICT_CONFIG: Record<string, { label: string; class: string }> = {
+  BONNE_AFFAIRE: { label: "Bonne affaire", class: "bg-green-500/15 text-green-400 border-green-500/30" },
+  PRIX_CORRECT: { label: "Prix correct", class: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+  SUREVALUE: { label: "Surévalué", class: "bg-red-500/15 text-red-400 border-red-500/30" },
 };
-const VERDICT_LABELS: Record<string, string> = { BONNE_AFFAIRE: "BONNE AFFAIRE", PRIX_CORRECT: "PRIX CORRECT", SUREVALUE: "SURÉVALUÉ" };
+
+const TYPE_LABELS: Record<string, string> = { PC_COMPLET: "PC complet", COMPOSANT: "Composant", LOT: "Lot" };
 
 function relativeDate(iso: string) {
   return formatDistanceToNow(new Date(iso), { addSuffix: true, locale: fr });
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
-};
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-};
-
-// ── Sub-components ──
-
-function StatsBar() {
-  const stats = [
-    { label: "Annonces scannées", value: "47", icon: ScanSearch, color: "text-primary" },
-    { label: "Crédits gagnés", value: "+127", icon: Award, color: "text-green-600 dark:text-green-400" },
-    { label: "Bonnes affaires", value: "8", icon: TrendingUp, color: "text-green-600 dark:text-green-400" },
-    { label: "Temps économisé", value: "2h30", icon: Clock, color: "text-muted-foreground" },
-  ];
-  return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      {stats.map((s) => (
-        <motion.div key={s.label} variants={itemVariants}>
-          <Card className="p-3 md:p-4 flex items-center min-h-[72px]">
-            <div className="flex items-center gap-3 w-full">
-              <div className="p-2 rounded-lg bg-muted flex-shrink-0">
-                <s.icon className={cn("h-4 w-4 md:h-5 md:w-5", s.color)} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs md:text-sm text-muted-foreground truncate">{s.label}</p>
-                <p className="text-lg md:text-xl font-bold">{s.value}</p>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-      ))}
-    </motion.div>
-  );
-}
-
-function QuickAnalysisPanel({ analysis }: { analysis: QuickAnalysis }) {
+// ── Quick Analysis Panel ──
+function QuickAnalysisPanel({ analysis, onDeepAnalysis }: { analysis: QuickAnalysis; onDeepAnalysis: () => void }) {
   const metrics = [
     { label: "Écart marché", value: analysis.gap, icon: TrendingDown },
     { label: "Tendance 30j", value: analysis.trend30d, icon: TrendingUp },
-    { label: "Volume ventes", value: analysis.volume, icon: BarChart3 },
+    { label: "Volume", value: analysis.volume, icon: BarChart3 },
     { label: "Liquidité", value: analysis.liquidity, icon: Droplets },
   ];
   return (
-    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} transition={{ duration: 0.3 }} className="mt-4 pt-4 border-t space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {metrics.map((m) => (
-          <div key={m.label} className="p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
-              <m.icon className="h-3.5 w-3.5" />
-              {m.label}
-            </div>
-            <p className="font-semibold text-sm">{m.value}</p>
-          </div>
-        ))}
-      </div>
-      <div className="p-3 bg-muted/50 rounded-lg">
-        <p className="text-xs font-semibold text-muted-foreground mb-2">Détails du marché</p>
-        <div className="space-y-1.5">
-          {analysis.details.map((d, i) => (
-            <div key={i} className="flex justify-between text-xs">
-              <span className="text-muted-foreground">{d.label}</span>
-              <span className={cn("font-medium", d.positive === false ? "text-destructive" : "text-foreground")}>{d.value}</span>
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.25 }}
+      className="overflow-hidden"
+    >
+      <div className="pt-3 mt-3 border-t border-border space-y-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {metrics.map((m) => (
+            <div key={m.label} className="p-2.5 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-1 text-muted-foreground text-[11px] mb-0.5">
+                <m.icon className="h-3 w-3" />
+                {m.label}
+              </div>
+              <p className="font-semibold text-sm">{m.value}</p>
             </div>
           ))}
         </div>
-      </div>
-      <div className="p-3 bg-muted/50 rounded-lg">
-        <p className="text-xs font-semibold text-muted-foreground mb-2">Insights</p>
-        <ul className="space-y-1">
-          {analysis.insights.map((ins, i) => (
-            <li key={i} className="text-xs text-muted-foreground">{ins}</li>
-          ))}
-        </ul>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="p-2.5 bg-muted/50 rounded-lg">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Détails</p>
+            <div className="space-y-1">
+              {analysis.details.map((d, i) => (
+                <div key={i} className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">{d.label}</span>
+                  <span className={cn("font-medium", d.positive === false ? "text-destructive" : "")}>{d.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="p-2.5 bg-muted/50 rounded-lg">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Insights</p>
+            <ul className="space-y-0.5">
+              {analysis.insights.map((ins, i) => (
+                <li key={i} className="text-xs text-muted-foreground">{ins}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <Button size="sm" variant="secondary" className="w-full text-xs" onClick={onDeepAnalysis}>
+          <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
+          Analyse approfondie · 20 cr.
+        </Button>
       </div>
     </motion.div>
   );
 }
 
-function LensCard({ entry }: { entry: LensEntry }) {
+// ── Scan Card ──
+function ScanCard({ entry }: { entry: LensEntry }) {
   const navigate = useNavigate();
   const [watchlisted, setWatchlisted] = useState(entry.watchlisted);
   const [alertActive, setAlertActive] = useState(entry.alertActive);
   const [quickResult, setQuickResult] = useState<QuickAnalysis | null>(entry.analysisQuick);
+  const [expanded, setExpanded] = useState(!!entry.analysisQuick);
   const [loading, setLoading] = useState(false);
 
+  const verdict = VERDICT_CONFIG[entry.verdict];
+  const gapPositive = entry.gap > 0;
+
   const handleQuickAnalysis = () => {
-    if (quickResult) return;
+    if (quickResult) {
+      setExpanded(!expanded);
+      return;
+    }
     setLoading(true);
     setTimeout(() => {
-      setQuickResult({
-        gap: `${entry.gap > 0 ? "+" : ""}${entry.gap}%`,
-        trend30d: entry.gap > 0 ? "+2.1%" : "-4.2%",
+      const result: QuickAnalysis = {
+        gap: `${gapPositive ? "+" : ""}${entry.gap}%`,
+        trend30d: gapPositive ? "+2.1%" : "-4.2%",
         volume: "Modéré",
         liquidity: "6.3/10",
         details: [
           { label: "Valeur médiane 30j", value: `${entry.marketValue}€` },
           { label: "Prix annonce", value: `${entry.price}€` },
-          { label: "Écart", value: `${entry.gap > 0 ? "+" : ""}${entry.gap}% ${entry.gap > 0 ? "sous-évalué" : "surévalué"}`, positive: entry.gap > 0 },
+          { label: "Écart", value: `${gapPositive ? "+" : ""}${entry.gap}% ${gapPositive ? "sous-évalué" : "surévalué"}`, positive: gapPositive },
         ],
-        insights: entry.gap > 0
+        insights: gapPositive
           ? ["🟢 Prix inférieur au marché", "🟢 Composant populaire, revente facile", "🟡 Vérifier l'état réel"]
           : ["🔴 Prix au-dessus du marché", "🟡 Marge de négociation possible", "🟡 Tendance baissière récente"],
-      });
+      };
+      setQuickResult(result);
+      setExpanded(true);
       setLoading(false);
     }, 1500);
   };
@@ -242,141 +233,138 @@ function LensCard({ entry }: { entry: LensEntry }) {
   };
 
   return (
-    <Card className="hover:border-primary/50 transition-colors">
-      <CardContent className="p-4 space-y-2.5">
-        {/* Header badges */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge variant="outline" className={cn("text-[10px]", PLATFORM_STYLES[entry.platform])}>
+    <Card className="hover:border-primary/30 transition-colors group">
+      <CardContent className="p-4">
+        {/* Row 1: badges + date */}
+        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", PLATFORM_COLORS[entry.platform])}>
             {entry.platform}
           </Badge>
-          <Badge variant="outline" className="text-[10px]">
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
             {TYPE_LABELS[entry.type] || entry.type}
           </Badge>
-          <Badge variant="outline" className={cn("text-[10px]", VERDICT_STYLES[entry.verdict])}>
-            {VERDICT_LABELS[entry.verdict] || entry.verdict}
+          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-medium", verdict?.class)}>
+            {verdict?.label || entry.verdict}
           </Badge>
           <span className="ml-auto text-[11px] text-muted-foreground shrink-0">
             {relativeDate(entry.date)}
           </span>
         </div>
 
-        {/* Title */}
-        <p className="text-sm font-semibold truncate">{entry.title}</p>
+        {/* Row 2: title */}
+        <p className="text-sm font-semibold truncate mb-2">{entry.title}</p>
 
-        {/* Key info */}
-        <div className="flex items-baseline gap-2 flex-wrap text-xs">
-          <span className="text-lg font-bold text-primary">{entry.price}€</span>
-          <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">Valeur marché : {entry.marketValue}€</span>
-          <span className="text-muted-foreground">·</span>
-          <span className={cn("font-semibold", entry.gap > 0 ? "text-green-600 dark:text-green-400" : entry.gap < -5 ? "text-destructive" : "text-warning")}>
-            {entry.gap > 0 ? "+" : ""}{entry.gap}% {entry.gap > 0 ? "sous-évalué" : "surévalué"}
+        {/* Row 3: price block — the main visual anchor */}
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-xl font-bold text-primary tabular-nums">{entry.price}€</span>
+          <span className="text-xs text-muted-foreground">
+            Marché : {entry.marketValue}€
           </span>
-          <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">{entry.location}</span>
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-[11px] font-semibold",
+              gapPositive
+                ? "bg-green-500/10 text-green-400 border-green-500/20"
+                : entry.gap < -5
+                  ? "bg-red-500/10 text-red-400 border-red-500/20"
+                  : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+            )}
+          >
+            {gapPositive ? "+" : ""}{entry.gap}%
+          </Badge>
+          <div className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground">
+            <MapPin className="h-3 w-3" />
+            {entry.location}
+          </div>
         </div>
 
-        {/* Components chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+        {/* Row 4: components */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 mb-3" style={{ scrollbarWidth: "none" }}>
           {entry.components.slice(0, 4).map((c, i) => (
-            <div key={i} className="shrink-0 flex items-center gap-1.5 bg-muted/50 rounded-md px-2 py-1 text-[11px]">
-              <span className="text-muted-foreground font-medium">{c.type}</span>
-              <span className="text-foreground">{c.name}</span>
-              <span className="text-muted-foreground">·</span>
-              <span className="font-semibold text-primary">{c.score}/10</span>
+            <div key={i} className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px]">
+              <span className="text-muted-foreground">{c.type}</span>
+              <span>{c.name}</span>
+              <span className="text-primary font-semibold">{c.score}</span>
             </div>
           ))}
           {entry.components.length > 4 && (
-            <span className="shrink-0 text-[11px] text-muted-foreground self-center">+{entry.components.length - 4} autres</span>
+            <span className="shrink-0 text-[11px] text-muted-foreground self-center">+{entry.components.length - 4}</span>
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 pt-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setWatchlisted(!watchlisted)}>
-            <Bookmark className={cn("h-4 w-4", watchlisted ? "fill-primary text-primary" : "text-muted-foreground")} />
+        {/* Row 5: actions */}
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="ghost" size="icon" className="h-7 w-7"
+            onClick={() => setWatchlisted(!watchlisted)}
+          >
+            <Bookmark className={cn("h-3.5 w-3.5", watchlisted ? "fill-primary text-primary" : "text-muted-foreground")} />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setAlertActive(!alertActive)}>
-            <Bell className={cn("h-4 w-4", alertActive ? "fill-warning text-warning" : "text-muted-foreground")} />
+          <Button
+            variant="ghost" size="icon" className="h-7 w-7"
+            onClick={() => setAlertActive(!alertActive)}
+          >
+            <Bell className={cn("h-3.5 w-3.5", alertActive ? "fill-amber-400 text-amber-400" : "text-muted-foreground")} />
           </Button>
-          <div className="ml-auto flex gap-2">
-            {quickResult ? null : (
-              <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleQuickAnalysis} disabled={loading}>
-                {loading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Zap className="h-3 w-3 mr-1" />}
-                Analyse rapide · 5 cr.
-              </Button>
-            )}
-            <Button size="sm" variant="secondary" className="h-8 text-xs hidden sm:inline-flex" onClick={handleDeepAnalysis}>
-              <FlaskConical className="h-3 w-3 mr-1" />
-              Approfon. · 20 cr.
+
+          <div className="ml-auto flex gap-1.5">
+            <Button
+              size="sm" variant={quickResult ? "default" : "outline"}
+              className="h-7 text-xs gap-1"
+              onClick={handleQuickAnalysis}
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : quickResult ? (
+                expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+              ) : (
+                <Zap className="h-3 w-3" />
+              )}
+              {quickResult ? "Résultats" : "Analyse · 5 cr."}
+            </Button>
+            <Button
+              size="sm" variant="secondary"
+              className="h-7 text-xs gap-1 hidden sm:inline-flex"
+              onClick={handleDeepAnalysis}
+            >
+              <FlaskConical className="h-3 w-3" />
+              Approfondir · 20 cr.
             </Button>
           </div>
         </div>
 
-        {quickResult && <QuickAnalysisPanel analysis={quickResult} />}
+        {/* Expandable results */}
+        <AnimatePresence>
+          {quickResult && expanded && (
+            <QuickAnalysisPanel analysis={quickResult} onDeepAnalysis={handleDeepAnalysis} />
+          )}
+        </AnimatePresence>
       </CardContent>
     </Card>
   );
 }
 
-function SessionSidebar() {
-  return (
-    <div className="space-y-4 w-full">
-      <Card>
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-            </span>
-            <span className="text-xs font-medium text-green-600 dark:text-green-400">Collecte active</span>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground">Crédits cette session</p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">+7</p>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="p-2 bg-muted/50 rounded-lg">
-              <span className="text-muted-foreground">Annonces</span>
-              <p className="font-semibold">12</p>
-            </div>
-            <div className="p-2 bg-muted/50 rounded-lg">
-              <span className="text-muted-foreground">Durée</span>
-              <p className="font-semibold">38 min</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4 space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground">Communauté</p>
-          <p className="text-xs text-muted-foreground">Gagnez plus de crédits en participant aux missions communautaires.</p>
-          <Button variant="outline" size="sm" className="w-full text-xs" asChild>
-            <a href="/community">Voir les missions →</a>
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
+// ── Empty State ──
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="p-4 rounded-full bg-muted mb-6">
-        <Eye className="h-12 w-12 text-muted-foreground" strokeWidth={1.5} />
+        <Eye className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
       </div>
       <h3 className="text-lg font-semibold mb-2">Aucune annonce scannée</h3>
-      <p className="text-sm text-muted-foreground max-w-md mb-6">
-        Installez Monark Lens et naviguez sur Leboncoin, eBay ou Vinted pour voir apparaître vos scans ici.
+      <p className="text-sm text-muted-foreground max-w-sm mb-6">
+        Installez Monark Lens et naviguez sur Leboncoin, eBay ou Vinted pour voir vos scans ici.
       </p>
       <div className="flex gap-3">
-        <Button size="lg" className="gap-2">
+        <Button className="gap-2">
           <ExternalLink className="h-4 w-4" />
           Installer Monark Lens
         </Button>
-        <Button size="lg" variant="outline">Voir le catalogue →</Button>
+        <Button variant="outline" asChild>
+          <a href="/catalog">Voir le catalogue</a>
+        </Button>
       </div>
     </div>
   );
@@ -389,6 +377,8 @@ export default function LensHistory() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [verdictFilter, setVerdictFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
+
+  const hasActiveFilters = search || platformFilter !== "all" || typeFilter !== "all" || verdictFilter !== "all" || dateFilter !== "all";
 
   const resetFilters = () => {
     setSearch("");
@@ -412,76 +402,103 @@ export default function LensHistory() {
     });
   }, [search, platformFilter, typeFilter, verdictFilter, dateFilter]);
 
+  // Stats derived from data
+  const totalCredits = MOCK_HISTORY.reduce((s, e) => s + e.creditsEarned, 0);
+  const goodDeals = MOCK_HISTORY.filter((e) => e.verdict === "BONNE_AFFAIRE").length;
+
   return (
     <div className="min-h-screen py-6 md:py-8">
-      <div className="container max-w-7xl space-y-6">
+      <div className="container max-w-4xl space-y-5">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-2">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
-                <ScanSearch className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                <ScanSearch className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Mes Scans</h1>
-                <p className="text-sm md:text-base text-muted-foreground">
-                  Annonces analysées via Monark Lens
-                </p>
+                <h1 className="text-2xl font-bold">Mes Scans</h1>
+                <p className="text-sm text-muted-foreground">Annonces analysées via Monark Lens</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                </span>
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">Extension active</span>
-              </div>
-              <Button variant="outline" size="sm" className="gap-2" asChild>
-                <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Installer Monark Lens
-                </a>
-              </Button>
-            </div>
+            <Button variant="outline" size="sm" className="shrink-0 gap-1.5 text-xs" asChild>
+              <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" />
+                Installer Lens
+              </a>
+            </Button>
           </div>
         </motion.div>
 
-        {/* Stats */}
-        <StatsBar />
+        {/* Stats row */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+          className="grid grid-cols-3 gap-3"
+        >
+          <Card className="p-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-md bg-primary/10">
+                <ScanSearch className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xl font-bold tabular-nums">{MOCK_HISTORY.length}</p>
+                <p className="text-[11px] text-muted-foreground">Scans</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-md bg-green-500/10">
+                <Award className="h-4 w-4 text-green-400" />
+              </div>
+              <div>
+                <p className="text-xl font-bold tabular-nums text-green-400">+{totalCredits}</p>
+                <p className="text-[11px] text-muted-foreground">Crédits</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-md bg-green-500/10">
+                <TrendingUp className="h-4 w-4 text-green-400" />
+              </div>
+              <div>
+                <p className="text-xl font-bold tabular-nums">{goodDeals}</p>
+                <p className="text-[11px] text-muted-foreground">Bonnes affaires</p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
 
         {/* Filters */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.4 }} className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+          className="flex flex-wrap items-center gap-2"
+        >
+          <div className="relative flex-1 min-w-[180px] max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Rechercher une annonce, un composant..."
-              className="pl-9"
+              placeholder="Rechercher..."
+              className="pl-8 h-8 text-xs"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <Select value={platformFilter} onValueChange={setPlatformFilter}>
-            <SelectTrigger className="w-[150px] text-xs"><SelectValue placeholder="Plateforme" /></SelectTrigger>
+            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Plateforme" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toutes</SelectItem>
               <SelectItem value="Leboncoin">Leboncoin</SelectItem>
               <SelectItem value="eBay">eBay</SelectItem>
               <SelectItem value="Vinted">Vinted</SelectItem>
-              <SelectItem value="Facebook Marketplace">Facebook</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[150px] text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes annonces</SelectItem>
-              <SelectItem value="PC_COMPLET">PC complet</SelectItem>
-              <SelectItem value="COMPOSANT">Composant seul</SelectItem>
-              <SelectItem value="LOT">Lot</SelectItem>
             </SelectContent>
           </Select>
           <Select value={verdictFilter} onValueChange={setVerdictFilter}>
-            <SelectTrigger className="w-[130px] text-xs"><SelectValue placeholder="Verdict" /></SelectTrigger>
+            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Verdict" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous</SelectItem>
               <SelectItem value="BONNE_AFFAIRE">Bonne affaire</SelectItem>
@@ -489,47 +506,52 @@ export default function LensHistory() {
               <SelectItem value="SUREVALUE">Surévalué</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-[140px] text-xs"><SelectValue placeholder="Date" /></SelectTrigger>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes</SelectItem>
-              <SelectItem value="today">Aujourd'hui</SelectItem>
-              <SelectItem value="7d">7 derniers jours</SelectItem>
-              <SelectItem value="30d">30 derniers jours</SelectItem>
+              <SelectItem value="all">Tous</SelectItem>
+              <SelectItem value="PC_COMPLET">PC complet</SelectItem>
+              <SelectItem value="COMPOSANT">Composant</SelectItem>
+              <SelectItem value="LOT">Lot</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" onClick={resetFilters}>
-            <RotateCcw className="h-4 w-4" />
-          </Button>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground gap-1" onClick={resetFilters}>
+              <RotateCcw className="h-3 w-3" />
+              Reset
+            </Button>
+          )}
         </motion.div>
 
-        {/* Main content */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 md:gap-6 items-start">
-          {/* Feed */}
-          <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-3">
-            {filtered.length === 0 ? (
-              <EmptyState />
-            ) : (
-              filtered.map((entry) => (
-                <motion.div key={entry.id} variants={itemVariants}>
-                  <LensCard entry={entry} />
-                </motion.div>
-              ))
-            )}
-            {filtered.length > 0 && (
-              <Button variant="outline" className="w-full">
-                Charger plus
-              </Button>
-            )}
-          </motion.div>
+        {/* Results count */}
+        <p className="text-xs text-muted-foreground">
+          {filtered.length} annonce{filtered.length !== 1 ? "s" : ""}
+          {hasActiveFilters ? " (filtrées)" : ""}
+        </p>
 
-          {/* Sidebar - desktop only */}
-          <div className="hidden lg:block">
-            <div className="sticky top-20">
-              <SessionSidebar />
-            </div>
-          </div>
-        </div>
+        {/* Feed */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
+          className="space-y-2.5"
+        >
+          {filtered.length === 0 ? (
+            <EmptyState />
+          ) : (
+            filtered.map((entry) => (
+              <motion.div key={entry.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}>
+                <ScanCard entry={entry} />
+              </motion.div>
+            ))
+          )}
+        </motion.div>
+
+        {filtered.length > 0 && (
+          <Button variant="outline" className="w-full text-xs h-9">
+            Charger plus
+          </Button>
+        )}
       </div>
     </div>
   );
