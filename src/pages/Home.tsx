@@ -50,7 +50,7 @@ export default function Home() {
     creditsResetDate: data?.stats?.credits_reset_date ?? null,
     planName: data?.stats?.plan_name ?? "Free",
     totalAnalyses: data?.stats?.total_scraps ?? 0,
-    averageScore: (data?.stats as any)?.average_score ?? 6.4,
+    averageScore: (data?.stats as any)?.average_score ?? null,
     watchlistCount: data?.stats?.watchlist_count ?? 0,
     estimatedGains: data?.stats?.estimated_gains ?? 0,
   };

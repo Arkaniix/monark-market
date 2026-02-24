@@ -484,12 +484,15 @@ export const mockProvider: DataProvider = {
   async getDashboard() {
     track('getDashboard');
     await delay();
-    const watchlist = initializeWatchlist();
+     const watchlist = initializeWatchlist();
     const credits = getCreditsFromSubscription();
     const notifications = initializeNotifications();
+    const alerts = initializeAlerts();
     const trainingProgress = getFromStorage(STORAGE_KEYS.TRAINING_PROGRESS, mockUserProgress);
     const subState = getMockSubscriptionState();
     const planConfig = MOCK_PLANS[subState.planName];
+
+    const dealNotifs = notifications.filter(n => n.type === 'deal_detected');
 
     return {
       user: {
@@ -501,15 +504,25 @@ export const mockProvider: DataProvider = {
         credits_remaining: credits.credits_remaining,
         credits_reset_date: credits.credits_reset_date ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         plan_name: planConfig.displayName,
-        total_scraps: 47,
+        total_scraps: watchlist.length * 3 + dealNotifs.length * 2,
         watchlist_count: watchlist.length,
-        estimated_gains: 340,
+        estimated_gains: Math.round(watchlist.length * 45 + dealNotifs.length * 28),
       },
       last_scrap_date: new Date(Date.now() - 3600000).toISOString(),
       recent_activity: [
-        { id: 1, type: 'scrap' as const, description: 'Scrap RTX 4060 terminé', date: new Date().toISOString() },
-        { id: 2, type: 'alert' as const, description: 'Alerte prix déclenchée', date: new Date(Date.now() - 3600000).toISOString() },
-      ],
+        ...notifications.slice(0, 3).map(n => ({
+          id: typeof n.id === 'number' ? n.id : parseInt(String(n.id)) || 0,
+          type: n.type === 'deal_detected' ? 'scan' as const : 'alert' as const,
+          description: n.message || n.title,
+          date: n.created_at,
+        })),
+        ...alerts.slice(0, 2).map(a => ({
+          id: (a.id as number) + 1000,
+          type: 'alert' as const,
+          description: `Alerte active : ${a.target_name || 'composant'}`,
+          date: a.created_at,
+        })),
+      ].slice(0, 5),
       performance_data: Array.from({ length: 30 }, (_, i) => ({
         day: i + 1,
         scraps: Math.floor(Math.random() * 5) + 1,
