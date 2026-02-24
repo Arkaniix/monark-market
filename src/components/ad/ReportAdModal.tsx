@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { apiPost } from "@/lib/api";
 import { Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,26 +61,30 @@ export function ReportAdModal({ adId, adTitle }: ReportAdModalProps) {
 
     setIsSubmitting(true);
 
-    // Mock submission - in production, this would call an API
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    console.log("Report submitted:", {
-      adId,
-      problemType,
-      comment,
-      timestamp: new Date().toISOString(),
-    });
+    try {
+      await apiPost(`/v1/ads/${adId}/report`, {
+        problem_type: problemType,
+        comment: comment || undefined,
+      });
 
     toast({
       title: "Signalement envoyé",
       description: "Merci pour votre contribution à l'amélioration de la base de données.",
     });
 
-    // Reset and close
-    setProblemType("");
-    setComment("");
-    setIsSubmitting(false);
-    setOpen(false);
+      // Reset and close
+      setProblemType("");
+      setComment("");
+      setOpen(false);
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'envoyer le signalement. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOpenChange = (newOpen: boolean) => {
