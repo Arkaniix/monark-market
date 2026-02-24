@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 import { Calculator, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown, ArrowLeft, ScanSearch } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEnhancedEstimationHistory } from "@/hooks";
+import type { EnhancedEstimationHistoryItem } from "@/types/estimator";
 import { useToast } from "@/hooks/use-toast";
 import { useModelsSearch } from "@/hooks";
 import type { ModelAutocomplete, DealItem } from "@/providers/types";
@@ -45,6 +50,7 @@ import { Handshake, TrendingUp, BarChart3, Target } from "lucide-react";
 export default function Estimator() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Entitlements
   const { plan, limits, helpers } = useEntitlements();
@@ -62,7 +68,8 @@ export default function Estimator() {
 
   // NEW: Options state
   const [options, setOptions] = useState<EstimationOptions>(DEFAULT_ESTIMATION_OPTIONS);
-
+  const [activeTab, setActiveTab] = useState<"estimator" | "history">("estimator");
+  const [historyPage, setHistoryPage] = useState(1);
   // Result state - now enhanced
   const [result, setResult] = useState<EnhancedEstimationResult | null>(null);
 
@@ -71,6 +78,19 @@ export default function Estimator() {
   
   // NEW: Enhanced estimation hook
   const enhancedEstimation = useEnhancedEstimation();
+
+  // History query
+  const {
+    data: historyData,
+    isLoading: isLoadingHistory,
+    isError: isHistoryError,
+    refetch: refreshHistory,
+  } = useEnhancedEstimationHistory(historyPage, activeTab === "history");
+
+  const historyState = isLoadingHistory ? "loading"
+    : isHistoryError ? "error"
+    : historyData?.items?.length === 0 ? "empty"
+    : "success";
 
   const getCategoryIcon = (category: string) => {
     switch (category?.toUpperCase()) {
@@ -306,16 +326,20 @@ export default function Estimator() {
           <PlanBadge plan={plan} />
         </motion.div>
 
-        {/* Link to Mes Analyses (replaces Tabs) */}
-        <div className="flex items-center justify-between mb-8">
-          <div />
-          <Button variant="ghost" size="sm" className="text-xs gap-1.5 text-muted-foreground" asChild>
-            <Link to="/lens-history">
+        {/* Tabs: Estimator + History */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "estimator" | "history")}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="estimator" className="gap-1.5">
+              <Calculator className="h-3.5 w-3.5" />
+              Estimation
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-1.5">
               <History className="h-3.5 w-3.5" />
-              Voir mes analyses
-            </Link>
-          </Button>
-        </div>
+              Historique
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="estimator">
 
         {/* Lens pre-fill banner */}
         {searchParams.get('source') === 'lens' && (
@@ -685,6 +709,131 @@ export default function Estimator() {
             </motion.div>
           )}
         </AnimatePresence>
+          </TabsContent>
+
+          {/* History Tab */}
+          <TabsContent value="history">
+            <Card className="shadow-lg">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <History className="h-4 w-4 text-primary" />
+                    Historique des estimations
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => refreshHistory()} disabled={isLoadingHistory}>
+                      <RefreshCw className={cn("h-4 w-4", isLoadingHistory && "animate-spin")} />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-xs gap-1.5 text-muted-foreground" asChild>
+                      <Link to="/lens-history?tab=estimations">
+                        <ScanSearch className="h-3.5 w-3.5" />
+                        Voir dans Mes Analyses
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-2.5">
+                  💡 Vos estimations complètes sont aussi disponibles dans{" "}
+                  <Link to="/lens-history?tab=estimations" className="text-primary hover:underline font-medium">
+                    Mes Analyses
+                  </Link>
+                  . Les données affichées correspondent au plan actif lors de l'estimation.
+                </p>
+
+                {historyState === "loading" && (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <Card key={i} className="p-4">
+                        <Skeleton className="h-4 w-2/3 mb-2" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-3 w-20" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {historyState === "error" && (
+                  <div className="flex flex-col items-center py-10">
+                    <RefreshCw className="h-8 w-8 text-muted-foreground mb-3" />
+                    <p className="text-sm text-muted-foreground mb-3">Erreur de chargement</p>
+                    <Button variant="outline" size="sm" onClick={() => refreshHistory()}>
+                      Réessayer
+                    </Button>
+                  </div>
+                )}
+
+                {historyState === "empty" && (
+                  <div className="flex flex-col items-center py-10">
+                    <Calculator className="h-8 w-8 text-muted-foreground mb-3" />
+                    <p className="text-sm font-medium mb-1">Aucune estimation</p>
+                    <p className="text-xs text-muted-foreground mb-4 text-center max-w-xs">
+                      Lancez votre première estimation via le formulaire.
+                    </p>
+                    <Button size="sm" onClick={() => setActiveTab("estimator")}>
+                      Nouvelle estimation
+                    </Button>
+                  </div>
+                )}
+
+                {historyState === "success" && historyData?.items?.map((item) => {
+                  const planColors: Record<string, string> = {
+                    free: "bg-muted/50 text-muted-foreground border-border",
+                    standard: "bg-primary/10 text-primary border-primary/20",
+                    pro: "bg-green-500/15 text-green-400 border-green-500/30",
+                  };
+                  return (
+                    <Card key={item.id} className="hover:border-primary/30 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                              <p className="text-sm font-semibold truncate">{item.model_name}</p>
+                              <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", planColors[item.plan_at_creation] || "")}>
+                                {item.plan_at_creation}
+                              </Badge>
+                              {item.platform && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                  {item.platform}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {item.category} · {item.condition || "État inconnu"}
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-lg font-bold text-primary tabular-nums">{item.ad_price}€</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {new Date(item.created_at).toLocaleDateString("fr-FR")}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-3 justify-end">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 h-7 text-xs"
+                            onClick={() => {
+                              navigate(`/estimator?model_id=${item.model_id}&model_name=${encodeURIComponent(item.model_name)}&price=${item.ad_price}&platform=${item.platform || ""}&condition=${item.condition || ""}&source=history`);
+                              setActiveTab("estimator");
+                            }}
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            Ré-estimer
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
