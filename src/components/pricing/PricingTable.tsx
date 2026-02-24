@@ -34,7 +34,7 @@ export const PLANS: PlanConfig[] = [
     displayName: "Free",
     price: 0,
     creditsPerMonth: 20,
-    description: "Découvrir Monark Lens",
+    description: "Découvrir Monark Lens — Signal gratuit",
     icon: Eye,
   },
   {
@@ -43,7 +43,7 @@ export const PLANS: PlanConfig[] = [
     displayName: "Standard",
     price: 11.99,
     creditsPerMonth: 200,
-    description: "Pour les acheteurs réguliers",
+    description: "Qualifier et décider — acheteurs réguliers",
     popular: true,
     icon: Zap,
   },
@@ -53,7 +53,7 @@ export const PLANS: PlanConfig[] = [
     displayName: "Pro",
     price: 24.99,
     creditsPerMonth: 800,
-    description: "Pour les revendeurs et pros",
+    description: "Flux complet — revendeurs et pros",
     icon: Award,
   },
 ];
@@ -70,12 +70,13 @@ export const PLAN_FEATURES: PlanFeature[] = [
   { name: "Crédits mensuels", free: "20", standard: "200", pro: "800" },
   { name: "Market Score (via extension)", tooltip: "Score 0-10 sur chaque annonce consultée avec l'extension", free: "Score seul", standard: true, pro: true },
   { name: "Verdict + valeur marché", tooltip: "Verdict textuel et comparaison prix annonce vs marché", free: false, standard: true, pro: true },
-  { name: "Analyse rapide (5 cr.)", tooltip: "Médian, écart, tendance, volume, liquidité dans l'overlay", free: false, standard: true, pro: true },
-  { name: "Analyse approfondie (20 cr.)", tooltip: "Redirige vers l'Estimator avec données pré-remplies", free: false, standard: true, pro: true },
+  { name: "Qualifier une annonce (5 cr.)", tooltip: "Analyse inline dans Mes Analyses : médiane, écart, tendance, volume, liquidité", free: false, standard: true, pro: true },
+  { name: "Décision complète (20 cr.)", tooltip: "Ouvre l'Estimator avec les données de l'annonce pré-remplies pour un verdict buy/negotiate/wait/pass complet", free: false, standard: true, pro: true },
   { name: "Accès catalogue composants", tooltip: "Base de données de tous les composants référencés", free: true, standard: true, pro: true },
   { name: "Pages détail modèles", free: true, standard: true, pro: true },
   { name: "Alertes prix actives", free: false, standard: "10", pro: "100" },
   { name: "Watchlist", free: false, standard: "15 items", pro: "Illimité" },
+  { name: "Mes Analyses (historique unifié)", tooltip: "Toutes vos analyses Lens (Signal, Qualifiées, Décisions) au même endroit", free: "5 dernières", standard: "30 jours", pro: "Illimité" },
   { name: "Estimator - Synthèse & Indicateurs", free: false, standard: true, pro: true },
   { name: "Estimator - Bloc décision final", free: false, standard: true, pro: true },
   { name: "Estimator - Prix achat/revente", free: false, standard: true, pro: true },
@@ -85,7 +86,7 @@ export const PLAN_FEATURES: PlanFeature[] = [
   { name: "Tendances marché avancées", free: false, standard: true, pro: true },
   { name: "Estimator - Scénarios comparatifs", free: false, standard: false, pro: true },
   { name: "Estimator - Négociation & Plateformes", free: false, standard: false, pro: true },
-  { name: "Historique étendu", free: false, standard: false, pro: true },
+  { name: "Mes Analyses — historique étendu (Pro)", tooltip: "Accès à tout l'historique Signal + Qualifié + Décision sans limite de date. Standard = 30 derniers jours.", free: false, standard: "30 jours", pro: true },
   { name: "Export de données", free: false, standard: false, pro: true },
   { name: "Priorité d'analyse", free: false, standard: false, pro: true },
 ];
@@ -361,29 +362,28 @@ function getHighlightedFeatures(planId: string): string[] {
     case "free":
       return [
         "20 crédits/mois",
-        "Market Score gratuit (extension)",
-        "Accès catalogue complet",
+        "Market Score (Signal) sur chaque annonce",
         "Collecte passive 1 cr/annonce",
-        "Introduction plateforme",
+        "Mes Analyses — 5 dernières entrées",
+        "Accès catalogue complet",
       ];
     case "standard":
       return [
         "200 crédits/mois",
-        "Verdict + valeur marché",
-        "Analyse rapide + approfondie",
-        "Estimator complet (décision, prix, graphiques)",
+        "Qualifier une annonce — analyse inline (5 cr.)",
+        "Décision complète via Estimator (20 cr.)",
+        "Mes Analyses — 30 jours d'historique",
         "10 alertes + 15 watchlist",
-        "Formation avancée + tendances",
         "Collecte passive 2 cr/annonce",
+        "Formation avancée + tendances",
       ];
     case "pro":
       return [
         "800 crédits/mois",
         "Tout Standard inclus",
-        "Scénarios comparatifs + négociation",
-        "Historique étendu + export CSV",
+        "Mes Analyses — historique illimité + export",
+        "Scénarios comparatifs + négociation (Estimator)",
         "100 alertes + watchlist illimitée",
-        "Missions premium exclusives",
         "Collecte passive 3 cr/annonce",
         "Support prioritaire",
       ];

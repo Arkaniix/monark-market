@@ -17,7 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 const navigation = [
   { name: "Accueil", href: "/", icon: Home },
   { name: "Suivi", href: "/tracking", icon: Radar },
-  { name: "Mes Scans", href: "/lens-history", icon: Eye },
+  { name: "Mes Analyses", href: "/lens-history", icon: Eye },
   { name: "Catalogue", href: "/catalog", icon: Search },
   { name: "Estimator", href: "/estimator", icon: Calculator },
   { name: "Communauté", href: "/community", icon: Users },

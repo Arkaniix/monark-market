@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, RotateCcw, Bookmark, Bell, Zap, FlaskConical, Loader2,
   ExternalLink, TrendingUp, TrendingDown, BarChart3, Droplets,
-  ScanSearch, Award, Clock, MapPin, ChevronDown, ChevronUp, Eye,
+  ScanSearch, Award, Clock, MapPin, ChevronDown, ChevronUp, Eye, Target,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ interface LensEntry {
   analysisDeep: null;
   watchlisted: boolean;
   alertActive: boolean;
+  depth: "signal" | "qualified" | "decision";
 }
 
 // ── Mock Data ──
@@ -64,6 +65,7 @@ const MOCK_HISTORY: LensEntry[] = [
       { type: "SSD", name: "990 Pro 1To", score: 6.9 },
     ],
     analysisQuick: null, analysisDeep: null, watchlisted: true, alertActive: false,
+    depth: "signal",
   },
   {
     id: 2, platform: "eBay", type: "COMPOSANT",
@@ -86,6 +88,7 @@ const MOCK_HISTORY: LensEntry[] = [
       ],
     },
     analysisDeep: null, watchlisted: false, alertActive: true,
+    depth: "qualified",
   },
   {
     id: 3, platform: "Vinted", type: "LOT",
@@ -97,6 +100,7 @@ const MOCK_HISTORY: LensEntry[] = [
       { type: "SSD", name: "SSD 2To", score: 7.1 },
     ],
     analysisQuick: null, analysisDeep: null, watchlisted: false, alertActive: false,
+    depth: "signal",
   },
   {
     id: 4, platform: "Leboncoin", type: "COMPOSANT",
@@ -105,6 +109,7 @@ const MOCK_HISTORY: LensEntry[] = [
     location: "Toulouse", date: "2026-02-23T09:20:00", creditsEarned: 2,
     components: [{ type: "CPU", name: "Ryzen 9 5900X", score: 7.2 }],
     analysisQuick: null, analysisDeep: null, watchlisted: false, alertActive: false,
+    depth: "signal",
   },
 ];
 
@@ -120,6 +125,12 @@ const VERDICT_CONFIG: Record<string, { label: string; class: string }> = {
   BONNE_AFFAIRE: { label: "Bonne affaire", class: "bg-green-500/15 text-green-400 border-green-500/30" },
   PRIX_CORRECT: { label: "Prix correct", class: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
   SUREVALUE: { label: "Surévalué", class: "bg-red-500/15 text-red-400 border-red-500/30" },
+};
+
+const DEPTH_CONFIG = {
+  signal: { label: "Signal", class: "bg-muted/50 text-muted-foreground border-border" },
+  qualified: { label: "Qualifié", class: "bg-primary/10 text-primary border-primary/20" },
+  decision: { label: "Décision", class: "bg-green-500/15 text-green-400 border-green-500/30" },
 };
 
 const TYPE_LABELS: Record<string, string> = { PC_COMPLET: "PC complet", COMPOSANT: "Composant", LOT: "Lot" };
@@ -181,7 +192,7 @@ function QuickAnalysisPanel({ analysis, onDeepAnalysis }: { analysis: QuickAnaly
 
         <Button size="sm" variant="secondary" className="w-full text-xs" onClick={onDeepAnalysis}>
           <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
-          Analyse approfondie · 20 cr.
+          Décision complète · 20 cr. →
         </Button>
       </div>
     </motion.div>
@@ -196,9 +207,11 @@ function ScanCard({ entry }: { entry: LensEntry }) {
   const [quickResult, setQuickResult] = useState<QuickAnalysis | null>(entry.analysisQuick);
   const [expanded, setExpanded] = useState(!!entry.analysisQuick);
   const [loading, setLoading] = useState(false);
+  const [depth, setDepth] = useState<"signal" | "qualified" | "decision">(entry.depth);
 
   const verdict = VERDICT_CONFIG[entry.verdict];
   const gapPositive = entry.gap > 0;
+  const depthConf = DEPTH_CONFIG[depth];
 
   const handleQuickAnalysis = () => {
     if (quickResult) {
@@ -223,11 +236,13 @@ function ScanCard({ entry }: { entry: LensEntry }) {
       };
       setQuickResult(result);
       setExpanded(true);
+      setDepth("qualified");
       setLoading(false);
     }, 1500);
   };
 
   const handleDeepAnalysis = () => {
+    setDepth("decision");
     const comp = entry.components[0];
     const params = new URLSearchParams({
       model_name: comp?.name || entry.title,
@@ -254,6 +269,9 @@ function ScanCard({ entry }: { entry: LensEntry }) {
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-medium", verdict?.class)}>
             {verdict?.label || entry.verdict}
           </Badge>
+          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", depthConf.class)}>
+            {depthConf.label}
+          </Badge>
           <span className="ml-auto text-[11px] text-muted-foreground shrink-0">
             {relativeDate(entry.date)}
           </span>
@@ -262,7 +280,7 @@ function ScanCard({ entry }: { entry: LensEntry }) {
         {/* Row 2: title */}
         <p className="text-sm font-semibold truncate mb-2">{entry.title}</p>
 
-        {/* Row 3: price block — the main visual anchor */}
+        {/* Row 3: price block */}
         <div className="flex items-center gap-3 mb-2">
           <span className="text-xl font-bold text-primary tabular-nums">{entry.price}€</span>
           <span className="text-xs text-muted-foreground">
@@ -330,7 +348,7 @@ function ScanCard({ entry }: { entry: LensEntry }) {
               ) : (
                 <Zap className="h-3 w-3" />
               )}
-              {quickResult ? "Résultats" : "Analyse · 5 cr."}
+              {quickResult ? "Résultats" : "Qualifier · 5 cr."}
             </Button>
             <Button
               size="sm" variant="secondary"
@@ -338,7 +356,7 @@ function ScanCard({ entry }: { entry: LensEntry }) {
               onClick={handleDeepAnalysis}
             >
               <FlaskConical className="h-3 w-3" />
-              Approfondir · 20 cr.
+              Décision complète · 20 cr. →
             </Button>
           </div>
         </div>
@@ -361,9 +379,9 @@ function EmptyState() {
       <div className="p-4 rounded-full bg-muted mb-6">
         <Eye className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
       </div>
-      <h3 className="text-lg font-semibold mb-2">Aucune annonce scannée</h3>
+      <h3 className="text-lg font-semibold mb-2">Aucune analyse</h3>
       <p className="text-sm text-muted-foreground max-w-sm mb-6">
-        Installez Monark Lens et naviguez sur Leboncoin, eBay ou Vinted pour voir vos scans ici.
+        Installez Monark Lens et naviguez sur Leboncoin, eBay ou Vinted pour voir vos analyses ici.
       </p>
       <div className="flex gap-3">
         <Button className="gap-2">
@@ -385,8 +403,9 @@ export default function LensHistory() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [verdictFilter, setVerdictFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
+  const [depthFilter, setDepthFilter] = useState("all");
 
-  const hasActiveFilters = search || platformFilter !== "all" || typeFilter !== "all" || verdictFilter !== "all" || dateFilter !== "all";
+  const hasActiveFilters = search || platformFilter !== "all" || typeFilter !== "all" || verdictFilter !== "all" || dateFilter !== "all" || depthFilter !== "all";
 
   const resetFilters = () => {
     setSearch("");
@@ -394,6 +413,7 @@ export default function LensHistory() {
     setTypeFilter("all");
     setVerdictFilter("all");
     setDateFilter("all");
+    setDepthFilter("all");
   };
 
   const filtered = useMemo(() => {
@@ -402,17 +422,20 @@ export default function LensHistory() {
       if (platformFilter !== "all" && e.platform !== platformFilter) return false;
       if (typeFilter !== "all" && e.type !== typeFilter) return false;
       if (verdictFilter !== "all" && e.verdict !== verdictFilter) return false;
+      if (depthFilter !== "all" && e.depth !== depthFilter) return false;
       if (dateFilter === "today") {
         const today = new Date().toISOString().slice(0, 10);
         if (!e.date.startsWith(today)) return false;
       }
       return true;
     });
-  }, [search, platformFilter, typeFilter, verdictFilter, dateFilter]);
+  }, [search, platformFilter, typeFilter, verdictFilter, dateFilter, depthFilter]);
 
   // Stats derived from data
   const totalCredits = MOCK_HISTORY.reduce((s, e) => s + e.creditsEarned, 0);
-  const goodDeals = MOCK_HISTORY.filter((e) => e.verdict === "BONNE_AFFAIRE").length;
+  const signalCount = MOCK_HISTORY.filter((e) => e.depth === "signal").length;
+  const qualifiedCount = MOCK_HISTORY.filter((e) => e.depth === "qualified").length;
+  const decisionCount = MOCK_HISTORY.filter((e) => e.depth === "decision").length;
 
   return (
     <div className="min-h-screen py-6 md:py-8">
@@ -425,8 +448,8 @@ export default function LensHistory() {
                 <ScanSearch className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Mes Scans</h1>
-                <p className="text-sm text-muted-foreground">Annonces analysées via Monark Lens</p>
+                <h1 className="text-2xl font-bold">Mes Analyses</h1>
+                <p className="text-sm text-muted-foreground">Toutes vos analyses — Signal, Qualifiées, Décisions</p>
               </div>
             </div>
             <Button variant="outline" size="sm" className="shrink-0 gap-1.5 text-xs" asChild>
@@ -443,16 +466,38 @@ export default function LensHistory() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1, duration: 0.4 }}
-          className="grid grid-cols-3 gap-3"
+          className="grid grid-cols-2 md:grid-cols-4 gap-3"
         >
           <Card className="p-3">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-md bg-primary/10">
-                <ScanSearch className="h-4 w-4 text-primary" />
+              <div className="p-1.5 rounded-md bg-muted">
+                <ScanSearch className="h-4 w-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-xl font-bold tabular-nums">{MOCK_HISTORY.length}</p>
-                <p className="text-[11px] text-muted-foreground">Scans</p>
+                <p className="text-xl font-bold tabular-nums">{signalCount}</p>
+                <p className="text-[11px] text-muted-foreground">Signal</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-md bg-primary/10">
+                <Zap className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xl font-bold tabular-nums">{qualifiedCount}</p>
+                <p className="text-[11px] text-muted-foreground">Qualifiées</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-md bg-green-500/10">
+                <Target className="h-4 w-4 text-green-400" />
+              </div>
+              <div>
+                <p className="text-xl font-bold tabular-nums">{decisionCount}</p>
+                <p className="text-[11px] text-muted-foreground">Décisions</p>
               </div>
             </div>
           </Card>
@@ -463,18 +508,7 @@ export default function LensHistory() {
               </div>
               <div>
                 <p className="text-xl font-bold tabular-nums text-green-400">+{totalCredits}</p>
-                <p className="text-[11px] text-muted-foreground">Crédits</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-md bg-green-500/10">
-                <TrendingUp className="h-4 w-4 text-green-400" />
-              </div>
-              <div>
-                <p className="text-xl font-bold tabular-nums">{goodDeals}</p>
-                <p className="text-[11px] text-muted-foreground">Bonnes affaires</p>
+                <p className="text-[11px] text-muted-foreground">Crédits gagnés</p>
               </div>
             </div>
           </Card>
@@ -505,6 +539,15 @@ export default function LensHistory() {
               <SelectItem value="Vinted">Vinted</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={depthFilter} onValueChange={setDepthFilter}>
+            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Profondeur" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes</SelectItem>
+              <SelectItem value="signal">Signal</SelectItem>
+              <SelectItem value="qualified">Qualifiées</SelectItem>
+              <SelectItem value="decision">Décisions</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={verdictFilter} onValueChange={setVerdictFilter}>
             <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Verdict" /></SelectTrigger>
             <SelectContent>
@@ -533,7 +576,7 @@ export default function LensHistory() {
 
         {/* Results count */}
         <p className="text-xs text-muted-foreground">
-          {filtered.length} annonce{filtered.length !== 1 ? "s" : ""}
+          {filtered.length} analyse{filtered.length !== 1 ? "s" : ""}
           {hasActiveFilters ? " (filtrées)" : ""}
         </p>
 

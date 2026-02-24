@@ -7,20 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Calculator, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown, ArrowLeft, ScanSearch } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useModelsSearch, useEnhancedEstimationHistory } from "@/hooks";
+import { useModelsSearch } from "@/hooks";
 import type { ModelAutocomplete, DealItem } from "@/providers/types";
 import { useEntitlements } from "@/hooks/useEntitlements";
-import type { EstimatorFeatures, PlanType } from "@/hooks/useEntitlements";
+import type { PlanType } from "@/hooks/useEntitlements";
 import { PlanBadge } from "@/components/LockedFeatureOverlay";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { EnhancedEstimationHistoryItem } from "@/types/estimator";
 import { MARKETPLACE_PLATFORMS, normalizePlatformKey } from "@/lib/platforms";
 
 // Import NEW enhanced components
@@ -44,14 +40,11 @@ import { useEnhancedEstimation, DEFAULT_ESTIMATION_OPTIONS } from "@/hooks/useEn
 import type { EnhancedEstimationResult, EstimationOptions } from "@/types/estimator";
 import { CONDITION_OPTIONS } from "@/types/estimator";
 
-// Import history locked section helper
-import HistoryLockedSection, { isFeatureAccessible } from "@/components/estimator/HistoryLockedSection";
 import { Handshake, TrendingUp, BarChart3, Target } from "lucide-react";
 
 export default function Estimator() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"estimator" | "history">("estimator");
 
   // Entitlements
   const { plan, limits, helpers } = useEntitlements();
@@ -73,27 +66,8 @@ export default function Estimator() {
   // Result state - now enhanced
   const [result, setResult] = useState<EnhancedEstimationResult | null>(null);
 
-  // History modal state
-  const [viewHistoryItem, setViewHistoryItem] = useState<EnhancedEstimationHistoryItem | null>(null);
-  const [historyPage, setHistoryPage] = useState(1);
-
   // API hooks
   const { models, state: searchState, error: searchError, retry: retrySearch } = useModelsSearch(modelSearch);
-  const shouldFetchHistory = activeTab === "history";
-  const { 
-    data: historyData,
-    isLoading: isLoadingHistory,
-    isError: isHistoryError,
-    error: historyError,
-    refetch: refreshHistory,
-  } = useEnhancedEstimationHistory(historyPage, shouldFetchHistory);
-  
-  // Compute history state for UI
-  const historyState = isLoadingHistory ? "loading" 
-    : isHistoryError ? "error"
-    : historyData?.items?.length === 0 ? "empty"
-    : "success";
-  const retryHistory = refreshHistory;
   
   // NEW: Enhanced estimation hook
   const enhancedEstimation = useEnhancedEstimation();
@@ -138,7 +112,6 @@ export default function Estimator() {
     setAdPrice(ad.price.toString());
     setPlatform(normalizePlatformKey(ad.platform));
     setCondition(ad.condition?.toLowerCase().replace(" ", "-") || "bon");
-    // Reset skip options when selecting an ad
     setOptions(DEFAULT_ESTIMATION_OPTIONS);
   };
 
@@ -169,7 +142,7 @@ export default function Estimator() {
       return;
     }
 
-    // Handle Lens extension pre-fill (from Mes Scans or extension)
+    // Handle Lens extension pre-fill (from Mes Analyses or extension)
     if (lensSource === 'lens') {
       const resolvedName = modelName || (lensComponentId ? `Composant #${lensComponentId}` : '');
       if (resolvedName) {
@@ -244,7 +217,6 @@ export default function Estimator() {
       return;
     }
     
-    // Validate required fields unless skipped
     if (!options.withoutCondition && !condition) {
       toast({
         title: "État manquant",
@@ -299,18 +271,6 @@ export default function Estimator() {
     setOptions(DEFAULT_ESTIMATION_OPTIONS);
   };
 
-  // Get badge for plan at creation
-  const getPlanBadge = (planAtCreation: string) => {
-    switch (planAtCreation) {
-      case 'pro':
-        return <Badge variant="secondary" className="gap-1 text-xs"><Crown className="h-3 w-3" />Pro</Badge>;
-      case 'standard':
-        return <Badge variant="outline" className="text-xs">Standard</Badge>;
-      default:
-        return <Badge variant="outline" className="text-xs opacity-60">Free</Badge>;
-    }
-  };
-
   const canUseEstimator = helpers.canUseEstimator();
 
   // Check if form is valid
@@ -346,677 +306,385 @@ export default function Estimator() {
           <PlanBadge plan={plan} />
         </motion.div>
 
+        {/* Link to Mes Analyses (replaces Tabs) */}
+        <div className="flex items-center justify-between mb-8">
+          <div />
+          <Button variant="ghost" size="sm" className="text-xs gap-1.5 text-muted-foreground" asChild>
+            <Link to="/lens-history">
+              <History className="h-3.5 w-3.5" />
+              Voir mes analyses
+            </Link>
+          </Button>
+        </div>
+
         {/* Lens pre-fill banner */}
         {searchParams.get('source') === 'lens' && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
             <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
               <ScanSearch className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium flex-1">Analyse lancée depuis Monark Lens</span>
+              <span className="text-sm font-medium flex-1">Décision complète — données pré-remplies depuis Mes Analyses</span>
               <Button variant="ghost" size="sm" className="text-xs gap-1 h-7" asChild>
                 <Link to="/lens-history">
                   <ArrowLeft className="h-3 w-3" />
-                  Retour aux scans
+                  Retour à Mes Analyses
                 </Link>
               </Button>
             </div>
           </motion.div>
         )}
 
-        <Tabs value={activeTab} onValueChange={v => setActiveTab(v as "estimator" | "history")} className="mb-8">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-            <TabsTrigger value="estimator" className="gap-2"><Calculator className="h-4 w-4" />Estimation</TabsTrigger>
-            <TabsTrigger value="history" className="gap-2"><History className="h-4 w-4" />Historique</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="estimator" className="mt-8">
-            {/* PC Blocked Warning */}
-            {isPCBlocked && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }} 
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6"
-              >
-                <Card className="border-destructive/50 bg-destructive/5">
-                  <CardContent className="py-4">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-destructive">Estimation non disponible</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          L'estimateur ne prend pas en charge les PC complets ni les lots. 
-                          Pour évaluer un PC, estimez chaque composant individuellement.
-                        </p>
-                        <Button variant="outline" size="sm" className="mt-3" onClick={handleReset}>
-                          Nouvelle estimation
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Ad Search Bar */}
-            {!isPCBlocked && <AdSearchBar onAdSelect={handleAdSelect} />}
-
-            {/* Form */}
-            {!isPCBlocked && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-                <Card className="shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      Formulaire d'estimation
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* NEW: Options block */}
-                    <EstimationOptionsBlock
-                      options={options}
-                      onChange={handleOptionsChange}
-                      plan={plan}
-                    />
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        {/* Model search */}
-                        <div className="space-y-2">
-                          <Label>Modèle *</Label>
-                          <Popover open={modelPopoverOpen} onOpenChange={setModelPopoverOpen}>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" role="combobox" className="w-full justify-between">
-                                {selectedModel ? <span>{selectedModel.name}</span> : <span className="text-muted-foreground">Rechercher...</span>}
-                                <Search className="ml-2 h-4 w-4 opacity-50" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-full p-0 z-50" align="start">
-                              <Command shouldFilter={false}>
-                                <CommandInput placeholder="Tapez pour rechercher..." value={modelSearch} onValueChange={setModelSearch} />
-                                <CommandList>
-                                  {searchState === "loading" && (
-                                    <div className="p-4 flex items-center justify-center gap-2 text-muted-foreground">
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                      <span className="text-sm">Recherche…</span>
-                                    </div>
-                                  )}
-                                  {searchState === "idle" && modelSearch.length < 2 && (
-                                    <div className="p-4 text-sm text-muted-foreground text-center">
-                                      Tapez au moins 2 caractères
-                                    </div>
-                                  )}
-                                  {searchState === "empty" && <CommandEmpty>Aucun modèle trouvé</CommandEmpty>}
-                                  {searchState === "error" && (
-                                    <div className="p-4 text-center">
-                                      <div className="flex items-center justify-center gap-2 text-destructive mb-2">
-                                        <AlertCircle className="h-4 w-4" />
-                                        <span className="text-sm">{searchError}</span>
-                                      </div>
-                                      <Button variant="outline" size="sm" onClick={retrySearch}>
-                                        <RefreshCw className="h-3 w-3 mr-1" />Réessayer
-                                      </Button>
-                                    </div>
-                                  )}
-                                  {searchState === "success" && models.length > 0 && (
-                                    <CommandGroup>
-                                      {models.map(model => (
-                                        <CommandItem 
-                                          key={model.id} 
-                                          value={model.id.toString()} 
-                                          onSelect={() => {
-                                            setSelectedModel(model);
-                                            setModelPopoverOpen(false);
-                                          }} 
-                                          className="flex items-center gap-3 cursor-pointer"
-                                        >
-                                          <div className="flex-shrink-0 w-8 h-8 rounded bg-muted flex items-center justify-center">
-                                            {getCategoryIcon(model.category)}
-                                          </div>
-                                          <div className="flex flex-col flex-1 min-w-0">
-                                            <span className="font-medium truncate">{model.name}</span>
-                                            <span className="text-xs text-muted-foreground truncate">{model.brand} • {model.category}</span>
-                                          </div>
-                                        </CommandItem>
-                                      ))}
-                                    </CommandGroup>
-                                  )}
-                                </CommandList>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-
-                        {/* Condition */}
-                        <div>
-                          <Label className={options.withoutCondition ? "text-muted-foreground" : ""}>
-                            État {!options.withoutCondition && "*"}
-                          </Label>
-                          <Select 
-                            value={condition} 
-                            onValueChange={setCondition}
-                            disabled={options.withoutCondition}
-                          >
-                            <SelectTrigger className={`mt-2 ${options.withoutCondition ? "opacity-50" : ""}`}>
-                              <SelectValue placeholder={options.withoutCondition ? "Non renseigné" : "Sélectionner..."} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {CONDITION_OPTIONS.map(opt => (
-                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Platform */}
-                        <div>
-                          <Label className={options.withoutPlatform ? "text-muted-foreground" : ""}>
-                            Plateforme de l'annonce {!options.withoutPlatform && "*"}
-                          </Label>
-                          <Select 
-                            value={platform} 
-                            onValueChange={setPlatform}
-                            disabled={options.withoutPlatform}
-                          >
-                            <SelectTrigger className={`mt-2 ${options.withoutPlatform ? "opacity-50" : ""}`}>
-                              <SelectValue placeholder={options.withoutPlatform ? "Non renseignée" : "Sélectionner..."} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {MARKETPLACE_PLATFORMS.map(p => (
-                                <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        {/* Ad price */}
-                        <div>
-                          <Label>Prix affiché sur l'annonce (€) *</Label>
-                          <Input 
-                            type="number" 
-                            placeholder="Ex: 280" 
-                            value={adPrice} 
-                            onChange={e => setAdPrice(e.target.value)} 
-                            className="mt-2" 
-                          />
-                        </div>
-
-                        {/* Input summary chips */}
-                        <InputSummaryChips
-                          modelName={selectedModel?.name || null}
-                          category={selectedModel?.category || null}
-                          adPrice={adPrice}
-                          condition={condition}
-                          platform={platform}
-                          withoutCondition={options.withoutCondition}
-                          withoutPlatform={options.withoutPlatform}
-                        />
-
-                        {/* Submit buttons */}
-                        <div className="flex gap-3 pt-2">
-                          <Button 
-                            onClick={handleCalculate} 
-                            disabled={!isFormValid || enhancedEstimation.isPending || !canUseEstimator} 
-                            className="flex-1 gap-2"
-                          >
-                            {enhancedEstimation.isPending ? (
-                              <><RefreshCw className="h-4 w-4 animate-spin" />Calcul...</>
-                            ) : (
-                              <><Calculator className="h-4 w-4" />Estimer</>
-                            )}
-                          </Button>
-                          <Button variant="outline" onClick={handleReset}>Reset</Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Results - Enhanced layout with accessible sections first, locked sections last */}
-            <AnimatePresence mode="wait">
-              {result && (
-                <motion.div 
-                  key="results" 
-                  initial={{ opacity: 0, y: 40 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  exit={{ opacity: 0 }} 
-                  className="space-y-6"
-                >
-                  {/* === EXPORT CSV (Elite only, at top) === */}
-                  {plan === 'pro' && (
-                    <div className="flex justify-end">
-                      <ExportCSVButton result={result as any} platform={result.inputs.platform || ""} />
-                    </div>
-                  )}
-
-                  {/* === HYPOTHESES BANNER (if missing inputs) === */}
-                  {result.hypotheses.length > 0 && (
-                    <HypothesesBanner 
-                      hypotheses={result.hypotheses}
-                      onScrollToForm={() => {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                    />
-                  )}
-
-                  {/* ============ ACCESSIBLE SECTIONS (based on current plan) ============ */}
-
-                  {/* === SECTION 1: SYNTHESIS + OPPORTUNITY SCORE (All plans) === */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <SynthesisBanner result={result as any} />
-                    <OpportunityScoreCard 
-                      opportunity={result.opportunity}
-                      confidence={result.confidence}
-                      tags={result.tags}
-                      plan={plan}
-                    />
-                  </div>
-
-                  {/* === SECTION 2: MARKET DATA (All plans, some locked) === */}
-                  <EnhancedMarketCard
-                    market={result.market}
-                    adPrice={result.inputs.ad_price}
-                    plan={plan}
-                  />
-
-                  {/* === SECTION 3: DECISION BLOCK (Pro+) === */}
-                  {plan !== 'standard' && plan !== 'free' && (
-                    <EnhancedDecisionBlock
-                      decision={result.decision}
-                      actionablePrices={result.actionable_prices}
-                      adPrice={result.inputs.ad_price}
-                      plan={plan}
-                    />
-                  )}
-
-                  {/* === SECTION 4: NEGOTIATION (Pro+) === */}
-                  {result.negotiation && plan !== 'standard' && plan !== 'free' && (
-                    <EnhancedNegotiationSection
-                      negotiation={result.negotiation}
-                      adPrice={result.inputs.ad_price}
-                      plan={plan}
-                      withoutCondition={options.withoutCondition}
-                    />
-                  )}
-
-                  {/* === SECTION 5: PLATFORMS (Pro+) === */}
-                  {result.platforms && plan !== 'standard' && plan !== 'free' && (
-                    <EnhancedPlatformsSection
-                      platforms={result.platforms}
-                      plan={plan}
-                      sourcePlatform={result.inputs.platform}
-                    />
-                  )}
-
-                  {/* === SECTION 6: SCENARIOS (Elite) === */}
-                  {result.scenarios && plan === 'pro' && (
-                    <EnhancedScenariosSection
-                      scenarios={result.scenarios}
-                      adPrice={result.inputs.ad_price}
-                      plan={plan}
-                    />
-                  )}
-
-                  {/* === SECTION 7: WHAT-IF SIMULATOR (Elite) === */}
-                  {result.what_if && plan === 'pro' && (
-                    <WhatIfSimulator
-                      whatIf={result.what_if}
-                      adPrice={result.inputs.ad_price}
-                      actionablePrices={result.actionable_prices}
-                      plan={plan}
-                    />
-                  )}
-
-                  {/* ============ LOCKED SECTIONS (not available with current plan) ============ */}
-                  
-                  {/* Decision Block - Locked for Starter */}
-                  {(plan === 'standard' || plan === 'free') && (
-                    <EnhancedDecisionBlock
-                      decision={result.decision}
-                      actionablePrices={result.actionable_prices}
-                      adPrice={result.inputs.ad_price}
-                      plan={plan}
-                    />
-                  )}
-
-                  {/* Negotiation - Locked for Starter */}
-                  {result.negotiation && (plan === 'standard' || plan === 'free') && (
-                    <EnhancedNegotiationSection
-                      negotiation={result.negotiation}
-                      adPrice={result.inputs.ad_price}
-                      plan={plan}
-                      withoutCondition={options.withoutCondition}
-                    />
-                  )}
-
-                  {/* Platforms - Locked for Starter */}
-                  {result.platforms && (plan === 'standard' || plan === 'free') && (
-                    <EnhancedPlatformsSection
-                      platforms={result.platforms}
-                      plan={plan}
-                      sourcePlatform={result.inputs.platform}
-                    />
-                  )}
-
-                  {/* Scenarios - Locked for non-Elite */}
-                  {result.scenarios && plan !== 'pro' && (
-                    <EnhancedScenariosSection
-                      scenarios={result.scenarios}
-                      adPrice={result.inputs.ad_price}
-                      plan={plan}
-                    />
-                  )}
-
-                  {/* What-If - Locked for non-Elite */}
-                  {result.what_if && plan !== 'pro' && (
-                    <WhatIfSimulator
-                      whatIf={result.what_if}
-                      adPrice={result.inputs.ad_price}
-                      actionablePrices={result.actionable_prices}
-                      plan={plan}
-                    />
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </TabsContent>
-
-          <TabsContent value="history" className="mt-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <History className="h-5 w-5" />
-                  Historique des estimations
-                </CardTitle>
-                <Button variant="outline" size="sm" onClick={() => refreshHistory()} disabled={isLoadingHistory}>
-                  <RefreshCw className={`h-4 w-4 ${isLoadingHistory ? 'animate-spin' : ''}`} />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  💡 Consultez vos estimations passées sans dépenser de crédits. Les données affichées correspondent au plan actif lors de l'estimation.
-                </p>
-
-                {historyState === "loading" && (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
-                        <Skeleton className="h-12 w-12 rounded-lg" />
-                        <div className="flex-1 space-y-2">
-                          <Skeleton className="h-4 w-1/3" />
-                          <Skeleton className="h-3 w-1/2" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {historyState === "error" && (
-                  <div className="text-center py-12">
-                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-destructive opacity-70" />
-                    <p className="text-destructive mb-2">Erreur de chargement</p>
-                    <Button variant="outline" onClick={() => refreshHistory()}>
-                      <RefreshCw className="h-4 w-4 mr-2" />Réessayer
+        {/* PC Blocked Warning */}
+        {isPCBlocked && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Card className="border-destructive/50 bg-destructive/5">
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-destructive">Estimation non disponible</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      L'estimateur ne prend pas en charge les PC complets ni les lots. 
+                      Pour évaluer un PC, estimez chaque composant individuellement.
+                    </p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={handleReset}>
+                      Nouvelle estimation
                     </Button>
                   </div>
-                )}
-
-                {historyState === "empty" && (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Aucune estimation</p>
-                  </div>
-                )}
-
-                {historyState === "success" && historyData?.items?.map(item => (
-                  <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg mb-3 hover:bg-muted/50">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                      {getCategoryIcon(item.category)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium truncate">{item.model_name}</p>
-                        {getPlanBadge(item.plan_at_creation)}
-                        {item.platform && (
-                          <Badge variant="outline" className="text-xs">{item.platform}</Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{item.category} • {item.condition || "État inconnu"}</p>
-                    </div>
-                    <div className="text-sm text-right">
-                      <p className="font-medium">{item.ad_price}€</p>
-                      <p className="text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3 inline mr-1" />
-                        {new Date(item.created_at).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setViewHistoryItem(item)}
-                        className="gap-1"
-                      >
-                        <Eye className="h-4 w-4" />
-                        Voir
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => {
-                          const nextPlatform = normalizePlatformKey(item.platform);
-                          setSelectedModel({
-                            id: item.model_id,
-                            name: item.model_name,
-                            brand: item.brand || '',
-                            category: item.category,
-                            family: null
-                          });
-                          setModelSearch(item.model_name);
-                          setCondition(item.condition || '');
-                          setAdPrice(item.ad_price.toString());
-                          if (nextPlatform) setPlatform(nextPlatform);
-                          // Set skip options based on history item
-                          setOptions({
-                            withoutPlatform: !item.platform,
-                            withoutCondition: !item.condition,
-                          });
-                          setActiveTab("estimator");
-                        }}
-                        title="Réestimer (coûte des crédits)"
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </motion.div>
+        )}
 
-        {/* History View Modal */}
-        <Dialog open={!!viewHistoryItem} onOpenChange={(open) => !open && setViewHistoryItem(null)}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <History className="h-5 w-5" />
-                Résultats sauvegardés
-                {viewHistoryItem && getPlanBadge(viewHistoryItem.plan_at_creation)}
-                <Badge variant="secondary" className="ml-2">
-                  {viewHistoryItem?.created_at ? new Date(viewHistoryItem.created_at).toLocaleDateString('fr-FR') : ''}
-                </Badge>
-              </DialogTitle>
-            </DialogHeader>
-            {viewHistoryItem?.results && (() => {
-              const historyPlan = viewHistoryItem.plan_at_creation as PlanType;
-              
-              // Helper to re-estimate with this item's data
-              const handleReEstimate = () => {
-                const nextPlatform = normalizePlatformKey(viewHistoryItem.platform);
-                setSelectedModel({
-                  id: viewHistoryItem.model_id,
-                  name: viewHistoryItem.model_name,
-                  brand: viewHistoryItem.brand || '',
-                  category: viewHistoryItem.category,
-                  family: null
-                });
-                setModelSearch(viewHistoryItem.model_name);
-                setCondition(viewHistoryItem.condition || '');
-                setAdPrice(viewHistoryItem.ad_price.toString());
-                if (nextPlatform) setPlatform(nextPlatform);
-                setOptions({
-                  withoutPlatform: !viewHistoryItem.platform,
-                  withoutCondition: !viewHistoryItem.condition,
-                });
-                setViewHistoryItem(null);
-                setActiveTab("estimator");
-              };
+        {/* Ad Search Bar */}
+        {!isPCBlocked && <AdSearchBar onAdSelect={handleAdSelect} />}
 
-              // Features accessible based on plan at creation
-              const hasDecision = isFeatureAccessible('decision', historyPlan);
-              const hasNegotiation = isFeatureAccessible('negotiation', historyPlan);
-              const hasPlatforms = isFeatureAccessible('platforms', historyPlan);
-              const hasScenarios = isFeatureAccessible('scenarios', historyPlan);
-              const hasWhatIf = isFeatureAccessible('whatIf', historyPlan);
+        {/* Form */}
+        {!isPCBlocked && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Formulaire d'estimation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Options block */}
+                <EstimationOptionsBlock
+                  options={options}
+                  onChange={handleOptionsChange}
+                  plan={plan}
+                />
 
-              return (
-                <div className="space-y-6 mt-4">
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                    <p className="text-sm text-amber-700 dark:text-amber-400">
-                      ⚠️ Ces données datent du {new Date(viewHistoryItem.created_at).toLocaleDateString('fr-FR')}. 
-                      Le marché peut avoir évolué depuis. Pour des données à jour, relancez une estimation (coûte des crédits).
-                    </p>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    {/* Model search */}
+                    <div className="space-y-2">
+                      <Label>Modèle *</Label>
+                      <Popover open={modelPopoverOpen} onOpenChange={setModelPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" role="combobox" className="w-full justify-between">
+                            {selectedModel ? <span>{selectedModel.name}</span> : <span className="text-muted-foreground">Rechercher...</span>}
+                            <Search className="ml-2 h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0 z-50" align="start">
+                          <Command shouldFilter={false}>
+                            <CommandInput placeholder="Tapez pour rechercher..." value={modelSearch} onValueChange={setModelSearch} />
+                            <CommandList>
+                              {searchState === "loading" && (
+                                <div className="p-4 flex items-center justify-center gap-2 text-muted-foreground">
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span className="text-sm">Recherche…</span>
+                                </div>
+                              )}
+                              {searchState === "idle" && modelSearch.length < 2 && (
+                                <div className="p-4 text-sm text-muted-foreground text-center">
+                                  Tapez au moins 2 caractères
+                                </div>
+                              )}
+                              {searchState === "empty" && <CommandEmpty>Aucun modèle trouvé</CommandEmpty>}
+                              {searchState === "error" && (
+                                <div className="p-4 text-center">
+                                  <div className="flex items-center justify-center gap-2 text-destructive mb-2">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <span className="text-sm">{searchError}</span>
+                                  </div>
+                                  <Button variant="outline" size="sm" onClick={retrySearch}>
+                                    <RefreshCw className="h-3 w-3 mr-1" />Réessayer
+                                  </Button>
+                                </div>
+                              )}
+                              {searchState === "success" && models.length > 0 && (
+                                <CommandGroup>
+                                  {models.map(model => (
+                                    <CommandItem 
+                                      key={model.id} 
+                                      value={model.id.toString()} 
+                                      onSelect={() => {
+                                        setSelectedModel(model);
+                                        setModelPopoverOpen(false);
+                                      }} 
+                                      className="flex items-center gap-3 cursor-pointer"
+                                    >
+                                      <div className="flex-shrink-0 w-8 h-8 rounded bg-muted flex items-center justify-center">
+                                        {getCategoryIcon(model.category)}
+                                      </div>
+                                      <div className="flex flex-col flex-1 min-w-0">
+                                        <span className="font-medium truncate">{model.name}</span>
+                                        <span className="text-xs text-muted-foreground truncate">{model.brand} • {model.category}</span>
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              )}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* Condition */}
+                    <div>
+                      <Label className={options.withoutCondition ? "text-muted-foreground" : ""}>
+                        État {!options.withoutCondition && "*"}
+                      </Label>
+                      <Select 
+                        value={condition} 
+                        onValueChange={setCondition}
+                        disabled={options.withoutCondition}
+                      >
+                        <SelectTrigger className={`mt-2 ${options.withoutCondition ? "opacity-50" : ""}`}>
+                          <SelectValue placeholder={options.withoutCondition ? "Non renseigné" : "Sélectionner..."} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CONDITION_OPTIONS.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Platform */}
+                    <div>
+                      <Label className={options.withoutPlatform ? "text-muted-foreground" : ""}>
+                        Plateforme de l'annonce {!options.withoutPlatform && "*"}
+                      </Label>
+                      <Select 
+                        value={platform} 
+                        onValueChange={setPlatform}
+                        disabled={options.withoutPlatform}
+                      >
+                        <SelectTrigger className={`mt-2 ${options.withoutPlatform ? "opacity-50" : ""}`}>
+                          <SelectValue placeholder={options.withoutPlatform ? "Non renseignée" : "Sélectionner..."} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MARKETPLACE_PLATFORMS.map(p => (
+                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  
-                  {/* ============ ACCESSIBLE SECTIONS (based on plan_at_creation) ============ */}
-                  
-                  {/* Synthesis Banner - Always accessible */}
-                  <SynthesisBanner result={viewHistoryItem.results} />
 
-                  {/* Hypotheses if any - Always accessible */}
-                  {viewHistoryItem.results.hypotheses?.length > 0 && (
-                    <HypothesesBanner hypotheses={viewHistoryItem.results.hypotheses} />
-                  )}
+                  <div className="space-y-4">
+                    {/* Ad price */}
+                    <div>
+                      <Label>Prix affiché sur l'annonce (€) *</Label>
+                      <Input 
+                        type="number" 
+                        placeholder="Ex: 280" 
+                        value={adPrice} 
+                        onChange={e => setAdPrice(e.target.value)} 
+                        className="mt-2" 
+                      />
+                    </div>
 
-                  {/* Decision Block - Pro+ */}
-                  {hasDecision && (
-                    <EnhancedDecisionBlock 
-                      decision={viewHistoryItem.results.decision}
-                      actionablePrices={viewHistoryItem.results.actionable_prices}
-                      adPrice={viewHistoryItem.ad_price}
-                      plan={historyPlan}
+                    {/* Input summary chips */}
+                    <InputSummaryChips
+                      modelName={selectedModel?.name || null}
+                      category={selectedModel?.category || null}
+                      adPrice={adPrice}
+                      condition={condition}
+                      platform={platform}
+                      withoutCondition={options.withoutCondition}
+                      withoutPlatform={options.withoutPlatform}
                     />
-                  )}
 
-                  {/* Market Data - Always show basic, Pro+ for advanced */}
-                  <EnhancedMarketCard 
-                    market={viewHistoryItem.results.market} 
-                    adPrice={viewHistoryItem.ad_price}
-                    plan={historyPlan}
-                  />
-
-                  {/* Negotiation Section - Pro+ */}
-                  {hasNegotiation && viewHistoryItem.results.negotiation && (
-                    <EnhancedNegotiationSection 
-                      negotiation={viewHistoryItem.results.negotiation}
-                      adPrice={viewHistoryItem.ad_price}
-                      plan={historyPlan}
-                    />
-                  )}
-
-                  {/* Platforms Analysis - Pro+ */}
-                  {hasPlatforms && viewHistoryItem.results.platforms && (
-                    <EnhancedPlatformsSection 
-                      platforms={viewHistoryItem.results.platforms}
-                      plan={historyPlan}
-                      sourcePlatform={viewHistoryItem.platform}
-                      withoutPlatform={viewHistoryItem.options?.withoutPlatform}
-                    />
-                  )}
-
-                  {/* Scenarios - Elite only */}
-                  {hasScenarios && viewHistoryItem.results.scenarios && (
-                    <EnhancedScenariosSection 
-                      scenarios={viewHistoryItem.results.scenarios} 
-                      adPrice={viewHistoryItem.ad_price}
-                      plan="pro"
-                    />
-                  )}
-
-                  {/* What-If Simulator - Elite only */}
-                  {hasWhatIf && viewHistoryItem.results.what_if && (
-                    <WhatIfSimulator
-                      whatIf={viewHistoryItem.results.what_if}
-                      adPrice={viewHistoryItem.ad_price}
-                      actionablePrices={viewHistoryItem.results.actionable_prices}
-                      plan="pro"
-                    />
-                  )}
-
-                  {/* ============ LOCKED SECTIONS (not available at plan_at_creation) ============ */}
-                  
-                  {/* Decision Block - Locked for Starter */}
-                  {!hasDecision && (
-                    <HistoryLockedSection
-                      title="Recommandation d'achat"
-                      icon={<Target className="h-5 w-5" />}
-                      planAtCreation={historyPlan}
-                      currentPlan={plan}
-                      onReEstimate={handleReEstimate}
-                    />
-                  )}
-
-                  {/* Negotiation - Locked for Starter */}
-                  {!hasNegotiation && (
-                    <HistoryLockedSection
-                      title="Stratégie de négociation"
-                      icon={<Handshake className="h-5 w-5" />}
-                      planAtCreation={historyPlan}
-                      currentPlan={plan}
-                      onReEstimate={handleReEstimate}
-                    />
-                  )}
-
-                  {/* Platforms - Locked for Starter */}
-                  {!hasPlatforms && (
-                    <HistoryLockedSection
-                      title="Analyse des plateformes"
-                      icon={<BarChart3 className="h-5 w-5" />}
-                      planAtCreation={historyPlan}
-                      currentPlan={plan}
-                      onReEstimate={handleReEstimate}
-                    />
-                  )}
-
-                  {/* Scenarios - Locked for non-Elite */}
-                  {!hasScenarios && (
-                    <HistoryLockedSection
-                      title="Scénarios de revente"
-                      icon={<TrendingUp className="h-5 w-5" />}
-                      planAtCreation={historyPlan}
-                      currentPlan={plan}
-                      onReEstimate={handleReEstimate}
-                    />
-                  )}
-
-                  {/* What-If - Locked for non-Elite */}
-                  {!hasWhatIf && (
-                    <HistoryLockedSection
-                      title="Simulateur What-If"
-                      icon={<Calculator className="h-5 w-5" />}
-                      planAtCreation={historyPlan}
-                      currentPlan={plan}
-                      onReEstimate={handleReEstimate}
-                    />
-                  )}
+                    {/* Submit buttons */}
+                    <div className="flex gap-3 pt-2">
+                      <Button 
+                        onClick={handleCalculate} 
+                        disabled={!isFormValid || enhancedEstimation.isPending || !canUseEstimator} 
+                        className="flex-1 gap-2"
+                      >
+                        {enhancedEstimation.isPending ? (
+                          <><RefreshCw className="h-4 w-4 animate-spin" />Calcul...</>
+                        ) : (
+                          <><Calculator className="h-4 w-4" />Estimer</>
+                        )}
+                      </Button>
+                      <Button variant="outline" onClick={handleReset}>Reset</Button>
+                    </div>
+                  </div>
                 </div>
-              );
-            })()}
-          </DialogContent>
-        </Dialog>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Results - Enhanced layout */}
+        <AnimatePresence mode="wait">
+          {result && (
+            <motion.div 
+              key="results" 
+              initial={{ opacity: 0, y: 40 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0 }} 
+              className="space-y-6"
+            >
+              {/* === EXPORT CSV (Pro only, at top) === */}
+              {plan === 'pro' && (
+                <div className="flex justify-end">
+                  <ExportCSVButton result={result as any} platform={result.inputs.platform || ""} />
+                </div>
+              )}
+
+              {/* === HYPOTHESES BANNER (if missing inputs) === */}
+              {result.hypotheses.length > 0 && (
+                <HypothesesBanner 
+                  hypotheses={result.hypotheses}
+                  onScrollToForm={() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              )}
+
+              {/* ============ ACCESSIBLE SECTIONS ============ */}
+
+              {/* === SECTION 1: SYNTHESIS + OPPORTUNITY SCORE === */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <SynthesisBanner result={result as any} />
+                <OpportunityScoreCard 
+                  opportunity={result.opportunity}
+                  confidence={result.confidence}
+                  tags={result.tags}
+                  plan={plan}
+                />
+              </div>
+
+              {/* === SECTION 2: MARKET DATA === */}
+              <EnhancedMarketCard
+                market={result.market}
+                adPrice={result.inputs.ad_price}
+                plan={plan}
+              />
+
+              {/* === SECTION 3: DECISION BLOCK (Pro+) === */}
+              {plan !== 'standard' && plan !== 'free' && (
+                <EnhancedDecisionBlock
+                  decision={result.decision}
+                  actionablePrices={result.actionable_prices}
+                  adPrice={result.inputs.ad_price}
+                  plan={plan}
+                />
+              )}
+
+              {/* === SECTION 4: NEGOTIATION (Pro+) === */}
+              {result.negotiation && plan !== 'standard' && plan !== 'free' && (
+                <EnhancedNegotiationSection
+                  negotiation={result.negotiation}
+                  adPrice={result.inputs.ad_price}
+                  plan={plan}
+                  withoutCondition={options.withoutCondition}
+                />
+              )}
+
+              {/* === SECTION 5: PLATFORMS (Pro+) === */}
+              {result.platforms && plan !== 'standard' && plan !== 'free' && (
+                <EnhancedPlatformsSection
+                  platforms={result.platforms}
+                  plan={plan}
+                  sourcePlatform={result.inputs.platform}
+                />
+              )}
+
+              {/* === SECTION 6: SCENARIOS (Pro) === */}
+              {result.scenarios && plan === 'pro' && (
+                <EnhancedScenariosSection
+                  scenarios={result.scenarios}
+                  adPrice={result.inputs.ad_price}
+                  plan={plan}
+                />
+              )}
+
+              {/* === SECTION 7: WHAT-IF SIMULATOR (Pro) === */}
+              {result.what_if && plan === 'pro' && (
+                <WhatIfSimulator
+                  whatIf={result.what_if}
+                  adPrice={result.inputs.ad_price}
+                  actionablePrices={result.actionable_prices}
+                  plan={plan}
+                />
+              )}
+
+              {/* ============ LOCKED SECTIONS ============ */}
+              
+              {/* Decision Block - Locked for Standard/Free */}
+              {(plan === 'standard' || plan === 'free') && (
+                <EnhancedDecisionBlock
+                  decision={result.decision}
+                  actionablePrices={result.actionable_prices}
+                  adPrice={result.inputs.ad_price}
+                  plan={plan}
+                />
+              )}
+
+              {/* Negotiation - Locked for Standard/Free */}
+              {result.negotiation && (plan === 'standard' || plan === 'free') && (
+                <EnhancedNegotiationSection
+                  negotiation={result.negotiation}
+                  adPrice={result.inputs.ad_price}
+                  plan={plan}
+                  withoutCondition={options.withoutCondition}
+                />
+              )}
+
+              {/* Platforms - Locked for Standard/Free */}
+              {result.platforms && (plan === 'standard' || plan === 'free') && (
+                <EnhancedPlatformsSection
+                  platforms={result.platforms}
+                  plan={plan}
+                  sourcePlatform={result.inputs.platform}
+                />
+              )}
+
+              {/* Scenarios - Locked for non-Pro */}
+              {result.scenarios && plan !== 'pro' && (
+                <EnhancedScenariosSection
+                  scenarios={result.scenarios}
+                  adPrice={result.inputs.ad_price}
+                  plan={plan}
+                />
+              )}
+
+              {/* What-If - Locked for non-Pro */}
+              {result.what_if && plan !== 'pro' && (
+                <WhatIfSimulator
+                  whatIf={result.what_if}
+                  adPrice={result.inputs.ad_price}
+                  actionablePrices={result.actionable_prices}
+                  plan={plan}
+                />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
