@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { apiPost } from "@/lib/api";
+import { ENDPOINTS } from "@/lib/api/endpoints";
 import { z } from "zod";
 import {
   Dialog,
@@ -37,8 +39,7 @@ export function ForgotPasswordModal({ trigger }: ForgotPasswordModalProps) {
     try {
       emailSchema.parse(email);
 
-      // Simulate API call - in production this would call /v1/auth/forgot-password
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await apiPost(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
 
       setSent(true);
       toast({
