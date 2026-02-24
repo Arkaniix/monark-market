@@ -5,7 +5,7 @@ import {
   Search, RotateCcw, Bookmark, Bell, Zap, FlaskConical, Loader2,
   ExternalLink, TrendingUp, TrendingDown, BarChart3, Droplets,
   ScanSearch, Award, Clock, MapPin, ChevronDown, ChevronUp, Eye, Target,
-  RefreshCw, Calculator,
+  RefreshCw, Calculator, X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEnhancedEstimationHistory } from "@/hooks";
-import type { EnhancedEstimationHistoryItem } from "@/types/estimator";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import type { EnhancedEstimationHistoryItem, EnhancedEstimationResult } from "@/types/estimator";
+
+// Import result display components
+import SynthesisBanner from "@/components/estimator/SynthesisBanner";
+import OpportunityScoreCard from "@/components/estimator/OpportunityScoreCard";
+import HypothesesBanner from "@/components/estimator/HypothesesBanner";
+import EnhancedDecisionBlock from "@/components/estimator/EnhancedDecisionBlock";
+import EnhancedMarketCard from "@/components/estimator/EnhancedMarketCard";
+import EnhancedNegotiationSection from "@/components/estimator/EnhancedNegotiationSection";
+import EnhancedScenariosSection from "@/components/estimator/EnhancedScenariosSection";
+import EnhancedPlatformsSection from "@/components/estimator/EnhancedPlatformsSection";
+import WhatIfSimulator from "@/components/estimator/WhatIfSimulator";
+import InputSummaryChips from "@/components/estimator/InputSummaryChips";
 
 // ── Types ──
 interface LensComponent {
@@ -393,7 +407,7 @@ function EmptyState() {
 }
 
 // ── Estimation History Card ──
-function EstimationHistoryCard({ item, onReEstimate }: { item: EnhancedEstimationHistoryItem; onReEstimate: (item: EnhancedEstimationHistoryItem) => void }) {
+function EstimationHistoryCard({ item, onReEstimate, onView }: { item: EnhancedEstimationHistoryItem; onReEstimate: (item: EnhancedEstimationHistoryItem) => void; onView: (item: EnhancedEstimationHistoryItem) => void }) {
   const planColors: Record<string, string> = {
     free: "bg-muted/50 text-muted-foreground border-border",
     standard: "bg-primary/10 text-primary border-primary/20",
@@ -434,6 +448,15 @@ function EstimationHistoryCard({ item, onReEstimate }: { item: EnhancedEstimatio
             size="sm"
             variant="outline"
             className="gap-1 h-7 text-xs"
+            onClick={() => onView(item)}
+          >
+            <Eye className="h-3 w-3" />
+            Voir détail
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1 h-7 text-xs"
             onClick={() => onReEstimate(item)}
           >
             <RotateCcw className="h-3 w-3" />
@@ -442,6 +465,131 @@ function EstimationHistoryCard({ item, onReEstimate }: { item: EnhancedEstimatio
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// ── Estimation Detail Dialog ──
+function EstimationDetailDialog({ 
+  item, 
+  onClose, 
+  plan, 
+  onReEstimate 
+}: { 
+  item: EnhancedEstimationHistoryItem | null; 
+  onClose: () => void; 
+  plan: string;
+  onReEstimate: (item: EnhancedEstimationHistoryItem) => void;
+}) {
+  if (!item) return null;
+  const result = item.results;
+  const historyPlan = item.plan_at_creation || plan;
+
+  return (
+    <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogHeader className="p-6 pb-3 sticky top-0 bg-background z-10 border-b">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <DialogTitle className="text-lg">{item.model_name}</DialogTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                {item.category} · {item.condition || "État inconnu"} · {item.ad_price}€ · {new Date(item.created_at).toLocaleDateString("fr-FR")}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge variant="outline" className="text-[10px]">{historyPlan}</Badge>
+              <Button size="sm" variant="outline" className="gap-1 h-7 text-xs" onClick={() => { onClose(); onReEstimate(item); }}>
+                <RotateCcw className="h-3 w-3" />
+                Ré-estimer
+              </Button>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="p-6 space-y-6">
+          {/* Input summary */}
+          {result.inputs && (
+            <InputSummaryChips
+              modelName={result.inputs.model_name}
+              category={result.inputs.category}
+              condition={result.inputs.condition || ""}
+              platform={result.inputs.platform || ""}
+              adPrice={String(result.inputs.ad_price)}
+              withoutCondition={item.options?.withoutCondition}
+              withoutPlatform={item.options?.withoutPlatform}
+            />
+          )}
+
+          {/* Hypotheses */}
+          {result.hypotheses?.length > 0 && (
+            <HypothesesBanner hypotheses={result.hypotheses} />
+          )}
+
+          {/* Synthesis + Score */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <SynthesisBanner result={result as any} />
+            <OpportunityScoreCard 
+              opportunity={result.opportunity}
+              confidence={result.confidence}
+              tags={result.tags}
+              plan={historyPlan as any}
+            />
+          </div>
+
+          {/* Market */}
+          <EnhancedMarketCard
+            market={result.market}
+            adPrice={result.inputs.ad_price}
+            plan={historyPlan as any}
+          />
+
+          {/* Decision */}
+          <EnhancedDecisionBlock
+            decision={result.decision}
+            actionablePrices={result.actionable_prices}
+            adPrice={result.inputs.ad_price}
+            plan={historyPlan as any}
+          />
+
+          {/* Negotiation */}
+          {result.negotiation && (
+            <EnhancedNegotiationSection
+              negotiation={result.negotiation}
+              adPrice={result.inputs.ad_price}
+              plan={historyPlan as any}
+              withoutCondition={item.options?.withoutCondition}
+            />
+          )}
+
+          {/* Platforms */}
+          {result.platforms && (
+            <EnhancedPlatformsSection
+              platforms={result.platforms}
+              plan={historyPlan as any}
+              sourcePlatform={result.inputs.platform}
+            />
+          )}
+
+          {/* Scenarios */}
+          {result.scenarios && (
+            <EnhancedScenariosSection
+              scenarios={result.scenarios}
+              adPrice={result.inputs.ad_price}
+              plan={historyPlan as any}
+            />
+          )}
+
+          {/* What-if */}
+          {result.what_if && (
+            <WhatIfSimulator
+              whatIf={result.what_if}
+              adPrice={result.inputs.ad_price}
+              actionablePrices={result.actionable_prices}
+              plan={historyPlan as any}
+            />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -456,6 +604,9 @@ export default function LensHistory() {
   const [depthFilter, setDepthFilter] = useState("all");
   const [activeTab, setActiveTab] = useState<"scans" | "estimations">("scans");
   const [historyPage, setHistoryPage] = useState(1);
+  const [viewHistoryItem, setViewHistoryItem] = useState<EnhancedEstimationHistoryItem | null>(null);
+
+  const { plan } = useEntitlements();
 
   const {
     data: historyData,
@@ -748,12 +899,21 @@ export default function LensHistory() {
                     key={item.id}
                     item={item}
                     onReEstimate={handleReEstimate}
+                    onView={setViewHistoryItem}
                   />
                 ))}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* ── Detail Dialog ── */}
+        <EstimationDetailDialog
+          item={viewHistoryItem}
+          onClose={() => setViewHistoryItem(null)}
+          plan={plan}
+          onReEstimate={handleReEstimate}
+        />
       </div>
     </div>
   );
