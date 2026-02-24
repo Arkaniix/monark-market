@@ -24,6 +24,9 @@ import RGPD from "./pages/RGPD";
 import LegalNotice from "./pages/LegalNotice";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
+import Deals from "./pages/Deals";
+import AdDetail from "./pages/AdDetail";
+import JobDetail from "./pages/JobDetail";
 
 // Redirection legacy /trends vers /
 const TrendsRedirect = () => <Navigate to="/" replace />;
@@ -175,6 +178,22 @@ export const routes: RouteConfig[] = [
     path: "/debug",
     component: Debug,
     requiresAuth: false,
+  },
+
+  {
+    path: "/deals",
+    component: Deals,
+    requiresAuth: true,
+  },
+  {
+    path: "/ads/:id",
+    component: AdDetail,
+    requiresAuth: true,
+  },
+  {
+    path: "/jobs/:id",
+    component: JobDetail,
+    requiresAuth: true,
   },
 
   // 404 - doit être en dernier
