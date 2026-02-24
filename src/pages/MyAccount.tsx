@@ -27,6 +27,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "next-themes";
 import { useMockSubscription, MOCK_PLANS } from "@/hooks/useMockSubscription";
 import { SavedSearchesPanel } from "@/components/account/SavedSearchesPanel";
+import { apiPatch, apiPost } from "@/lib/api";
+import { ENDPOINTS } from "@/lib/api/endpoints";
+import { useUpdateUserSettings } from "@/hooks/useUserSettings";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -131,7 +134,8 @@ function SectionHeader({ icon: Icon, title, description }: { icon: React.Element
 export default function MyAccount() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isLoading: authLoading, logout, isAdmin } = useAuth();
+  const { user, isLoading: authLoading, logout, isAdmin, refreshMe } = useAuth();
+  const updateSettings = useUpdateUserSettings();
   const { theme, setTheme } = useTheme();
   
   // Centralized subscription state
@@ -149,7 +153,9 @@ export default function MyAccount() {
   } = useMockSubscription();
   
   // Form state
-  const [displayName, setDisplayName] = useState("Jean");
+  const [displayName, setDisplayName] = useState(user?.display_name || "");
+  const [isSavingName, setIsSavingName] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [language, setLanguage] = useState("fr");
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
@@ -182,8 +188,8 @@ export default function MyAccount() {
   // MOCK DATA (non-subscription)
   // ═══════════════════════════════════════════════════════════════════
   
-  const mockEmail = "jean.dupont@email.com";
-  const mockMemberSince = subDays(new Date(), 180);
+  const userEmail = user?.email || "Email inconnu";
+  const userMemberSince = user?.created_at ? new Date(user.created_at) : new Date();
   const mockResetDate = new Date(creditsResetDate);
   const daysUntilReset = differenceInDays(mockResetDate, new Date());
 
@@ -237,24 +243,42 @@ export default function MyAccount() {
     toast({ title: "Déconnexion", description: "À bientôt !" });
   };
 
-  const handleSaveDisplayName = () => {
-    toast({ title: "Profil mis à jour", description: "Votre nom d'affichage a été enregistré." });
+  const handleSaveDisplayName = async () => {
+    setIsSavingName(true);
+    try {
+      await apiPatch(ENDPOINTS.USERS.UPDATE_ME, { display_name: displayName });
+      await refreshMe();
+      toast({ title: "Profil mis à jour", description: "Votre nom d'affichage a été enregistré." });
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de mettre à jour le nom.", variant: "destructive" });
+    } finally {
+      setIsSavingName(false);
+    }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       toast({ title: "Erreur", description: "Les mots de passe ne correspondent pas.", variant: "destructive" });
       return;
     }
     if (newPassword.length < 8) {
-      toast({ title: "Erreur", description: "Le mot de passe doit contenir au moins 8 caractères.", variant: "destructive" });
+      toast({ title: "Erreur", description: "Minimum 8 caractères.", variant: "destructive" });
       return;
     }
-    toast({ title: "Mot de passe modifié", description: "Votre mot de passe a été mis à jour avec succès." });
-    setPasswordModalOpen(false);
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    setIsChangingPassword(true);
+    try {
+      await apiPost("/v1/auth/change_password", {
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+      toast({ title: "Mot de passe modifié", description: "Votre mot de passe a été mis à jour." });
+      setPasswordModalOpen(false);
+      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+    } catch {
+      toast({ title: "Erreur", description: "Mot de passe actuel incorrect ou erreur serveur.", variant: "destructive" });
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handlePlanChange = (targetPlan: string) => {
@@ -321,7 +345,7 @@ export default function MyAccount() {
     );
   }
 
-  const userInitials = mockEmail.slice(0, 2).toUpperCase();
+  const userInitials = userEmail.slice(0, 2).toUpperCase();
 
   // ═══════════════════════════════════════════════════════════════════
   // RENDER
@@ -364,7 +388,7 @@ export default function MyAccount() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-semibold text-lg">{mockEmail}</p>
+                      <p className="font-semibold text-lg">{userEmail}</p>
                       <Badge variant={isAdmin ? "default" : "secondary"} className="mt-1">
                         {isAdmin ? "Administrateur" : "Utilisateur"}
                       </Badge>
@@ -373,7 +397,7 @@ export default function MyAccount() {
 
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span>Membre depuis {format(mockMemberSince, "d MMMM yyyy", { locale: fr })}</span>
+                    <span>Membre depuis {format(userMemberSince, "d MMMM yyyy", { locale: fr })}</span>
                   </div>
                 </div>
 
@@ -395,9 +419,9 @@ export default function MyAccount() {
                     />
                     <Button 
                       onClick={handleSaveDisplayName}
-                      disabled={!displayName.trim()}
+                      disabled={!displayName.trim() || isSavingName}
                     >
-                      Enregistrer
+                      {isSavingName ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enregistrer"}
                     </Button>
                   </div>
                 </div>
@@ -423,7 +447,7 @@ export default function MyAccount() {
                 label="Langue"
                 description="Définit la langue de toute l'interface."
               >
-                <Select value={language} onValueChange={setLanguage}>
+                <Select value={language} onValueChange={(v) => { setLanguage(v); updateSettings.mutate({ locale: v }); }}>
                   <SelectTrigger className="w-36 h-9">
                     <SelectValue />
                   </SelectTrigger>
@@ -452,7 +476,7 @@ export default function MyAccount() {
               >
                 <Switch 
                   checked={notificationsEnabled} 
-                  onCheckedChange={setNotificationsEnabled}
+                  onCheckedChange={(checked) => { setNotificationsEnabled(checked); updateSettings.mutate({ notify_push: checked }); }}
                 />
               </SettingItem>
 
@@ -463,7 +487,7 @@ export default function MyAccount() {
               >
                 <Switch 
                   checked={emailAlerts} 
-                  onCheckedChange={setEmailAlerts}
+                  onCheckedChange={(checked) => { setEmailAlerts(checked); updateSettings.mutate({ notify_email: checked }); }}
                 />
               </SettingItem>
             </CardContent>
@@ -726,48 +750,14 @@ export default function MyAccount() {
                         Cette action est <strong>irréversible</strong>. Toutes vos données, crédits et historique seront définitivement supprimés.
                       </p>
                     </div>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          className="gap-2 border-destructive/30 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Supprimer
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5 text-destructive" />
-                            Supprimer votre compte ?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription className="space-y-3">
-                            <p>Cette action est <strong>irréversible</strong>. Toutes vos données seront définitivement supprimées :</p>
-                            <ul className="list-disc list-inside text-sm space-y-1">
-                              <li>Votre profil et préférences</li>
-                              <li>Votre watchlist et alertes</li>
-                              <li>Votre historique d'estimations</li>
-                              <li>Vos {mockCreditsRemaining} crédits restants</li>
-                            </ul>
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction 
-                            className="bg-destructive hover:bg-destructive/90"
-                            onClick={() => {
-                              toast({ 
-                                title: "Fonctionnalité à venir", 
-                                description: "La suppression de compte sera disponible prochainement.",
-                              });
-                            }}
-                          >
-                            Supprimer définitivement
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <Button 
+                      variant="outline" 
+                      className="gap-2 border-destructive/30 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                      disabled
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Bientôt disponible
+                    </Button>
                   </div>
                 </div>
               </div>
