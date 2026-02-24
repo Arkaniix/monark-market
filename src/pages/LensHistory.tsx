@@ -5,15 +5,20 @@ import {
   Search, RotateCcw, Bookmark, Bell, Zap, FlaskConical, Loader2,
   ExternalLink, TrendingUp, TrendingDown, BarChart3, Droplets,
   ScanSearch, Award, Clock, MapPin, ChevronDown, ChevronUp, Eye, Target,
+  RefreshCw, Calculator,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useEnhancedEstimationHistory } from "@/hooks";
+import type { EnhancedEstimationHistoryItem } from "@/types/estimator";
 
 // ── Types ──
 interface LensComponent {
@@ -141,6 +146,7 @@ function relativeDate(iso: string) {
 
 // ── Quick Analysis Panel ──
 function QuickAnalysisPanel({ analysis, onDeepAnalysis }: { analysis: QuickAnalysis; onDeepAnalysis: () => void }) {
+  // ... keep existing code (all metrics, details, insights)
   const metrics = [
     { label: "Écart marché", value: analysis.gap, icon: TrendingDown },
     { label: "Tendance 30j", value: analysis.trend30d, icon: TrendingUp },
@@ -196,6 +202,7 @@ function QuickAnalysisPanel({ analysis, onDeepAnalysis }: { analysis: QuickAnaly
 
 // ── Scan Card ──
 function ScanCard({ entry }: { entry: LensEntry }) {
+  // ... keep existing code (entire ScanCard component unchanged)
   const navigate = useNavigate();
   const [watchlisted, setWatchlisted] = useState(entry.watchlisted);
   const [alertActive, setAlertActive] = useState(entry.alertActive);
@@ -253,7 +260,6 @@ function ScanCard({ entry }: { entry: LensEntry }) {
   return (
     <Card className="hover:border-primary/30 transition-colors group">
       <CardContent className="p-4">
-        {/* Row 1: badges + date */}
         <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", PLATFORM_COLORS[entry.platform])}>
             {entry.platform}
@@ -272,10 +278,8 @@ function ScanCard({ entry }: { entry: LensEntry }) {
           </span>
         </div>
 
-        {/* Row 2: title */}
         <p className="text-sm font-semibold truncate mb-2">{entry.title}</p>
 
-        {/* Row 3: price block */}
         <div className="flex items-center gap-3 mb-2">
           <span className="text-xl font-bold text-primary tabular-nums">{entry.price}€</span>
           <span className="text-xs text-muted-foreground">
@@ -300,7 +304,6 @@ function ScanCard({ entry }: { entry: LensEntry }) {
           </div>
         </div>
 
-        {/* Row 4: components */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 mb-3" style={{ scrollbarWidth: "none" }}>
           {entry.components.slice(0, 4).map((c, i) => (
             <div key={i} className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px]">
@@ -314,7 +317,6 @@ function ScanCard({ entry }: { entry: LensEntry }) {
           )}
         </div>
 
-        {/* Row 5: actions */}
         <div className="flex items-center gap-1.5">
           <Button
             variant="ghost" size="icon" className="h-7 w-7"
@@ -356,7 +358,6 @@ function ScanCard({ entry }: { entry: LensEntry }) {
           </div>
         </div>
 
-        {/* Expandable results */}
         <AnimatePresence>
           {quickResult && expanded && (
             <QuickAnalysisPanel analysis={quickResult} onDeepAnalysis={handleDeepAnalysis} />
@@ -391,14 +392,82 @@ function EmptyState() {
   );
 }
 
+// ── Estimation History Card ──
+function EstimationHistoryCard({ item, onReEstimate }: { item: EnhancedEstimationHistoryItem; onReEstimate: (item: EnhancedEstimationHistoryItem) => void }) {
+  const planColors: Record<string, string> = {
+    free: "bg-muted/50 text-muted-foreground border-border",
+    standard: "bg-primary/10 text-primary border-primary/20",
+    pro: "bg-green-500/15 text-green-400 border-green-500/30",
+  };
+
+  return (
+    <Card className="hover:border-primary/30 transition-colors">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+              <p className="text-sm font-semibold truncate">{item.model_name}</p>
+              <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", planColors[item.plan_at_creation] || "")}>
+                {item.plan_at_creation}
+              </Badge>
+              {item.platform && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                  {item.platform}
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {item.category} · {item.condition || "État inconnu"}
+            </p>
+          </div>
+
+          <div className="text-right shrink-0">
+            <p className="text-lg font-bold text-primary tabular-nums">{item.ad_price}€</p>
+            <p className="text-[11px] text-muted-foreground">
+              {new Date(item.created_at).toLocaleDateString("fr-FR")}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 mt-3 justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1 h-7 text-xs"
+            onClick={() => onReEstimate(item)}
+          >
+            <RotateCcw className="h-3 w-3" />
+            Ré-estimer
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Main Page ──
 export default function LensHistory() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [platformFilter, setPlatformFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [verdictFilter, setVerdictFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [depthFilter, setDepthFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState<"scans" | "estimations">("scans");
+  const [historyPage, setHistoryPage] = useState(1);
+
+  const {
+    data: historyData,
+    isLoading: isLoadingHistory,
+    isError: isHistoryError,
+    refetch: refreshHistory,
+  } = useEnhancedEstimationHistory(historyPage, activeTab === "estimations");
+
+  const historyState = isLoadingHistory ? "loading"
+    : isHistoryError ? "error"
+    : historyData?.items?.length === 0 ? "empty"
+    : "success";
 
   const hasActiveFilters = search || platformFilter !== "all" || typeFilter !== "all" || verdictFilter !== "all" || dateFilter !== "all" || depthFilter !== "all";
 
@@ -426,11 +495,14 @@ export default function LensHistory() {
     });
   }, [search, platformFilter, typeFilter, verdictFilter, dateFilter, depthFilter]);
 
-  // Stats derived from data
   const totalCredits = MOCK_HISTORY.reduce((s, e) => s + e.creditsEarned, 0);
   const signalCount = MOCK_HISTORY.filter((e) => e.depth === "signal").length;
   const qualifiedCount = MOCK_HISTORY.filter((e) => e.depth === "qualified").length;
   const decisionCount = MOCK_HISTORY.filter((e) => e.depth === "decision").length;
+
+  const handleReEstimate = (item: EnhancedEstimationHistoryItem) => {
+    navigate(`/estimator?model_id=${item.model_id}&model_name=${encodeURIComponent(item.model_name)}&price=${item.ad_price}&platform=${item.platform || ""}&condition=${item.condition || ""}&source=history`);
+  };
 
   return (
     <div className="min-h-screen py-6 md:py-8">
@@ -444,7 +516,7 @@ export default function LensHistory() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Mes Analyses</h1>
-                <p className="text-sm text-muted-foreground">Toutes vos analyses — Signal, Qualifiées, Décisions</p>
+                <p className="text-sm text-muted-foreground">Toutes vos analyses — Scans Lens et Estimations complètes</p>
               </div>
             </div>
             <Button variant="outline" size="sm" className="shrink-0 gap-1.5 text-xs" asChild>
@@ -456,148 +528,232 @@ export default function LensHistory() {
           </div>
         </motion.div>
 
-        {/* Stats row */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-3"
-        >
-          <Card className="p-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-md bg-muted">
-                <ScanSearch className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-xl font-bold tabular-nums">{signalCount}</p>
-                <p className="text-[11px] text-muted-foreground">Signal</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-md bg-primary/10">
-                <Zap className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-xl font-bold tabular-nums">{qualifiedCount}</p>
-                <p className="text-[11px] text-muted-foreground">Qualifiées</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-md bg-green-500/10">
-                <Target className="h-4 w-4 text-green-400" />
-              </div>
-              <div>
-                <p className="text-xl font-bold tabular-nums">{decisionCount}</p>
-                <p className="text-[11px] text-muted-foreground">Décisions</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-md bg-green-500/10">
-                <Award className="h-4 w-4 text-green-400" />
-              </div>
-              <div>
-                <p className="text-xl font-bold tabular-nums text-green-400">+{totalCredits}</p>
-                <p className="text-[11px] text-muted-foreground">Crédits gagnés</p>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "scans" | "estimations")}>
+          <TabsList>
+            <TabsTrigger value="scans" className="gap-1.5">
+              <ScanSearch className="h-3.5 w-3.5" />
+              Scans Lens
+            </TabsTrigger>
+            <TabsTrigger value="estimations" className="gap-1.5">
+              <Calculator className="h-3.5 w-3.5" />
+              Estimations complètes
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-          className="flex flex-wrap items-center gap-2"
-        >
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher..."
-              className="pl-8 h-8 text-xs"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select value={platformFilter} onValueChange={setPlatformFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Plateforme" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes</SelectItem>
-              <SelectItem value="Leboncoin">Leboncoin</SelectItem>
-              <SelectItem value="eBay">eBay</SelectItem>
-              <SelectItem value="Vinted">Vinted</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={depthFilter} onValueChange={setDepthFilter}>
-            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Profondeur" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes</SelectItem>
-              <SelectItem value="signal">Signal</SelectItem>
-              <SelectItem value="qualified">Qualifiées</SelectItem>
-              <SelectItem value="decision">Décisions</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={verdictFilter} onValueChange={setVerdictFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Verdict" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous</SelectItem>
-              <SelectItem value="BONNE_AFFAIRE">Bonne affaire</SelectItem>
-              <SelectItem value="PRIX_CORRECT">Prix correct</SelectItem>
-              <SelectItem value="SUREVALUE">Surévalué</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous</SelectItem>
-              <SelectItem value="PC_COMPLET">PC complet</SelectItem>
-              <SelectItem value="COMPOSANT">Composant</SelectItem>
-              <SelectItem value="LOT">Lot</SelectItem>
-            </SelectContent>
-          </Select>
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground gap-1" onClick={resetFilters}>
-              <RotateCcw className="h-3 w-3" />
-              Reset
-            </Button>
-          )}
-        </motion.div>
+          {/* ── TAB: SCANS ── */}
+          <TabsContent value="scans" className="space-y-5 mt-5">
+            {/* Stats row */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="grid grid-cols-2 md:grid-cols-4 gap-3"
+            >
+              <Card className="p-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-md bg-muted">
+                    <ScanSearch className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold tabular-nums">{signalCount}</p>
+                    <p className="text-[11px] text-muted-foreground">Signal</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-md bg-primary/10">
+                    <Zap className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold tabular-nums">{qualifiedCount}</p>
+                    <p className="text-[11px] text-muted-foreground">Qualifiées</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-md bg-green-500/10">
+                    <Target className="h-4 w-4 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold tabular-nums">{decisionCount}</p>
+                    <p className="text-[11px] text-muted-foreground">Décisions</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-md bg-green-500/10">
+                    <Award className="h-4 w-4 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold tabular-nums text-green-400">+{totalCredits}</p>
+                    <p className="text-[11px] text-muted-foreground">Crédits gagnés</p>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
 
-        {/* Results count */}
-        <p className="text-xs text-muted-foreground">
-          {filtered.length} analyse{filtered.length !== 1 ? "s" : ""}
-          {hasActiveFilters ? " (filtrées)" : ""}
-        </p>
+            {/* Filters */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="flex flex-wrap items-center gap-2"
+            >
+              <div className="relative flex-1 min-w-[180px] max-w-xs">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher..."
+                  className="pl-8 h-8 text-xs"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Plateforme" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="Leboncoin">Leboncoin</SelectItem>
+                  <SelectItem value="eBay">eBay</SelectItem>
+                  <SelectItem value="Vinted">Vinted</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={depthFilter} onValueChange={setDepthFilter}>
+                <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Profondeur" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="signal">Signal</SelectItem>
+                  <SelectItem value="qualified">Qualifiées</SelectItem>
+                  <SelectItem value="decision">Décisions</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={verdictFilter} onValueChange={setVerdictFilter}>
+                <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Verdict" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="BONNE_AFFAIRE">Bonne affaire</SelectItem>
+                  <SelectItem value="PRIX_CORRECT">Prix correct</SelectItem>
+                  <SelectItem value="SUREVALUE">Surévalué</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="PC_COMPLET">PC complet</SelectItem>
+                  <SelectItem value="COMPOSANT">Composant</SelectItem>
+                  <SelectItem value="LOT">Lot</SelectItem>
+                </SelectContent>
+              </Select>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground gap-1" onClick={resetFilters}>
+                  <RotateCcw className="h-3 w-3" />
+                  Reset
+                </Button>
+              )}
+            </motion.div>
 
-        {/* Feed */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
-          className="space-y-2.5"
-        >
-          {filtered.length === 0 ? (
-            <EmptyState />
-          ) : (
-            filtered.map((entry) => (
-              <motion.div key={entry.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}>
-                <ScanCard entry={entry} />
-              </motion.div>
-            ))
-          )}
-        </motion.div>
+            {/* Results count */}
+            <p className="text-xs text-muted-foreground">
+              {filtered.length} analyse{filtered.length !== 1 ? "s" : ""}
+              {hasActiveFilters ? " (filtrées)" : ""}
+            </p>
 
-        {filtered.length > 0 && (
-          <Button variant="outline" className="w-full text-xs h-9">
-            Charger plus
-          </Button>
-        )}
+            {/* Feed */}
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
+              className="space-y-2.5"
+            >
+              {filtered.length === 0 ? (
+                <EmptyState />
+              ) : (
+                filtered.map((entry) => (
+                  <motion.div key={entry.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}>
+                    <ScanCard entry={entry} />
+                  </motion.div>
+                ))
+              )}
+            </motion.div>
+
+            {filtered.length > 0 && (
+              <Button variant="outline" className="w-full text-xs h-9">
+                Charger plus
+              </Button>
+            )}
+          </TabsContent>
+
+          {/* ── TAB: ESTIMATIONS ── */}
+          <TabsContent value="estimations" className="mt-5">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Calculator className="h-4 w-4 text-primary" />
+                    Historique des estimations complètes
+                  </CardTitle>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => refreshHistory()} disabled={isLoadingHistory}>
+                    <RefreshCw className={cn("h-4 w-4", isLoadingHistory && "animate-spin")} />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-2.5">
+                  💡 Consultez vos estimations passées sans dépenser de crédits. Lancez une estimation depuis l'<a href="/estimator" className="text-primary hover:underline font-medium">Estimator</a>.
+                </p>
+
+                {historyState === "loading" && (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <Card key={i} className="p-4">
+                        <Skeleton className="h-4 w-2/3 mb-2" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-3 w-20" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {historyState === "error" && (
+                  <div className="flex flex-col items-center py-10">
+                    <RefreshCw className="h-8 w-8 text-muted-foreground mb-3" />
+                    <p className="text-sm text-muted-foreground mb-3">Erreur de chargement</p>
+                    <Button variant="outline" size="sm" onClick={() => refreshHistory()}>
+                      Réessayer
+                    </Button>
+                  </div>
+                )}
+
+                {historyState === "empty" && (
+                  <div className="flex flex-col items-center py-10">
+                    <Calculator className="h-8 w-8 text-muted-foreground mb-3" />
+                    <p className="text-sm font-medium mb-1">Aucune estimation complète</p>
+                    <p className="text-xs text-muted-foreground mb-4 text-center max-w-xs">
+                      Lancez une décision complète depuis un scan Lens ou via l'Estimator.
+                    </p>
+                    <Button size="sm" onClick={() => navigate("/estimator")}>
+                      Ouvrir l'Estimator
+                    </Button>
+                  </div>
+                )}
+
+                {historyState === "success" && historyData?.items?.map((item) => (
+                  <EstimationHistoryCard
+                    key={item.id}
+                    item={item}
+                    onReEstimate={handleReEstimate}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
