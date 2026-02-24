@@ -12,7 +12,7 @@ import { ActivityHistoryModal } from "./ActivityHistoryModal";
 
 interface PersonalStatsProps {
   totalAnalyses: number;
-  averageScore: number;
+  averageScore: number | null;
   creditsRemaining: number;
   creditsResetDate?: string | null;
   opportunitiesDetected?: number;
@@ -119,7 +119,7 @@ export function PersonalStats({
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
-  const scoreColor = averageScore >= 7 ? "text-success" : averageScore >= 4 ? "text-warning" : "text-destructive";
+  const scoreColor = averageScore === null ? "text-muted-foreground" : averageScore >= 7 ? "text-success" : averageScore >= 4 ? "text-warning" : "text-destructive";
 
   return (
     <section className="py-8">
@@ -145,10 +145,19 @@ export function PersonalStats({
               <CardContent>
                 <div className="flex items-end justify-between">
                   <div>
-                    <div className={`text-3xl font-bold ${scoreColor}`}>{averageScore.toFixed(1)}<span className="text-lg text-muted-foreground">/10</span></div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Sur vos dernières analyses
-                    </p>
+                    {averageScore !== null ? (
+                      <>
+                        <div className={`text-3xl font-bold ${scoreColor}`}>
+                          {averageScore.toFixed(1)}<span className="text-lg text-muted-foreground">/10</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Sur vos dernières analyses</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-3xl font-bold text-muted-foreground">—</div>
+                        <p className="text-xs text-muted-foreground mt-1">Pas encore d'analyses</p>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardContent>
