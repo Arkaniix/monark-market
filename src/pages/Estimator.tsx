@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { Calculator, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown } from "lucide-react";
+import { Calculator, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown, ArrowLeft, ScanSearch } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useModelsSearch, useEnhancedEstimationHistory } from "@/hooks";
 import type { ModelAutocomplete, DealItem } from "@/providers/types";
@@ -159,7 +159,6 @@ export default function Estimator() {
     
     // Lens extension params
     const lensComponentId = searchParams.get('component');
-    const lensPrice = searchParams.get('price');
     const lensSource = searchParams.get('source');
 
     // Block PC types from URL params
@@ -170,17 +169,20 @@ export default function Estimator() {
       return;
     }
 
-    // Handle Lens extension pre-fill
-    if (lensComponentId && lensSource === 'lens') {
-      setSelectedModel({
-        id: parseInt(lensComponentId, 10),
-        name: modelName || `Composant #${lensComponentId}`,
-        brand: '',
-        category: category || '',
-        family: null
-      });
-      setModelSearch(modelName || `Composant #${lensComponentId}`);
-      if (lensPrice) setAdPrice(lensPrice);
+    // Handle Lens extension pre-fill (from Mes Scans or extension)
+    if (lensSource === 'lens') {
+      const resolvedName = modelName || (lensComponentId ? `Composant #${lensComponentId}` : '');
+      if (resolvedName) {
+        setSelectedModel({
+          id: lensComponentId ? parseInt(lensComponentId, 10) : 0,
+          name: resolvedName,
+          brand: '',
+          category: category || '',
+          family: null
+        });
+        setModelSearch(resolvedName);
+      }
+      if (price) setAdPrice(price);
       if (platformParam) setPlatform(normalizePlatformKey(platformParam));
       if (conditionParam) {
         const normalized = conditionParam.toLowerCase().trim();
@@ -348,8 +350,14 @@ export default function Estimator() {
         {searchParams.get('source') === 'lens' && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
             <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
-              <Badge className="bg-primary text-primary-foreground">Lens</Badge>
-              <span className="text-sm font-medium">Analyse lancée depuis Monark Lens</span>
+              <ScanSearch className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium flex-1">Analyse lancée depuis Monark Lens</span>
+              <Button variant="ghost" size="sm" className="text-xs gap-1 h-7" asChild>
+                <Link to="/lens-history">
+                  <ArrowLeft className="h-3 w-3" />
+                  Retour aux scans
+                </Link>
+              </Button>
             </div>
           </motion.div>
         )}
