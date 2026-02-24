@@ -315,7 +315,7 @@ export function AlertsTab({ alerts, isLoading, error, refetch }: AlertsTabProps)
                   )}
                 </span>
                 {activeAlertsCount >= maxAlerts && plan !== "pro" && (
-                  <Link to="/account?tab=subscription" className="text-primary hover:underline flex items-center gap-1">
+                  <Link to="/pricing" className="text-primary hover:underline flex items-center gap-1">
                     <Crown className="h-3 w-3" />
                     Augmenter
                   </Link>

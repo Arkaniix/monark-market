@@ -114,7 +114,7 @@ export function AlertLimitModal({
           </Button>
           {!isMaxPlan && (
             <Button asChild className="w-full sm:w-auto gap-2">
-              <Link to="/account?tab=subscription">
+              <Link to="/pricing">
                 <Crown className="h-4 w-4" />
                 Passer au plan {PLAN_LABELS[nextPlan]}
               </Link>

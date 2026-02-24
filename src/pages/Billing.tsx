@@ -50,7 +50,11 @@ export default function Billing() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Statut</span>
-                <Badge variant="default" className="bg-green-500">Actif</Badge>
+                {isSubscriptionActive ? (
+                  <Badge variant="default" className="bg-green-500">Actif</Badge>
+                ) : (
+                  <Badge variant="secondary">Gratuit</Badge>
+                )}
               </div>
               <Separator />
               <div className="flex items-center justify-between">

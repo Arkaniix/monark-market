@@ -58,12 +58,15 @@ export default function Tracking() {
 
         {/* Stats rapides avec indication des limites */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-          {/* Watchlist - Gratuit & Illimité */}
+          {/* Watchlist */}
           <Card className="cursor-pointer hover:border-primary/50 transition-colors relative overflow-hidden" onClick={() => setActiveTab("watchlist")}>
             <div className="absolute top-2 right-2">
               <Badge variant="secondary" className="text-[10px] bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
-                <Infinity className="h-3 w-3 mr-0.5" />
-                Illimité
+                {(limits.maxWatchlistItems === 999 || limits.maxWatchlistItems === -1) ? (
+                  <><Infinity className="h-3 w-3 mr-0.5" />Illimité</>
+                ) : (
+                  `${watchlist.length}/${limits.maxWatchlistItems}`
+                )}
               </Badge>
             </div>
             <CardContent className="pt-5 pb-4">
@@ -107,7 +110,7 @@ export default function Tracking() {
               />
               {alertsLimitReached && plan !== "pro" && (
                 <Link 
-                  to="/account?tab=subscription" 
+                  to="/pricing" 
                   className="text-xs text-primary hover:underline mt-2 flex items-center gap-1"
                   onClick={(e) => e.stopPropagation()}
                 >

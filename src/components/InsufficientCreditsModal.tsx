@@ -108,7 +108,7 @@ export default function InsufficientCreditsModal({
         <DialogFooter className="flex-col sm:flex-col gap-2">
           {/* Primary CTA - Upgrade */}
           <Button asChild className="w-full gap-2" size="lg">
-            <Link to="/account?tab=subscription">
+            <Link to="/pricing">
               <Crown className="h-4 w-4" />
               Passer au plan supérieur
             </Link>
@@ -116,7 +116,7 @@ export default function InsufficientCreditsModal({
 
           {/* Secondary CTA - Buy credits */}
           <Button asChild variant="outline" className="w-full gap-2">
-            <Link to="/account?tab=credits">
+            <Link to="/billing">
               <Coins className="h-4 w-4" />
               Acheter des crédits
             </Link>
