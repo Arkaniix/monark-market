@@ -58,9 +58,9 @@ export function WelcomeHeader({
 
             <div className="flex flex-wrap gap-3">
               <Button size="lg" className="gap-2" asChild>
-                <Link to="/estimator">
+                <Link to="/lens-history">
                   <Eye className="h-5 w-5" />
-                  Lancer une analyse
+                  Mes analyses
                 </Link>
               </Button>
 
