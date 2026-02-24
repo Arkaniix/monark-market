@@ -285,13 +285,13 @@ export function AccountSummary({ onLaunchScrap }: AccountSummaryProps) {
             </Button>
           )}
           <Button variant="outline" asChild>
-            <Link to="/my-account?tab=watchlist" className="gap-2">
+            <Link to="/tracking" className="gap-2">
               <Eye className="h-4 w-4" />
               Gérer ma watchlist
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link to="/my-account?tab=notifications" className="gap-2">
+            <Link to="/tracking" className="gap-2">
               <Bell className="h-4 w-4" />
               Voir les notifications
             </Link>
