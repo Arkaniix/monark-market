@@ -17,7 +17,7 @@ import {
   Calendar, AlertTriangle, Mail, Shield, LogOut, Trash2, 
   Bell, Moon, Sun, Globe, Key, Loader2, Check, Coins,
   RefreshCw, TrendingUp, TrendingDown, X, Minus, Info,
-  ChevronLeft, ChevronRight, History, Bookmark
+  ChevronLeft, ChevronRight, History, Bookmark, FlaskConical
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays, subDays, subHours } from "date-fns";
@@ -57,9 +57,9 @@ import {
 // Historique complet simulé (30 entrées)
 const generateFullHistory = () => {
   const actions = [
-    { action: "Estimation", cost: 3 },
-    { action: "Scrap standard", cost: 5 },
-    { action: "Scrap avancé", cost: 20 },
+    { action: "Analyse Estimator", cost: 3 },
+    { action: "Qualifier une annonce", cost: 5 },
+    { action: "Décision complète (Estimator)", cost: 20 },
   ];
   
   return Array.from({ length: 30 }, (_, i) => {
@@ -205,7 +205,7 @@ export default function MyAccount() {
       credits: 200,
       features: ["10 alertes actives", "Estimator complet", "Formation avancée"],
       isPopular: true,
-      hasAdvancedScrap: false,
+      hasAdvancedAnalysis: false,
       hasAdvancedStats: true,
       hasExport: false,
     },
@@ -215,7 +215,7 @@ export default function MyAccount() {
       price: 24.99, 
       credits: 800,
       features: ["100 alertes", "Scénarios + export", "Support prioritaire"],
-      hasAdvancedScrap: false,
+      hasAdvancedAnalysis: false,
       hasAdvancedStats: true,
       hasExport: true,
     },
@@ -313,7 +313,7 @@ export default function MyAccount() {
     const target = plans.find(p => p.id === targetPlan);
     
     if (current && target) {
-      if (current.hasAdvancedScrap && !target.hasAdvancedScrap) losses.push("Scrap avancé");
+      if (current.hasAdvancedAnalysis && !target.hasAdvancedAnalysis) losses.push("Décision complète (Estimator)");
       if (current.hasAdvancedStats && !target.hasAdvancedStats) losses.push("Statistiques avancées");
       if (current.hasExport && !target.hasExport) losses.push("Export de données");
       losses.push(`${current.credits - target.credits} crédits/mois`);
@@ -617,15 +617,15 @@ export default function MyAccount() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                    <span className="text-sm">Scrap standard</span>
+                    <span className="text-sm">Qualifier une annonce</span>
                     <Badge variant="outline">5 crédits</Badge>
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                    <span className="text-sm">Scrap avancé</span>
+                    <span className="text-sm">Décision complète</span>
                     <Badge variant="outline">20 crédits</Badge>
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                    <span className="text-sm">Estimation</span>
+                    <span className="text-sm">Analyse Estimator</span>
                     <Badge variant="outline">3 crédits</Badge>
                   </div>
                 </div>
@@ -1078,9 +1078,9 @@ export default function MyAccount() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {item.action === "Estimation" && <TrendingUp className="h-4 w-4 text-blue-500" />}
-                          {item.action === "Scrap standard" && <RefreshCw className="h-4 w-4 text-green-500" />}
-                          {item.action === "Scrap avancé" && <Zap className="h-4 w-4 text-amber-500" />}
+                          {item.action === "Analyse Estimator" && <TrendingUp className="h-4 w-4 text-blue-500" />}
+                          {item.action === "Qualifier une annonce" && <Zap className="h-4 w-4 text-green-500" />}
+                          {item.action === "Décision complète (Estimator)" && <FlaskConical className="h-4 w-4 text-amber-500" />}
                           {item.action}
                         </div>
                       </TableCell>

@@ -178,7 +178,7 @@ export function PersonalStats({
                   <div>
                     <div className="text-3xl font-bold">{totalAnalyses}</div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Rapides · Approfondies · Passives
+                      Signal · Qualifiées · Décisions
                     </p>
                   </div>
                 </div>
