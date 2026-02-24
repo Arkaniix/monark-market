@@ -189,11 +189,6 @@ function QuickAnalysisPanel({ analysis, onDeepAnalysis }: { analysis: QuickAnaly
             </ul>
           </div>
         </div>
-
-        <Button size="sm" variant="secondary" className="w-full text-xs" onClick={onDeepAnalysis}>
-          <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
-          Décision complète · 20 cr. →
-        </Button>
       </div>
     </motion.div>
   );
