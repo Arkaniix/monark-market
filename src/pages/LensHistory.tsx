@@ -229,7 +229,15 @@ function ScanCard({ entry }: { entry: LensEntry }) {
 
   const handleDeepAnalysis = () => {
     const comp = entry.components[0];
-    navigate(`/estimator?component=${encodeURIComponent(comp?.name || "")}&price=${entry.price}&source=lens`);
+    const params = new URLSearchParams({
+      model_name: comp?.name || entry.title,
+      price: entry.price.toString(),
+      platform: entry.platform.toLowerCase(),
+      source: "lens",
+      scan_id: entry.id.toString(),
+    });
+    if (comp?.type) params.set("category", comp.type);
+    navigate(`/estimator?${params.toString()}`);
   };
 
   return (
