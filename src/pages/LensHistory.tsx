@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, Search, RotateCcw, Bookmark, Bell, Zap, FlaskConical, Loader2, ExternalLink, TrendingUp, TrendingDown, BarChart3, Droplets, Trophy, ScanSearch, Activity, Award, Clock } from "lucide-react";
+import { Eye, Search, RotateCcw, Bookmark, Bell, Zap, FlaskConical, Loader2, ExternalLink, TrendingUp, TrendingDown, BarChart3, Droplets, ScanSearch, Award, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -77,7 +77,7 @@ const MOCK_HISTORY: LensEntry[] = [
       insights: [
         "🔴 Prix au-dessus du marché",
         "🟡 Tendance baissière sur 30j",
-        "🟢 Vendeur noté (234 ventes)",
+        "🟡 Volume de ventes modéré",
         "🟡 Marge de négociation estimée : 20-30€",
       ],
     },
@@ -203,10 +203,6 @@ function QuickAnalysisPanel({ analysis }: { analysis: QuickAnalysis }) {
           ))}
         </ul>
       </div>
-      <Button className="w-full" size="sm">
-        <FlaskConical className="h-3.5 w-3.5 mr-1.5" />
-        Analyse approfondie — 20 cr.
-      </Button>
     </motion.div>
   );
 }
@@ -234,7 +230,7 @@ function LensCard({ entry }: { entry: LensEntry }) {
         ],
         insights: entry.gap > 0
           ? ["🟢 Prix inférieur au marché", "🟢 Composant populaire, revente facile", "🟡 Vérifier l'état réel"]
-          : ["🔴 Prix au-dessus du marché", "🟡 Marge de négociation possible", "🟢 Vendeur fiable"],
+          : ["🔴 Prix au-dessus du marché", "🟡 Marge de négociation possible", "🟡 Tendance baissière récente"],
       });
       setLoading(false);
     }, 1500);
@@ -304,11 +300,7 @@ function LensCard({ entry }: { entry: LensEntry }) {
             <Bell className={cn("h-4 w-4", alertActive ? "fill-warning text-warning" : "text-muted-foreground")} />
           </Button>
           <div className="ml-auto flex gap-2">
-            {quickResult ? (
-              <Button size="sm" className="h-8 text-xs">
-                Résultats →
-              </Button>
-            ) : (
+            {quickResult ? null : (
               <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleQuickAnalysis} disabled={loading}>
                 {loading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Zap className="h-3 w-3 mr-1" />}
                 Analyse rapide · 5 cr.
@@ -357,60 +349,11 @@ function SessionSidebar() {
       </Card>
 
       <Card>
-        <CardHeader className="pb-2 p-4">
-          <CardTitle className="text-sm">Missions actives</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0 space-y-3">
-          {[
-            { label: "Naviguer 20 annonces GPU", progress: 12, total: 20, reward: 15 },
-            { label: "Analyser 5 PC complets", progress: 2, total: 5, reward: 25 },
-          ].map((m) => (
-            <div key={m.label} className="space-y-1">
-              <div className="flex justify-between text-[11px]">
-                <span className="text-muted-foreground">{m.label}</span>
-                <span className="text-green-600 dark:text-green-400 font-medium">+{m.reward} cr.</span>
-              </div>
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(m.progress / m.total) * 100}%` }} />
-              </div>
-              <p className="text-[10px] text-muted-foreground text-right">{m.progress}/{m.total}</p>
-            </div>
-          ))}
-          <Button variant="link" className="text-xs text-primary p-0 h-auto">
-            Voir toutes les missions →
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-2 p-4">
-          <div className="flex items-center gap-1.5">
-            <Trophy className="h-3.5 w-3.5 text-amber-500" />
-            <CardTitle className="text-sm">Leaderboard semaine</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4 pt-0 space-y-2">
-          {[
-            { rank: 1, name: "GPUHunter42", credits: 342 },
-            { rank: 2, name: "DealSniper", credits: 298 },
-            { rank: 3, name: "TechScout", credits: 271 },
-          ].map((u) => (
-            <div key={u.rank} className="flex items-center gap-2 text-xs">
-              <span className={cn("font-bold w-5", u.rank === 1 ? "text-amber-500" : u.rank === 2 ? "text-zinc-400" : "text-orange-500")}>
-                #{u.rank}
-              </span>
-              <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                {u.name.slice(0, 2).toUpperCase()}
-              </div>
-              <span className="flex-1">{u.name}</span>
-              <span className="text-green-600 dark:text-green-400 font-medium">{u.credits} cr.</span>
-            </div>
-          ))}
-          <div className="pt-2 border-t text-xs text-muted-foreground">
-            Votre rang : <span className="font-semibold text-foreground">#47</span>
-          </div>
-          <Button variant="link" className="text-xs text-primary p-0 h-auto">
-            Voir le classement →
+        <CardContent className="p-4 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground">Communauté</p>
+          <p className="text-xs text-muted-foreground">Gagnez plus de crédits en participant aux missions communautaires.</p>
+          <Button variant="outline" size="sm" className="w-full text-xs" asChild>
+            <a href="/community">Voir les missions →</a>
           </Button>
         </CardContent>
       </Card>
