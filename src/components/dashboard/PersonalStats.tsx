@@ -26,6 +26,7 @@ interface PersonalStatsProps {
   }>;
   performanceData: Array<{
     day: number;
+    scraps?: number;
     analyses?: number;
     margin?: number;
     credits?: number;
@@ -58,25 +59,22 @@ export function PersonalStats({
 
   const filteredData = useMemo(() => {
     const periodDays = timeFilter === '7j' ? 7 : timeFilter === '30j' ? 30 : 90;
-    const seededRandom = (seed: number) => {
-      const x = Math.sin(seed * 9999) * 10000;
-      return x - Math.floor(x);
-    };
-    const baseSeed = timeFilter === '7j' ? 42 : timeFilter === '30j' ? 137 : 256;
-    return Array.from({ length: periodDays }, (_, i) => {
-      const seed = baseSeed + i * 7.3;
-      const random1 = seededRandom(seed);
-      const random2 = seededRandom(seed + 100);
-      const trend = (i / periodDays) * 1.5;
-      const weekdayEffect = (i % 7 < 5) ? 1.2 : 0.6;
-      const noise = (random1 - 0.5) * 4;
-      const spike = random2 > 0.9 ? 3 : 0;
-      return {
+    
+    if (performanceData && performanceData.length > 0) {
+      const sliced = performanceData.slice(-periodDays);
+      return sliced.map((d, i) => ({
         day: i + 1,
-        analyses: Math.max(0, Math.round(2 + trend + weekdayEffect + noise + spike))
-      };
-    });
-  }, [timeFilter]);
+        analyses: d.analyses ?? d.scraps ?? 0,
+      }));
+    }
+    
+    return Array.from({ length: periodDays }, (_, i) => ({
+      day: i + 1,
+      analyses: 0,
+    }));
+  }, [timeFilter, performanceData]);
+
+  const hasChartData = filteredData.some(d => d.analyses > 0);
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -278,20 +276,30 @@ export function PersonalStats({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="h-[200px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={filteredData}>
-                      <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} tickFormatter={formatChartDate} interval="preserveStartEnd" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                      <Tooltip contentStyle={{
-                        backgroundColor: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "var(--radius)"
-                      }} />
-                      <Line type="monotone" dataKey="analyses" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                {!hasChartData && (
+                  <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm">
+                    <div className="text-center">
+                      <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p>Aucune donnée sur cette période</p>
+                    </div>
+                  </div>
+                )}
+                {hasChartData && (
+                  <div className="h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={filteredData}>
+                        <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={10} tickLine={false} axisLine={false} tickFormatter={formatChartDate} interval="preserveStartEnd" />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                        <Tooltip contentStyle={{
+                          backgroundColor: "hsl(var(--background))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "var(--radius)"
+                        }} />
+                        <Line type="monotone" dataKey="analyses" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
                 <div className="flex items-center justify-center gap-6 mt-4 text-sm">
                   <div className="flex items-center gap-2">
                     <div className="h-3 w-3 rounded-full bg-primary" />
