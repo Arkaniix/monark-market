@@ -414,51 +414,100 @@ function EstimationHistoryCard({ item, onReEstimate, onView }: { item: EnhancedE
     pro: "bg-green-500/15 text-green-400 border-green-500/30",
   };
 
+  const r = item.results;
+  const score = r?.opportunity?.score;
+  const scoreLabel = r?.opportunity?.label;
+  const decision = r?.decision?.action;
+  const median = r?.market?.median_price;
+  const margin = r?.actionable_prices?.margin_pct;
+  const confidence = r?.confidence?.level;
+
+  const scoreColor = score != null
+    ? score >= 75 ? "text-green-400" : score >= 55 ? "text-primary" : score >= 35 ? "text-yellow-400" : "text-red-400"
+    : "text-muted-foreground";
+
+  const decisionColors: Record<string, string> = {
+    buy: "bg-green-500/15 text-green-400 border-green-500/30",
+    negotiate: "bg-primary/10 text-primary border-primary/20",
+    wait: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+    pass: "bg-red-500/15 text-red-400 border-red-500/30",
+  };
+  const decisionLabels: Record<string, string> = {
+    buy: "Acheter", negotiate: "Négocier", wait: "Attendre", pass: "Passer",
+  };
+
   return (
     <Card className="hover:border-primary/30 transition-colors">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-              <p className="text-sm font-semibold truncate">{item.model_name}</p>
-              <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", planColors[item.plan_at_creation] || "")}>
-                {item.plan_at_creation}
+      <CardContent className="px-3 py-2.5">
+        {/* Row 1: Model name + badges + date */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+            <p className="text-sm font-semibold truncate">{item.model_name}</p>
+            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 leading-tight", planColors[item.plan_at_creation] || "")}>
+              {item.plan_at_creation}
+            </Badge>
+            {item.platform && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 leading-tight">
+                {item.platform}
               </Badge>
-              {item.platform && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                  {item.platform}
-                </Badge>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {item.category} · {item.condition || "État inconnu"}
-            </p>
+            )}
+            {decision && (
+              <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 leading-tight", decisionColors[decision] || "")}>
+                {decisionLabels[decision] || decision}
+              </Badge>
+            )}
           </div>
-
-          <div className="text-right shrink-0">
-            <p className="text-lg font-bold text-primary tabular-nums">{item.ad_price}€</p>
-            <p className="text-[11px] text-muted-foreground">
-              {new Date(item.created_at).toLocaleDateString("fr-FR")}
-            </p>
-          </div>
+          <span className="text-[11px] text-muted-foreground shrink-0">
+            {new Date(item.created_at).toLocaleDateString("fr-FR")}
+          </span>
         </div>
 
-        <div className="flex items-center gap-1.5 mt-3 justify-end">
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1 h-7 text-xs"
-            onClick={() => onView(item)}
-          >
+        {/* Row 2: Category + condition */}
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {item.category} · {item.condition || "État inconnu"}
+        </p>
+
+        {/* Row 3: Key metrics */}
+        <div className="flex items-center gap-3 mt-2 text-xs">
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground">Prix :</span>
+            <span className="font-semibold text-primary tabular-nums">{item.ad_price}€</span>
+          </div>
+          {median != null && (
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Médian :</span>
+              <span className="font-medium tabular-nums">{median}€</span>
+            </div>
+          )}
+          {score != null && (
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Score :</span>
+              <span className={cn("font-semibold tabular-nums", scoreColor)}>{score}/100</span>
+            </div>
+          )}
+          {margin != null && (
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Marge :</span>
+              <span className={cn("font-medium tabular-nums", margin > 0 ? "text-green-400" : "text-red-400")}>
+                {margin > 0 ? "+" : ""}{margin.toFixed(0)}%
+              </span>
+            </div>
+          )}
+          {confidence && (
+            <div className="hidden sm:flex items-center gap-1">
+              <span className="text-muted-foreground">Confiance :</span>
+              <span className="font-medium capitalize">{confidence === "high" ? "Élevée" : confidence === "medium" ? "Moyenne" : "Faible"}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Row 4: Actions */}
+        <div className="flex items-center gap-1.5 mt-2 justify-end">
+          <Button size="sm" variant="outline" className="gap-1 h-6 text-xs px-2" onClick={() => onView(item)}>
             <Eye className="h-3 w-3" />
-            Voir détail
+            Détail
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1 h-7 text-xs"
-            onClick={() => onReEstimate(item)}
-          >
+          <Button size="sm" variant="outline" className="gap-1 h-6 text-xs px-2" onClick={() => onReEstimate(item)}>
             <RotateCcw className="h-3 w-3" />
             Ré-estimer
           </Button>
