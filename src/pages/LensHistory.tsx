@@ -346,7 +346,7 @@ function ScanCard({ entry }: { entry: LensEntry }) {
               {quickResult ? "Résultats" : "Qualifier · 5 cr."}
             </Button>
             <Button
-              size="sm" variant="secondary"
+              size="sm" variant="default"
               className="h-7 text-xs gap-1 hidden sm:inline-flex"
               onClick={handleDeepAnalysis}
             >
