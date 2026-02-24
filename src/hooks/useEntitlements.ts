@@ -37,6 +37,7 @@ export interface EstimatorFeatures {
   canSeeAdvancedIndicators: boolean;
   chartInteractive: boolean;
   chartPeriods: ('7' | '30' | '90')[];
+  historyDepth: "signal_only" | "30_days" | "unlimited";
 }
 
 export interface PlanLimits {
@@ -101,9 +102,9 @@ export interface Entitlements {
 }
 
 // ============= Plan Configuration =============
-// Free: 0€/mois, 20 crédits (découverte Lens)
-// Standard: 11.99€/mois, 200 crédits, 10 alertes
-// Pro: 24.99€/mois, 800 crédits, 100 alertes
+// Free: 0€/mois, 20 crédits — Signal auto (Market Score), historique 5 entrées
+// Standard: 11.99€/mois, 200 crédits — Qualifier (5cr) + Décision (20cr), historique 30j
+// Pro: 24.99€/mois, 800 crédits — Tout + historique illimité + négociation/scénarios
 
 const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   free: {
@@ -135,6 +136,7 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
       canSeeAdvancedIndicators: false,
       chartInteractive: false,
       chartPeriods: [],
+      historyDepth: "signal_only",
     },
   },
   standard: {
@@ -166,6 +168,7 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
       canSeeAdvancedIndicators: false,
       chartInteractive: true,
       chartPeriods: ['30', '90'],
+      historyDepth: "30_days",
     },
   },
   pro: {
@@ -197,6 +200,7 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
       canSeeAdvancedIndicators: true,
       chartInteractive: true,
       chartPeriods: ['7', '30', '90'],
+      historyDepth: "unlimited",
     },
   },
 };
