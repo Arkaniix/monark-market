@@ -851,11 +851,9 @@ export default function ModelDetail() {
                           </div>
                           <div className="flex gap-2">
                             <Button size="sm" asChild>
-                              <Link to={`/ads/${ad.ad_id}`}>Voir</Link>
-                            </Button>
-                            <Button size="sm" variant="outline" asChild>
                               <a href={ad.url} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-4 w-4" />
+                                Voir l'annonce
+                                <ExternalLink className="h-4 w-4 ml-1" />
                               </a>
                             </Button>
                           </div>

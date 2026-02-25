@@ -431,7 +431,7 @@ export function CreateAlertModal({
               </span>
               {plan !== "pro" && (
                 <Button asChild variant="link" size="sm" className="p-0 h-auto text-primary">
-                  <Link to="/account?tab=subscription">
+                  <Link to="/pricing">
                     <Crown className="h-3 w-3 mr-1" />
                     Upgrade
                   </Link>
