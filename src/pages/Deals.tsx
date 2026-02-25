@@ -514,8 +514,8 @@ export default function Deals() {
 
                             {/* Actions row */}
                             <div className="deal-card__actions flex gap-2 mt-3">
-                              {deal.id ? <Button className="flex-1 h-9 text-sm" variant="default" size="sm" asChild>
-                                  <Link to={`/ads/${deal.id}`}>Voir</Link>
+                              {deal.url ? <Button className="flex-1 h-9 text-sm" variant="default" size="sm" asChild>
+                                  <a href={deal.url} target="_blank" rel="noopener noreferrer">Voir l'annonce</a>
                                 </Button> : <Button className="flex-1 h-9 text-sm" variant="default" size="sm" disabled>
                                   Voir
                                 </Button>}

@@ -190,8 +190,8 @@ export default function MyAccount() {
   
   const userEmail = user?.email || "Email inconnu";
   const userMemberSince = user?.created_at ? new Date(user.created_at) : new Date();
-  const mockResetDate = new Date(creditsResetDate);
-  const daysUntilReset = differenceInDays(mockResetDate, new Date());
+  const resetDate = new Date(creditsResetDate);
+  const daysUntilReset = differenceInDays(resetDate, new Date());
 
   // ═══════════════════════════════════════════════════════════════════
   // PLAN DATA
@@ -546,7 +546,7 @@ export default function MyAccount() {
                 </div>
                 <div className="p-3 rounded-lg bg-background/50 border">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Réinitialisation</p>
-                  <p className="text-lg font-semibold">{format(mockResetDate, "d MMM yyyy", { locale: fr })}</p>
+                  <p className="text-lg font-semibold">{format(resetDate, "d MMM yyyy", { locale: fr })}</p>
                 </div>
               </div>
               
@@ -597,7 +597,7 @@ export default function MyAccount() {
                 </div>
                 <Progress value={creditPercentage} className={`h-3 ${isCreditsLow ? "[&>div]:bg-destructive" : ""}`} />
                 <p className="text-sm text-muted-foreground mt-3">
-                  Réinitialisation le {format(mockResetDate, "d MMMM", { locale: fr })}
+                  Réinitialisation le {format(resetDate, "d MMMM", { locale: fr })}
                   {daysUntilReset > 0 && ` (dans ${daysUntilReset} jour${daysUntilReset > 1 ? "s" : ""})`}
                 </p>
                 <Button className="w-full mt-4 gap-2" asChild>

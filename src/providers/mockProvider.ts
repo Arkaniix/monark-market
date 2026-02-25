@@ -195,30 +195,30 @@ function initializeNotifications(): Notification[] {
   // Generate 20 notifications with mix of types over the past 14 days
   const initial: Notification[] = [
     // Today - 3 notifications
-    { id: 'n1', type: 'deal_detected', title: 'Bonne affaire détectée !', message: 'RTX 4060 Ti à 320€ (-17%) trouvée à Paris', is_read: false, created_at: new Date(now - 3600000 * 1).toISOString(), link: '/ads/3' },
+    { id: 'n1', type: 'deal_detected', title: 'Bonne affaire détectée !', message: 'RTX 4060 Ti à 320€ (-17%) trouvée à Paris', is_read: false, created_at: new Date(now - 3600000 * 1).toISOString(), link: '/deals' },
     { id: 'n2', type: 'price_alert', title: 'Alerte prix déclenchée', message: 'Ryzen 7 5800X3D est passé sous 280€', is_read: false, created_at: new Date(now - 3600000 * 3).toISOString(), link: '/models/5' },
     { id: 'n3', type: 'community_reward', title: 'Récompense communauté', message: 'Vous avez gagné 3 crédits pour votre contribution', is_read: false, created_at: new Date(now - 3600000 * 6).toISOString() },
     // Yesterday - 4 notifications
-    { id: 'n4', type: 'deal_detected', title: 'Deal exceptionnel !', message: 'RTX 3080 à 450€ (-13%) disponible à Lyon', is_read: false, created_at: new Date(now - 86400000 - 3600000 * 2).toISOString(), link: '/ads/15' },
+    { id: 'n4', type: 'deal_detected', title: 'Deal exceptionnel !', message: 'RTX 3080 à 450€ (-13%) disponible à Lyon', is_read: false, created_at: new Date(now - 86400000 - 3600000 * 2).toISOString(), link: '/deals' },
     { id: 'n5', type: 'price_alert', title: 'Baisse de prix', message: 'Samsung 980 Pro 1TB a baissé de 8%', is_read: false, created_at: new Date(now - 86400000 - 3600000 * 5).toISOString(), link: '/models/25' },
     { id: 'n6', type: 'community_reward', title: 'Mission terminée', message: 'Mission "Scrap GPU" complétée, +2 crédits', is_read: true, created_at: new Date(now - 86400000 - 3600000 * 8).toISOString() },
-    { id: 'n7', type: 'deal_detected', title: 'Opportunité GPU', message: 'RTX 4070 Super à 590€ à Marseille', is_read: true, created_at: new Date(now - 86400000 - 3600000 * 12).toISOString(), link: '/ads/28' },
+    { id: 'n7', type: 'deal_detected', title: 'Opportunité GPU', message: 'RTX 4070 Super à 590€ à Marseille', is_read: true, created_at: new Date(now - 86400000 - 3600000 * 12).toISOString(), link: '/deals' },
     // 2-3 days ago - 4 notifications  
     { id: 'n8', type: 'price_alert', title: 'Alerte variation', message: 'RTX 3070 a augmenté de 5% cette semaine', is_read: true, created_at: new Date(now - 86400000 * 2 - 3600000 * 4).toISOString(), link: '/models/12' },
-    { id: 'n9', type: 'deal_detected', title: 'Deal CPU détecté', message: 'Ryzen 5 5600X à 120€ (-18%)', is_read: true, created_at: new Date(now - 86400000 * 2 - 3600000 * 10).toISOString(), link: '/ads/42' },
+    { id: 'n9', type: 'deal_detected', title: 'Deal CPU détecté', message: 'Ryzen 5 5600X à 120€ (-18%)', is_read: true, created_at: new Date(now - 86400000 * 2 - 3600000 * 10).toISOString(), link: '/deals' },
     { id: 'n10', type: 'community_reward', title: 'Contribution validée', message: 'Votre scrap a ajouté 47 nouvelles annonces', is_read: true, created_at: new Date(now - 86400000 * 3 - 3600000 * 3).toISOString() },
     { id: 'n11', type: 'price_alert', title: 'Prix cible atteint', message: 'Corsair Vengeance DDR5 disponible sous 120€', is_read: true, created_at: new Date(now - 86400000 * 3 - 3600000 * 8).toISOString(), link: '/models/30' },
     // 4-7 days ago - 5 notifications
-    { id: 'n12', type: 'deal_detected', title: 'Deal RAM', message: 'Kit DDR5 32GB à 95€ à Toulouse', is_read: true, created_at: new Date(now - 86400000 * 4 - 3600000 * 6).toISOString(), link: '/ads/56' },
+    { id: 'n12', type: 'deal_detected', title: 'Deal RAM', message: 'Kit DDR5 32GB à 95€ à Toulouse', is_read: true, created_at: new Date(now - 86400000 * 4 - 3600000 * 6).toISOString(), link: '/deals' },
     { id: 'n13', type: 'community_reward', title: 'Rang amélioré', message: 'Vous êtes maintenant dans le top 100 contributeurs', is_read: true, created_at: new Date(now - 86400000 * 5 - 3600000 * 2).toISOString() },
     { id: 'n14', type: 'price_alert', title: 'Tendance baissière', message: 'RTX 4080 en baisse de 12% sur 30 jours', is_read: true, created_at: new Date(now - 86400000 * 5 - 3600000 * 10).toISOString(), link: '/models/6' },
-    { id: 'n15', type: 'deal_detected', title: 'Deal SSD', message: 'Samsung 990 Pro 2TB à 180€', is_read: true, created_at: new Date(now - 86400000 * 6 - 3600000 * 4).toISOString(), link: '/ads/71' },
+    { id: 'n15', type: 'deal_detected', title: 'Deal SSD', message: 'Samsung 990 Pro 2TB à 180€', is_read: true, created_at: new Date(now - 86400000 * 6 - 3600000 * 4).toISOString(), link: '/deals' },
     { id: 'n16', type: 'community_reward', title: 'Bonus hebdomadaire', message: '+5 crédits pour votre activité cette semaine', is_read: true, created_at: new Date(now - 86400000 * 7).toISOString() },
     // 8-14 days ago - 4 notifications
-    { id: 'n17', type: 'deal_detected', title: 'Opportunité rare', message: 'RTX 4090 à 1450€ (-10%) à Bordeaux', is_read: true, created_at: new Date(now - 86400000 * 9 - 3600000 * 5).toISOString(), link: '/ads/89' },
+    { id: 'n17', type: 'deal_detected', title: 'Opportunité rare', message: 'RTX 4090 à 1450€ (-10%) à Bordeaux', is_read: true, created_at: new Date(now - 86400000 * 9 - 3600000 * 5).toISOString(), link: '/deals' },
     { id: 'n18', type: 'price_alert', title: 'Nouvelle annonce', message: 'Nouveau listing RTX 4060 Ti dans votre région', is_read: true, created_at: new Date(now - 86400000 * 11 - 3600000 * 8).toISOString(), link: '/models/1' },
     { id: 'n19', type: 'community_reward', title: 'Badge débloqué', message: 'Badge "Chasseur de deals" obtenu', is_read: true, created_at: new Date(now - 86400000 * 12 - 3600000 * 3).toISOString() },
-    { id: 'n20', type: 'deal_detected', title: 'Deal CM', message: 'ASUS ROG Strix B650E-F à 220€', is_read: true, created_at: new Date(now - 86400000 * 14).toISOString(), link: '/ads/102' },
+    { id: 'n20', type: 'deal_detected', title: 'Deal CM', message: 'ASUS ROG Strix B650E-F à 220€', is_read: true, created_at: new Date(now - 86400000 * 14).toISOString(), link: '/deals' },
   ];
   setToStorage(STORAGE_KEYS.NOTIFICATIONS, initial);
   return initial;
