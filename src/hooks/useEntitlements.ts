@@ -19,6 +19,44 @@ export const CREDIT_COSTS: Record<CreditActionType, number> = {
   export: 0, // Free but plan-gated
 };
 
+// Collecte passive (crédits gagnés en naviguant avec l'extension)
+export const PASSIVE_EARN: Record<PlanType, { creditsPerAd: number; weeklyCapCredits: number }> = {
+  free:     { creditsPerAd: 1, weeklyCapCredits: 8  },  // ~8 annonces/semaine
+  standard: { creditsPerAd: 1, weeklyCapCredits: 30 },  // ~30 annonces/semaine
+  pro:      { creditsPerAd: 2, weeklyCapCredits: 80 },  // ~40 annonces/semaine
+};
+
+// Cooldown par annonce : même annonce = 0 crédit pendant 30 jours (anti-farming)
+
+// Missions communautaires — récompenses selon rareté du composant
+export const MISSION_REWARDS = {
+  documented:   { base: 3,  label: "Composant bien documenté" },   // >50 scans existants
+  scarce:       { base: 8,  label: "Composant peu documenté" },    // 10-50 scans
+  orphan:       { base: 20, label: "Composant orphelin" },         // <10 scans
+  special:      { base: 40, label: "Mission spéciale" },           // déclenchée manuellement
+} as const;
+
+// Multiplicateurs de récompense mission par plan
+export const MISSION_MULTIPLIERS: Record<PlanType, number> = {
+  free:     1,
+  standard: 1.5,
+  pro:      2,
+};
+
+// Plafonds mensuels de crédits gagnés via missions
+export const MISSION_MONTHLY_CAP: Record<PlanType, number> = {
+  free:     15,
+  standard: 40,
+  pro:      80,
+};
+
+// Rollover (crédits reportés au mois suivant, plafonnés)
+export const CREDITS_ROLLOVER_CAP: Record<PlanType, number> = {
+  free:     0,
+  standard: 40,
+  pro:      120,
+};
+
 export interface EstimatorFeatures {
   // Starter visible
   canSeeMedianPrice: boolean;
@@ -102,9 +140,9 @@ export interface Entitlements {
 }
 
 // ============= Plan Configuration =============
-// Free: 0€/mois, 20 crédits — Signal auto (Market Score), historique 5 entrées
-// Standard: 11.99€/mois, 200 crédits — Qualifier (5cr) + Décision (20cr), historique 30j
-// Pro: 24.99€/mois, 800 crédits — Tout + historique illimité + négociation/scénarios
+// Free: 0€/mois, 10 crédits — Signal auto (Market Score), Estimator prix médian
+// Standard: 11.99€/mois, 180 crédits + rollover 40cr — Qualifier + Décision complète
+// Pro: 22.99€/mois, 600 crédits + rollover 120cr — Flux complet revendeurs pro
 
 const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   free: {
@@ -118,11 +156,11 @@ const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     canAccessAdvancedStats: false,
     canAccessPrioritySupport: false,
     canAccessApiAccess: false,
-    canAccessTraining: false,
+    canAccessTraining: true,  // Accès intro plateforme
     canAccessAdsDatabase: false,
     canAccessCatalog: true,
     estimator: {
-      canSeeMedianPrice: false,
+      canSeeMedianPrice: true,   // Free voit le prix médian uniquement
       canSeeVariation30d: false,
       canSeeVolume: false,
       canSeeOpportunityLabel: false,

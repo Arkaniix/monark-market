@@ -33,8 +33,8 @@ export const PLANS: PlanConfig[] = [
     name: "Free",
     displayName: "Free",
     price: 0,
-    creditsPerMonth: 20,
-    description: "Découvrir Monark Lens — Signal gratuit",
+    creditsPerMonth: 10,
+    description: "Découvrir Monark — Market Score & prix médian gratuits",
     icon: Eye,
   },
   {
@@ -42,8 +42,8 @@ export const PLANS: PlanConfig[] = [
     name: "Standard",
     displayName: "Standard",
     price: 11.99,
-    creditsPerMonth: 200,
-    description: "Qualifier et décider — acheteurs réguliers",
+    creditsPerMonth: 180,
+    description: "Qualifier et décider — acheteurs et revendeurs occasionnels",
     popular: true,
     icon: Zap,
   },
@@ -51,9 +51,9 @@ export const PLANS: PlanConfig[] = [
     id: "pro",
     name: "Pro",
     displayName: "Pro",
-    price: 24.99,
-    creditsPerMonth: 800,
-    description: "Flux complet — revendeurs et pros",
+    price: 22.99,
+    creditsPerMonth: 600,
+    description: "Flux complet — revendeurs actifs et professionnels",
     icon: Award,
   },
 ];
@@ -67,9 +67,11 @@ export interface PlanFeature {
 }
 
 export const PLAN_FEATURES: PlanFeature[] = [
-  { name: "Crédits mensuels", free: "20", standard: "200", pro: "800" },
+  { name: "Crédits mensuels", free: "10", standard: "180", pro: "600" },
+  { name: "Report crédits (rollover)", tooltip: "Les crédits non utilisés sont partiellement reportés au mois suivant", free: false, standard: "40 cr max", pro: "120 cr max" },
   { name: "Market Score (via extension)", tooltip: "Score 0-10 sur chaque annonce consultée avec l'extension", free: "Score seul", standard: true, pro: true },
   { name: "Verdict + valeur marché", tooltip: "Verdict textuel et comparaison prix annonce vs marché", free: false, standard: true, pro: true },
+  { name: "Estimator — Prix médian", tooltip: "Valeur médiane du composant sur le marché secondaire", free: true, standard: true, pro: true },
   { name: "Qualifier une annonce (5 cr.)", tooltip: "Analyse inline dans Mes Analyses : médiane, écart, tendance, volume, liquidité", free: false, standard: true, pro: true },
   { name: "Décision complète (20 cr.)", tooltip: "Ouvre l'Estimator avec les données de l'annonce pré-remplies pour un verdict buy/negotiate/wait/pass complet", free: false, standard: true, pro: true },
   { name: "Accès catalogue composants", tooltip: "Base de données de tous les composants référencés", free: true, standard: true, pro: true },
@@ -77,18 +79,19 @@ export const PLAN_FEATURES: PlanFeature[] = [
   { name: "Alertes prix actives", free: false, standard: "10", pro: "100" },
   { name: "Watchlist", free: false, standard: "15 items", pro: "Illimité" },
   { name: "Mes Analyses (historique unifié)", tooltip: "Toutes vos analyses Lens (Signal, Qualifiées, Décisions) au même endroit", free: "5 dernières", standard: "30 jours", pro: "Illimité" },
+  { name: "Collecte passive", tooltip: "Crédits gagnés automatiquement en naviguant avec l'extension. Plafond hebdomadaire anti-farming.", free: "1 cr/annonce — 8 cr/sem", standard: "1 cr/annonce — 30 cr/sem", pro: "2 cr/annonce — 80 cr/sem" },
+  { name: "Missions communautaires", tooltip: "Récompenses pour l'enrichissement de la base de données. Multiplicateur selon le plan.", free: "×1 — 15 cr/mois max", standard: "×1.5 — 40 cr/mois max", pro: "×2 — 80 cr/mois max" },
   { name: "Estimator - Synthèse & Indicateurs", free: false, standard: true, pro: true },
   { name: "Estimator - Bloc décision final", free: false, standard: true, pro: true },
   { name: "Estimator - Prix achat/revente", free: false, standard: true, pro: true },
   { name: "Estimator - Graphiques interactifs", free: false, standard: true, pro: true },
   { name: "Introduction plateforme", tooltip: "Module de formation d'introduction", free: true, standard: true, pro: true },
-  { name: "Formation avancée", free: false, standard: true, pro: true },
+  { name: "Formation avancée achat-revente", free: false, standard: true, pro: true },
   { name: "Tendances marché avancées", free: false, standard: true, pro: true },
   { name: "Estimator - Scénarios comparatifs", free: false, standard: false, pro: true },
   { name: "Estimator - Négociation & Plateformes", free: false, standard: false, pro: true },
-  { name: "Mes Analyses — historique étendu (Pro)", tooltip: "Accès à tout l'historique Signal + Qualifié + Décision sans limite de date. Standard = 30 derniers jours.", free: false, standard: "30 jours", pro: true },
   { name: "Export de données", free: false, standard: false, pro: true },
-  { name: "Priorité d'analyse", free: false, standard: false, pro: true },
+  { name: "Support prioritaire (< 24h)", free: false, standard: false, pro: true },
 ];
 
 interface PricingTableProps {
@@ -108,13 +111,19 @@ export function PricingTable({
 }: PricingTableProps) {
   return (
     <div className={cn("space-y-8", className)}>
-      {/* Non-cumulative credits warning */}
+      {/* Launch price banner */}
+      <div className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-sm font-medium max-w-xl mx-auto">
+        <Zap className="h-4 w-4 flex-shrink-0" />
+        <span>Prix de lancement — Monark est en développement actif, les tarifs évolueront. Les membres actuels ne seront jamais les premiers impactés.</span>
+      </div>
+
+      {/* Rollover info */}
       <div className="flex items-center justify-center gap-3 p-4 rounded-lg bg-muted/50 border max-w-2xl mx-auto">
         <RefreshCw className="h-5 w-5 text-primary flex-shrink-0" />
         <div className="text-center">
-          <p className="font-medium">Crédits non cumulables</p>
+          <p className="font-medium">Rollover partiel des crédits</p>
           <p className="text-sm text-muted-foreground">
-            Les crédits sont remis à zéro chaque mois. Les crédits non utilisés ne sont pas reportés.
+            Standard : jusqu'à 40 crédits non utilisés reportés au mois suivant. Pro : jusqu'à 120. Free : remise à zéro chaque mois.
           </p>
         </div>
       </div>
@@ -361,31 +370,29 @@ function getHighlightedFeatures(planId: string): string[] {
   switch (planId) {
     case "free":
       return [
-        "20 crédits/mois",
+        "10 crédits/mois",
         "Market Score (Signal) sur chaque annonce",
-        "Collecte passive 1 cr/annonce",
-        "Mes Analyses — 5 dernières entrées",
-        "Accès catalogue complet",
+        "Estimator — prix médian gratuit",
+        "Collecte passive : 1 cr/annonce (8 cr/sem max)",
+        "Catalogue complet + intro plateforme",
       ];
     case "standard":
       return [
-        "200 crédits/mois",
+        "180 crédits/mois + rollover 40 cr",
         "Qualifier une annonce — analyse inline (5 cr.)",
         "Décision complète via Estimator (20 cr.)",
-        "Mes Analyses — 30 jours d'historique",
-        "10 alertes + 15 watchlist",
-        "Collecte passive 2 cr/annonce",
-        "Formation avancée + tendances",
+        "Collecte passive : 1 cr/annonce (30 cr/sem max)",
+        "Missions ×1.5 — jusqu'à 40 cr/mois bonus",
+        "Formation complète achat-revente",
       ];
     case "pro":
       return [
-        "800 crédits/mois",
+        "600 crédits/mois + rollover 120 cr",
         "Tout Standard inclus",
-        "Mes Analyses — historique illimité + export",
+        "Collecte passive : 2 cr/annonce (80 cr/sem max)",
+        "Missions ×2 — jusqu'à 80 cr/mois bonus",
         "Scénarios comparatifs + négociation (Estimator)",
-        "100 alertes + watchlist illimitée",
-        "Collecte passive 3 cr/annonce",
-        "Support prioritaire",
+        "Support prioritaire + export données",
       ];
     default:
       return [];

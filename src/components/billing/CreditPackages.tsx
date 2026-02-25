@@ -23,25 +23,25 @@ export interface CreditPackage {
 
 export const CREDIT_PACKAGES: CreditPackage[] = [
   {
-    id: "pack-50",
-    credits: 50,
-    price: 5,
-    pricePerCredit: 0.10,
+    id: "pack-60",
+    credits: 60,
+    price: 1.99,
+    pricePerCredit: 0.033,
   },
   {
-    id: "pack-150",
-    credits: 150,
-    price: 12,
-    pricePerCredit: 0.08,
+    id: "pack-200",
+    credits: 200,
+    price: 4.99,
+    pricePerCredit: 0.025,
     popular: true,
-    savings: "20%",
+    savings: "24%",
   },
   {
-    id: "pack-400",
-    credits: 400,
-    price: 30,
-    pricePerCredit: 0.075,
-    savings: "25%",
+    id: "pack-500",
+    credits: 500,
+    price: 9.99,
+    pricePerCredit: 0.020,
+    savings: "39%",
   },
 ];
 

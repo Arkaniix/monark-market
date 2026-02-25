@@ -30,7 +30,7 @@ const faqs = [
   },
   {
     question: "Comment fonctionnent les crédits et les missions ?",
-    answer: "Chaque plan inclut un quota mensuel de crédits. En plus, vous gagnez des crédits automatiquement en naviguant avec l'extension (1 à 3 crédits par annonce enrichie selon votre plan). Des missions semi-actives proposent aussi des récompenses bonus (ex: naviguer 20 annonces GPU cette semaine).",
+    answer: "Chaque plan inclut un quota mensuel de crédits (10 Free, 180 Standard, 600 Pro). Standard et Pro bénéficient d'un rollover partiel : les crédits non utilisés se reportent jusqu'à 40 cr (Standard) ou 120 cr (Pro) le mois suivant. En plus, vous gagnez des crédits en naviguant avec l'extension (1-2 crédits par annonce, plafond hebdomadaire selon votre plan) et en complétant des missions communautaires (jusqu'à 80 cr/mois bonus pour Pro).",
   },
   {
     question: "Y a-t-il un engagement de durée ?",
