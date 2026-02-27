@@ -142,14 +142,19 @@ export default function AdminSubscriptions() {
 
   const handleViewDetail = (sub: Subscription) => {
     // Mock payment and credit injection data
+    // Determine credits based on plan name
+    const planName = (sub.subscription_plans?.name || '').toLowerCase();
+    const planCredits = planName.includes('pro') ? 600 : planName.includes('standard') ? 180 : 10;
+    const rolloverCap = planName.includes('pro') ? 120 : planName.includes('standard') ? 40 : 0;
+    
     const detail: SubscriptionDetail = {
       ...sub,
       payments: [
         { id: 1, amount: sub.subscription_plans?.price || 0, date: sub.started_at, status: 'completed' },
       ],
       creditInjections: [
-        { id: 1, delta: 50, date: sub.started_at, reason: 'subscription_start' },
-        { id: 2, delta: 50, date: sub.credits_reset_date || sub.started_at, reason: 'monthly_refill' },
+        { id: 1, delta: planCredits, date: sub.started_at, reason: 'subscription_start' },
+        { id: 2, delta: planCredits, date: sub.credits_reset_date || sub.started_at, reason: `monthly_refill (rollover max: ${rolloverCap})` },
       ]
     };
     setSelectedSubscription(detail);
