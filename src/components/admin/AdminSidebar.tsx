@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CreditCard, Coins, Briefcase, Package, Database, Cpu, TrendingUp, Plug, Activity, FileText, Settings, AlertTriangle, BarChart3, DollarSign } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, Coins, Briefcase, Package, Database, Cpu, TrendingUp, Plug, Activity, FileText, Settings, AlertTriangle, BarChart3, Telescope, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ export default function AdminSidebar({ activeSection, onSectionChange, rejectsBa
         { id: "users", label: "Utilisateurs", icon: Users },
         { id: "subscriptions", label: "Abonnements", icon: CreditCard },
         { id: "credits", label: "Crédits & Politiques", icon: Coins },
+        { id: "compta", label: "Comptabilité", icon: Receipt },
       ],
     },
     {
@@ -42,6 +43,7 @@ export default function AdminSidebar({ activeSection, onSectionChange, rejectsBa
     {
       label: "INTELLIGENCE MARCHÉ",
       items: [
+        { id: "observatory", label: "Observatoire", icon: Telescope },
         { id: "metrics", label: "Analyses de marché", icon: TrendingUp },
         { id: "regimes", label: "Régimes de marché", icon: BarChart3 },
       ],
