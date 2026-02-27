@@ -20,7 +20,8 @@ import AdminExternal from "@/components/admin/AdminExternal";
 import AdminHealth from "@/components/admin/AdminHealth";
 import AdminLogs from "@/components/admin/AdminLogs";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
-import AdminSupport from "@/components/admin/AdminSupport";
+import AdminRejects from "@/components/admin/AdminRejects";
+import AdminRegimes from "@/components/admin/AdminRegimes";
 
 const LOADING_TIMEOUT_MS = 8000;
 
@@ -80,10 +81,14 @@ export default function Admin() {
         return <AdminAds />;
       case "ingest":
         return <AdminIngest />;
+      case "rejects":
+        return <AdminRejects />;
       case "models":
         return <AdminModels />;
       case "metrics":
         return <AdminMetrics />;
+      case "regimes":
+        return <AdminRegimes />;
       case "external":
         return <AdminExternal />;
       case "health":
@@ -92,8 +97,6 @@ export default function Admin() {
         return <AdminLogs />;
       case "settings":
         return <AdminSystemSettings />;
-      case "support":
-        return <AdminSupport />;
       default:
         return <AdminDashboard />;
     }

@@ -202,6 +202,12 @@ export const CONFIG = {
 export const ADMIN = {
   USERS: '/v1/admin/users',
   SYSTEM: '/v1/admin/system',
+  JOBS: '/v1/admin/jobs',
+  LOGS: '/v1/admin/logs',
+  REJECTS_STATS: '/v1/admin/rejects/stats',
+  REJECTS_LIST: '/v1/admin/rejects',
+  REJECTS_REVIEW: (id: number) => `/v1/admin/rejects/${id}/review`,
+  REJECTS_EXPORT: '/v1/admin/rejects/export/csv',
 } as const;
 
 // ============= Health =============
