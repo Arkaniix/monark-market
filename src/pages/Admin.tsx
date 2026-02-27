@@ -22,6 +22,8 @@ import AdminLogs from "@/components/admin/AdminLogs";
 import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
 import AdminRejects from "@/components/admin/AdminRejects";
 import AdminRegimes from "@/components/admin/AdminRegimes";
+import AdminObservatory from "@/components/admin/AdminObservatory";
+import AdminCompta from "@/components/admin/AdminCompta";
 
 const LOADING_TIMEOUT_MS = 8000;
 
@@ -89,6 +91,10 @@ export default function Admin() {
         return <AdminMetrics />;
       case "regimes":
         return <AdminRegimes />;
+      case "observatory":
+        return <AdminObservatory />;
+      case "compta":
+        return <AdminCompta />;
       case "external":
         return <AdminExternal />;
       case "health":

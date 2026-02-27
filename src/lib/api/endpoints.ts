@@ -208,6 +208,12 @@ export const ADMIN = {
   REJECTS_LIST: '/v1/admin/rejects',
   REJECTS_REVIEW: (id: number) => `/v1/admin/rejects/${id}/review`,
   REJECTS_EXPORT: '/v1/admin/rejects/export/csv',
+  OBSERVATORY: '/v1/admin/observatory',
+  OBSERVATORY_MISSION: '/v1/admin/observatory/mission',
+  OBSERVATORY_EXPORT: '/v1/admin/observatory/export',
+  BILLING_CLIENTS: '/v1/admin/billing/clients',
+  BILLING_CLIENT_HISTORY: (userId: number) => `/v1/admin/billing/client/${userId}/history`,
+  BILLING_EXPORT: '/v1/admin/billing/export',
 } as const;
 
 // ============= Health =============
