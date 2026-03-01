@@ -56,40 +56,9 @@ export default function VariantDetail() {
             },
           };
         }
-      } catch {
-        // API not available, use mock fallback
+      } catch (err) {
+        throw new Error('Variante introuvable');
       }
-
-      // Mock fallback: build variant from id
-      const variantId = parseInt(id);
-      return {
-        id: variantId,
-        brand: 'N/A',
-        variant_name: `Variante #${variantId}`,
-        boost_clock_mhz: null,
-        core_clock_mhz: null,
-        memory_gb: null,
-        length_mm: null,
-        color: null,
-        price_usd: null,
-        image_url: null,
-        parent_model: {
-          id: 0,
-          name: 'Modèle inconnu',
-          brand: '',
-          category: 'GPU',
-          image_url: null,
-        },
-        market: {
-          median_price: 0,
-          fair_value_30d: 0,
-          volume_active: 0,
-          rarity_index: 0,
-          var_30d_pct: 0,
-          median_days_to_sell: 0,
-          last_scan_at: new Date().toISOString(),
-        },
-      };
     },
     enabled: !!id,
     retry: false,

@@ -17,7 +17,8 @@ import {
   Calendar, AlertTriangle, Mail, Shield, LogOut, Trash2, 
   Bell, Moon, Sun, Globe, Key, Loader2, Check, Coins,
   RefreshCw, TrendingUp, TrendingDown, X, Minus, Info,
-  ChevronLeft, ChevronRight, History, Bookmark, FlaskConical
+  ChevronLeft, ChevronRight, History, Bookmark, FlaskConical,
+  Download
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays, subDays, subHours } from "date-fns";
@@ -27,7 +28,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "next-themes";
 import { useMockSubscription, MOCK_PLANS } from "@/hooks/useMockSubscription";
 import { SavedSearchesPanel } from "@/components/account/SavedSearchesPanel";
-import { apiPatch, apiPost } from "@/lib/api";
+import { apiPatch, apiPost, apiFetch, apiDelete } from "@/lib/api";
+import { toast as sonnerToast } from "sonner";
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { useUpdateUserSettings } from "@/hooks/useUserSettings";
 import {
@@ -184,6 +186,12 @@ export default function MyAccount() {
   // Loading states for mock
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
+  // RGPD states
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
   // ═══════════════════════════════════════════════════════════════════
   // MOCK DATA (non-subscription)
   // ═══════════════════════════════════════════════════════════════════
@@ -305,6 +313,62 @@ export default function MyAccount() {
       title: "Plan modifié", 
       description: `Votre abonnement est maintenant ${targetName}.`
     });
+  };
+
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const [profile, credits, estimations, watchlist, alerts, searches] = await Promise.allSettled([
+        apiFetch(ENDPOINTS.USERS.ME),
+        apiFetch(ENDPOINTS.CREDITS.HISTORY),
+        apiFetch(ENDPOINTS.ESTIMATOR.HISTORY + "?page_size=1000"),
+        apiFetch(ENDPOINTS.WATCHLIST.LIST),
+        apiFetch(ENDPOINTS.ALERTS.LIST),
+        apiFetch(ENDPOINTS.USERS.SAVED_SEARCHES),
+      ]);
+
+      const exportData = {
+        exported_at: new Date().toISOString(),
+        profile: profile.status === "fulfilled" ? profile.value : null,
+        credit_history: credits.status === "fulfilled" ? credits.value : null,
+        estimations: estimations.status === "fulfilled" ? estimations.value : null,
+        watchlist: watchlist.status === "fulfilled" ? watchlist.value : null,
+        alerts: alerts.status === "fulfilled" ? alerts.value : null,
+        saved_searches: searches.status === "fulfilled" ? searches.value : null,
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `monark-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast({ title: "Export terminé", description: "Vos données ont été téléchargées." });
+    } catch {
+      toast({ title: "Erreur d'export", description: "Impossible d'exporter vos données.", variant: "destructive" });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    try {
+      await apiDelete(ENDPOINTS.USERS.DELETE_ME);
+      await logout();
+      navigate("/");
+      sonnerToast.success("Compte supprimé", {
+        description: "Votre compte et toutes vos données ont été supprimés."
+      });
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de supprimer le compte. Contactez le support.", variant: "destructive" });
+    } finally {
+      setIsDeletingAccount(false);
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText("");
+    }
   };
 
   const getDowngradeLosses = (targetPlan: string) => {
@@ -735,6 +799,60 @@ export default function MyAccount() {
 
               <Separator />
 
+              {/* Besoin d'aide */}
+              <div className="p-4 rounded-lg border bg-muted/30">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium">Besoin d'aide ?</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Contactez-nous par email ou rejoignez notre communauté Discord.
+                    </p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <Button variant="outline" className="gap-2" asChild>
+                      <a href="mailto:support@monark-market.fr">
+                        <Mail className="h-4 w-4" />
+                        Email
+                      </a>
+                    </Button>
+                    <Button variant="outline" className="gap-2" asChild>
+                      <a href="https://discord.gg/monark" target="_blank" rel="noopener noreferrer">
+                        Discord
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Export RGPD */}
+              <div className="p-4 rounded-lg border bg-muted/30">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium">Exporter mes données</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Téléchargez une copie de toutes vos données personnelles conformément au RGPD (article 20).
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="gap-2 shrink-0"
+                    onClick={handleExportData}
+                    disabled={isExporting}
+                  >
+                    {isExporting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                    {isExporting ? "Export en cours..." : "Télécharger mes données"}
+                  </Button>
+                </div>
+              </div>
+
+              <Separator />
+
               {/* Zone sensible */}
               <div className="pt-2">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
@@ -753,10 +871,10 @@ export default function MyAccount() {
                     <Button 
                       variant="outline" 
                       className="gap-2 border-destructive/30 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-                      disabled
+                      onClick={() => setShowDeleteConfirm(true)}
                     >
                       <Trash2 className="h-4 w-4" />
-                      Bientôt disponible
+                      Supprimer mon compte
                     </Button>
                   </div>
                 </div>
@@ -1122,6 +1240,61 @@ export default function MyAccount() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          MODAL: SUPPRESSION DE COMPTE (RGPD)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={(open) => {
+        setShowDeleteConfirm(open);
+        if (!open) setDeleteConfirmText("");
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Supprimer définitivement votre compte ?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  Cette action est <strong>irréversible</strong>. Toutes vos données personnelles, crédits,
+                  historique d'estimations, watchlist et alertes seront définitivement supprimés.
+                  Votre abonnement actif sera annulé sans remboursement.
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="delete-confirm" className="text-sm font-medium">
+                    Tapez <strong>SUPPRIMER</strong> pour confirmer
+                  </Label>
+                  <Input
+                    id="delete-confirm"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="SUPPRIMER"
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmText !== "SUPPRIMER" || isDeletingAccount}
+            >
+              {isDeletingAccount ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Suppression...
+                </>
+              ) : (
+                "Supprimer définitivement"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

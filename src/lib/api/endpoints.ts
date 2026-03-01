@@ -21,6 +21,7 @@ export const DASHBOARD = {
 export const USERS = {
   ME: '/v1/users/me',
   UPDATE_ME: '/v1/users/me', // PATCH
+  DELETE_ME: '/v1/users/me', // DELETE
   ACTIVITY: '/v1/users/me/activity',
   LOGS: '/v1/users/me/logs',
   SESSIONS: '/v1/users/me/sessions',
