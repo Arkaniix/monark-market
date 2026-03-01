@@ -18,7 +18,10 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { TrendingUp, TrendingDown, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
+import { ENDPOINTS } from "@/lib/api/endpoints";
 import { mockModels, Model } from "@/lib/mockData";
 
 interface ModelComparatorProps {
@@ -28,21 +31,47 @@ interface ModelComparatorProps {
 export default function ModelComparator({ currentModel }: ModelComparatorProps) {
   const [selectedModelId, setSelectedModelId] = useState<string>("");
 
+  const isMockMode = import.meta.env.VITE_DATA_PROVIDER === "mock";
+
+  const { data: apiModelsData, isLoading: isLoadingApi } = useQuery({
+    queryKey: ["models", "comparator"],
+    queryFn: () => apiFetch<any>(ENDPOINTS.MODELS.LIST + "?limit=500"),
+    staleTime: 300000,
+    enabled: !isMockMode,
+  });
+
+  const allModels: Model[] = isMockMode
+    ? mockModels
+    : (apiModelsData?.items || apiModelsData || []);
+
+  const isLoading = !isMockMode && isLoadingApi;
+
   // Get models from the same category excluding current model
-  const availableModels = mockModels.filter(
+  const availableModels = allModels.filter(
     (m) => m.category === currentModel.category && m.id !== currentModel.id
   );
 
-  const compareModel = mockModels.find((m) => m.id === selectedModelId);
+  const compareModel = allModels.find((m) => m.id === selectedModelId);
 
   // Combine price histories for comparison
   const combinedHistory =
     compareModel &&
-    currentModel.priceHistory.map((item, index) => ({
+    currentModel.priceHistory?.map((item, index) => ({
       date: item.date,
       [currentModel.name]: item.price,
-      [compareModel.name]: compareModel.priceHistory[index]?.price || 0,
+      [compareModel.name]: compareModel.priceHistory?.[index]?.price || 0,
     }));
+
+  if (isLoading) {
+    return (
+      <Card className="p-12">
+        <div className="text-center text-muted-foreground">
+          <Loader2 className="h-8 w-8 mx-auto mb-3 animate-spin" />
+          <p>Chargement des modèles...</p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -133,19 +162,21 @@ export default function ModelComparator({ currentModel }: ModelComparatorProps) 
                     </div>
                   </div>
 
-                  <div className="pt-2">
-                    <ResponsiveContainer width="100%" height={60}>
-                      <LineChart data={currentModel.priceHistory}>
-                        <Line
-                          type="monotone"
-                          dataKey="price"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  {currentModel.priceHistory && (
+                    <div className="pt-2">
+                      <ResponsiveContainer width="100%" height={60}>
+                        <LineChart data={currentModel.priceHistory}>
+                          <Line
+                            type="monotone"
+                            dataKey="price"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2}
+                            dot={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -219,62 +250,66 @@ export default function ModelComparator({ currentModel }: ModelComparatorProps) 
                     </div>
                   </div>
 
-                  <div className="pt-2">
-                    <ResponsiveContainer width="100%" height={60}>
-                      <LineChart data={compareModel.priceHistory}>
-                        <Line
-                          type="monotone"
-                          dataKey="price"
-                          stroke="hsl(var(--accent))"
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  {compareModel.priceHistory && (
+                    <div className="pt-2">
+                      <ResponsiveContainer width="100%" height={60}>
+                        <LineChart data={compareModel.priceHistory}>
+                          <Line
+                            type="monotone"
+                            dataKey="price"
+                            stroke="hsl(var(--accent))"
+                            strokeWidth={2}
+                            dot={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Comparison Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Évolution comparative des prix</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={combinedHistory}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="date" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                    }}
-                    formatter={(value: number) => `${value}€`}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey={currentModel.name}
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    name={currentModel.name}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey={compareModel.name}
-                    stroke="hsl(var(--accent))"
-                    strokeWidth={2}
-                    name={compareModel.name}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          {combinedHistory && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Évolution comparative des prix</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={combinedHistory}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="date" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                      formatter={(value: number) => `${value}€`}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey={currentModel.name}
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      name={currentModel.name}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey={compareModel.name}
+                      stroke="hsl(var(--accent))"
+                      strokeWidth={2}
+                      name={compareModel.name}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Key Differences */}
           <Card>
