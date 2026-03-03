@@ -1,18 +1,16 @@
 // Admin API Helper - Centralized fetcher for admin panel
 // Uses FastAPI backend for pipeline/market data, Supabase for user/billing data
 
-import { API_BASE_URL } from './client';
-import { supabase } from '@/integrations/supabase/client';
+import { API_BASE_URL, getAccessToken } from './client';
 
 /**
- * Fetch from VPS API with JWT auth from Supabase session
+ * Fetch from VPS API with JWT auth from localStorage (same token as all other API calls)
  */
 export async function adminApiFetch<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
+  const token = getAccessToken();
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
@@ -55,8 +53,7 @@ export async function adminApiPatch<T>(endpoint: string, body?: unknown): Promis
  * Download a file (CSV export etc.)
  */
 export async function adminApiDownload(endpoint: string, filename: string): Promise<void> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
+  const token = getAccessToken();
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     headers: {

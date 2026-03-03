@@ -486,13 +486,28 @@ export const apiProvider: DataProvider = {
     };
   },
   async getSubscriptionPlans() {
-    return apiFetch<SubscriptionPlan[]>(ENDPOINTS.BILLING.PLANS);
+    try {
+      return await apiFetch<SubscriptionPlan[]>(ENDPOINTS.BILLING.PLANS);
+    } catch {
+      console.warn('Billing plans endpoint unavailable');
+      return [];
+    }
   },
   async getUserSubscription() {
-    return apiFetch<UserSubscription | null>(ENDPOINTS.BILLING.SUBSCRIPTIONS);
+    try {
+      return await apiFetch<UserSubscription | null>(ENDPOINTS.BILLING.SUBSCRIPTIONS);
+    } catch {
+      console.warn('Subscription endpoint unavailable, falling back to user profile');
+      return null;
+    }
   },
   async getSubscriptionHistory() {
-    return apiFetch<UserSubscription[]>(ENDPOINTS.BILLING.HISTORY);
+    try {
+      return await apiFetch<UserSubscription[]>(ENDPOINTS.BILLING.HISTORY);
+    } catch {
+      console.warn('Subscription history endpoint unavailable');
+      return [];
+    }
   },
   async getUserProfile() {
     return apiFetch<UserProfile>(ENDPOINTS.USERS.ME);
@@ -512,9 +527,14 @@ export const apiProvider: DataProvider = {
     return apiPut(ENDPOINTS.USERS.UPDATE_SETTINGS, data);
   },
 
-  // Saved Searches
+  // Saved Searches (endpoint not yet available in backend)
   async getSavedSearches() {
-    return apiFetch(ENDPOINTS.USERS.SAVED_SEARCHES);
+    try {
+      return await apiFetch(ENDPOINTS.USERS.SAVED_SEARCHES);
+    } catch {
+      console.warn('Saved searches endpoint not available');
+      return { items: [], total: 0 };
+    }
   },
   async getSavedSearch(id) {
     return apiFetch(ENDPOINTS.USERS.SAVED_SEARCH_DETAIL(id));
