@@ -20,6 +20,8 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEnhancedEstimationHistory } from "@/hooks";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { useLensHistory } from "@/hooks/useLensHistory";
+import type { LensHistoryItem } from "@/hooks/useLensHistory";
 import type { EnhancedEstimationHistoryItem, EnhancedEstimationResult } from "@/types/estimator";
 
 // Import result display components
@@ -70,67 +72,40 @@ interface LensEntry {
   depth: "signal" | "qualified" | "decision";
 }
 
-// ── Mock Data (dev only) ──
-const DEV_MOCK_HISTORY: LensEntry[] = [
-  {
-    id: 1, platform: "Leboncoin", type: "PC_COMPLET",
-    title: "PC Gamer RTX 4070 Ti Super / Ryzen 7 7800X3D / 32Go DDR5",
-    price: 1350, marketValue: 1420, gap: 5.2, verdict: "BONNE_AFFAIRE",
-    location: "Lyon 3ème", date: "2026-02-24T14:32:00", creditsEarned: 3,
-    components: [
-      { type: "GPU", name: "RTX 4070 Ti Super", score: 8.2 },
-      { type: "CPU", name: "Ryzen 7 7800X3D", score: 7.8 },
-      { type: "RAM", name: "32Go DDR5", score: 7.1 },
-      { type: "SSD", name: "990 Pro 1To", score: 6.9 },
-    ],
-    analysisQuick: null, analysisDeep: null, watchlisted: true, alertActive: false,
+// Platform display name helper
+function displayPlatform(raw: string): string {
+  const map: Record<string, string> = {
+    leboncoin: "Leboncoin",
+    ebay: "eBay",
+    vinted: "Vinted",
+    facebook: "Facebook Marketplace",
+    ldlc: "LDLC Occasion",
+  };
+  return map[raw.toLowerCase()] || raw;
+}
+
+// Convert API item to LensEntry for display
+function apiItemToLensEntry(item: LensHistoryItem): LensEntry {
+  return {
+    id: item.id,
+    platform: displayPlatform(item.platform),
+    type: "COMPOSANT",
+    title: item.component_name || "Composant inconnu",
+    price: item.price,
+    marketValue: 0,
+    gap: 0,
+    verdict: "PRIX_CORRECT",
+    location: item.region || "",
+    date: item.created_at,
+    creditsEarned: 3,
+    components: [{ type: "GPU", name: item.component_name || "?", score: 0 }],
+    analysisQuick: null,
+    analysisDeep: null,
+    watchlisted: false,
+    alertActive: false,
     depth: "signal",
-  },
-  {
-    id: 2, platform: "eBay", type: "COMPOSANT",
-    title: "NVIDIA RTX 3080 10Go ASUS TUF Gaming — Excellent état",
-    price: 320, marketValue: 295, gap: -8.5, verdict: "SUREVALUE",
-    location: "Paris 11ème", date: "2026-02-24T11:15:00", creditsEarned: 2,
-    components: [{ type: "GPU", name: "RTX 3080 10Go", score: 5.9 }],
-    analysisQuick: {
-      gap: "-8.5%", trend30d: "-4.2%", volume: "Modéré", liquidity: "6.3/10",
-      details: [
-        { label: "Valeur médiane eBay sold 30j", value: "295€" },
-        { label: "Prix annonce", value: "320€" },
-        { label: "Écart", value: "-8.5% surévalué", positive: false },
-      ],
-      insights: [
-        "🔴 Prix au-dessus du marché",
-        "🟡 Tendance baissière sur 30j",
-        "🟡 Volume de ventes modéré",
-        "🟡 Marge de négociation estimée : 20-30€",
-      ],
-    },
-    analysisDeep: null, watchlisted: false, alertActive: true,
-    depth: "qualified",
-  },
-  {
-    id: 3, platform: "Vinted", type: "LOT",
-    title: "Lot RAM DDR4 64Go (4x16Go) Corsair 3200MHz + SSD 2To",
-    price: 95, marketValue: 110, gap: 13.6, verdict: "BONNE_AFFAIRE",
-    location: "Bordeaux", date: "2026-02-23T18:45:00", creditsEarned: 2,
-    components: [
-      { type: "RAM", name: "64Go DDR4 3200MHz", score: 7.4 },
-      { type: "SSD", name: "SSD 2To", score: 7.1 },
-    ],
-    analysisQuick: null, analysisDeep: null, watchlisted: false, alertActive: false,
-    depth: "signal",
-  },
-  {
-    id: 4, platform: "Leboncoin", type: "COMPOSANT",
-    title: "AMD Ryzen 9 5900X — Boîte d'origine, facture disponible",
-    price: 180, marketValue: 175, gap: -2.9, verdict: "PRIX_CORRECT",
-    location: "Toulouse", date: "2026-02-23T09:20:00", creditsEarned: 2,
-    components: [{ type: "CPU", name: "Ryzen 9 5900X", score: 7.2 }],
-    analysisQuick: null, analysisDeep: null, watchlisted: false, alertActive: false,
-    depth: "signal",
-  },
-];
+  };
+}
 
 // ── Helpers ──
 const PLATFORM_COLORS: Record<string, string> = {
@@ -657,6 +632,24 @@ export default function LensHistory() {
 
   const { plan } = useEntitlements();
 
+  // Lens history from API
+  const {
+    items: apiItems,
+    total: lensTotal,
+    page: lensPage,
+    setPage: setLensPage,
+    stats: lensStats,
+    isLoading: isLoadingLens,
+    isError: isLensError,
+    refresh: refreshLens,
+  } = useLensHistory({
+    platform: platformFilter !== "all" ? platformFilter.toLowerCase() : undefined,
+    enabled: activeTab === "scans",
+  });
+
+  // Convert API items to LensEntry format
+  const lensScans = useMemo(() => apiItems.map(apiItemToLensEntry), [apiItems]);
+
   const {
     data: historyData,
     isLoading: isLoadingHistory,
@@ -680,13 +673,9 @@ export default function LensHistory() {
     setDepthFilter("all");
   };
 
-  // In dev: show mock scans for demo. In prod: empty until real Lens data.
-  const lensScans: LensEntry[] = import.meta.env.DEV ? DEV_MOCK_HISTORY : [];
-
   const filtered = useMemo(() => {
     return lensScans.filter((e) => {
       if (search && !e.title.toLowerCase().includes(search.toLowerCase()) && !e.components.some((c) => c.name.toLowerCase().includes(search.toLowerCase()))) return false;
-      if (platformFilter !== "all" && e.platform !== platformFilter) return false;
       if (typeFilter !== "all" && e.type !== typeFilter) return false;
       if (verdictFilter !== "all" && e.verdict !== verdictFilter) return false;
       if (depthFilter !== "all" && e.depth !== depthFilter) return false;
@@ -696,12 +685,14 @@ export default function LensHistory() {
       }
       return true;
     });
-  }, [lensScans, search, platformFilter, typeFilter, verdictFilter, dateFilter, depthFilter]);
+  }, [lensScans, search, typeFilter, verdictFilter, dateFilter, depthFilter]);
 
-  const totalCredits = lensScans.reduce((s, e) => s + e.creditsEarned, 0);
-  const signalCount = lensScans.filter((e) => e.depth === "signal").length;
+  // Stats from API
+  const signalCount = lensStats?.total_signals ?? lensScans.length;
+  const totalCredits = lensStats?.total_credits_earned ?? 0;
   const qualifiedCount = lensScans.filter((e) => e.depth === "qualified").length;
   const decisionCount = lensScans.filter((e) => e.depth === "decision").length;
+  const hasMorePages = lensTotal > lensPage * 50;
 
   const handleReEstimate = (item: EnhancedEstimationHistoryItem) => {
     navigate(`/estimator?model_id=${item.model_id}&model_name=${encodeURIComponent(item.model_name)}&price=${item.ad_price}&platform=${item.platform || ""}&condition=${item.condition || ""}&source=history`);
@@ -866,26 +857,49 @@ export default function LensHistory() {
             </p>
 
             {/* Feed */}
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
-              className="space-y-2.5"
-            >
-              {filtered.length === 0 ? (
-                <EmptyState />
-              ) : (
-                filtered.map((entry) => (
-                  <motion.div key={entry.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}>
-                    <ScanCard entry={entry} />
-                  </motion.div>
-                ))
-              )}
-            </motion.div>
+            {isLoadingLens ? (
+              <div className="space-y-2.5">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i} className="p-4">
+                    <Skeleton className="h-4 w-2/3 mb-2" />
+                    <Skeleton className="h-3 w-1/2 mb-2" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : isLensError ? (
+              <div className="flex flex-col items-center py-10">
+                <RefreshCw className="h-8 w-8 text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground mb-3">Erreur de chargement</p>
+                <Button variant="outline" size="sm" onClick={() => refreshLens()}>
+                  Réessayer
+                </Button>
+              </div>
+            ) : (
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
+                className="space-y-2.5"
+              >
+                {filtered.length === 0 ? (
+                  <EmptyState />
+                ) : (
+                  filtered.map((entry) => (
+                    <motion.div key={entry.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}>
+                      <ScanCard entry={entry} />
+                    </motion.div>
+                  ))
+                )}
+              </motion.div>
+            )}
 
-            {filtered.length > 0 && (
-              <Button variant="outline" className="w-full text-xs h-9">
-                Charger plus
+            {hasMorePages && !isLoadingLens && filtered.length > 0 && (
+              <Button variant="outline" className="w-full text-xs h-9" onClick={() => setLensPage(lensPage + 1)}>
+                Charger plus ({lensTotal - lensPage * 50} restants)
               </Button>
             )}
           </TabsContent>
