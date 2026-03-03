@@ -180,6 +180,8 @@ export const INGEST = {
 export const LENS = {
   SCORE: '/v1/lens/score',
   QUICK: '/v1/lens/quick',
+  HISTORY: '/v1/lens/history',
+  STATS: '/v1/lens/stats',
 } as const;
 
 // ============= Signals =============
