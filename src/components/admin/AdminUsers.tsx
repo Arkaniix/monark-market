@@ -4,11 +4,33 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Shield, Search, ChevronLeft, ChevronRight, Loader2, Users, Eye, Coins, CreditCard } from "lucide-react";
 import { useAdminUsers } from "@/hooks/useAdmin";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { adminApiFetch } from "@/lib/api/adminApi";
+import { ADMIN } from "@/lib/api/endpoints";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UserDetail {
   id: string;
@@ -17,8 +39,106 @@ interface UserDetail {
   role: string;
   plan_name: string;
   credits_remaining: number;
+  credits_balance?: number;
   created_at: string;
   last_sign_in_at: string | null;
+}
+
+function CreditAdjustDialog({
+  userId,
+  userName,
+  currentBalance,
+  onSuccess,
+}: {
+  userId: string;
+  userName: string;
+  currentBalance: number;
+  onSuccess: () => void;
+}) {
+  const [delta, setDelta] = useState(0);
+  const [reason, setReason] = useState("admin_adjustment");
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit() {
+    if (delta === 0) return;
+    setLoading(true);
+    try {
+      await adminApiFetch(ADMIN.USER_CREDITS(userId), {
+        method: "POST",
+        body: JSON.stringify({ delta, reason }),
+      });
+      toast.success(`Crédits ajustés : ${delta > 0 ? "+" : ""}${delta} pour ${userName}`);
+      setIsOpen(false);
+      setDelta(0);
+      onSuccess();
+    } catch {
+      toast.error("Erreur lors de l'ajustement des crédits");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <>
+      <Button variant="ghost" size="sm" onClick={() => setIsOpen(true)}>
+        <Coins className="h-4 w-4 mr-1" />
+        Ajuster
+      </Button>
+
+      <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ajuster les crédits de {userName}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Solde actuel : {currentBalance} crédits
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div>
+              <Label>Montant (positif = ajouter, négatif = retirer)</Label>
+              <Input
+                type="number"
+                value={delta}
+                onChange={(e) => setDelta(parseInt(e.target.value) || 0)}
+                placeholder="Ex: 100 ou -50"
+              />
+              {delta !== 0 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Nouveau solde : {Math.max(0, currentBalance + delta)} crédits
+                </p>
+              )}
+            </div>
+            <div>
+              <Label>Raison</Label>
+              <Select value={reason} onValueChange={setReason}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin_adjustment">Ajustement admin</SelectItem>
+                  <SelectItem value="bonus">Bonus</SelectItem>
+                  <SelectItem value="compensation">Compensation</SelectItem>
+                  <SelectItem value="correction">Correction d'erreur</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubmit} disabled={delta === 0 || loading}>
+              {loading
+                ? "En cours..."
+                : delta > 0
+                ? `Ajouter ${delta} crédits`
+                : `Retirer ${Math.abs(delta)} crédits`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 }
 
 export default function AdminUsers() {
@@ -27,11 +147,13 @@ export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserDetail | null>(null);
   const limit = 20;
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError } = useAdminUsers(page, limit, searchQuery || undefined);
 
   const handleSearch = () => { setSearchQuery(searchTerm); setPage(1); };
   const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Enter') handleSearch(); };
+  const refetchUsers = () => queryClient.invalidateQueries({ queryKey: ['admin-users'] });
 
   if (isLoading) return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (isError) return <Card><CardContent className="py-12 text-center"><p className="text-destructive">Erreur lors du chargement des utilisateurs</p></CardContent></Card>;
@@ -44,7 +166,7 @@ export default function AdminUsers() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">Gestion des utilisateurs</h2>
-        <p className="text-muted-foreground">Vue de tous les comptes utilisateurs (lecture seule)</p>
+        <p className="text-muted-foreground">Vue de tous les comptes utilisateurs</p>
       </div>
 
       <Card>
@@ -83,10 +205,28 @@ export default function AdminUsers() {
                   <TableCell className="text-muted-foreground text-sm">{user.email}</TableCell>
                   <TableCell><Badge variant={user.role === 'admin' ? 'default' : 'outline'}><Shield className="h-3 w-3 mr-1" />{user.role}</Badge></TableCell>
                   <TableCell><Badge variant="secondary">{user.plan_name || 'Free'}</Badge></TableCell>
-                  <TableCell>{user.credits_remaining}</TableCell>
+                  <TableCell>
+                    {user.role === 'admin' ? (
+                      <span className="text-emerald-500 font-medium">∞</span>
+                    ) : (
+                      <span>{user.credits_balance ?? user.credits_remaining}</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-sm">{format(new Date(user.created_at), "dd MMM yyyy", { locale: fr })}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{user.last_sign_in_at ? format(new Date(user.last_sign_in_at), "dd MMM yyyy HH:mm", { locale: fr }) : 'Jamais'}</TableCell>
-                  <TableCell><Button size="icon" variant="ghost" onClick={() => setSelectedUser(user as UserDetail)}><Eye className="h-4 w-4" /></Button></TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="ghost" onClick={() => setSelectedUser(user as UserDetail)}><Eye className="h-4 w-4" /></Button>
+                      {user.role !== 'admin' && (
+                        <CreditAdjustDialog
+                          userId={user.id}
+                          userName={user.display_name || user.email}
+                          currentBalance={user.credits_balance ?? user.credits_remaining}
+                          onSuccess={refetchUsers}
+                        />
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -119,7 +259,13 @@ export default function AdminUsers() {
                 <Card>
                   <CardContent className="pt-4">
                     <div className="flex items-center gap-2"><Coins className="h-4 w-4 text-muted-foreground" /><span className="text-sm text-muted-foreground">Crédits</span></div>
-                    <p className="text-2xl font-bold mt-1">{selectedUser.credits_remaining}</p>
+                    <p className="text-2xl font-bold mt-1">
+                      {selectedUser.role === 'admin' ? (
+                        <span className="text-emerald-500">∞</span>
+                      ) : (
+                        selectedUser.credits_balance ?? selectedUser.credits_remaining
+                      )}
+                    </p>
                   </CardContent>
                 </Card>
                 <Card>

@@ -802,6 +802,7 @@ export interface UserJobsResponse {
 export interface UserCredits {
   credits_remaining: number;
   plan_name: string;
+  unlimited?: boolean;
   credits_reset_date?: string;
 }
 
@@ -944,6 +945,7 @@ export interface AdminUser {
   display_name: string | null;
   role: string;
   credits_remaining: number;
+  credits_balance?: number;
   plan_name: string | null;
   created_at: string;
   last_sign_in_at: string | null;

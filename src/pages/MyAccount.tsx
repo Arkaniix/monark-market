@@ -649,7 +649,9 @@ export default function MyAccount() {
               <CardContent>
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <span className="text-3xl font-bold">{mockCreditsRemaining}</span>
+                    <span className="text-3xl font-bold">
+                      {mockCreditsRemaining === Infinity ? '∞' : mockCreditsRemaining}
+                    </span>
                     <span className="text-muted-foreground ml-1">/ {mockMaxCredits}</span>
                   </div>
                   {isCreditsLow && (
