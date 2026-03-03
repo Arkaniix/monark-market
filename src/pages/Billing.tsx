@@ -51,7 +51,7 @@ export default function Billing() {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Statut</span>
                 {isSubscriptionActive ? (
-                  <Badge variant="default" className="bg-green-500">Actif</Badge>
+                  <Badge variant="default" className="bg-success">Actif</Badge>
                 ) : (
                   <Badge variant="secondary">Gratuit</Badge>
                 )}
@@ -61,7 +61,9 @@ export default function Billing() {
                 <span className="text-muted-foreground">Crédits disponibles</span>
                 <div className="flex items-center gap-2">
                   <Coins className="h-4 w-4 text-primary" />
-                  <span className="font-bold text-lg">{creditsRemaining}</span>
+                  <span className="font-bold text-lg">
+                    {creditsRemaining === Infinity ? '∞' : creditsRemaining}
+                  </span>
                 </div>
               </div>
               {creditsResetDate && (

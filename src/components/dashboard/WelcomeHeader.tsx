@@ -51,7 +51,7 @@ export function WelcomeHeader({
                   Abonnement : {planName}
                 </Badge>
                 <Badge variant="default" className="text-sm px-3 py-1.5">
-                  {creditsRemaining} crédits
+                  {creditsRemaining === Infinity ? '∞ crédits' : `${creditsRemaining} crédits`}
                 </Badge>
               </div>
             </div>

@@ -197,7 +197,9 @@ export function PersonalStats({
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="text-3xl font-bold text-success">{creditsRemaining}</div>
+                  <div className="text-3xl font-bold text-success">
+                    {creditsRemaining === Infinity ? '∞' : creditsRemaining}
+                  </div>
                   {creditsResetDate && <CreditResetInfo resetDate={creditsResetDate} creditsRemaining={creditsRemaining} variant="compact" />}
                   <div className="flex items-center gap-1">
                     <Link to="/community" className="text-xs text-primary hover:underline">

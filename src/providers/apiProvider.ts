@@ -471,12 +471,18 @@ export const apiProvider: DataProvider = {
 
   // Credits & Billing (v0.18)
   async getUserCredits() {
-    const response = await apiFetch<any>(ENDPOINTS.CREDITS.BALANCE);
-    // GARDE CRITIQUE - utilise ?? pour gérer null et undefined
+    const response = await apiFetch<{
+      balance: number;
+      currency?: string;
+      plan?: string;
+      unlimited?: boolean;
+      credits_reset_date?: string;
+    }>(ENDPOINTS.CREDITS.BALANCE);
     return {
-      credits_remaining: response?.balance ?? response?.credits_remaining ?? 0,
-      plan_name: response?.plan_name || 'Starter',
-      credits_reset_date: response?.credits_reset_date,
+      credits_remaining: response.unlimited ? Infinity : (response.balance ?? 0),
+      plan_name: response.plan || 'free',
+      unlimited: response.unlimited || false,
+      credits_reset_date: response.credits_reset_date,
     };
   },
   async getSubscriptionPlans() {
@@ -541,8 +547,9 @@ export const apiProvider: DataProvider = {
         email: u.email,
         display_name: u.display_name,
         role: u.role,
-        credits_remaining: 0,
-        plan_name: u.role,
+        credits_remaining: u.credits_balance ?? 0,
+        credits_balance: u.credits_balance ?? 0,
+        plan_name: u.current_plan_name || u.role,
         created_at: u.created_at,
         last_sign_in_at: u.last_login,
       })),

@@ -202,6 +202,8 @@ export const CONFIG = {
 // ============= Admin =============
 export const ADMIN = {
   USERS: '/v1/admin/users',
+  USER_DETAIL: (id: number | string) => `/v1/admin/users/${id}`,
+  USER_CREDITS: (id: number | string) => `/v1/admin/users/${id}/credits`,
   SYSTEM: '/v1/admin/system',
   JOBS: '/v1/admin/jobs',
   LOGS: '/v1/admin/logs',
