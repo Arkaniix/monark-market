@@ -648,12 +648,15 @@ export default function LensHistory() {
     enabled: activeTab === "scans",
   });
 
+  // In DEV mode, use mock data as fallback when API fails or returns empty
+  const useDevMock = import.meta.env.DEV && (isLensError || apiItems.length === 0);
+
   // Convert API items to LensEntry format, fallback to mock in DEV mode
   const lensScans = useMemo(() => {
     if (apiItems.length > 0) return apiItems.map(apiItemToLensEntry);
     if (import.meta.env.DEV) return DEV_MOCK_HISTORY as LensEntry[];
     return [];
-  }, [apiItems]);
+  }, [apiItems, isLensError]);
 
   const {
     data: historyData,
@@ -862,7 +865,7 @@ export default function LensHistory() {
             </p>
 
             {/* Feed */}
-            {isLoadingLens ? (
+            {isLoadingLens && !useDevMock ? (
               <div className="space-y-2.5">
                 {[...Array(3)].map((_, i) => (
                   <Card key={i} className="p-4">
@@ -875,7 +878,7 @@ export default function LensHistory() {
                   </Card>
                 ))}
               </div>
-            ) : isLensError ? (
+            ) : isLensError && !useDevMock ? (
               <div className="flex flex-col items-center py-10">
                 <RefreshCw className="h-8 w-8 text-muted-foreground mb-3" />
                 <p className="text-sm text-muted-foreground mb-3">Erreur de chargement</p>
