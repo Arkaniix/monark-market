@@ -22,6 +22,7 @@ import { useEnhancedEstimationHistory } from "@/hooks";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useLensHistory } from "@/hooks/useLensHistory";
 import type { LensHistoryItem } from "@/hooks/useLensHistory";
+import { DEV_MOCK_HISTORY } from "@/data/mockLensHistory";
 import type { EnhancedEstimationHistoryItem, EnhancedEstimationResult } from "@/types/estimator";
 
 // Import result display components
@@ -647,8 +648,12 @@ export default function LensHistory() {
     enabled: activeTab === "scans",
   });
 
-  // Convert API items to LensEntry format
-  const lensScans = useMemo(() => apiItems.map(apiItemToLensEntry), [apiItems]);
+  // Convert API items to LensEntry format, fallback to mock in DEV mode
+  const lensScans = useMemo(() => {
+    if (apiItems.length > 0) return apiItems.map(apiItemToLensEntry);
+    if (import.meta.env.DEV) return DEV_MOCK_HISTORY as LensEntry[];
+    return [];
+  }, [apiItems]);
 
   const {
     data: historyData,
@@ -687,9 +692,9 @@ export default function LensHistory() {
     });
   }, [lensScans, search, typeFilter, verdictFilter, dateFilter, depthFilter]);
 
-  // Stats from API
+  // Stats from API, fallback to mock-derived stats in DEV
   const signalCount = lensStats?.total_signals ?? lensScans.length;
-  const totalCredits = lensStats?.total_credits_earned ?? 0;
+  const totalCredits = lensStats?.total_credits_earned ?? (import.meta.env.DEV ? lensScans.reduce((s, e) => s + e.creditsEarned, 0) : 0);
   const qualifiedCount = lensScans.filter((e) => e.depth === "qualified").length;
   const decisionCount = lensScans.filter((e) => e.depth === "decision").length;
   const hasMorePages = lensTotal > lensPage * 50;
