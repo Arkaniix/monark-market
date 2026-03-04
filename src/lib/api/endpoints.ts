@@ -135,6 +135,9 @@ export const NOTIFICATIONS = {
 export const COMMUNITY = {
   LEADERBOARD: '/v1/community/leaderboard',
   STATS: '/v1/community/stats',
+  MY_STATS: '/v1/community/my-stats',
+  RECENT_ACTIVITY: '/v1/community/recent-activity',
+  CONSENSUS: '/v1/community/consensus',
   TASKS_AVAILABLE: '/v1/community/tasks/available',
   TASKS_CLAIM: '/v1/community/tasks/claim',
   TASKS_MY: '/v1/community/tasks/my',
