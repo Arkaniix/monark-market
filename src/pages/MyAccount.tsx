@@ -18,7 +18,7 @@ import {
   Bell, Moon, Sun, Globe, Key, Loader2, Check, Coins,
   RefreshCw, TrendingUp, TrendingDown, X, Minus, Info,
   ChevronLeft, ChevronRight, History, Bookmark, FlaskConical,
-  Download
+  Download, Users
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInDays, subDays, subHours } from "date-fns";
@@ -32,6 +32,7 @@ import { apiPatch, apiPost, apiFetch, apiDelete } from "@/lib/api";
 import { toast as sonnerToast } from "sonner";
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { useUpdateUserSettings } from "@/hooks/useUserSettings";
+import { useCommunityMyStats, TRUST_LEVELS, getTrustScoreProgressColor } from "@/hooks/useCommunityStats";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -126,6 +127,73 @@ function SectionHeader({ icon: Icon, title, description }: { icon: React.Element
       </h2>
       <p className="text-sm text-muted-foreground mt-1">{description}</p>
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// COMMUNITY TRUST SECTION
+// ═══════════════════════════════════════════════════════════════════
+
+function CommunityTrustSection() {
+  const { data: myStats, isLoading } = useCommunityMyStats();
+
+  if (isLoading) {
+    return (
+      <motion.section variants={itemVariants}>
+        <SectionHeader icon={Users} title="Communauté" description="Votre score de confiance et vos contributions" />
+        <Card>
+          <CardContent className="pt-6">
+            <Skeleton className="h-24 w-full" />
+          </CardContent>
+        </Card>
+      </motion.section>
+    );
+  }
+
+  if (!myStats) return null;
+
+  const trustLevel = TRUST_LEVELS[myStats.trust_level] || TRUST_LEVELS.new;
+  const progressColor = getTrustScoreProgressColor(myStats.trust_score);
+
+  return (
+    <motion.section variants={itemVariants}>
+      <SectionHeader icon={Users} title="Communauté" description="Votre score de confiance et vos contributions" />
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          {/* Trust Score */}
+          <div className="flex items-center gap-4">
+            <span className="text-2xl">{trustLevel.icon}</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`font-bold ${trustLevel.color}`}>{trustLevel.label}</span>
+                <span className="text-sm text-muted-foreground">
+                  — Score : {Math.round(myStats.trust_score * 100)}%
+                </span>
+              </div>
+              <Progress value={myStats.trust_score * 100} className={`h-2 ${progressColor}`} />
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <span>
+              Signalements : <strong className="text-foreground">{myStats.total_flags}</strong>
+              {myStats.flags_confirmed > 0 && (
+                <span> (dont <strong className="text-green-500">{myStats.flags_confirmed}</strong> alignés)</span>
+              )}
+            </span>
+          </div>
+
+          {/* Link */}
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/community" className="gap-2">
+              <Users className="h-4 w-4" />
+              Voir mes contributions →
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </motion.section>
   );
 }
 
@@ -901,6 +969,12 @@ export default function MyAccount() {
             </CardContent>
           </Card>
         </motion.section>
+
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            SECTION: COMMUNAUTÉ & TRUST SCORE
+            ═══════════════════════════════════════════════════════════════════ */}
+        <CommunityTrustSection />
 
         {/* Liens légaux */}
         <motion.div variants={itemVariants} className="flex items-center justify-center gap-4 pt-4 text-sm text-muted-foreground">
