@@ -85,26 +85,66 @@ function displayPlatform(raw: string): string {
   return map[raw.toLowerCase()] || raw;
 }
 
+// Map API verdict string to internal verdict key
+function mapVerdict(apiVerdict: string | null | undefined, gap: number): string {
+  if (apiVerdict) {
+    const v = apiVerdict.toLowerCase();
+    if (v.includes("bonne") || v === "bonne_affaire") return "BONNE_AFFAIRE";
+    if (v.includes("sur") || v === "surevalue" || v === "surévalué") return "SUREVALUE";
+    if (v.includes("correct") || v === "prix_correct") return "PRIX_CORRECT";
+  }
+  // Derive from gap if no API verdict
+  if (gap > 5) return "BONNE_AFFAIRE";
+  if (gap < -5) return "SUREVALUE";
+  return "PRIX_CORRECT";
+}
+
+// Determine depth from API data
+function deriveDepth(item: LensHistoryItem): "signal" | "qualified" | "decision" {
+  if (item.signal_type === "decision" || item.signal_type === "estimation") return "decision";
+  if (item.market_median && item.market_median > 0 && item.gap_percent != null) return "qualified";
+  return "signal";
+}
+
 // Convert API item to LensEntry for display
 function apiItemToLensEntry(item: LensHistoryItem): LensEntry {
+  const isBundle = item.is_bundle || item.listing_intent === "bundle";
+  const marketValue = item.market_median ?? 0;
+  const gap = item.gap_percent ?? 0;
+  const hasMarketData = marketValue > 0;
+  const verdict = hasMarketData ? mapVerdict(item.verdict, gap) : "NO_DATA";
+  const depth = deriveDepth(item);
+
+  // Build components list
+  let components: LensComponent[] = [];
+  if (isBundle && item.bundle_components && item.bundle_components.length > 0) {
+    components = item.bundle_components.map((c) => ({
+      type: c.category?.toUpperCase() || "?",
+      name: c.name,
+      score: c.score ?? 0,
+    }));
+  } else {
+    components = [{ type: "GPU", name: item.component_name || "?", score: 0 }];
+  }
+
   return {
     id: item.id,
     platform: displayPlatform(item.platform),
-    type: "COMPOSANT",
-    title: item.component_name || "Composant inconnu",
+    type: isBundle ? "PC_COMPLET" : "COMPOSANT",
+    title: item.ad_title || item.component_name || "Composant inconnu",
     price: item.price,
-    marketValue: 0,
-    gap: 0,
-    verdict: "PRIX_CORRECT",
+    marketValue,
+    gap,
+    verdict,
     location: item.region || "",
     date: item.created_at,
-    creditsEarned: 3,
-    components: [{ type: "GPU", name: item.component_name || "?", score: 0 }],
+    creditsEarned: item.credits_earned ?? 0,
+    components,
     analysisQuick: null,
     analysisDeep: null,
     watchlisted: false,
     alertActive: false,
-    depth: "signal",
+    depth,
   };
 }
 
