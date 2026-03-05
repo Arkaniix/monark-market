@@ -45,6 +45,8 @@ export interface LensStats {
   total_credits_earned: number;
   signals_by_platform: Record<string, number>;
   signals_today: number;
+  qualified_count?: number;
+  decision_count?: number;
 }
 
 interface UseLensHistoryOptions {
