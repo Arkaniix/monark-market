@@ -19,6 +19,18 @@ export interface LensHistoryItem {
   is_bundle: boolean;
   signal_type: string;
   created_at: string;
+  // Optional enriched fields from API
+  listing_intent?: string;
+  market_median?: number | null;
+  gap_percent?: number | null;
+  verdict?: string | null;
+  confidence?: number | null;
+  data_points_30d?: number | null;
+  credits_earned?: number | null;
+  bundle_components?: { id: number; name: string; category: string; score?: number }[];
+  bundle_component_ids?: number[];
+  ad_title?: string | null;
+  ad_url?: string | null;
 }
 
 interface LensHistoryResponse {
@@ -33,6 +45,8 @@ export interface LensStats {
   total_credits_earned: number;
   signals_by_platform: Record<string, number>;
   signals_today: number;
+  qualified_count?: number;
+  decision_count?: number;
 }
 
 interface UseLensHistoryOptions {

@@ -85,26 +85,66 @@ function displayPlatform(raw: string): string {
   return map[raw.toLowerCase()] || raw;
 }
 
+// Map API verdict string to internal verdict key
+function mapVerdict(apiVerdict: string | null | undefined, gap: number): string {
+  if (apiVerdict) {
+    const v = apiVerdict.toLowerCase();
+    if (v.includes("bonne") || v === "bonne_affaire") return "BONNE_AFFAIRE";
+    if (v.includes("sur") || v === "surevalue" || v === "surévalué") return "SUREVALUE";
+    if (v.includes("correct") || v === "prix_correct") return "PRIX_CORRECT";
+  }
+  // Derive from gap if no API verdict
+  if (gap > 5) return "BONNE_AFFAIRE";
+  if (gap < -5) return "SUREVALUE";
+  return "PRIX_CORRECT";
+}
+
+// Determine depth from API data
+function deriveDepth(item: LensHistoryItem): "signal" | "qualified" | "decision" {
+  if (item.signal_type === "decision" || item.signal_type === "estimation") return "decision";
+  if (item.market_median && item.market_median > 0 && item.gap_percent != null) return "qualified";
+  return "signal";
+}
+
 // Convert API item to LensEntry for display
 function apiItemToLensEntry(item: LensHistoryItem): LensEntry {
+  const isBundle = item.is_bundle || item.listing_intent === "bundle";
+  const marketValue = item.market_median ?? 0;
+  const gap = item.gap_percent ?? 0;
+  const hasMarketData = marketValue > 0;
+  const verdict = hasMarketData ? mapVerdict(item.verdict, gap) : "NO_DATA";
+  const depth = deriveDepth(item);
+
+  // Build components list
+  let components: LensComponent[] = [];
+  if (isBundle && item.bundle_components && item.bundle_components.length > 0) {
+    components = item.bundle_components.map((c) => ({
+      type: c.category?.toUpperCase() || "?",
+      name: c.name,
+      score: c.score ?? 0,
+    }));
+  } else {
+    components = [{ type: "GPU", name: item.component_name || "?", score: 0 }];
+  }
+
   return {
     id: item.id,
     platform: displayPlatform(item.platform),
-    type: "COMPOSANT",
-    title: item.component_name || "Composant inconnu",
+    type: isBundle ? "PC_COMPLET" : "COMPOSANT",
+    title: item.ad_title || item.component_name || "Composant inconnu",
     price: item.price,
-    marketValue: 0,
-    gap: 0,
-    verdict: "PRIX_CORRECT",
+    marketValue,
+    gap,
+    verdict,
     location: item.region || "",
     date: item.created_at,
-    creditsEarned: 3,
-    components: [{ type: "GPU", name: item.component_name || "?", score: 0 }],
+    creditsEarned: item.credits_earned ?? 0,
+    components,
     analysisQuick: null,
     analysisDeep: null,
     watchlisted: false,
     alertActive: false,
-    depth: "signal",
+    depth,
   };
 }
 
@@ -120,6 +160,7 @@ const VERDICT_CONFIG: Record<string, { label: string; class: string }> = {
   BONNE_AFFAIRE: { label: "Bonne affaire", class: "bg-green-500/15 text-green-400 border-green-500/30" },
   PRIX_CORRECT: { label: "Prix correct", class: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
   SUREVALUE: { label: "Surévalué", class: "bg-red-500/15 text-red-400 border-red-500/30" },
+  NO_DATA: { label: "Signal collecté", class: "bg-muted/50 text-muted-foreground border-border" },
 };
 
 const DEPTH_CONFIG = {
@@ -202,8 +243,10 @@ function ScanCard({ entry }: { entry: LensEntry }) {
   const [depth, setDepth] = useState<"signal" | "qualified" | "decision">(entry.depth);
 
   const verdict = VERDICT_CONFIG[entry.verdict];
+  const hasMarketData = entry.marketValue > 0;
   const gapPositive = entry.gap > 0;
   const depthConf = DEPTH_CONFIG[depth];
+  const isBundle = entry.type === "PC_COMPLET" || entry.type === "LOT";
 
   const handleQuickAnalysis = () => {
     if (quickResult) {
@@ -254,7 +297,10 @@ function ScanCard({ entry }: { entry: LensEntry }) {
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", PLATFORM_COLORS[entry.platform])}>
             {entry.platform}
           </Badge>
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+          <Badge variant="outline" className={cn(
+            "text-[10px] px-1.5 py-0",
+            isBundle ? "bg-orange-500/10 text-orange-400 border-orange-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+          )}>
             {TYPE_LABELS[entry.type] || entry.type}
           </Badge>
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-medium", verdict?.class)}>
@@ -272,38 +318,48 @@ function ScanCard({ entry }: { entry: LensEntry }) {
 
         <div className="flex items-center gap-3 mb-2">
           <span className="text-xl font-bold text-primary tabular-nums">{entry.price}€</span>
-          <span className="text-xs text-muted-foreground">
-            Marché : {entry.marketValue}€
-          </span>
-          <Badge
-            variant="outline"
-            className={cn(
-              "text-[11px] font-semibold",
-              gapPositive
-                ? "bg-green-500/10 text-green-400 border-green-500/20"
-                : entry.gap < -5
-                  ? "bg-red-500/10 text-red-400 border-red-500/20"
-                  : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-            )}
-          >
-            {gapPositive ? "+" : ""}{entry.gap}%
-          </Badge>
-          <div className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground">
-            <MapPin className="h-3 w-3" />
-            {entry.location}
-          </div>
+          {hasMarketData ? (
+            <>
+              <span className="text-xs text-muted-foreground">
+                Marché : {entry.marketValue}€
+              </span>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-[11px] font-semibold",
+                  gapPositive
+                    ? "bg-green-500/10 text-green-400 border-green-500/20"
+                    : entry.gap < -5
+                      ? "bg-red-500/10 text-red-400 border-red-500/20"
+                      : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                )}
+              >
+                {gapPositive ? "+" : ""}{entry.gap.toFixed(1)}%
+              </Badge>
+            </>
+          ) : (
+            <span className="text-xs text-muted-foreground italic">
+              Pas de données marché
+            </span>
+          )}
+          {entry.location && (
+            <div className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground">
+              <MapPin className="h-3 w-3" />
+              {entry.location}
+            </div>
+          )}
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto pb-1 mb-3" style={{ scrollbarWidth: "none" }}>
-          {entry.components.slice(0, 4).map((c, i) => (
+          {entry.components.slice(0, 6).map((c, i) => (
             <div key={i} className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px]">
               <span className="text-muted-foreground">{c.type}</span>
               <span>{c.name}</span>
-              <span className="text-primary font-semibold">{c.score}</span>
+              {c.score > 0 && <span className="text-primary font-semibold">{c.score}</span>}
             </div>
           ))}
-          {entry.components.length > 4 && (
-            <span className="shrink-0 text-[11px] text-muted-foreground self-center">+{entry.components.length - 4}</span>
+          {entry.components.length > 6 && (
+            <span className="shrink-0 text-[11px] text-muted-foreground self-center">+{entry.components.length - 6}</span>
           )}
         </div>
 
@@ -695,11 +751,11 @@ export default function LensHistory() {
     });
   }, [lensScans, search, typeFilter, verdictFilter, dateFilter, depthFilter]);
 
-  // Stats from API, fallback to mock-derived stats in DEV
+  // Stats from API, fallback to local derivation
   const signalCount = lensStats?.total_signals ?? lensScans.length;
   const totalCredits = lensStats?.total_credits_earned ?? (import.meta.env.DEV ? lensScans.reduce((s, e) => s + e.creditsEarned, 0) : 0);
-  const qualifiedCount = lensScans.filter((e) => e.depth === "qualified").length;
-  const decisionCount = lensScans.filter((e) => e.depth === "decision").length;
+  const qualifiedCount = lensStats?.qualified_count ?? lensScans.filter((e) => e.depth === "qualified").length;
+  const decisionCount = lensStats?.decision_count ?? lensScans.filter((e) => e.depth === "decision").length;
   const hasMorePages = lensTotal > lensPage * 50;
 
   const handleReEstimate = (item: EnhancedEstimationHistoryItem) => {
