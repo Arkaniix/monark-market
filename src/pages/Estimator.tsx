@@ -54,7 +54,7 @@ export default function Estimator() {
   const navigate = useNavigate();
 
   // Entitlements
-  const { plan, limits, helpers } = useEntitlements();
+  const { plan, planDisplayName, limits, helpers } = useEntitlements();
   const { estimator: estimatorLimits } = limits;
 
   // Form state
@@ -623,7 +623,7 @@ export default function Estimator() {
 
               {/* === SECTION 1: SYNTHESIS + OPPORTUNITY SCORE === */}
               <div className="grid md:grid-cols-2 gap-6">
-                <SynthesisBanner result={result as any} />
+                <SynthesisBanner result={result as any} planDisplayName={planDisplayName} />
                 <OpportunityScoreCard 
                   opportunity={result.opportunity}
                   confidence={result.confidence}

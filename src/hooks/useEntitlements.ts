@@ -1,6 +1,7 @@
 // Centralized entitlements hook - single source of truth for user permissions
 import { useMemo } from "react";
 import { useUserCredits, useUserSubscription, useAlerts, useWatchlist } from "./useProviderData";
+import { useAuth } from "@/context/AuthContext";
 
 // ============= Types =============
 export type PlanType = "free" | "standard" | "pro";
@@ -267,9 +268,10 @@ function normalizePlanName(planName: string | undefined | null): PlanType {
   
   const normalized = planName.toLowerCase().trim();
   
+  // Admin gets full pro access
+  if (normalized === "admin") return "pro";
   if (normalized.includes("pro")) return "pro";
   if (normalized.includes("standard")) return "standard";
-  // Rétrocompatibilité avec les anciens plans
   if (normalized.includes("elite") || normalized.includes("élite")) return "pro";
   if (normalized.includes("starter")) return "standard";
   if (normalized.includes("free") || normalized === "") return "free";
@@ -283,9 +285,12 @@ export function useEntitlements(): Entitlements {
   const { data: subscription, isLoading: subLoading, isError: subError } = useUserSubscription();
   const { data: alertsData, isLoading: alertsLoading } = useAlerts();
   const { data: watchlistData, isLoading: watchlistLoading } = useWatchlist();
+  const { isAdmin: authIsAdmin } = useAuth();
   
-  // Derive plan from subscription or credits
+  // Derive plan from subscription or credits — admin always gets pro
+  const isAdminUser = authIsAdmin;
   const plan = useMemo<PlanType>(() => {
+    if (isAdminUser) return "pro";
     if (subscription?.plan?.name) {
       return normalizePlanName(subscription.plan.name);
     }
@@ -293,7 +298,7 @@ export function useEntitlements(): Entitlements {
       return normalizePlanName(credits.plan_name);
     }
     return "free";
-  }, [subscription, credits]);
+  }, [subscription, credits, isAdminUser]);
   
   // Get limits for current plan
   const limits = useMemo(() => PLAN_LIMITS[plan], [plan]);
@@ -371,7 +376,7 @@ export function useEntitlements(): Entitlements {
   
   return {
     plan,
-    planDisplayName: PLAN_DISPLAY_NAMES[plan],
+    planDisplayName: isAdminUser ? "Admin" : PLAN_DISPLAY_NAMES[plan],
     creditsRemaining,
     creditsResetDate,
     currentAlerts,
