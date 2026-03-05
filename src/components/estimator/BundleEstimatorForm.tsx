@@ -78,17 +78,13 @@ export default function BundleEstimatorForm() {
       toast({ title: "Maximum atteint", description: `${MAX_COMPONENTS} composants maximum`, variant: "destructive" });
       return;
     }
-    if (components.some(c => c.id === model.id)) {
-      toast({ title: "Déjà ajouté", description: "Ce composant est déjà dans la liste", variant: "destructive" });
-      return;
-    }
     setComponents(prev => [...prev, { id: model.id, name: model.name, category: model.category }]);
     setModelSearch("");
     setPopoverOpen(false);
   };
 
-  const removeComponent = (id: number) => {
-    setComponents(prev => prev.filter(c => c.id !== id));
+  const removeComponent = (index: number) => {
+    setComponents(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleEstimate = async () => {
@@ -199,8 +195,8 @@ export default function BundleEstimatorForm() {
                                 <span className="font-medium truncate">{model.name}</span>
                                 <span className="text-xs text-muted-foreground truncate">{model.brand} • {model.category}</span>
                               </div>
-                              {components.some(c => c.id === model.id) && (
-                                <Badge variant="outline" className="text-[10px] shrink-0">Ajouté</Badge>
+                              {components.filter(c => c.id === model.id).length > 0 && (
+                                <Badge variant="outline" className="text-[10px] shrink-0">×{components.filter(c => c.id === model.id).length}</Badge>
                               )}
                             </CommandItem>
                           ))}
@@ -218,7 +214,7 @@ export default function BundleEstimatorForm() {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
                   {components.map((comp, i) => (
                     <motion.div
-                      key={comp.id}
+                      key={`${comp.id}-${i}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
@@ -231,7 +227,7 @@ export default function BundleEstimatorForm() {
                         <p className="text-sm font-medium truncate">{comp.name}</p>
                         <p className="text-[11px] text-muted-foreground">{getCategoryLabel(comp.category)}</p>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeComponent(comp.id)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeComponent(i)}>
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     </motion.div>
