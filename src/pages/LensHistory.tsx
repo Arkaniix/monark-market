@@ -297,7 +297,10 @@ function ScanCard({ entry }: { entry: LensEntry }) {
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", PLATFORM_COLORS[entry.platform])}>
             {entry.platform}
           </Badge>
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+          <Badge variant="outline" className={cn(
+            "text-[10px] px-1.5 py-0",
+            isBundle ? "bg-orange-500/10 text-orange-400 border-orange-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+          )}>
             {TYPE_LABELS[entry.type] || entry.type}
           </Badge>
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-medium", verdict?.class)}>
