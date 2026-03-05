@@ -160,6 +160,7 @@ const VERDICT_CONFIG: Record<string, { label: string; class: string }> = {
   BONNE_AFFAIRE: { label: "Bonne affaire", class: "bg-green-500/15 text-green-400 border-green-500/30" },
   PRIX_CORRECT: { label: "Prix correct", class: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
   SUREVALUE: { label: "Surévalué", class: "bg-red-500/15 text-red-400 border-red-500/30" },
+  NO_DATA: { label: "Signal collecté", class: "bg-muted/50 text-muted-foreground border-border" },
 };
 
 const DEPTH_CONFIG = {
