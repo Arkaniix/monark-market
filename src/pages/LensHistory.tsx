@@ -318,26 +318,36 @@ function ScanCard({ entry }: { entry: LensEntry }) {
 
         <div className="flex items-center gap-3 mb-2">
           <span className="text-xl font-bold text-primary tabular-nums">{entry.price}€</span>
-          <span className="text-xs text-muted-foreground">
-            Marché : {entry.marketValue}€
-          </span>
-          <Badge
-            variant="outline"
-            className={cn(
-              "text-[11px] font-semibold",
-              gapPositive
-                ? "bg-green-500/10 text-green-400 border-green-500/20"
-                : entry.gap < -5
-                  ? "bg-red-500/10 text-red-400 border-red-500/20"
-                  : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-            )}
-          >
-            {gapPositive ? "+" : ""}{entry.gap}%
-          </Badge>
-          <div className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground">
-            <MapPin className="h-3 w-3" />
-            {entry.location}
-          </div>
+          {hasMarketData ? (
+            <>
+              <span className="text-xs text-muted-foreground">
+                Marché : {entry.marketValue}€
+              </span>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-[11px] font-semibold",
+                  gapPositive
+                    ? "bg-green-500/10 text-green-400 border-green-500/20"
+                    : entry.gap < -5
+                      ? "bg-red-500/10 text-red-400 border-red-500/20"
+                      : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                )}
+              >
+                {gapPositive ? "+" : ""}{entry.gap.toFixed(1)}%
+              </Badge>
+            </>
+          ) : (
+            <span className="text-xs text-muted-foreground italic">
+              Pas de données marché
+            </span>
+          )}
+          {entry.location && (
+            <div className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground">
+              <MapPin className="h-3 w-3" />
+              {entry.location}
+            </div>
+          )}
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto pb-1 mb-3" style={{ scrollbarWidth: "none" }}>
