@@ -358,8 +358,8 @@ function ScanCard({ entry }: { entry: LensEntry }) {
               {c.score > 0 && <span className="text-primary font-semibold">{c.score}</span>}
             </div>
           ))}
-          {entry.components.length > 4 && (
-            <span className="shrink-0 text-[11px] text-muted-foreground self-center">+{entry.components.length - 4}</span>
+          {entry.components.length > 6 && (
+            <span className="shrink-0 text-[11px] text-muted-foreground self-center">+{entry.components.length - 6}</span>
           )}
         </div>
 
