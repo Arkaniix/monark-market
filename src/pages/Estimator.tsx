@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-import { Calculator, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown, ArrowLeft, ScanSearch } from "lucide-react";
+import { Calculator, RefreshCw, History, Search, Loader2, AlertCircle, Cpu, HardDrive, MemoryStick, Monitor, RotateCcw, Eye, Clock, Sparkles, AlertTriangle, Crown, ArrowLeft, ScanSearch, Wrench, MonitorSmartphone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEnhancedEstimationHistory } from "@/hooks";
@@ -39,6 +39,7 @@ import EnhancedPlatformsSection from "@/components/estimator/EnhancedPlatformsSe
 import WhatIfSimulator from "@/components/estimator/WhatIfSimulator";
 import AdSearchBar from "@/components/estimator/AdSearchBar";
 import ExportCSVButton from "@/components/estimator/ExportCSVButton";
+import BundleEstimatorForm from "@/components/estimator/BundleEstimatorForm";
 
 // Import enhanced estimator hook
 import { useEnhancedEstimation, DEFAULT_ESTIMATION_OPTIONS } from "@/hooks/useEnhancedEstimator";
@@ -65,6 +66,9 @@ export default function Estimator() {
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
   const [isPCBlocked, setIsPCBlocked] = useState(false);
+  const [estimatorMode, setEstimatorMode] = useState<"single" | "bundle">(
+    searchParams.get("type") === "bundle" ? "bundle" : "single"
+  );
 
   // NEW: Options state
   const [options, setOptions] = useState<EstimationOptions>(DEFAULT_ESTIMATION_OPTIONS);
@@ -291,7 +295,7 @@ export default function Estimator() {
     setOptions(DEFAULT_ESTIMATION_OPTIONS);
   };
 
-  const canUseEstimator = helpers.canUseEstimator();
+  // canUseEstimator removed — Estimator is free for all plans
 
   // Check if form is valid
   const isFormValid = selectedModel && adPrice && 
@@ -323,7 +327,7 @@ export default function Estimator() {
               <p className="text-muted-foreground text-sm">Est-ce que j'achète ce composant pour le revendre ?</p>
             </div>
           </div>
-          <PlanBadge plan={plan} />
+          {/* No plan badge — Estimator is free for everyone */}
         </motion.div>
 
         {/* Tabs: Estimator + History */}
@@ -341,7 +345,33 @@ export default function Estimator() {
 
           <TabsContent value="estimator">
 
-        {/* Lens pre-fill banner */}
+        {/* Mode toggle: Single vs Bundle */}
+        <div className="flex items-center gap-2 mb-6">
+          <Button
+            variant={estimatorMode === "single" ? "default" : "outline"}
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setEstimatorMode("single")}
+          >
+            <Wrench className="h-3.5 w-3.5" />
+            Composant seul
+          </Button>
+          <Button
+            variant={estimatorMode === "bundle" ? "default" : "outline"}
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setEstimatorMode("bundle")}
+          >
+            <MonitorSmartphone className="h-3.5 w-3.5" />
+            PC complet
+          </Button>
+        </div>
+
+        {/* Bundle mode */}
+        {estimatorMode === "bundle" && <BundleEstimatorForm />}
+
+        {/* Single component mode */}
+        {estimatorMode === "single" && (<>
         {searchParams.get('source') === 'lens' && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
             <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
@@ -544,7 +574,7 @@ export default function Estimator() {
                     <div className="flex gap-3 pt-2">
                       <Button 
                         onClick={handleCalculate} 
-                        disabled={!isFormValid || enhancedEstimation.isPending || !canUseEstimator} 
+                        disabled={!isFormValid || enhancedEstimation.isPending} 
                         className="flex-1 gap-2"
                       >
                         {enhancedEstimation.isPending ? (
@@ -709,6 +739,7 @@ export default function Estimator() {
             </motion.div>
           )}
         </AnimatePresence>
+        </>)}
           </TabsContent>
 
           {/* History Tab */}
