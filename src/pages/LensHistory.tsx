@@ -751,11 +751,11 @@ export default function LensHistory() {
     });
   }, [lensScans, search, typeFilter, verdictFilter, dateFilter, depthFilter]);
 
-  // Stats from API, fallback to mock-derived stats in DEV
+  // Stats from API, fallback to local derivation
   const signalCount = lensStats?.total_signals ?? lensScans.length;
   const totalCredits = lensStats?.total_credits_earned ?? (import.meta.env.DEV ? lensScans.reduce((s, e) => s + e.creditsEarned, 0) : 0);
-  const qualifiedCount = lensScans.filter((e) => e.depth === "qualified").length;
-  const decisionCount = lensScans.filter((e) => e.depth === "decision").length;
+  const qualifiedCount = lensStats?.qualified_count ?? lensScans.filter((e) => e.depth === "qualified").length;
+  const decisionCount = lensStats?.decision_count ?? lensScans.filter((e) => e.depth === "decision").length;
   const hasMorePages = lensTotal > lensPage * 50;
 
   const handleReEstimate = (item: EnhancedEstimationHistoryItem) => {
