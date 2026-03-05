@@ -602,8 +602,26 @@ export default function Estimator() {
               exit={{ opacity: 0 }} 
               className="space-y-6"
             >
+              {/* Insufficient data banner */}
+              {(result as any)._hasInsufficientData && (
+                <Card className="border-amber-500/30 bg-amber-500/5">
+                  <CardContent className="py-4">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-amber-600 dark:text-amber-400">Données insuffisantes</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Ce composant n'a pas encore assez de données marché pour des recommandations fiables.
+                          Naviguez des annonces avec l'extension Monark Lens pour enrichir la base.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* === EXPORT CSV (Pro only, at top) === */}
-              {plan === 'pro' && (
+              {plan === 'pro' && !(result as any)._hasInsufficientData && (
                 <div className="flex justify-end">
                   <ExportCSVButton result={result as any} platform={result.inputs.platform || ""} />
                 </div>
@@ -632,12 +650,17 @@ export default function Estimator() {
                 />
               </div>
 
-              {/* === SECTION 2: MARKET DATA === */}
-              <EnhancedMarketCard
-                market={result.market}
-                adPrice={result.inputs.ad_price}
-                plan={plan}
-              />
+              {/* === SECTION 2: MARKET DATA (only if sufficient data) === */}
+              {!(result as any)._hasInsufficientData && (
+                <EnhancedMarketCard
+                  market={result.market}
+                  adPrice={result.inputs.ad_price}
+                  plan={plan}
+                />
+              )}
+
+              {/* === Below sections hidden if insufficient data === */}
+              {!(result as any)._hasInsufficientData && (<>
 
               {/* === SECTION 3: DECISION BLOCK (Pro+) === */}
               {plan !== 'standard' && plan !== 'free' && (
@@ -736,6 +759,7 @@ export default function Estimator() {
                   plan={plan}
                 />
               )}
+              </>)}
             </motion.div>
           )}
         </AnimatePresence>
