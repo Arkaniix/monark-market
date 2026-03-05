@@ -185,6 +185,7 @@ export const LENS = {
   QUICK: '/v1/lens/quick',
   HISTORY: '/v1/lens/history',
   STATS: '/v1/lens/stats',
+  ANALYZE_BUNDLE: '/v1/lens/analyze-bundle',
 } as const;
 
 // ============= Signals =============

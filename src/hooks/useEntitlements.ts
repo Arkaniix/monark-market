@@ -312,8 +312,8 @@ export function useEntitlements(): Entitlements {
   // Create helper functions
   const helpers = useMemo<EntitlementHelpers>(() => ({
     canUseEstimator: () => {
-      if (plan === "free") return false;
-      return creditsRemaining > 0 || limits.maxEstimationsPerDay === -1;
+      // Estimator is accessible to ALL plans including Free
+      return true;
     },
     
     canAnalyze: (type: AnalysisType) => {
