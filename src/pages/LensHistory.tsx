@@ -243,8 +243,10 @@ function ScanCard({ entry }: { entry: LensEntry }) {
   const [depth, setDepth] = useState<"signal" | "qualified" | "decision">(entry.depth);
 
   const verdict = VERDICT_CONFIG[entry.verdict];
+  const hasMarketData = entry.marketValue > 0;
   const gapPositive = entry.gap > 0;
   const depthConf = DEPTH_CONFIG[depth];
+  const isBundle = entry.type === "PC_COMPLET" || entry.type === "LOT";
 
   const handleQuickAnalysis = () => {
     if (quickResult) {
