@@ -8,16 +8,18 @@ import { CONDITION_MAP } from "@/types/estimator";
 
 interface SynthesisBannerProps {
   result: EnhancedEstimationResult;
+  planDisplayName?: string;
 }
 
 // Badge de plan pour indiquer l'accessibilité
-function PlanBadge({ plan }: { plan: "free" | "standard" | "pro" }) {
-  const config = {
-    free: { label: "Free", className: "border-muted-foreground/50 text-muted-foreground" },
-    standard: { label: "Standard", className: "border-primary/50 text-primary" },
-    pro: { label: "Pro", className: "border-amber-500/50 text-amber-600" },
-  };
-  const { label, className } = config[plan];
+function PlanBadge({ label }: { label: string }) {
+  const isAdmin = label.toLowerCase() === "admin";
+  const isPro = label.toLowerCase() === "pro" || isAdmin;
+  const className = isPro
+    ? "border-amber-500/50 text-amber-600"
+    : label.toLowerCase() === "standard"
+    ? "border-primary/50 text-primary"
+    : "border-muted-foreground/50 text-muted-foreground";
   return (
     <Badge variant="outline" className={`ml-2 gap-1 text-xs ${className}`}>
       <Sparkles className="h-3 w-3" />
@@ -111,7 +113,7 @@ function TrendIcon({ trend }: { trend: "up" | "down" | "stable" }) {
   }
 }
 
-export default function SynthesisBanner({ result }: SynthesisBannerProps) {
+export default function SynthesisBanner({ result, planDisplayName = "Gratuit" }: SynthesisBannerProps) {
   const verdict = getVerdictFromOpportunity(result.opportunity.label);
   const VerdictIcon = verdict.icon;
 
@@ -129,7 +131,7 @@ export default function SynthesisBanner({ result }: SynthesisBannerProps) {
         <CardContent className="py-6">
           <div className="flex items-center gap-2 mb-4">
             <h3 className="text-sm font-medium text-muted-foreground">Synthèse</h3>
-            <PlanBadge plan="free" />
+            <PlanBadge label={planDisplayName} />
           </div>
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             {/* Composant info */}
