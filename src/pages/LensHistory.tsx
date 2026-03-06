@@ -386,9 +386,9 @@ function ScanCard({ entry }: { entry: LensEntry }) {
         <div className="flex gap-1.5 overflow-x-auto pb-1 mb-3" style={{ scrollbarWidth: "none" }}>
           {entry.components.slice(0, 6).map((c, i) => (
             <div key={i} className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px]">
-              <span className="text-muted-foreground">{c.type}</span>
+              <span className={cn("font-medium", c.categoryColor || "text-muted-foreground")}>{c.type}</span>
               <span>{c.name}</span>
-              {c.score > 0 && <span className="text-primary font-semibold">{c.score}</span>}
+              {c.score > 0 && <span className="text-primary font-semibold">{c.score.toFixed(1)}</span>}
             </div>
           ))}
           {entry.components.length > 6 && (
