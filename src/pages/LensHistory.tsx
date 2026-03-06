@@ -103,7 +103,7 @@ function mapVerdict(apiVerdict: string | null | undefined, gap: number): string 
 // Determine depth from API data
 function deriveDepth(item: LensHistoryItem): "signal" | "qualified" | "decision" {
   if (item.signal_type === "decision" || item.signal_type === "estimation") return "decision";
-  if (item.market_median && item.market_median > 0 && item.gap_percent != null) return "qualified";
+  if (item.market_median != null && item.market_median > 0) return "qualified";
   return "signal";
 }
 
