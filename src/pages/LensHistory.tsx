@@ -42,6 +42,7 @@ interface LensComponent {
   type: string;
   name: string;
   score: number;
+  categoryColor?: string;
 }
 
 interface QuickAnalysis {
