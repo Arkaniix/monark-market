@@ -107,26 +107,58 @@ function deriveDepth(item: LensHistoryItem): "signal" | "qualified" | "decision"
   return "signal";
 }
 
+// Category color mapping for bundle components
+const CATEGORY_COLORS: Record<string, string> = {
+  gpu: "text-red-400",
+  cpu: "text-blue-400",
+  ram: "text-purple-400",
+  ssd: "text-cyan-400",
+  psu: "text-yellow-400",
+  case: "text-muted-foreground",
+  motherboard: "text-orange-400",
+  cooler: "text-teal-400",
+};
+
 // Convert API item to LensEntry for display
 function apiItemToLensEntry(item: LensHistoryItem): LensEntry {
   const isBundle = item.is_bundle || item.listing_intent === "bundle";
   const marketValue = item.market_median ?? 0;
-  const gap = item.gap_percent ?? 0;
+  const dataPoints = item.data_points ?? item.data_points_30d ?? 0;
+
+  // Compute gap from API or derive
+  let gap = item.gap_percent ?? 0;
+  if (gap === 0 && marketValue > 0) {
+    gap = ((item.price - marketValue) / marketValue) * 100;
+  }
+
   const hasMarketData = marketValue > 0;
   const verdict = hasMarketData ? mapVerdict(item.verdict, gap) : "NO_DATA";
   const depth = deriveDepth(item);
 
-  // Build components list
+  // Build components list from bundle_components
   let components: LensComponent[] = [];
   if (isBundle && item.bundle_components && item.bundle_components.length > 0) {
-    components = item.bundle_components.map((c) => ({
-      type: c.category?.toUpperCase() || "?",
-      name: c.name,
-      score: c.score ?? 0,
-    }));
+    components = item.bundle_components.map((c) => {
+      const cat = (c.category || "").toLowerCase();
+      // Compute individual score if market_median available
+      let score = 0;
+      if (c.market_median && c.market_median > 0 && item.price > 0) {
+        // Individual score based on how component's market value relates — use API score if available
+        score = item.score ? Math.round(item.score * 10) / 10 : 0;
+      }
+      return {
+        type: cat.toUpperCase() || "?",
+        name: c.name,
+        score,
+        categoryColor: CATEGORY_COLORS[cat] || "text-muted-foreground",
+      };
+    });
   } else {
     components = [{ type: "GPU", name: item.component_name || "?", score: 0 }];
   }
+
+  // API score is /10, display as /10
+  const apiScore = item.score ?? null;
 
   return {
     id: item.id,
