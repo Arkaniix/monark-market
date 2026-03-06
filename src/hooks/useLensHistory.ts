@@ -19,18 +19,27 @@ export interface LensHistoryItem {
   is_bundle: boolean;
   signal_type: string;
   created_at: string;
-  // Optional enriched fields from API
+  // Enriched fields from API
   listing_intent?: string;
   market_median?: number | null;
   gap_percent?: number | null;
+  score?: number | null;
   verdict?: string | null;
   confidence?: number | null;
-  data_points_30d?: number | null;
+  data_points?: number | null;
+  data_points_30d?: number | null; // legacy alias
   credits_earned?: number | null;
-  bundle_components?: { id: number; name: string; category: string; score?: number }[];
-  bundle_component_ids?: number[];
+  bundle_components?: {
+    component_id: number;
+    name: string;
+    category: string;
+    market_median?: number | null;
+    data_points?: number | null;
+  }[] | null;
+  bundle_component_ids?: number[] | null;
   ad_title?: string | null;
   ad_url?: string | null;
+  is_outlier?: boolean;
 }
 
 interface LensHistoryResponse {

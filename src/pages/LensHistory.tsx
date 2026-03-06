@@ -42,6 +42,7 @@ interface LensComponent {
   type: string;
   name: string;
   score: number;
+  categoryColor?: string;
 }
 
 interface QuickAnalysis {
@@ -102,30 +103,62 @@ function mapVerdict(apiVerdict: string | null | undefined, gap: number): string 
 // Determine depth from API data
 function deriveDepth(item: LensHistoryItem): "signal" | "qualified" | "decision" {
   if (item.signal_type === "decision" || item.signal_type === "estimation") return "decision";
-  if (item.market_median && item.market_median > 0 && item.gap_percent != null) return "qualified";
+  if (item.market_median != null && item.market_median > 0) return "qualified";
   return "signal";
 }
+
+// Category color mapping for bundle components
+const CATEGORY_COLORS: Record<string, string> = {
+  gpu: "text-red-400",
+  cpu: "text-blue-400",
+  ram: "text-purple-400",
+  ssd: "text-cyan-400",
+  psu: "text-yellow-400",
+  case: "text-muted-foreground",
+  motherboard: "text-orange-400",
+  cooler: "text-teal-400",
+};
 
 // Convert API item to LensEntry for display
 function apiItemToLensEntry(item: LensHistoryItem): LensEntry {
   const isBundle = item.is_bundle || item.listing_intent === "bundle";
   const marketValue = item.market_median ?? 0;
-  const gap = item.gap_percent ?? 0;
+  const dataPoints = item.data_points ?? item.data_points_30d ?? 0;
+
+  // Compute gap from API or derive
+  let gap = item.gap_percent ?? 0;
+  if (gap === 0 && marketValue > 0) {
+    gap = ((item.price - marketValue) / marketValue) * 100;
+  }
+
   const hasMarketData = marketValue > 0;
   const verdict = hasMarketData ? mapVerdict(item.verdict, gap) : "NO_DATA";
   const depth = deriveDepth(item);
 
-  // Build components list
+  // Build components list from bundle_components
   let components: LensComponent[] = [];
   if (isBundle && item.bundle_components && item.bundle_components.length > 0) {
-    components = item.bundle_components.map((c) => ({
-      type: c.category?.toUpperCase() || "?",
-      name: c.name,
-      score: c.score ?? 0,
-    }));
+    components = item.bundle_components.map((c) => {
+      const cat = (c.category || "").toLowerCase();
+      // Compute individual score if market_median available
+      let score = 0;
+      if (c.market_median && c.market_median > 0 && item.price > 0) {
+        // Individual score based on how component's market value relates — use API score if available
+        score = item.score ? Math.round(item.score * 10) / 10 : 0;
+      }
+      return {
+        type: cat.toUpperCase() || "?",
+        name: c.name,
+        score,
+        categoryColor: CATEGORY_COLORS[cat] || "text-muted-foreground",
+      };
+    });
   } else {
     components = [{ type: "GPU", name: item.component_name || "?", score: 0 }];
   }
+
+  // API score is /10, display as /10
+  const apiScore = item.score ?? null;
 
   return {
     id: item.id,
@@ -244,36 +277,63 @@ function ScanCard({ entry }: { entry: LensEntry }) {
 
   const verdict = VERDICT_CONFIG[entry.verdict];
   const hasMarketData = entry.marketValue > 0;
-  const gapPositive = entry.gap > 0;
+  const gapNegative = entry.gap < 0; // negative gap = price below market = good
   const depthConf = DEPTH_CONFIG[depth];
   const isBundle = entry.type === "PC_COMPLET" || entry.type === "LOT";
+
+  // Derive volume label from data_points stored in entry
+  const getVolumeLabel = () => {
+    // We don't have data_points on LensEntry, but we can derive from hasMarketData
+    if (!hasMarketData) return "Données insuffisantes";
+    return "—"; // Real volume comes from API quick endpoint
+  };
 
   const handleQuickAnalysis = () => {
     if (quickResult) {
       setExpanded(!expanded);
       return;
     }
+    if (!hasMarketData) {
+      // No market data → show minimal info
+      const result: QuickAnalysis = {
+        gap: "—",
+        trend30d: "—",
+        volume: "Données insuffisantes",
+        liquidity: "—",
+        details: [
+          { label: "Prix annonce", value: `${entry.price}€` },
+          { label: "Valeur médiane 30j", value: "Pas de données" },
+        ],
+        insights: ["⚪ Pas assez de données marché pour qualifier ce signal"],
+      };
+      setQuickResult(result);
+      setExpanded(true);
+      return;
+    }
     setLoading(true);
     setTimeout(() => {
+      const gapStr = `${entry.gap > 0 ? "+" : ""}${entry.gap.toFixed(1)}%`;
       const result: QuickAnalysis = {
-        gap: `${gapPositive ? "+" : ""}${entry.gap}%`,
-        trend30d: gapPositive ? "+2.1%" : "-4.2%",
-        volume: "Modéré",
-        liquidity: "6.3/10",
+        gap: gapStr,
+        trend30d: "—", // Not available from history endpoint
+        volume: "—",
+        liquidity: "—",
         details: [
           { label: "Valeur médiane 30j", value: `${entry.marketValue}€` },
           { label: "Prix annonce", value: `${entry.price}€` },
-          { label: "Écart", value: `${gapPositive ? "+" : ""}${entry.gap}% ${gapPositive ? "sous-évalué" : "surévalué"}`, positive: gapPositive },
+          { label: "Écart", value: `${gapStr} ${gapNegative ? "sous le marché" : "au-dessus du marché"}`, positive: gapNegative },
         ],
-        insights: gapPositive
-          ? ["🟢 Prix inférieur au marché", "🟢 Composant populaire, revente facile", "🟡 Vérifier l'état réel"]
-          : ["🔴 Prix au-dessus du marché", "🟡 Marge de négociation possible", "🟡 Tendance baissière récente"],
+        insights: gapNegative
+          ? ["🟢 Prix inférieur au marché", "🟡 Vérifier l'état réel avant achat"]
+          : entry.gap <= 10
+            ? ["🟡 Prix proche du marché", "🟡 Marge de négociation possible"]
+            : ["🔴 Prix au-dessus du marché", "🟡 Négociation recommandée"],
       };
       setQuickResult(result);
       setExpanded(true);
       setDepth("qualified");
       setLoading(false);
-    }, 1500);
+    }, 800);
   };
 
   const handleDeepAnalysis = () => {
@@ -299,7 +359,7 @@ function ScanCard({ entry }: { entry: LensEntry }) {
           </Badge>
           <Badge variant="outline" className={cn(
             "text-[10px] px-1.5 py-0",
-            isBundle ? "bg-orange-500/10 text-orange-400 border-orange-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+            isBundle ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20"
           )}>
             {TYPE_LABELS[entry.type] || entry.type}
           </Badge>
@@ -327,14 +387,14 @@ function ScanCard({ entry }: { entry: LensEntry }) {
                 variant="outline"
                 className={cn(
                   "text-[11px] font-semibold",
-                  gapPositive
+                  entry.gap < 0
                     ? "bg-green-500/10 text-green-400 border-green-500/20"
-                    : entry.gap < -5
+                    : entry.gap > 10
                       ? "bg-red-500/10 text-red-400 border-red-500/20"
                       : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                 )}
               >
-                {gapPositive ? "+" : ""}{entry.gap.toFixed(1)}%
+                {entry.gap > 0 ? "+" : ""}{entry.gap.toFixed(1)}%
               </Badge>
             </>
           ) : (
@@ -353,9 +413,9 @@ function ScanCard({ entry }: { entry: LensEntry }) {
         <div className="flex gap-1.5 overflow-x-auto pb-1 mb-3" style={{ scrollbarWidth: "none" }}>
           {entry.components.slice(0, 6).map((c, i) => (
             <div key={i} className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px]">
-              <span className="text-muted-foreground">{c.type}</span>
+              <span className={cn("font-medium", c.categoryColor || "text-muted-foreground")}>{c.type}</span>
               <span>{c.name}</span>
-              {c.score > 0 && <span className="text-primary font-semibold">{c.score}</span>}
+              {c.score > 0 && <span className="text-primary font-semibold">{c.score.toFixed(1)}</span>}
             </div>
           ))}
           {entry.components.length > 6 && (
