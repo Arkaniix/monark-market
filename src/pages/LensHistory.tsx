@@ -277,36 +277,63 @@ function ScanCard({ entry }: { entry: LensEntry }) {
 
   const verdict = VERDICT_CONFIG[entry.verdict];
   const hasMarketData = entry.marketValue > 0;
-  const gapPositive = entry.gap > 0;
+  const gapNegative = entry.gap < 0; // negative gap = price below market = good
   const depthConf = DEPTH_CONFIG[depth];
   const isBundle = entry.type === "PC_COMPLET" || entry.type === "LOT";
+
+  // Derive volume label from data_points stored in entry
+  const getVolumeLabel = () => {
+    // We don't have data_points on LensEntry, but we can derive from hasMarketData
+    if (!hasMarketData) return "Données insuffisantes";
+    return "—"; // Real volume comes from API quick endpoint
+  };
 
   const handleQuickAnalysis = () => {
     if (quickResult) {
       setExpanded(!expanded);
       return;
     }
+    if (!hasMarketData) {
+      // No market data → show minimal info
+      const result: QuickAnalysis = {
+        gap: "—",
+        trend30d: "—",
+        volume: "Données insuffisantes",
+        liquidity: "—",
+        details: [
+          { label: "Prix annonce", value: `${entry.price}€` },
+          { label: "Valeur médiane 30j", value: "Pas de données" },
+        ],
+        insights: ["⚪ Pas assez de données marché pour qualifier ce signal"],
+      };
+      setQuickResult(result);
+      setExpanded(true);
+      return;
+    }
     setLoading(true);
     setTimeout(() => {
+      const gapStr = `${entry.gap > 0 ? "+" : ""}${entry.gap.toFixed(1)}%`;
       const result: QuickAnalysis = {
-        gap: `${gapPositive ? "+" : ""}${entry.gap}%`,
-        trend30d: gapPositive ? "+2.1%" : "-4.2%",
-        volume: "Modéré",
-        liquidity: "6.3/10",
+        gap: gapStr,
+        trend30d: "—", // Not available from history endpoint
+        volume: "—",
+        liquidity: "—",
         details: [
           { label: "Valeur médiane 30j", value: `${entry.marketValue}€` },
           { label: "Prix annonce", value: `${entry.price}€` },
-          { label: "Écart", value: `${gapPositive ? "+" : ""}${entry.gap}% ${gapPositive ? "sous-évalué" : "surévalué"}`, positive: gapPositive },
+          { label: "Écart", value: `${gapStr} ${gapNegative ? "sous le marché" : "au-dessus du marché"}`, positive: gapNegative },
         ],
-        insights: gapPositive
-          ? ["🟢 Prix inférieur au marché", "🟢 Composant populaire, revente facile", "🟡 Vérifier l'état réel"]
-          : ["🔴 Prix au-dessus du marché", "🟡 Marge de négociation possible", "🟡 Tendance baissière récente"],
+        insights: gapNegative
+          ? ["🟢 Prix inférieur au marché", "🟡 Vérifier l'état réel avant achat"]
+          : entry.gap <= 10
+            ? ["🟡 Prix proche du marché", "🟡 Marge de négociation possible"]
+            : ["🔴 Prix au-dessus du marché", "🟡 Négociation recommandée"],
       };
       setQuickResult(result);
       setExpanded(true);
       setDepth("qualified");
       setLoading(false);
-    }, 1500);
+    }, 800);
   };
 
   const handleDeepAnalysis = () => {
