@@ -381,10 +381,11 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
                 size="sm"
                 variant="outline"
                 className="h-7 text-xs gap-1"
-                onClick={() => setExpanded(!expanded)}
+                disabled={qualifying}
+                onClick={() => handleQualify('quick')}
               >
-                <Zap className="h-3 w-3" />
-                Qualifier · 5 cr.
+                {qualifying ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
+                {qualifying ? "Analyse…" : "Qualifier · 5 cr."}
               </Button>
             )}
             {/* Bouton Décision complète — visible si pas d'analyse ou seulement quick */}
