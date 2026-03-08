@@ -289,7 +289,7 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
                         else navigate(`/catalog?component=${c.component_id}`);
                       }}
                     >
-                      {c.component_name}
+                      {c.component_name || (c as any).name || `Composant #${c.component_id}`}
                     </span>
                     {c.market_median != null ? (
                       <span className="text-muted-foreground">{Math.round(c.market_median)}€</span>
