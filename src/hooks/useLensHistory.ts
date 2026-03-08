@@ -3,59 +3,85 @@ import { apiFetch } from "@/lib/api/client";
 import { LENS } from "@/lib/api/endpoints";
 import { useState } from "react";
 
-export interface LensHistoryItem {
-  id: number;
+// ── Bundle component from API ──
+export interface BundleComponent {
   component_id: number;
   component_name: string;
-  platform: string;
+  category: string;
+  market_median: number | null;
+  data_points: number;
+  catalog_slug: string | null;
+}
+
+// ── Insight from API ──
+export interface Insight {
+  type: string; // "positive" | "warning" | "negative" | "info"
+  text: string;
+  icon: string; // emoji
+}
+
+// ── Single history signal from API ──
+export interface LensHistoryItem {
+  id: number;
+  ad_hash: string | null;
+
+  // Component
+  component_id: number;
+  component_name: string;
+  category: string;
+
+  // Listing
   price: number;
-  currency: string;
+  platform: string;
   condition: string | null;
   region: string | null;
-  has_warranty: boolean;
-  has_invoice: boolean;
-  has_original_box: boolean;
-  defects: string | null;
-  is_bundle: boolean;
-  signal_type: string;
+  listing_intent: string;
   created_at: string;
-  // Enriched fields from API
-  listing_intent?: string;
-  market_median?: number | null;
-  gap_percent?: number | null;
-  score?: number | null;
-  verdict?: string | null;
-  confidence?: number | null;
-  data_points?: number | null;
-  data_points_30d?: number | null; // legacy alias
-  credits_earned?: number | null;
-  bundle_components?: {
-    component_id: number;
-    name: string;
-    category: string;
-    market_median?: number | null;
-    data_points?: number | null;
-  }[] | null;
-  bundle_component_ids?: number[] | null;
-  ad_title?: string | null;
-  ad_url?: string | null;
-  is_outlier?: boolean;
+
+  // Bundle
+  is_bundle: boolean;
+  bundle_components: BundleComponent[] | null;
+
+  // Market
+  market_median: number | null;
+  price_vs_market: number | null;
+  verdict: string | null;
+  data_points: number;
+  confidence: number;
+
+  // Bundle market
+  bundle_total_value: number | null;
+  bundle_verdict: string | null;
+
+  // Insights
+  insights: Insight[];
+
+  // Deep analysis
+  has_deep_analysis: boolean;
+  deep_analysis_level: string | null;
+  deep_data: any | null;
+
+  // Quality
+  is_qualified: boolean;
+  is_outlier: boolean;
+  cache_stale: boolean;
 }
 
-interface LensHistoryResponse {
-  items: LensHistoryItem[];
-  total: number;
-  page: number;
-  page_size: number;
-}
-
+// ── Stats from API ──
 export interface LensStats {
   total_signals: number;
-  total_credits_earned: number;
-  signals_by_platform: Record<string, number>;
-  signals_today: number;
-  qualified_count?: number;
-  decision_count?: number;
+  qualified: number;
+  bundles: number;
+  credits_earned: number;
+}
+
+// ── API response shape ──
+interface LensHistoryResponse {
+  signals: LensHistoryItem[];
+  total: number;
+  page: number;
+  per_page: number;
+  stats: LensStats;
 }
 
 interface UseLensHistoryOptions {
@@ -71,9 +97,9 @@ export function useLensHistory(options: UseLensHistoryOptions = {}) {
 
   const queryParams = new URLSearchParams();
   queryParams.set("page", String(page));
-  queryParams.set("page_size", String(pageSize));
+  queryParams.set("per_page", String(pageSize));
   if (platform && platform !== "all") queryParams.set("platform", platform);
-  if (signalType && signalType !== "all") queryParams.set("signal_type", signalType);
+  if (signalType && signalType !== "all") queryParams.set("intent", signalType);
 
   const {
     data,
@@ -88,24 +114,14 @@ export function useLensHistory(options: UseLensHistoryOptions = {}) {
     enabled,
   });
 
-  const {
-    data: stats,
-    isLoading: isLoadingStats,
-  } = useQuery<LensStats>({
-    queryKey: ["lens-stats"],
-    queryFn: () => apiFetch<LensStats>(LENS.STATS),
-    staleTime: 120_000,
-    enabled,
-  });
-
   return {
-    items: data?.items ?? [],
+    items: data?.signals ?? [],
     total: data?.total ?? 0,
     page,
     pageSize,
     setPage,
-    stats: stats ?? null,
-    isLoading: isLoading || isLoadingStats,
+    stats: data?.stats ?? null,
+    isLoading,
     isError,
     error,
     refresh: refetch,
