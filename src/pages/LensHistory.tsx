@@ -245,9 +245,17 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
               ⚠️ Données périmées
             </Badge>
           )}
-          <span className="ml-auto text-[11px] text-muted-foreground shrink-0">
-            {relativeDate(item.created_at)}
-          </span>
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            {item.region && (
+              <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                {getRegionLabel(item.region)}
+              </span>
+            )}
+            <span className="text-[11px] text-muted-foreground">
+              {relativeDate(item.created_at)}
+            </span>
+          </div>
         </div>
 
         {/* Row 2: Title */}
