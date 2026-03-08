@@ -88,7 +88,13 @@ const INSIGHT_COLORS: Record<string, string> = {
 };
 
 function relativeDate(iso: string) {
-  return formatDistanceToNow(new Date(iso), { addSuffix: true, locale: fr });
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "date inconnue";
+    return formatDistanceToNow(d, { addSuffix: true, locale: fr });
+  } catch {
+    return "date inconnue";
+  }
 }
 
 function getPlatformDisplay(raw: string) {
