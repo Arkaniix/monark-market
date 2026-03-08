@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api/client";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEnhancedEstimationHistory } from "@/hooks";
@@ -125,23 +126,23 @@ function buildTitle(item: LensHistoryItem): string {
     if (item.bundle_components && item.bundle_components.length > 0) {
       const names = item.bundle_components
         .slice(0, 3)
-        .map(c => c.component_name)
+        .map(c => c.component_name || (c as any).name || `Composant #${c.component_id}`)
         .filter(Boolean);
       if (names.length > 0) return `PC complet — ${names.join(" / ")}`;
     }
-    // Fallback: use main component name
     return `PC complet — ${item.component_name || "Composants inconnus"}`;
   }
   if (item.listing_intent === "multiple") {
-    return `Lot de ${item.component_name}`;
+    return `Lot de ${item.component_name || "Composant inconnu"}`;
   }
   return item.component_name || "Composant inconnu";
 }
 
 // ── Scan Card ──
-function ScanCard({ item }: { item: LensHistoryItem }) {
+function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: (id: number, level: string, deepData: any) => void }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
+  const [qualifying, setQualifying] = useState(false);
   const [watchlisted, setWatchlisted] = useState(false);
   const [alertActive, setAlertActive] = useState(false);
 
@@ -154,6 +155,23 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
   const title = buildTitle(item);
   const regionLabel = item.region ? (REGION_LABELS[item.region] || item.region) : null;
 
+
+  const handleQualify = async (level: 'quick' | 'full') => {
+    if (!item.ad_hash || qualifying) return;
+    setQualifying(true);
+    try {
+      const result = await apiFetch<any>('/v1/lens/analyze/deep', {
+        method: 'POST',
+        body: { ad_hash: item.ad_hash, analysis_level: level },
+      });
+      onQualified?.(item.id, level, result);
+      setExpanded(true);
+    } catch (err) {
+      console.error('Qualification failed:', err);
+    } finally {
+      setQualifying(false);
+    }
+  };
 
   const handleDeepAnalysis = () => {
     const params = new URLSearchParams({
@@ -271,7 +289,7 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
                         else navigate(`/catalog?component=${c.component_id}`);
                       }}
                     >
-                      {c.component_name}
+                      {c.component_name || (c as any).name || `Composant #${c.component_id}`}
                     </span>
                     {c.market_median != null ? (
                       <span className="text-muted-foreground">{Math.round(c.market_median)}€</span>
@@ -363,10 +381,11 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
                 size="sm"
                 variant="outline"
                 className="h-7 text-xs gap-1"
-                onClick={() => setExpanded(!expanded)}
+                disabled={qualifying}
+                onClick={() => handleQualify('quick')}
               >
-                <Zap className="h-3 w-3" />
-                Qualifier · 5 cr.
+                {qualifying ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
+                {qualifying ? "Analyse…" : "Qualifier · 5 cr."}
               </Button>
             )}
             {/* Bouton Décision complète — visible si pas d'analyse ou seulement quick */}
@@ -719,11 +738,26 @@ export default function LensHistory() {
 
   const useDevMock = import.meta.env.DEV && (isLensError || apiItems.length === 0);
 
+  // Local state overrides for qualification updates
+  const [qualifiedOverrides, setQualifiedOverrides] = useState<Record<number, { has_deep_analysis: boolean; deep_analysis_level: string; deep_data: any }>>({});
+
+  const handleSignalQualified = (id: number, level: string, deepData: any) => {
+    setQualifiedOverrides(prev => ({
+      ...prev,
+      [id]: { has_deep_analysis: true, deep_analysis_level: level, deep_data: deepData },
+    }));
+  };
+
   const lensScans: LensHistoryItem[] = useMemo(() => {
-    if (apiItems.length > 0) return apiItems;
-    if (import.meta.env.DEV) return DEV_MOCK_HISTORY as unknown as LensHistoryItem[];
-    return [];
-  }, [apiItems, isLensError]);
+    const base = apiItems.length > 0 ? apiItems : (import.meta.env.DEV ? DEV_MOCK_HISTORY as unknown as LensHistoryItem[] : []);
+    // Apply local qualification overrides
+    if (Object.keys(qualifiedOverrides).length === 0) return base;
+    return base.map(item => {
+      const override = qualifiedOverrides[item.id];
+      if (!override) return item;
+      return { ...item, ...override };
+    });
+  }, [apiItems, isLensError, qualifiedOverrides]);
 
   const {
     data: historyData,
@@ -752,7 +786,7 @@ export default function LensHistory() {
       if (search) {
         const q = search.toLowerCase();
         const matchesName = item.component_name?.toLowerCase().includes(q);
-        const matchesBundle = item.bundle_components?.some(c => c.component_name.toLowerCase().includes(q));
+        const matchesBundle = item.bundle_components?.some(c => (c.component_name || (c as any).name || "").toLowerCase().includes(q));
         if (!matchesName && !matchesBundle) return false;
       }
       if (typeFilter === "PC_COMPLET" && !item.is_bundle) return false;
@@ -940,7 +974,7 @@ export default function LensHistory() {
                 ) : (
                   filtered.map((item) => (
                     <motion.div key={item.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}>
-                      <ScanCard item={item} />
+                      <ScanCard item={item} onQualified={handleSignalQualified} />
                     </motion.div>
                   ))
                 )}
