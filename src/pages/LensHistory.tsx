@@ -786,7 +786,7 @@ export default function LensHistory() {
       if (search) {
         const q = search.toLowerCase();
         const matchesName = item.component_name?.toLowerCase().includes(q);
-        const matchesBundle = item.bundle_components?.some(c => c.component_name.toLowerCase().includes(q));
+        const matchesBundle = item.bundle_components?.some(c => (c.component_name || (c as any).name || "").toLowerCase().includes(q));
         if (!matchesName && !matchesBundle) return false;
       }
       if (typeFilter === "PC_COMPLET" && !item.is_bundle) return false;
