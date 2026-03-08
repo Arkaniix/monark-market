@@ -110,7 +110,21 @@ export function useLensHistory(options: UseLensHistoryOptions = {}) {
     refetch,
   } = useQuery<LensHistoryResponse>({
     queryKey: ["lens-history", page, platform, signalType],
-    queryFn: () => apiFetch<LensHistoryResponse>(`${LENS.HISTORY}?${queryParams.toString()}`),
+    queryFn: async () => {
+      const raw = await apiFetch<LensHistoryResponse>(`${LENS.HISTORY}?${queryParams.toString()}`);
+      // Normalize: backend may send "name" instead of "component_name" in bundle_components
+      if (raw?.signals) {
+        for (const sig of raw.signals) {
+          if (sig.bundle_components) {
+            sig.bundle_components = sig.bundle_components.map((c: any) => ({
+              ...c,
+              component_name: c.component_name || c.name || `Composant #${c.component_id}`,
+            }));
+          }
+        }
+      }
+      return raw;
+    },
     staleTime: 60_000,
     enabled,
   });
