@@ -849,12 +849,12 @@ export default function LensHistory() {
               <Select value={verdictFilter} onValueChange={setVerdictFilter}>
                 <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Verdict" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="excellente_affaire">Excellente affaire</SelectItem>
-                  <SelectItem value="bonne_affaire">Bonne affaire</SelectItem>
-                  <SelectItem value="prix_correct">Prix correct</SelectItem>
-                  <SelectItem value="au_dessus_marche">Surévalué</SelectItem>
-                  <SelectItem value="trop_cher">Trop cher</SelectItem>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="excellente_affaire">🔥 Excellente affaire</SelectItem>
+                  <SelectItem value="bonne_affaire">✅ Bonne affaire</SelectItem>
+                  <SelectItem value="prix_correct">➡️ Prix correct</SelectItem>
+                  <SelectItem value="au_dessus_marche">⚠️ Surévalué</SelectItem>
+                  <SelectItem value="trop_cher">🚫 Trop cher</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={depthFilter} onValueChange={setDepthFilter}>
