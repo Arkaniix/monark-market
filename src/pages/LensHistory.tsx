@@ -79,7 +79,28 @@ const REGION_LABELS: Record<string, string> = {
   "bourgogne-franche-comte": "Bourgogne-Franche-Comté",
   "centre-val-de-loire": "Centre-Val de Loire",
   "corse": "Corse",
+  "grand-ouest": "Grand Ouest",
+  "alsace": "Alsace",
+  "lorraine": "Lorraine",
+  "champagne-ardenne": "Champagne-Ardenne",
+  "picardie": "Picardie",
+  "nord-pas-de-calais": "Nord-Pas-de-Calais",
+  "aquitaine": "Aquitaine",
+  "midi-pyrenees": "Midi-Pyrénées",
+  "languedoc-roussillon": "Languedoc-Roussillon",
+  "rhone-alpes": "Rhône-Alpes",
+  "poitou-charentes": "Poitou-Charentes",
+  "limousin": "Limousin",
+  "auvergne": "Auvergne",
+  "franche-comte": "Franche-Comté",
+  "basse-normandie": "Basse-Normandie",
+  "haute-normandie": "Haute-Normandie",
+  "bourgogne": "Bourgogne",
 };
+
+function getRegionLabel(slug: string): string {
+  return REGION_LABELS[slug] || slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
 
 const INSIGHT_COLORS: Record<string, string> = {
   positive: "bg-green-500/20 text-green-400",
@@ -224,9 +245,17 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
               ⚠️ Données périmées
             </Badge>
           )}
-          <span className="ml-auto text-[11px] text-muted-foreground shrink-0">
-            {relativeDate(item.created_at)}
-          </span>
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            {item.region && (
+              <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                {getRegionLabel(item.region)}
+              </span>
+            )}
+            <span className="text-[11px] text-muted-foreground">
+              {relativeDate(item.created_at)}
+            </span>
+          </div>
         </div>
 
         {/* Row 2: Title */}
