@@ -138,9 +138,10 @@ function buildTitle(item: LensHistoryItem): string {
 }
 
 // ── Scan Card ──
-function ScanCard({ item }: { item: LensHistoryItem }) {
+function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: (id: number, level: string, deepData: any) => void }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
+  const [qualifying, setQualifying] = useState(false);
   const [watchlisted, setWatchlisted] = useState(false);
   const [alertActive, setAlertActive] = useState(false);
 
