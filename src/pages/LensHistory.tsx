@@ -154,9 +154,7 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
   const title = buildTitle(item);
   const regionLabel = item.region ? (REGION_LABELS[item.region] || item.region) : null;
 
-  // Components with and without data
-  const componentsWithData = item.bundle_components?.filter(c => c.market_median != null) ?? [];
-  const componentsWithoutData = (item.bundle_components?.length ?? 0) - componentsWithData.length;
+  const hasMarketData = item.market_median != null && item.market_median > 0;
 
   const handleDeepAnalysis = () => {
     const params = new URLSearchParams({
