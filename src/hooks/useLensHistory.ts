@@ -7,6 +7,7 @@ import { useState } from "react";
 export interface BundleComponent {
   component_id: number;
   component_name: string;
+  name?: string; // backend may send "name" instead of "component_name"
   category: string;
   market_median: number | null;
   data_points: number;
