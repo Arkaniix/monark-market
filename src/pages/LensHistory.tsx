@@ -121,9 +121,16 @@ function getVolumeLabel(dp: number): string {
 }
 
 function buildTitle(item: LensHistoryItem): string {
-  if (item.is_bundle && item.bundle_components && item.bundle_components.length > 0) {
-    const main = item.bundle_components.slice(0, 3).map(c => c.component_name).join(" / ");
-    return `PC complet — ${main}`;
+  if (item.is_bundle) {
+    if (item.bundle_components && item.bundle_components.length > 0) {
+      const names = item.bundle_components
+        .slice(0, 3)
+        .map(c => c.component_name)
+        .filter(Boolean);
+      if (names.length > 0) return `PC complet — ${names.join(" / ")}`;
+    }
+    // Fallback: use main component name
+    return `PC complet — ${item.component_name || "Composants inconnus"}`;
   }
   if (item.listing_intent === "multiple") {
     return `Lot de ${item.component_name}`;
