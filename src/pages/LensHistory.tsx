@@ -248,29 +248,55 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
 
         {/* Row 4: Bundle components */}
         {item.is_bundle && (
-          <div className="flex gap-1.5 overflow-x-auto pb-1 mb-2" style={{ scrollbarWidth: "none" }}>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
             {item.bundle_components && item.bundle_components.length > 0 ? (
-              item.bundle_components.slice(0, 6).map((c, i) => {
+              item.bundle_components.map((c, i) => {
                 const cat = (c.category || "").toLowerCase();
+                const catColorClass = ({
+                  gpu: "bg-red-500/20 text-red-400 border border-red-500/20",
+                  cpu: "bg-blue-500/20 text-blue-400 border border-blue-500/20",
+                  ram: "bg-purple-500/20 text-purple-400 border border-purple-500/20",
+                  ssd: "bg-cyan-500/20 text-cyan-400 border border-cyan-500/20",
+                })[cat] || "bg-muted/50 text-muted-foreground border border-border";
                 return (
-                  <button
-                    key={i}
-                    className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px] hover:bg-muted transition-colors cursor-pointer"
-                    onClick={() => {
-                      if (c.catalog_slug) navigate(`/catalog/${c.catalog_slug}`);
-                      else navigate(`/catalog?component=${c.component_id}`);
-                    }}
-                  >
-                    <span className={cn("font-medium uppercase", CATEGORY_COLORS[cat] || "text-muted-foreground")}>{cat || "?"}</span>
-                    <span>{c.component_name}</span>
-                    {c.market_median != null && (
-                      <span className="text-muted-foreground ml-0.5">{c.market_median}€</span>
+                  <span key={i} className="inline-flex items-center gap-1.5 text-xs">
+                    <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide", catColorClass)}>
+                      {cat || "?"}
+                    </span>
+                    <span
+                      className="cursor-pointer hover:text-primary hover:underline transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (c.catalog_slug) navigate(`/catalog/${c.catalog_slug}`);
+                        else navigate(`/catalog?component=${c.component_id}`);
+                      }}
+                    >
+                      {c.component_name}
+                    </span>
+                    {c.market_median != null ? (
+                      <span className="text-muted-foreground">{Math.round(c.market_median)}€</span>
+                    ) : (
+                      <span className="text-muted-foreground/50">—</span>
                     )}
-                  </button>
+                  </span>
                 );
               })
             ) : (
-              <span className="text-[11px] text-muted-foreground italic">Composants non détaillés</span>
+              <span className="inline-flex items-center gap-1.5 text-xs">
+                <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide", ({
+                  gpu: "bg-red-500/20 text-red-400 border border-red-500/20",
+                  cpu: "bg-blue-500/20 text-blue-400 border border-blue-500/20",
+                  ram: "bg-purple-500/20 text-purple-400 border border-purple-500/20",
+                  ssd: "bg-cyan-500/20 text-cyan-400 border border-cyan-500/20",
+                })[(item.category || "").toLowerCase()] || "bg-muted/50 text-muted-foreground border border-border")}>
+                  {(item.category || "?").toUpperCase()}
+                </span>
+                <span>{item.component_name}</span>
+                {item.market_median != null && (
+                  <span className="text-muted-foreground">{Math.round(item.market_median)}€</span>
+                )}
+                <span className="text-muted-foreground/50 italic ml-2">+ composants non détaillés</span>
+              </span>
             )}
           </div>
         )}
@@ -321,11 +347,12 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
           )}
 
           <div className="ml-auto flex gap-1.5">
+            {/* Bouton Qualifier / Résultats */}
             {item.has_deep_analysis ? (
               <Button
                 size="sm"
-                variant={expanded ? "default" : "outline"}
-                className="h-7 text-xs gap-1"
+                variant="outline"
+                className={cn("h-7 text-xs gap-1", "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25")}
                 onClick={() => setExpanded(!expanded)}
               >
                 {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -334,15 +361,16 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
             ) : (
               <Button
                 size="sm"
-                variant={expanded ? "default" : "outline"}
+                variant="outline"
                 className="h-7 text-xs gap-1"
                 onClick={() => setExpanded(!expanded)}
               >
-                {expanded ? <ChevronUp className="h-3 w-3" /> : <Zap className="h-3 w-3" />}
-                {expanded ? "Résultats" : "Qualifier · 5 cr."}
+                <Zap className="h-3 w-3" />
+                Qualifier · 5 cr.
               </Button>
             )}
-            {!item.has_deep_analysis && (
+            {/* Bouton Décision complète — visible si pas d'analyse ou seulement quick */}
+            {(!item.has_deep_analysis || item.deep_analysis_level === "quick") && (
               <Button
                 size="sm" variant="outline"
                 className="h-7 text-xs gap-1 hidden sm:inline-flex border-primary/40 text-primary hover:bg-primary/10"
