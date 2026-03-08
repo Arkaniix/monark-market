@@ -155,6 +155,23 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
   const regionLabel = item.region ? (REGION_LABELS[item.region] || item.region) : null;
 
 
+  const handleQualify = async (level: 'quick' | 'full') => {
+    if (!item.ad_hash || qualifying) return;
+    setQualifying(true);
+    try {
+      const result = await apiFetch<any>('/v1/lens/analyze/deep', {
+        method: 'POST',
+        body: { ad_hash: item.ad_hash, analysis_level: level },
+      });
+      onQualified?.(item.id, level, result);
+      setExpanded(true);
+    } catch (err) {
+      console.error('Qualification failed:', err);
+    } finally {
+      setQualifying(false);
+    }
+  };
+
   const handleDeepAnalysis = () => {
     const params = new URLSearchParams({
       model_name: item.component_name || title,
