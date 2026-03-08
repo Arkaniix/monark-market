@@ -121,9 +121,16 @@ function getVolumeLabel(dp: number): string {
 }
 
 function buildTitle(item: LensHistoryItem): string {
-  if (item.is_bundle && item.bundle_components && item.bundle_components.length > 0) {
-    const main = item.bundle_components.slice(0, 3).map(c => c.component_name).join(" / ");
-    return `PC complet — ${main}`;
+  if (item.is_bundle) {
+    if (item.bundle_components && item.bundle_components.length > 0) {
+      const names = item.bundle_components
+        .slice(0, 3)
+        .map(c => c.component_name)
+        .filter(Boolean);
+      if (names.length > 0) return `PC complet — ${names.join(" / ")}`;
+    }
+    // Fallback: use main component name
+    return `PC complet — ${item.component_name || "Composants inconnus"}`;
   }
   if (item.listing_intent === "multiple") {
     return `Lot de ${item.component_name}`;
@@ -147,9 +154,6 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
   const title = buildTitle(item);
   const regionLabel = item.region ? (REGION_LABELS[item.region] || item.region) : null;
 
-  // Components with and without data
-  const componentsWithData = item.bundle_components?.filter(c => c.market_median != null) ?? [];
-  const componentsWithoutData = (item.bundle_components?.length ?? 0) - componentsWithData.length;
 
   const handleDeepAnalysis = () => {
     const params = new URLSearchParams({
@@ -234,31 +238,30 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
         </div>
 
         {/* Row 4: Bundle components */}
-        {item.is_bundle && item.bundle_components && item.bundle_components.length > 0 && (
+        {item.is_bundle && (
           <div className="flex gap-1.5 overflow-x-auto pb-1 mb-2" style={{ scrollbarWidth: "none" }}>
-            {item.bundle_components.filter(c => c.market_median != null || c.component_name).slice(0, 6).map((c, i) => {
-              const cat = (c.category || "").toLowerCase();
-              return (
-                <button
-                  key={i}
-                  className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px] hover:bg-muted transition-colors cursor-pointer"
-                  onClick={() => {
-                    if (c.catalog_slug) navigate(`/catalog/${c.catalog_slug}`);
-                    else navigate(`/catalog?component=${c.component_id}`);
-                  }}
-                >
-                  <span className={cn("font-medium uppercase", CATEGORY_COLORS[cat] || "text-muted-foreground")}>{cat || "?"}</span>
-                  <span>{c.component_name}</span>
-                  {c.market_median != null && (
-                    <span className="text-muted-foreground ml-0.5">{c.market_median}€</span>
-                  )}
-                </button>
-              );
-            })}
-            {componentsWithoutData > 0 && (
-              <span className="shrink-0 text-[11px] text-muted-foreground self-center">
-                + {componentsWithoutData} composant{componentsWithoutData > 1 ? "s" : ""} sans données
-              </span>
+            {item.bundle_components && item.bundle_components.length > 0 ? (
+              item.bundle_components.slice(0, 6).map((c, i) => {
+                const cat = (c.category || "").toLowerCase();
+                return (
+                  <button
+                    key={i}
+                    className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px] hover:bg-muted transition-colors cursor-pointer"
+                    onClick={() => {
+                      if (c.catalog_slug) navigate(`/catalog/${c.catalog_slug}`);
+                      else navigate(`/catalog?component=${c.component_id}`);
+                    }}
+                  >
+                    <span className={cn("font-medium uppercase", CATEGORY_COLORS[cat] || "text-muted-foreground")}>{cat || "?"}</span>
+                    <span>{c.component_name}</span>
+                    {c.market_median != null && (
+                      <span className="text-muted-foreground ml-0.5">{c.market_median}€</span>
+                    )}
+                  </button>
+                );
+              })
+            ) : (
+              <span className="text-[11px] text-muted-foreground italic">Composants non détaillés</span>
             )}
           </div>
         )}
@@ -843,12 +846,12 @@ export default function LensHistory() {
               <Select value={verdictFilter} onValueChange={setVerdictFilter}>
                 <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Verdict" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="excellente_affaire">Excellente affaire</SelectItem>
-                  <SelectItem value="bonne_affaire">Bonne affaire</SelectItem>
-                  <SelectItem value="prix_correct">Prix correct</SelectItem>
-                  <SelectItem value="au_dessus_marche">Surévalué</SelectItem>
-                  <SelectItem value="trop_cher">Trop cher</SelectItem>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="excellente_affaire">🔥 Excellente affaire</SelectItem>
+                  <SelectItem value="bonne_affaire">✅ Bonne affaire</SelectItem>
+                  <SelectItem value="prix_correct">➡️ Prix correct</SelectItem>
+                  <SelectItem value="au_dessus_marche">⚠️ Surévalué</SelectItem>
+                  <SelectItem value="trop_cher">🚫 Trop cher</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={depthFilter} onValueChange={setDepthFilter}>
