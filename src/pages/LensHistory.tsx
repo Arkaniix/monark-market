@@ -347,11 +347,12 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
           )}
 
           <div className="ml-auto flex gap-1.5">
+            {/* Bouton Qualifier / Résultats */}
             {item.has_deep_analysis ? (
               <Button
                 size="sm"
-                variant={expanded ? "default" : "outline"}
-                className="h-7 text-xs gap-1"
+                variant="outline"
+                className={cn("h-7 text-xs gap-1", "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25")}
                 onClick={() => setExpanded(!expanded)}
               >
                 {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -360,15 +361,16 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
             ) : (
               <Button
                 size="sm"
-                variant={expanded ? "default" : "outline"}
+                variant="outline"
                 className="h-7 text-xs gap-1"
                 onClick={() => setExpanded(!expanded)}
               >
-                {expanded ? <ChevronUp className="h-3 w-3" /> : <Zap className="h-3 w-3" />}
-                {expanded ? "Résultats" : "Qualifier · 5 cr."}
+                <Zap className="h-3 w-3" />
+                Qualifier · 5 cr.
               </Button>
             )}
-            {!item.has_deep_analysis && (
+            {/* Bouton Décision complète — visible si pas d'analyse ou seulement quick */}
+            {(!item.has_deep_analysis || item.deep_analysis_level === "quick") && (
               <Button
                 size="sm" variant="outline"
                 className="h-7 text-xs gap-1 hidden sm:inline-flex border-primary/40 text-primary hover:bg-primary/10"
