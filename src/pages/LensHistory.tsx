@@ -79,7 +79,28 @@ const REGION_LABELS: Record<string, string> = {
   "bourgogne-franche-comte": "Bourgogne-Franche-Comté",
   "centre-val-de-loire": "Centre-Val de Loire",
   "corse": "Corse",
+  "grand-ouest": "Grand Ouest",
+  "alsace": "Alsace",
+  "lorraine": "Lorraine",
+  "champagne-ardenne": "Champagne-Ardenne",
+  "picardie": "Picardie",
+  "nord-pas-de-calais": "Nord-Pas-de-Calais",
+  "aquitaine": "Aquitaine",
+  "midi-pyrenees": "Midi-Pyrénées",
+  "languedoc-roussillon": "Languedoc-Roussillon",
+  "rhone-alpes": "Rhône-Alpes",
+  "poitou-charentes": "Poitou-Charentes",
+  "limousin": "Limousin",
+  "auvergne": "Auvergne",
+  "franche-comte": "Franche-Comté",
+  "basse-normandie": "Basse-Normandie",
+  "haute-normandie": "Haute-Normandie",
+  "bourgogne": "Bourgogne",
 };
+
+function getRegionLabel(slug: string): string {
+  return REGION_LABELS[slug] || slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
 
 const INSIGHT_COLORS: Record<string, string> = {
   positive: "bg-green-500/20 text-green-400",
