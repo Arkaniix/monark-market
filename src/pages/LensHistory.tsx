@@ -266,7 +266,10 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
         {/* Non-bundle: single component chip */}
         {!item.is_bundle && (
           <div className="flex gap-1.5 mb-2">
-            <div className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px]">
+            <div
+              className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px] cursor-pointer hover:bg-muted transition-colors"
+              onClick={(e) => { e.stopPropagation(); navigate(`/catalog?component=${item.component_id}`); }}
+            >
               <span className={cn("font-medium uppercase", CATEGORY_COLORS[(item.category || "").toLowerCase()] || "text-muted-foreground")}>
                 {(item.category || "?").toUpperCase()}
               </span>
