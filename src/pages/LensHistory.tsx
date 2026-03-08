@@ -212,7 +212,16 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
         </div>
 
         {/* Row 2: Title */}
-        <p className="text-sm font-semibold truncate mb-2">{title}</p>
+        {!item.is_bundle ? (
+          <p
+            className="text-sm font-semibold truncate mb-2 cursor-pointer hover:text-primary transition-colors"
+            onClick={(e) => { e.stopPropagation(); navigate(`/catalog?component=${item.component_id}`); }}
+          >
+            {title}
+          </p>
+        ) : (
+          <p className="text-sm font-semibold truncate mb-2">{title}</p>
+        )}
 
         {/* Row 3: Price + Market + Region */}
         <div className="flex items-center gap-3 mb-2 flex-wrap">
