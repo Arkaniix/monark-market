@@ -738,11 +738,26 @@ export default function LensHistory() {
 
   const useDevMock = import.meta.env.DEV && (isLensError || apiItems.length === 0);
 
+  // Local state overrides for qualification updates
+  const [qualifiedOverrides, setQualifiedOverrides] = useState<Record<number, { has_deep_analysis: boolean; deep_analysis_level: string; deep_data: any }>>({});
+
+  const handleSignalQualified = (id: number, level: string, deepData: any) => {
+    setQualifiedOverrides(prev => ({
+      ...prev,
+      [id]: { has_deep_analysis: true, deep_analysis_level: level, deep_data: deepData },
+    }));
+  };
+
   const lensScans: LensHistoryItem[] = useMemo(() => {
-    if (apiItems.length > 0) return apiItems;
-    if (import.meta.env.DEV) return DEV_MOCK_HISTORY as unknown as LensHistoryItem[];
-    return [];
-  }, [apiItems, isLensError]);
+    const base = apiItems.length > 0 ? apiItems : (import.meta.env.DEV ? DEV_MOCK_HISTORY as unknown as LensHistoryItem[] : []);
+    // Apply local qualification overrides
+    if (Object.keys(qualifiedOverrides).length === 0) return base;
+    return base.map(item => {
+      const override = qualifiedOverrides[item.id];
+      if (!override) return item;
+      return { ...item, ...override };
+    });
+  }, [apiItems, isLensError, qualifiedOverrides]);
 
   const {
     data: historyData,
