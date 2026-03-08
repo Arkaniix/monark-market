@@ -154,7 +154,6 @@ function ScanCard({ item }: { item: LensHistoryItem }) {
   const title = buildTitle(item);
   const regionLabel = item.region ? (REGION_LABELS[item.region] || item.region) : null;
 
-  const hasMarketData = item.market_median != null && item.market_median > 0;
 
   const handleDeepAnalysis = () => {
     const params = new URLSearchParams({
