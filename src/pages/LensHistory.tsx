@@ -234,7 +234,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
           <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5", platform.class)}>
             {platform.label}
           </Badge>
-          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0",
+          <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5",
             item.is_bundle
               ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
               : item.listing_intent === "multiple"
