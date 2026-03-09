@@ -33,11 +33,13 @@ export interface LensHistoryItem {
 
   // Listing
   price: number;
+  previous_price: number | null;
   platform: string;
   condition: string | null;
   region: string | null;
   listing_intent: string;
   created_at: string;
+  date: string | null; // updated_at mapped by backend
 
   // Bundle
   is_bundle: boolean;

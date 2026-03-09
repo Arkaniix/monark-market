@@ -286,8 +286,14 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
             <span className="text-muted-foreground/40">·</span>
             <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
               <Clock className="w-3 h-3" />
-              {relativeDate(item.created_at)}
+              {relativeDate(item.date || item.created_at)}
             </span>
+            {item.previous_price != null && item.previous_price !== item.price && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/20 flex items-center gap-0.5">
+                <RefreshCw className="w-2.5 h-2.5" />
+                Mis à jour
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -305,7 +311,21 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
 
         {/* Row 3: Price + Market + Region */}
         <div className="flex items-center gap-3 mb-2 flex-wrap">
-          <span className="text-xl font-bold text-primary tabular-nums">{item.price}€</span>
+          {item.previous_price != null && item.previous_price !== item.price && (
+            <>
+              <span className="text-sm text-muted-foreground line-through tabular-nums">{item.previous_price}€</span>
+              {item.price < item.previous_price ? (
+                <TrendingDown className="w-4 h-4 text-green-400" />
+              ) : (
+                <TrendingUp className="w-4 h-4 text-red-400" />
+              )}
+            </>
+          )}
+          <span className={cn("text-xl font-bold tabular-nums", 
+            item.previous_price != null && item.previous_price !== item.price
+              ? item.price < item.previous_price ? "text-green-400" : "text-red-400"
+              : "text-primary"
+          )}>{item.price}€</span>
           {hasMarketData ? (
             <>
               <span className="text-xs text-muted-foreground">
