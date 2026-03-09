@@ -1071,10 +1071,23 @@ export default function LensHistory() {
               )}
             </motion.div>
 
-            <p className="text-xs text-muted-foreground">
-              {filtered.length} analyse{filtered.length !== 1 ? "s" : ""}
-              {hasActiveFilters ? " (filtrées)" : ""}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {filtered.length} analyse{filtered.length !== 1 ? "s" : ""}
+                {hasActiveFilters ? " (filtrées)" : ""}
+              </p>
+              {lensScans.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-muted-foreground hover:text-destructive gap-1"
+                  onClick={handleDeleteAll}
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Tout supprimer
+                </Button>
+              )}
+            </div>
 
             {/* Feed */}
             {isLoadingLens && !useDevMock ? (
