@@ -83,6 +83,8 @@ interface LensHistoryResponse {
   page: number;
   per_page: number;
   stats: LensStats;
+  history_limit: number | null;
+  history_usage: number;
 }
 
 interface UseLensHistoryOptions {
@@ -136,6 +138,8 @@ export function useLensHistory(options: UseLensHistoryOptions = {}) {
     pageSize,
     setPage,
     stats: data?.stats ?? null,
+    historyLimit: data?.history_limit ?? null,
+    historyUsage: data?.history_usage ?? 0,
     isLoading,
     isError,
     error,

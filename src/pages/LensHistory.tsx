@@ -5,7 +5,7 @@ import {
   Search, RotateCcw, Bookmark, Bell, Zap, FlaskConical, Loader2,
   ExternalLink, TrendingUp, TrendingDown, BarChart3, Droplets,
   ScanSearch, Award, Clock, MapPin, ChevronDown, ChevronUp, Eye, Target,
-  RefreshCw, Calculator, X, AlertTriangle, Check,
+  RefreshCw, Calculator, X, AlertTriangle, Check, Trash2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api/client";
+import { LENS } from "@/lib/api/endpoints";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEnhancedEstimationHistory } from "@/hooks";
@@ -178,7 +180,7 @@ function buildTitle(item: LensHistoryItem): string {
 }
 
 // ── Scan Card ──
-function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: (id: number, level: string, deepData: any) => void }) {
+function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQualified?: (id: number, level: string, deepData: any) => void; onDelete?: (id: number) => void }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [qualifying, setQualifying] = useState(false);
@@ -409,6 +411,15 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setAlertActive(!alertActive)}>
             <Bell className={cn("h-3.5 w-3.5", alertActive ? "fill-amber-400 text-amber-400" : "text-muted-foreground")} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            title="Supprimer cette analyse"
+            onClick={() => onDelete?.(item.id)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
 
           {item.cache_stale && (
@@ -773,6 +784,8 @@ export default function LensHistory() {
     page: lensPage,
     setPage: setLensPage,
     stats: lensStats,
+    historyLimit,
+    historyUsage,
     isLoading: isLoadingLens,
     isError: isLensError,
     refresh: refreshLens,
@@ -782,6 +795,9 @@ export default function LensHistory() {
   });
 
   const useDevMock = import.meta.env.DEV && (isLensError || apiItems.length === 0);
+
+  // Local state for deleted items
+  const [deletedIds, setDeletedIds] = useState<Set<number>>(new Set());
 
   // Local state overrides for qualification updates
   const [qualifiedOverrides, setQualifiedOverrides] = useState<Record<number, { has_deep_analysis: boolean; deep_analysis_level: string; deep_data: any }>>({});
@@ -793,16 +809,39 @@ export default function LensHistory() {
     }));
   };
 
+  const handleDeleteSignal = async (signalId: number) => {
+    if (!window.confirm("Supprimer cette analyse ?")) return;
+    try {
+      await apiFetch(`${LENS.HISTORY_ITEM(signalId)}`, { method: 'DELETE' });
+      setDeletedIds(prev => new Set(prev).add(signalId));
+      toast.success("Analyse supprimée");
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!window.confirm("Supprimer TOUTES vos analyses ? Cette action est irréversible.")) return;
+    if (!window.confirm("Êtes-vous vraiment sûr ? Toutes vos analyses et résultats seront perdus.")) return;
+    try {
+      const result = await apiFetch<{ count: number }>(`${LENS.HISTORY}?confirm=true`, { method: 'DELETE' });
+      setDeletedIds(new Set());
+      refreshLens();
+      toast.success(`${result?.count ?? 0} analyses supprimées`);
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    }
+  };
+
   const lensScans: LensHistoryItem[] = useMemo(() => {
     const base = apiItems.length > 0 ? apiItems : (import.meta.env.DEV ? DEV_MOCK_HISTORY as unknown as LensHistoryItem[] : []);
-    // Apply local qualification overrides
-    if (Object.keys(qualifiedOverrides).length === 0) return base;
-    return base.map(item => {
-      const override = qualifiedOverrides[item.id];
-      if (!override) return item;
-      return { ...item, ...override };
-    });
-  }, [apiItems, isLensError, qualifiedOverrides]);
+    return base
+      .filter(item => !deletedIds.has(item.id))
+      .map(item => {
+        const override = qualifiedOverrides[item.id];
+        return override ? { ...item, ...override } : item;
+      });
+  }, [apiItems, isLensError, qualifiedOverrides, deletedIds]);
 
   const {
     data: historyData,
@@ -935,7 +974,53 @@ export default function LensHistory() {
               </Card>
             </motion.div>
 
-            {/* Filters */}
+            {/* History limit gauge */}
+            {historyLimit != null && (
+              <div className="space-y-2">
+                {historyUsage / historyLimit > 0.8 && (
+                  <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs flex items-center gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      Votre historique approche de la limite ({historyUsage}/{historyLimit}).
+                      Les analyses les plus anciennes seront automatiquement remplacées.
+                    </span>
+                    <a href="/pricing" className="text-primary hover:underline ml-auto whitespace-nowrap font-medium">
+                      Passer au plan supérieur →
+                    </a>
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>Historique : {historyUsage} / {historyLimit} analyses</span>
+                    <span className="text-muted-foreground/60">
+                      {historyLimit - historyUsage > 0
+                        ? `${historyLimit - historyUsage} restantes`
+                        : "Limite atteinte — les plus anciennes seront remplacées"}
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-1.5">
+                    <div
+                      className={cn(
+                        "h-1.5 rounded-full transition-all",
+                        historyUsage / historyLimit > 0.9
+                          ? "bg-destructive"
+                          : historyUsage / historyLimit > 0.7
+                            ? "bg-yellow-500"
+                            : "bg-primary"
+                      )}
+                      style={{ width: `${Math.min(100, (historyUsage / historyLimit) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            {historyLimit === null && historyUsage > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {historyUsage} analyses · Historique illimité (Pro)
+              </p>
+            )}
+
+            {/* Filters + Delete all */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.4 }} className="flex flex-wrap items-center gap-2">
               <div className="relative flex-1 min-w-[180px] max-w-xs">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -986,10 +1071,23 @@ export default function LensHistory() {
               )}
             </motion.div>
 
-            <p className="text-xs text-muted-foreground">
-              {filtered.length} analyse{filtered.length !== 1 ? "s" : ""}
-              {hasActiveFilters ? " (filtrées)" : ""}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {filtered.length} analyse{filtered.length !== 1 ? "s" : ""}
+                {hasActiveFilters ? " (filtrées)" : ""}
+              </p>
+              {lensScans.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-muted-foreground hover:text-destructive gap-1"
+                  onClick={handleDeleteAll}
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Tout supprimer
+                </Button>
+              )}
+            </div>
 
             {/* Feed */}
             {isLoadingLens && !useDevMock ? (
@@ -1019,7 +1117,7 @@ export default function LensHistory() {
                 ) : (
                   filtered.map((item) => (
                     <motion.div key={item.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}>
-                      <ScanCard item={item} onQualified={handleSignalQualified} />
+                      <ScanCard item={item} onQualified={handleSignalQualified} onDelete={handleDeleteSignal} />
                     </motion.div>
                   ))
                 )}
