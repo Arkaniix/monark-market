@@ -231,7 +231,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
       <CardContent className="p-5 space-y-3">
         {/* Row 1: Badges */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", platform.class)}>
+          <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5", platform.class)}>
             {platform.label}
           </Badge>
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0",
