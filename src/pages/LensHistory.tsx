@@ -289,7 +289,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
               {relativeDate(item.date || item.created_at)}
             </span>
             {item.previous_price != null && item.previous_price !== item.price && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/20 flex items-center gap-0.5">
+              <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-blue-500/10 text-blue-400 border-blue-500/20 flex items-center gap-1">
                 <RefreshCw className="w-2.5 h-2.5" />
                 Mis à jour
               </Badge>
