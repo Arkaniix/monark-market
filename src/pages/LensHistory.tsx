@@ -835,14 +835,13 @@ export default function LensHistory() {
 
   const lensScans: LensHistoryItem[] = useMemo(() => {
     const base = apiItems.length > 0 ? apiItems : (import.meta.env.DEV ? DEV_MOCK_HISTORY as unknown as LensHistoryItem[] : []);
-    // Apply local qualification overrides
-    if (Object.keys(qualifiedOverrides).length === 0) return base;
-    return base.map(item => {
-      const override = qualifiedOverrides[item.id];
-      if (!override) return item;
-      return { ...item, ...override };
-    });
-  }, [apiItems, isLensError, qualifiedOverrides]);
+    return base
+      .filter(item => !deletedIds.has(item.id))
+      .map(item => {
+        const override = qualifiedOverrides[item.id];
+        return override ? { ...item, ...override } : item;
+      });
+  }, [apiItems, isLensError, qualifiedOverrides, deletedIds]);
 
   const {
     data: historyData,
