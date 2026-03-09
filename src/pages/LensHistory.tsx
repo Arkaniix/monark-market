@@ -249,11 +249,11 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
             </Badge>
           )}
           {!activeVerdict && !hasMarketData && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-muted/50 text-muted-foreground border-border">
+            <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-muted/50 text-muted-foreground border-border">
               Signal collecté
             </Badge>
           )}
-          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0",
+          <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5",
             item.is_qualified
               ? "bg-primary/10 text-primary border-primary/20"
               : "bg-muted/50 text-muted-foreground border-border"
