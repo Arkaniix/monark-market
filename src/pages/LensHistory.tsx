@@ -285,12 +285,6 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
           ) : (
             <span className="text-xs text-muted-foreground italic">Pas de données marché</span>
           )}
-          {regionLabel && (
-            <div className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground">
-              <MapPin className="h-3 w-3" />
-              {regionLabel}
-            </div>
-          )}
         </div>
 
         {/* Row 4: Bundle components */}
@@ -532,15 +526,6 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
                   </div>
                 </div>
 
-                {/* CTA if no deep analysis */}
-                {!item.has_deep_analysis && (
-                  <div className="flex justify-center">
-                    <Button size="sm" variant="outline" className="text-xs gap-1 border-primary/40 text-primary" onClick={handleDeepAnalysis}>
-                      <FlaskConical className="h-3 w-3" />
-                      Analyse complète pour plus de détails →
-                    </Button>
-                  </div>
-                )}
               </div>
             </motion.div>
           )}
