@@ -14,6 +14,8 @@ export const DEV_MOCK_HISTORY: LensHistoryItem[] = [
     region: "auvergne-rhone-alpes",
     listing_intent: "bundle",
     created_at: new Date(Date.now() - 2 * 3600_000).toISOString(),
+    date: new Date(Date.now() - 2 * 3600_000).toISOString(),
+    previous_price: 1500,
     is_bundle: true,
     bundle_components: [
       { component_id: 42, component_name: "GeForce RTX 4070 Ti Super", category: "gpu", market_median: 620, data_points: 35, catalog_slug: "rtx-4070-ti-super" },
