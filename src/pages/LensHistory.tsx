@@ -300,7 +300,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
         {/* Row 2: Title */}
         {!item.is_bundle ? (
           <p
-            className="text-sm font-semibold truncate mb-2 cursor-pointer hover:text-primary transition-colors"
+            className="text-base font-semibold truncate cursor-pointer hover:text-primary transition-colors"
             onClick={(e) => { e.stopPropagation(); navigate(`/catalog?component=${item.component_id}`); }}
           >
             {title}
