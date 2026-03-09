@@ -138,6 +138,8 @@ export function useLensHistory(options: UseLensHistoryOptions = {}) {
     pageSize,
     setPage,
     stats: data?.stats ?? null,
+    historyLimit: data?.history_limit ?? null,
+    historyUsage: data?.history_usage ?? 0,
     isLoading,
     isError,
     error,
