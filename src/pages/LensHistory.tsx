@@ -526,15 +526,6 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
                   </div>
                 </div>
 
-                {/* CTA if no deep analysis */}
-                {!item.has_deep_analysis && (
-                  <div className="flex justify-center">
-                    <Button size="sm" variant="outline" className="text-xs gap-1 border-primary/40 text-primary" onClick={handleDeepAnalysis}>
-                      <FlaskConical className="h-3 w-3" />
-                      Analyse complète pour plus de détails →
-                    </Button>
-                  </div>
-                )}
               </div>
             </motion.div>
           )}
