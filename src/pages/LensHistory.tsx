@@ -342,7 +342,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
 
         {/* Row 4: Bundle components */}
         {item.is_bundle && (
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
             {item.bundle_components && item.bundle_components.length > 0 ? (
               item.bundle_components.map((c, i) => {
                 const cat = (c.category || "").toLowerCase();
