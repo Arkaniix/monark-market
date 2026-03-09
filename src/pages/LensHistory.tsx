@@ -412,7 +412,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
 
         {/* Row 5: Insights */}
         {item.insights && item.insights.length > 0 && (
-          <div className="flex gap-1.5 overflow-x-auto pb-1 mb-2" style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
             {item.insights.map((ins, i) => (
               <span
                 key={i}
