@@ -178,7 +178,7 @@ function buildTitle(item: LensHistoryItem): string {
 }
 
 // ── Scan Card ──
-function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: (id: number, level: string, deepData: any) => void }) {
+function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQualified?: (id: number, level: string, deepData: any) => void; onDelete?: (id: number) => void }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [qualifying, setQualifying] = useState(false);
