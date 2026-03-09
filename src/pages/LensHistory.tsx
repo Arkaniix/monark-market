@@ -226,11 +226,14 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
     navigate(`/estimator?${params.toString()}`);
   };
 
+  const hasPriceChange = item.previous_price != null && item.previous_price !== item.price;
+  const priceDropped = hasPriceChange && item.price < item.previous_price!;
+
   return (
-    <Card className="hover:border-primary/30 transition-colors group">
-      <CardContent className="p-5 space-y-3">
-        {/* Row 1: Badges */}
-        <div className="flex items-center gap-2 flex-wrap">
+    <Card className="hover:border-primary/30 transition-colors group overflow-hidden">
+      <CardContent className="p-0">
+        {/* ── Header bar: meta badges ── */}
+        <div className="flex items-center gap-1.5 px-4 py-2.5 bg-muted/30 border-b border-border/40 flex-wrap">
           <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5", platform.class)}>
             {platform.label}
           </Badge>
@@ -243,189 +246,179 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
           )}>
             {item.is_bundle ? "PC complet" : item.listing_intent === "multiple" ? "Lot" : "Composant"}
           </Badge>
-          {activeVerdict && (
-            <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 font-medium", activeVerdict.class)}>
-              {activeVerdict.emoji} {activeVerdict.label}
-            </Badge>
-          )}
-          {!activeVerdict && !hasMarketData && (
-            <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-muted/50 text-muted-foreground border-border">
-              Signal collecté
-            </Badge>
-          )}
-          <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5",
-            item.is_qualified
-              ? "bg-primary/10 text-primary border-primary/20"
-              : "bg-muted/50 text-muted-foreground border-border"
-          )}>
-            {item.is_qualified ? "Qualifié" : "Signal"}
-          </Badge>
+          {item.condition && (() => {
+            const cb = getConditionBadge(item.condition);
+            return cb ? (
+              <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 font-medium", cb.color)}>
+                {cb.label}
+              </Badge>
+            ) : null;
+          })()}
           {item.cache_stale && (
             <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-yellow-500/15 text-yellow-400 border-yellow-500/30">
-              ⚠️ Données périmées
+              ⚠️ Périmé
             </Badge>
           )}
-          <div className="ml-auto flex items-center gap-2 shrink-0">
-            {item.condition && (() => {
-              const cb = getConditionBadge(item.condition);
-              return cb ? (
-                <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 font-medium", cb.color)}>
-                  {cb.label}
-                </Badge>
-              ) : null;
-            })()}
+          {hasPriceChange && (
+            <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-blue-500/10 text-blue-400 border-blue-500/20 flex items-center gap-1">
+              <RefreshCw className="w-2.5 h-2.5" />
+              Mis à jour
+            </Badge>
+          )}
+          <div className="ml-auto flex items-center gap-2 text-[11px] text-muted-foreground shrink-0">
             {item.region && (
-              <>
-                <span className="text-muted-foreground/40">·</span>
-                <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
-                  <MapPin className="w-3 h-3" />
-                  {getRegionLabel(item.region)}
-                </span>
-              </>
+              <span className="flex items-center gap-0.5">
+                <MapPin className="w-3 h-3" />
+                {getRegionLabel(item.region)}
+              </span>
             )}
-            <span className="text-muted-foreground/40">·</span>
-            <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+            <span className="flex items-center gap-0.5">
               <Clock className="w-3 h-3" />
               {relativeDate(item.date || item.created_at)}
             </span>
-            {item.previous_price != null && item.previous_price !== item.price && (
-              <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-blue-500/10 text-blue-400 border-blue-500/20 flex items-center gap-1">
-                <RefreshCw className="w-2.5 h-2.5" />
-                Mis à jour
-              </Badge>
-            )}
           </div>
         </div>
 
-        {/* Row 2: Title */}
-        {!item.is_bundle ? (
-          <p
-            className="text-base font-semibold truncate cursor-pointer hover:text-primary transition-colors"
-            onClick={(e) => { e.stopPropagation(); navigate(`/catalog?component=${item.component_id}`); }}
-          >
-            {title}
-          </p>
-        ) : (
-          <p className="text-base font-semibold truncate">{title}</p>
-        )}
-
-        {/* Row 3: Price + Market + Region */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {item.previous_price != null && item.previous_price !== item.price && (
-            <>
-              <span className="text-sm text-muted-foreground line-through tabular-nums">{item.previous_price}€</span>
-              {item.price < item.previous_price ? (
-                <TrendingDown className="w-4 h-4 text-green-400" />
-              ) : (
-                <TrendingUp className="w-4 h-4 text-red-400" />
-              )}
-            </>
-          )}
-          <span className={cn("text-xl font-bold tabular-nums", 
-            item.previous_price != null && item.previous_price !== item.price
-              ? item.price < item.previous_price ? "text-green-400" : "text-red-400"
-              : "text-primary"
-          )}>{item.price}€</span>
-          {hasMarketData ? (
-            <>
-              <span className="text-xs text-muted-foreground">
-                Marché : {item.market_median}€
-              </span>
-              <Badge variant="outline" className={cn("text-[11px] font-semibold", getGapColor(gap))}>
-                {gap > 0 ? "+" : ""}{gap.toFixed(1)}%
-              </Badge>
-            </>
-          ) : (
-            <span className="text-xs text-muted-foreground italic">Pas de données marché</span>
-          )}
-        </div>
-
-        {/* Row 4: Bundle components */}
-        {item.is_bundle && (
-          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-            {item.bundle_components && item.bundle_components.length > 0 ? (
-              item.bundle_components.map((c, i) => {
-                const cat = (c.category || "").toLowerCase();
-                const catColorClass = ({
-                  gpu: "bg-red-500/20 text-red-400 border border-red-500/20",
-                  cpu: "bg-blue-500/20 text-blue-400 border border-blue-500/20",
-                  ram: "bg-purple-500/20 text-purple-400 border border-purple-500/20",
-                  ssd: "bg-cyan-500/20 text-cyan-400 border border-cyan-500/20",
-                })[cat] || "bg-muted/50 text-muted-foreground border border-border";
-                return (
-                  <span key={i} className="inline-flex items-center gap-1.5 text-xs">
-                    <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide", catColorClass)}>
-                      {cat || "?"}
-                    </span>
-                    <span
-                      className="cursor-pointer hover:text-primary hover:underline transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (c.catalog_slug) navigate(`/catalog/${c.catalog_slug}`);
-                        else navigate(`/catalog?component=${c.component_id}`);
-                      }}
-                    >
-                      {c.component_name || (c as any).name || `Composant #${c.component_id}`}
-                    </span>
-                    {c.market_median != null ? (
-                      <span className="text-muted-foreground">{Math.round(c.market_median)}€</span>
-                    ) : (
-                      <span className="text-muted-foreground/50">—</span>
-                    )}
-                  </span>
-                );
-              })
+        {/* ── Body: 2-column layout ── */}
+        <div className="flex flex-col sm:flex-row gap-4 px-4 py-4">
+          {/* Left: Identity */}
+          <div className="flex-1 min-w-0 space-y-2.5">
+            {!item.is_bundle ? (
+              <p
+                className="text-base font-semibold truncate cursor-pointer hover:text-primary transition-colors"
+                onClick={(e) => { e.stopPropagation(); navigate(`/catalog?component=${item.component_id}`); }}
+              >
+                {title}
+              </p>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-xs">
-                <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide", ({
-                  gpu: "bg-red-500/20 text-red-400 border border-red-500/20",
-                  cpu: "bg-blue-500/20 text-blue-400 border border-blue-500/20",
-                  ram: "bg-purple-500/20 text-purple-400 border border-purple-500/20",
-                  ssd: "bg-cyan-500/20 text-cyan-400 border border-cyan-500/20",
-                })[(item.category || "").toLowerCase()] || "bg-muted/50 text-muted-foreground border border-border")}>
+              <p className="text-base font-semibold truncate">{title}</p>
+            )}
+
+            {item.is_bundle && (
+              <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+                {item.bundle_components && item.bundle_components.length > 0 ? (
+                  item.bundle_components.map((c, i) => {
+                    const cat = (c.category || "").toLowerCase();
+                    const catColorClass = ({
+                      gpu: "bg-red-500/20 text-red-400 border border-red-500/20",
+                      cpu: "bg-blue-500/20 text-blue-400 border border-blue-500/20",
+                      ram: "bg-purple-500/20 text-purple-400 border border-purple-500/20",
+                      ssd: "bg-cyan-500/20 text-cyan-400 border border-cyan-500/20",
+                    })[cat] || "bg-muted/50 text-muted-foreground border border-border";
+                    return (
+                      <span key={i} className="inline-flex items-center gap-1.5 text-xs">
+                        <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide", catColorClass)}>
+                          {cat || "?"}
+                        </span>
+                        <span
+                          className="cursor-pointer hover:text-primary hover:underline transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (c.catalog_slug) navigate(`/catalog/${c.catalog_slug}`);
+                            else navigate(`/catalog?component=${c.component_id}`);
+                          }}
+                        >
+                          {c.component_name || (c as any).name || `Composant #${c.component_id}`}
+                        </span>
+                        {c.market_median != null ? (
+                          <span className="text-muted-foreground">{Math.round(c.market_median)}€</span>
+                        ) : (
+                          <span className="text-muted-foreground/50">—</span>
+                        )}
+                      </span>
+                    );
+                  })
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-xs">
+                    <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide", ({
+                      gpu: "bg-red-500/20 text-red-400 border border-red-500/20",
+                      cpu: "bg-blue-500/20 text-blue-400 border border-blue-500/20",
+                      ram: "bg-purple-500/20 text-purple-400 border border-purple-500/20",
+                      ssd: "bg-cyan-500/20 text-cyan-400 border border-cyan-500/20",
+                    })[(item.category || "").toLowerCase()] || "bg-muted/50 text-muted-foreground border border-border")}>
+                      {(item.category || "?").toUpperCase()}
+                    </span>
+                    <span>{item.component_name}</span>
+                    {item.market_median != null && (
+                      <span className="text-muted-foreground">{Math.round(item.market_median)}€</span>
+                    )}
+                    <span className="text-muted-foreground/50 italic ml-2">+ composants non détaillés</span>
+                  </span>
+                )}
+              </div>
+            )}
+
+            {!item.is_bundle && (
+              <div
+                className="inline-flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px] cursor-pointer hover:bg-muted transition-colors"
+                onClick={(e) => { e.stopPropagation(); navigate(`/catalog?component=${item.component_id}`); }}
+              >
+                <span className={cn("font-medium uppercase", CATEGORY_COLORS[(item.category || "").toLowerCase()] || "text-muted-foreground")}>
                   {(item.category || "?").toUpperCase()}
                 </span>
                 <span>{item.component_name}</span>
-                {item.market_median != null && (
-                  <span className="text-muted-foreground">{Math.round(item.market_median)}€</span>
-                )}
-                <span className="text-muted-foreground/50 italic ml-2">+ composants non détaillés</span>
-              </span>
+              </div>
+            )}
+
+            {item.insights && item.insights.length > 0 && (
+              <div className="flex gap-1.5 flex-wrap">
+                {item.insights.map((ins, i) => (
+                  <span
+                    key={i}
+                    className={cn("text-[10px] px-2 py-0.5 rounded-full", INSIGHT_COLORS[ins.type] || "bg-muted/50 text-muted-foreground")}
+                  >
+                    {ins.icon} {ins.text}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
-        )}
 
-        {/* Non-bundle: single component chip */}
-        {!item.is_bundle && (
-          <div className="flex gap-2">
-            <div
-              className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px] cursor-pointer hover:bg-muted transition-colors"
-              onClick={(e) => { e.stopPropagation(); navigate(`/catalog?component=${item.component_id}`); }}
-            >
-              <span className={cn("font-medium uppercase", CATEGORY_COLORS[(item.category || "").toLowerCase()] || "text-muted-foreground")}>
-                {(item.category || "?").toUpperCase()}
-              </span>
-              <span>{item.component_name}</span>
-            </div>
+          {/* Right: Price & Market */}
+          <div className="sm:w-48 shrink-0 flex flex-col items-end justify-center gap-1.5 sm:border-l sm:border-border/40 sm:pl-4">
+            {hasPriceChange && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground line-through tabular-nums">{item.previous_price}€</span>
+                {priceDropped ? (
+                  <TrendingDown className="w-3.5 h-3.5 text-green-400" />
+                ) : (
+                  <TrendingUp className="w-3.5 h-3.5 text-red-400" />
+                )}
+              </div>
+            )}
+            <span className={cn("text-2xl font-bold tabular-nums leading-none",
+              hasPriceChange
+                ? priceDropped ? "text-green-400" : "text-red-400"
+                : "text-primary"
+            )}>{item.price}€</span>
+
+            {hasMarketData ? (
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-[11px] text-muted-foreground tabular-nums">
+                  Médiane : {item.market_median}€
+                </span>
+                <Badge variant="outline" className={cn("text-[11px] font-semibold", getGapColor(gap))}>
+                  {gap > 0 ? "+" : ""}{gap.toFixed(1)}%
+                </Badge>
+              </div>
+            ) : (
+              <span className="text-[11px] text-muted-foreground italic">Pas de données</span>
+            )}
+            {activeVerdict && (
+              <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 font-medium mt-0.5", activeVerdict.class)}>
+                {activeVerdict.emoji} {activeVerdict.label}
+              </Badge>
+            )}
+            {!activeVerdict && !hasMarketData && (
+              <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-muted/50 text-muted-foreground border-border">
+                Signal collecté
+              </Badge>
+            )}
           </div>
-        )}
+        </div>
 
-        {/* Row 5: Insights */}
-        {item.insights && item.insights.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-            {item.insights.map((ins, i) => (
-              <span
-                key={i}
-                className={cn("shrink-0 text-[10px] px-2 py-0.5 rounded-full", INSIGHT_COLORS[ins.type] || "bg-muted/50 text-muted-foreground")}
-              >
-                {ins.icon} {ins.text}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Row 6: Actions */}
-        <div className="flex items-center gap-2 pt-1 border-t border-border/50">
+        {/* ── Footer: Actions ── */}
+        <div className="flex items-center gap-2 px-4 py-2.5 border-t border-border/40 bg-muted/20">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWatchlisted(!watchlisted)}>
             <Bookmark className={cn("h-3.5 w-3.5", watchlisted ? "fill-primary text-primary" : "text-muted-foreground")} />
           </Button>
@@ -450,7 +443,6 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
           )}
 
           <div className="ml-auto flex gap-1.5">
-            {/* Bouton Qualifier / Résultats */}
             {item.has_deep_analysis ? (
               <Button
                 size="sm"
@@ -473,7 +465,6 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
                 {qualifying ? "Analyse…" : "Qualifier · 5 cr."}
               </Button>
             )}
-            {/* Bouton Décision complète — visible si pas d'analyse ou seulement quick */}
             {(!item.has_deep_analysis || item.deep_analysis_level === "quick") && (
               <Button
                 size="sm" variant="outline"
