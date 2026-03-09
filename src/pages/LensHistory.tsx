@@ -264,11 +264,14 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
             </Badge>
           )}
           <div className="ml-auto flex items-center gap-1.5 shrink-0">
-            {item.condition && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-muted/50 text-muted-foreground border-border capitalize">
-                {item.condition}
-              </Badge>
-            )}
+            {item.condition && (() => {
+              const cb = getConditionBadge(item.condition);
+              return cb ? (
+                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-medium", cb.color)}>
+                  {cb.label}
+                </Badge>
+              ) : null;
+            })()}
             {item.region && (
               <>
                 <span className="text-muted-foreground/40">·</span>
