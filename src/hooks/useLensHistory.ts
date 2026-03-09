@@ -83,6 +83,8 @@ interface LensHistoryResponse {
   page: number;
   per_page: number;
   stats: LensStats;
+  history_limit: number | null;
+  history_usage: number;
 }
 
 interface UseLensHistoryOptions {
