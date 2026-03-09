@@ -310,7 +310,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
         )}
 
         {/* Row 3: Price + Market + Region */}
-        <div className="flex items-center gap-3 mb-2 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           {item.previous_price != null && item.previous_price !== item.price && (
             <>
               <span className="text-sm text-muted-foreground line-through tabular-nums">{item.previous_price}€</span>
