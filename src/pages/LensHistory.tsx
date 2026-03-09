@@ -102,6 +102,24 @@ function getRegionLabel(slug: string): string {
   return REGION_LABELS[slug] || slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
+const CONDITION_LABELS: Record<string, { label: string; color: string }> = {
+  "neuf": { label: "Neuf", color: "bg-green-500/20 text-green-400 border-green-500/30" },
+  "tresbonetat": { label: "Très bon état", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
+  "bonetat": { label: "Bon état", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
+  "etatcorrect": { label: "État correct", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+  "pourpieces": { label: "Pour pièces", color: "bg-red-500/20 text-red-400 border-red-500/30" },
+  "like_new": { label: "Comme neuf", color: "bg-green-500/20 text-green-400 border-green-500/30" },
+  "good": { label: "Bon état", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
+  "fair": { label: "État correct", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+  "broken": { label: "Pour pièces", color: "bg-red-500/20 text-red-400 border-red-500/30" },
+};
+
+function getConditionBadge(condition: string | null): { label: string; color: string } | null {
+  if (!condition) return null;
+  const normalized = condition.toLowerCase().replace(/[\s_-]/g, '');
+  return CONDITION_LABELS[normalized] || CONDITION_LABELS[condition] || { label: condition, color: "bg-muted/50 text-muted-foreground border-border" };
+}
+
 const INSIGHT_COLORS: Record<string, string> = {
   positive: "bg-green-500/20 text-green-400",
   warning: "bg-yellow-500/20 text-yellow-400",
@@ -246,11 +264,14 @@ function ScanCard({ item, onQualified }: { item: LensHistoryItem; onQualified?: 
             </Badge>
           )}
           <div className="ml-auto flex items-center gap-1.5 shrink-0">
-            {item.condition && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-muted/50 text-muted-foreground border-border capitalize">
-                {item.condition}
-              </Badge>
-            )}
+            {item.condition && (() => {
+              const cb = getConditionBadge(item.condition);
+              return cb ? (
+                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-medium", cb.color)}>
+                  {cb.label}
+                </Badge>
+              ) : null;
+            })()}
             {item.region && (
               <>
                 <span className="text-muted-foreground/40">·</span>
