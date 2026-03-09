@@ -17,6 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api/client";
+import { LENS } from "@/lib/api/endpoints";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEnhancedEstimationHistory } from "@/hooks";
