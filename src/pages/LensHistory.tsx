@@ -269,7 +269,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
             {item.condition && (() => {
               const cb = getConditionBadge(item.condition);
               return cb ? (
-                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-medium", cb.color)}>
+                <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 font-medium", cb.color)}>
                   {cb.label}
                 </Badge>
               ) : null;
