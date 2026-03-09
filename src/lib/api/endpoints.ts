@@ -184,6 +184,7 @@ export const LENS = {
   SCORE: '/v1/lens/score',
   QUICK: '/v1/lens/quick',
   HISTORY: '/v1/lens/history',
+  HISTORY_ITEM: (id: number) => `/v1/lens/history/${id}`,
   STATS: '/v1/lens/stats',
   ANALYZE_BUNDLE: '/v1/lens/analyze-bundle',
 } as const;
