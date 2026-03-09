@@ -53,6 +53,8 @@ export const DEV_MOCK_HISTORY: LensHistoryItem[] = [
     region: "ile-de-france",
     listing_intent: "sale",
     created_at: new Date(Date.now() - 5 * 3600_000).toISOString(),
+    date: new Date(Date.now() - 5 * 3600_000).toISOString(),
+    previous_price: 290,
     is_bundle: false,
     bundle_components: null,
     market_median: 295,
