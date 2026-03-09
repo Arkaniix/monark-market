@@ -784,6 +784,8 @@ export default function LensHistory() {
     page: lensPage,
     setPage: setLensPage,
     stats: lensStats,
+    historyLimit,
+    historyUsage,
     isLoading: isLoadingLens,
     isError: isLensError,
     refresh: refreshLens,
@@ -794,6 +796,9 @@ export default function LensHistory() {
 
   const useDevMock = import.meta.env.DEV && (isLensError || apiItems.length === 0);
 
+  // Local state for deleted items
+  const [deletedIds, setDeletedIds] = useState<Set<number>>(new Set());
+
   // Local state overrides for qualification updates
   const [qualifiedOverrides, setQualifiedOverrides] = useState<Record<number, { has_deep_analysis: boolean; deep_analysis_level: string; deep_data: any }>>({});
 
@@ -802,6 +807,30 @@ export default function LensHistory() {
       ...prev,
       [id]: { has_deep_analysis: true, deep_analysis_level: level, deep_data: deepData },
     }));
+  };
+
+  const handleDeleteSignal = async (signalId: number) => {
+    if (!window.confirm("Supprimer cette analyse ?")) return;
+    try {
+      await apiFetch(`${LENS.HISTORY_ITEM(signalId)}`, { method: 'DELETE' });
+      setDeletedIds(prev => new Set(prev).add(signalId));
+      toast.success("Analyse supprimée");
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!window.confirm("Supprimer TOUTES vos analyses ? Cette action est irréversible.")) return;
+    if (!window.confirm("Êtes-vous vraiment sûr ? Toutes vos analyses et résultats seront perdus.")) return;
+    try {
+      const result = await apiFetch<{ count: number }>(`${LENS.HISTORY}?confirm=true`, { method: 'DELETE' });
+      setDeletedIds(new Set());
+      refreshLens();
+      toast.success(`${result?.count ?? 0} analyses supprimées`);
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    }
   };
 
   const lensScans: LensHistoryItem[] = useMemo(() => {
