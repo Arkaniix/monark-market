@@ -265,7 +265,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
               ⚠️ Données périmées
             </Badge>
           )}
-          <div className="ml-auto flex items-center gap-1.5 shrink-0">
+          <div className="ml-auto flex items-center gap-2 shrink-0">
             {item.condition && (() => {
               const cb = getConditionBadge(item.condition);
               return cb ? (
