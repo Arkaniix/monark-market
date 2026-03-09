@@ -425,7 +425,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
         )}
 
         {/* Row 6: Actions */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2 pt-1 border-t border-border/50">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWatchlisted(!watchlisted)}>
             <Bookmark className={cn("h-3.5 w-3.5", watchlisted ? "fill-primary text-primary" : "text-muted-foreground")} />
           </Button>
