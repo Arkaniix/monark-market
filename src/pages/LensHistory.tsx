@@ -244,7 +244,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
             {item.is_bundle ? "PC complet" : item.listing_intent === "multiple" ? "Lot" : "Composant"}
           </Badge>
           {activeVerdict && (
-            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-medium", activeVerdict.class)}>
+            <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 font-medium", activeVerdict.class)}>
               {activeVerdict.emoji} {activeVerdict.label}
             </Badge>
           )}
