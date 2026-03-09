@@ -974,7 +974,53 @@ export default function LensHistory() {
               </Card>
             </motion.div>
 
-            {/* Filters */}
+            {/* History limit gauge */}
+            {historyLimit != null && (
+              <div className="space-y-2">
+                {historyUsage / historyLimit > 0.8 && (
+                  <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs flex items-center gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      Votre historique approche de la limite ({historyUsage}/{historyLimit}).
+                      Les analyses les plus anciennes seront automatiquement remplacées.
+                    </span>
+                    <a href="/pricing" className="text-primary hover:underline ml-auto whitespace-nowrap font-medium">
+                      Passer au plan supérieur →
+                    </a>
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>Historique : {historyUsage} / {historyLimit} analyses</span>
+                    <span className="text-muted-foreground/60">
+                      {historyLimit - historyUsage > 0
+                        ? `${historyLimit - historyUsage} restantes`
+                        : "Limite atteinte — les plus anciennes seront remplacées"}
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-1.5">
+                    <div
+                      className={cn(
+                        "h-1.5 rounded-full transition-all",
+                        historyUsage / historyLimit > 0.9
+                          ? "bg-destructive"
+                          : historyUsage / historyLimit > 0.7
+                            ? "bg-yellow-500"
+                            : "bg-primary"
+                      )}
+                      style={{ width: `${Math.min(100, (historyUsage / historyLimit) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            {historyLimit === null && historyUsage > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {historyUsage} analyses · Historique illimité (Pro)
+              </p>
+            )}
+
+            {/* Filters + Delete all */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.4 }} className="flex flex-wrap items-center gap-2">
               <div className="relative flex-1 min-w-[180px] max-w-xs">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
