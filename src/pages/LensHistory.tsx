@@ -410,6 +410,15 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setAlertActive(!alertActive)}>
             <Bell className={cn("h-3.5 w-3.5", alertActive ? "fill-amber-400 text-amber-400" : "text-muted-foreground")} />
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            title="Supprimer cette analyse"
+            onClick={() => onDelete?.(item.id)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
 
           {item.cache_stale && (
             <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-yellow-400">
