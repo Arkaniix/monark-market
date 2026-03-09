@@ -261,7 +261,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
             {item.is_qualified ? "Qualifié" : "Signal"}
           </Badge>
           {item.cache_stale && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-yellow-500/15 text-yellow-400 border-yellow-500/30">
+            <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-yellow-500/15 text-yellow-400 border-yellow-500/30">
               ⚠️ Données périmées
             </Badge>
           )}
