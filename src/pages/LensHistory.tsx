@@ -311,7 +311,21 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
 
         {/* Row 3: Price + Market + Region */}
         <div className="flex items-center gap-3 mb-2 flex-wrap">
-          <span className="text-xl font-bold text-primary tabular-nums">{item.price}€</span>
+          {item.previous_price != null && item.previous_price !== item.price && (
+            <>
+              <span className="text-sm text-muted-foreground line-through tabular-nums">{item.previous_price}€</span>
+              {item.price < item.previous_price ? (
+                <TrendingDown className="w-4 h-4 text-green-400" />
+              ) : (
+                <TrendingUp className="w-4 h-4 text-red-400" />
+              )}
+            </>
+          )}
+          <span className={cn("text-xl font-bold tabular-nums", 
+            item.previous_price != null && item.previous_price !== item.price
+              ? item.price < item.previous_price ? "text-green-400" : "text-red-400"
+              : "text-primary"
+          )}>{item.price}€</span>
           {hasMarketData ? (
             <>
               <span className="text-xs text-muted-foreground">
