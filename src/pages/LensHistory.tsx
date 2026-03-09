@@ -228,13 +228,13 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
 
   return (
     <Card className="hover:border-primary/30 transition-colors group">
-      <CardContent className="p-4">
+      <CardContent className="p-5 space-y-3">
         {/* Row 1: Badges */}
-        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", platform.class)}>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5", platform.class)}>
             {platform.label}
           </Badge>
-          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0",
+          <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5",
             item.is_bundle
               ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
               : item.listing_intent === "multiple"
@@ -244,16 +244,16 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
             {item.is_bundle ? "PC complet" : item.listing_intent === "multiple" ? "Lot" : "Composant"}
           </Badge>
           {activeVerdict && (
-            <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-medium", activeVerdict.class)}>
+            <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 font-medium", activeVerdict.class)}>
               {activeVerdict.emoji} {activeVerdict.label}
             </Badge>
           )}
           {!activeVerdict && !hasMarketData && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-muted/50 text-muted-foreground border-border">
+            <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-muted/50 text-muted-foreground border-border">
               Signal collecté
             </Badge>
           )}
-          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0",
+          <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5",
             item.is_qualified
               ? "bg-primary/10 text-primary border-primary/20"
               : "bg-muted/50 text-muted-foreground border-border"
@@ -261,15 +261,15 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
             {item.is_qualified ? "Qualifié" : "Signal"}
           </Badge>
           {item.cache_stale && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-yellow-500/15 text-yellow-400 border-yellow-500/30">
+            <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-yellow-500/15 text-yellow-400 border-yellow-500/30">
               ⚠️ Données périmées
             </Badge>
           )}
-          <div className="ml-auto flex items-center gap-1.5 shrink-0">
+          <div className="ml-auto flex items-center gap-2 shrink-0">
             {item.condition && (() => {
               const cb = getConditionBadge(item.condition);
               return cb ? (
-                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 font-medium", cb.color)}>
+                <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5 font-medium", cb.color)}>
                   {cb.label}
                 </Badge>
               ) : null;
@@ -289,7 +289,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
               {relativeDate(item.date || item.created_at)}
             </span>
             {item.previous_price != null && item.previous_price !== item.price && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/20 flex items-center gap-0.5">
+              <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-blue-500/10 text-blue-400 border-blue-500/20 flex items-center gap-1">
                 <RefreshCw className="w-2.5 h-2.5" />
                 Mis à jour
               </Badge>
@@ -300,17 +300,17 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
         {/* Row 2: Title */}
         {!item.is_bundle ? (
           <p
-            className="text-sm font-semibold truncate mb-2 cursor-pointer hover:text-primary transition-colors"
+            className="text-base font-semibold truncate cursor-pointer hover:text-primary transition-colors"
             onClick={(e) => { e.stopPropagation(); navigate(`/catalog?component=${item.component_id}`); }}
           >
             {title}
           </p>
         ) : (
-          <p className="text-sm font-semibold truncate mb-2">{title}</p>
+          <p className="text-base font-semibold truncate">{title}</p>
         )}
 
         {/* Row 3: Price + Market + Region */}
-        <div className="flex items-center gap-3 mb-2 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           {item.previous_price != null && item.previous_price !== item.price && (
             <>
               <span className="text-sm text-muted-foreground line-through tabular-nums">{item.previous_price}€</span>
@@ -342,7 +342,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
 
         {/* Row 4: Bundle components */}
         {item.is_bundle && (
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
             {item.bundle_components && item.bundle_components.length > 0 ? (
               item.bundle_components.map((c, i) => {
                 const cat = (c.category || "").toLowerCase();
@@ -397,7 +397,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
 
         {/* Non-bundle: single component chip */}
         {!item.is_bundle && (
-          <div className="flex gap-1.5 mb-2">
+          <div className="flex gap-2">
             <div
               className="shrink-0 flex items-center gap-1 bg-muted/50 rounded px-2 py-0.5 text-[11px] cursor-pointer hover:bg-muted transition-colors"
               onClick={(e) => { e.stopPropagation(); navigate(`/catalog?component=${item.component_id}`); }}
@@ -412,7 +412,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
 
         {/* Row 5: Insights */}
         {item.insights && item.insights.length > 0 && (
-          <div className="flex gap-1.5 overflow-x-auto pb-1 mb-2" style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
             {item.insights.map((ins, i) => (
               <span
                 key={i}
@@ -425,7 +425,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
         )}
 
         {/* Row 6: Actions */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2 pt-1 border-t border-border/50">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWatchlisted(!watchlisted)}>
             <Bookmark className={cn("h-3.5 w-3.5", watchlisted ? "fill-primary text-primary" : "text-muted-foreground")} />
           </Button>
