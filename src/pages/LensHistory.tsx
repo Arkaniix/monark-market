@@ -306,7 +306,7 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
             {title}
           </p>
         ) : (
-          <p className="text-sm font-semibold truncate mb-2">{title}</p>
+          <p className="text-base font-semibold truncate">{title}</p>
         )}
 
         {/* Row 3: Price + Market + Region */}
