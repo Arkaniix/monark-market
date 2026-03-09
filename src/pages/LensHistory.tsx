@@ -228,9 +228,9 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
 
   return (
     <Card className="hover:border-primary/30 transition-colors group">
-      <CardContent className="p-4">
+      <CardContent className="p-5 space-y-3">
         {/* Row 1: Badges */}
-        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", platform.class)}>
             {platform.label}
           </Badge>
