@@ -94,6 +94,8 @@ export const DEV_MOCK_HISTORY: LensHistoryItem[] = [
     region: "nouvelle-aquitaine",
     listing_intent: "multiple",
     created_at: new Date(Date.now() - 28 * 3600_000).toISOString(),
+    date: new Date(Date.now() - 28 * 3600_000).toISOString(),
+    previous_price: null,
     is_bundle: false,
     bundle_components: null,
     market_median: 110,
