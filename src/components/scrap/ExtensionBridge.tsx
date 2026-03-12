@@ -59,7 +59,7 @@ export default function ExtensionBridge({
   const [simulationMode, setSimulationMode] = useState(false);
   const [simulationRunning, setSimulationRunning] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
-  const simulationRef = useRef<NodeJS.Timeout | null>(null);
+  const simulationRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const addLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
