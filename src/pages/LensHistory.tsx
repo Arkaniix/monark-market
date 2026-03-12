@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, RotateCcw, Bookmark, Bell, Zap, FlaskConical, Loader2,
   ExternalLink, TrendingUp, TrendingDown, BarChart3, Droplets,
   ScanSearch, Award, Clock, MapPin, ChevronDown, ChevronUp, Eye, Target,
-  RefreshCw, Calculator, X, AlertTriangle, Check, Trash2,
+  RefreshCw, Calculator, X, AlertTriangle, Check, Trash2, CheckSquare, Square,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api/client";
 import { LENS } from "@/lib/api/endpoints";
