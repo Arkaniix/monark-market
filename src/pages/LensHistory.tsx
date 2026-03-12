@@ -1236,8 +1236,19 @@ export default function LensHistory() {
                   <EmptyState />
                 ) : (
                   filtered.map((item) => (
-                    <motion.div key={item.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}>
-                      <ScanCard item={item} onQualified={handleSignalQualified} onDelete={handleDeleteSignal} />
+                    <motion.div
+                      key={item.id}
+                      variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
+                      layout
+                    >
+                      <ScanCard
+                        item={item}
+                        onQualified={handleSignalQualified}
+                        onDelete={handleDeleteSignal}
+                        isSelected={selectedIds.has(item.id)}
+                        onToggleSelect={toggleSelect}
+                        selectionMode={selectionMode}
+                      />
                     </motion.div>
                   ))
                 )}
