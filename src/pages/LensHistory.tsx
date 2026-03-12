@@ -897,7 +897,7 @@ export default function LensHistory() {
     }
   };
 
-  // ── Multi-select ──
+  // ── Multi-select (state only — callbacks defined after filtered) ──
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [deletingBatch, setDeletingBatch] = useState(false);
   const selectionMode = selectedIds.size > 0;
@@ -911,36 +911,9 @@ export default function LensHistory() {
     });
   }, []);
 
-  const selectAll = useCallback(() => {
-    // Will be set after filtered is available — uses lensScans as fallback
-    setSelectedIds(new Set(lensScans.filter(i => !deletedIds.has(i.id)).map(i => i.id)));
-  }, [lensScans, deletedIds]);
-
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set());
   }, []);
-
-  const handleDeleteBatch = async () => {
-    if (selectedIds.size === 0) return;
-    setDeletingBatch(true);
-    try {
-      await apiFetch(LENS.SIGNALS_DELETE_BATCH, {
-        method: 'POST',
-        body: { signal_ids: Array.from(selectedIds) },
-      });
-      setDeletedIds(prev => {
-        const next = new Set(prev);
-        selectedIds.forEach(id => next.add(id));
-        return next;
-      });
-      toast.success(`${selectedIds.size} analyse(s) supprimée(s)`);
-      setSelectedIds(new Set());
-    } catch {
-      toast.error("Erreur lors de la suppression");
-    } finally {
-      setDeletingBatch(false);
-    }
-  };
 
   const lensScans: LensHistoryItem[] = useMemo(() => {
     const base = apiItems.length > 0 ? apiItems : (import.meta.env.DEV ? DEV_MOCK_HISTORY as unknown as LensHistoryItem[] : []);
@@ -992,6 +965,33 @@ export default function LensHistory() {
       return true;
     });
   }, [lensScans, search, typeFilter, verdictFilter, depthFilter]);
+
+  // ── Multi-select callbacks (after filtered) ──
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(filtered.map(i => i.id)));
+  }, [filtered]);
+
+  const handleDeleteBatch = async () => {
+    if (selectedIds.size === 0) return;
+    setDeletingBatch(true);
+    try {
+      await apiFetch(LENS.SIGNALS_DELETE_BATCH, {
+        method: 'POST',
+        body: { signal_ids: Array.from(selectedIds) },
+      });
+      setDeletedIds(prev => {
+        const next = new Set(prev);
+        selectedIds.forEach(id => next.add(id));
+        return next;
+      });
+      toast.success(`${selectedIds.size} analyse(s) supprimée(s)`);
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    } finally {
+      setDeletingBatch(false);
+    }
+  };
 
   // Stats from API
   const signalCount = lensStats?.total_signals ?? lensScans.length;
