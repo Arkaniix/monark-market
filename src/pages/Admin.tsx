@@ -96,6 +96,8 @@ export default function Admin() {
         return <AdminObservatory />;
       case "compta":
         return <AdminCompta />;
+      case "pipeline":
+        return <AdminPipeline />;
       case "external":
         return <AdminExternal />;
       case "health":

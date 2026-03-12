@@ -53,6 +53,7 @@ export default function AdminSidebar({ activeSection, onSectionChange, rejectsBa
       items: [
         { id: "health", label: "Santé système", icon: Activity },
         { id: "jobs", label: "Jobs & Scraping", icon: Briefcase },
+        { id: "pipeline", label: "Jobs & Pipeline", icon: TrendingUp },
         { id: "external", label: "Intégrations externes", icon: Plug },
         { id: "logs", label: "Logs & Audit", icon: FileText },
         { id: "settings", label: "Paramètres", icon: Settings },
