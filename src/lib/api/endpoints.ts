@@ -185,6 +185,9 @@ export const LENS = {
   QUICK: '/v1/lens/quick',
   HISTORY: '/v1/lens/history',
   HISTORY_ITEM: (id: number) => `/v1/lens/history/${id}`,
+  SIGNAL: (id: number) => `/v1/lens/signals/${id}`,
+  SIGNALS: '/v1/lens/signals',
+  SIGNALS_DELETE_BATCH: '/v1/lens/signals/delete-batch',
   STATS: '/v1/lens/stats',
   ANALYZE_BUNDLE: '/v1/lens/analyze-bundle',
 } as const;
