@@ -912,8 +912,9 @@ export default function LensHistory() {
   }, []);
 
   const selectAll = useCallback(() => {
-    setSelectedIds(new Set(filtered.map(i => i.id)));
-  }, [filtered]);
+    // Will be set after filtered is available — uses lensScans as fallback
+    setSelectedIds(new Set(lensScans.filter(i => !deletedIds.has(i.id)).map(i => i.id)));
+  }, [lensScans, deletedIds]);
 
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set());
