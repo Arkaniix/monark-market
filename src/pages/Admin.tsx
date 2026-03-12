@@ -24,6 +24,7 @@ import AdminRejects from "@/components/admin/AdminRejects";
 import AdminRegimes from "@/components/admin/AdminRegimes";
 import AdminObservatory from "@/components/admin/AdminObservatory";
 import AdminCompta from "@/components/admin/AdminCompta";
+import AdminPipeline from "@/components/admin/AdminPipeline";
 
 const LOADING_TIMEOUT_MS = 8000;
 
@@ -95,6 +96,8 @@ export default function Admin() {
         return <AdminObservatory />;
       case "compta":
         return <AdminCompta />;
+      case "pipeline":
+        return <AdminPipeline />;
       case "external":
         return <AdminExternal />;
       case "health":
