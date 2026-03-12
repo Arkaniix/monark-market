@@ -1320,6 +1320,94 @@ export default function LensHistory() {
         </Tabs>
 
         <EstimationDetailDialog item={viewHistoryItem} onClose={() => setViewHistoryItem(null)} plan={plan} onReEstimate={handleReEstimate} />
+
+        {/* ── Delete Single Modal ── */}
+        <Dialog open={deleteModalId !== null} onOpenChange={(open) => !open && setDeleteModalId(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Supprimer cette analyse ?</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Cette action est irréversible. L'analyse sera définitivement supprimée.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setDeleteModalId(null)} disabled={deletingId}>Annuler</Button>
+              <Button variant="destructive" onClick={confirmDeleteSignal} disabled={deletingId}>
+                {deletingId ? <><Loader2 className="h-4 w-4 animate-spin" />Suppression…</> : "Supprimer"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Delete All Modal ── */}
+        <Dialog open={deleteAllModal} onOpenChange={(open) => { if (!open) { setDeleteAllModal(false); setDeleteAllConfirmText(""); } }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-destructive">Supprimer toutes vos analyses ?</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Cette action est irréversible. Toutes vos analyses et résultats seront définitivement perdus.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Tapez <span className="font-mono font-bold text-foreground">SUPPRIMER</span> pour confirmer :
+              </p>
+              <Input
+                value={deleteAllConfirmText}
+                onChange={(e) => setDeleteAllConfirmText(e.target.value)}
+                placeholder="SUPPRIMER"
+                className="h-9 text-sm font-mono"
+              />
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => { setDeleteAllModal(false); setDeleteAllConfirmText(""); }} disabled={deletingAll}>Annuler</Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteAll}
+                disabled={deletingAll || deleteAllConfirmText !== "SUPPRIMER"}
+              >
+                {deletingAll ? <><Loader2 className="h-4 w-4 animate-spin" />Suppression…</> : "Tout supprimer"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Multi-select Action Bar ── */}
+        <AnimatePresence>
+          {selectionMode && (
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+            >
+              <div className="flex items-center gap-3 bg-card border border-border rounded-xl shadow-lg px-4 py-2.5">
+                <Checkbox
+                  checked={selectedIds.size === filtered.length && filtered.length > 0}
+                  onCheckedChange={(checked) => checked ? selectAll() : clearSelection()}
+                />
+                <span className="text-sm font-medium tabular-nums">
+                  {selectedIds.size} sélectionnée{selectedIds.size !== 1 ? "s" : ""}
+                </span>
+                <div className="w-px h-5 bg-border" />
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-8 text-xs gap-1.5"
+                  disabled={deletingBatch}
+                  onClick={handleDeleteBatch}
+                >
+                  {deletingBatch ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  Supprimer la sélection
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={clearSelection}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
