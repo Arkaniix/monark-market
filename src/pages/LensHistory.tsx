@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, RotateCcw, Bookmark, Bell, Zap, FlaskConical, Loader2,
   ExternalLink, TrendingUp, TrendingDown, BarChart3, Droplets,
   ScanSearch, Award, Clock, MapPin, ChevronDown, ChevronUp, Eye, Target,
-  RefreshCw, Calculator, X, AlertTriangle, Check, Trash2,
+  RefreshCw, Calculator, X, AlertTriangle, Check, Trash2, CheckSquare, Square,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api/client";
 import { LENS } from "@/lib/api/endpoints";
@@ -180,7 +181,14 @@ function buildTitle(item: LensHistoryItem): string {
 }
 
 // ── Scan Card ──
-function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQualified?: (id: number, level: string, deepData: any) => void; onDelete?: (id: number) => void }) {
+function ScanCard({ item, onQualified, onDelete, isSelected, onToggleSelect, selectionMode }: {
+  item: LensHistoryItem;
+  onQualified?: (id: number, level: string, deepData: any) => void;
+  onDelete?: (id: number) => void;
+  isSelected?: boolean;
+  onToggleSelect?: (id: number) => void;
+  selectionMode?: boolean;
+}) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [qualifying, setQualifying] = useState(false);
@@ -230,10 +238,29 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
   const priceDropped = hasPriceChange && item.price < item.previous_price!;
 
   return (
-    <Card className="hover:border-primary/30 transition-colors group overflow-hidden">
+    <Card className={cn(
+      "hover:border-primary/30 transition-colors group overflow-hidden",
+      isSelected && "border-primary/50 bg-primary/5"
+    )}>
       <CardContent className="p-0">
         {/* ── Header bar: meta badges ── */}
         <div className="flex items-center gap-1.5 px-4 py-2.5 bg-muted/30 border-b border-border/40 flex-wrap">
+          {/* Selection checkbox */}
+          {(selectionMode || isSelected) && (
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelect?.(item.id)}
+              className="mr-1"
+            />
+          )}
+          {!selectionMode && !isSelected && (
+            <div
+              className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer mr-1"
+              onClick={(e) => { e.stopPropagation(); onToggleSelect?.(item.id); }}
+            >
+              <Square className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+            </div>
+          )}
           <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5", platform.class)}>
             {platform.label}
           </Badge>
@@ -820,29 +847,73 @@ export default function LensHistory() {
     }));
   };
 
-  const handleDeleteSignal = async (signalId: number) => {
-    if (!window.confirm("Supprimer cette analyse ?")) return;
+  // ── Delete single modal ──
+  const [deleteModalId, setDeleteModalId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState(false);
+
+  const handleDeleteSignal = (signalId: number) => {
+    setDeleteModalId(signalId);
+  };
+
+  const confirmDeleteSignal = async () => {
+    if (!deleteModalId) return;
+    setDeletingId(true);
     try {
-      await apiFetch(`${LENS.HISTORY_ITEM(signalId)}`, { method: 'DELETE' });
-      setDeletedIds(prev => new Set(prev).add(signalId));
+      await apiFetch(`${LENS.SIGNAL(deleteModalId)}`, { method: 'DELETE' });
+      setDeletedIds(prev => new Set(prev).add(deleteModalId));
       toast.success("Analyse supprimée");
     } catch {
       toast.error("Erreur lors de la suppression");
+    } finally {
+      setDeletingId(false);
+      setDeleteModalId(null);
     }
   };
 
-  const handleDeleteAll = async () => {
-    if (!window.confirm("Supprimer TOUTES vos analyses ? Cette action est irréversible.")) return;
-    if (!window.confirm("Êtes-vous vraiment sûr ? Toutes vos analyses et résultats seront perdus.")) return;
+  // ── Delete all modal ──
+  const [deleteAllModal, setDeleteAllModal] = useState(false);
+  const [deleteAllConfirmText, setDeleteAllConfirmText] = useState("");
+  const [deletingAll, setDeletingAll] = useState(false);
+
+  const handleDeleteAll = () => {
+    setDeleteAllModal(true);
+    setDeleteAllConfirmText("");
+  };
+
+  const confirmDeleteAll = async () => {
+    setDeletingAll(true);
     try {
-      const result = await apiFetch<{ count: number }>(`${LENS.HISTORY}?confirm=true`, { method: 'DELETE' });
+      const result = await apiFetch<{ count: number }>(`${LENS.SIGNALS}?confirm=true`, { method: 'DELETE' });
       setDeletedIds(new Set());
+      setSelectedIds(new Set());
       refreshLens();
       toast.success(`${result?.count ?? 0} analyses supprimées`);
     } catch {
       toast.error("Erreur lors de la suppression");
+    } finally {
+      setDeletingAll(false);
+      setDeleteAllModal(false);
+      setDeleteAllConfirmText("");
     }
   };
+
+  // ── Multi-select (state only — callbacks defined after filtered) ──
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [deletingBatch, setDeletingBatch] = useState(false);
+  const selectionMode = selectedIds.size > 0;
+
+  const toggleSelect = useCallback((id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
 
   const lensScans: LensHistoryItem[] = useMemo(() => {
     const base = apiItems.length > 0 ? apiItems : (import.meta.env.DEV ? DEV_MOCK_HISTORY as unknown as LensHistoryItem[] : []);
@@ -894,6 +965,33 @@ export default function LensHistory() {
       return true;
     });
   }, [lensScans, search, typeFilter, verdictFilter, depthFilter]);
+
+  // ── Multi-select callbacks (after filtered) ──
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(filtered.map(i => i.id)));
+  }, [filtered]);
+
+  const handleDeleteBatch = async () => {
+    if (selectedIds.size === 0) return;
+    setDeletingBatch(true);
+    try {
+      await apiFetch(LENS.SIGNALS_DELETE_BATCH, {
+        method: 'POST',
+        body: { signal_ids: Array.from(selectedIds) },
+      });
+      setDeletedIds(prev => {
+        const next = new Set(prev);
+        selectedIds.forEach(id => next.add(id));
+        return next;
+      });
+      toast.success(`${selectedIds.size} analyse(s) supprimée(s)`);
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    } finally {
+      setDeletingBatch(false);
+    }
+  };
 
   // Stats from API
   const signalCount = lensStats?.total_signals ?? lensScans.length;
@@ -986,7 +1084,7 @@ export default function LensHistory() {
             </motion.div>
 
             {/* History limit gauge */}
-            {historyLimit != null && (
+            {historyLimit != null ? (
               <div className="space-y-2">
                 {historyUsage / historyLimit > 0.8 && (
                   <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs flex items-center gap-2">
@@ -1002,11 +1100,11 @@ export default function LensHistory() {
                 )}
                 <div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                    <span>Historique : {historyUsage} / {historyLimit} analyses</span>
+                    <span>{historyUsage} / {historyLimit} analyses</span>
                     <span className="text-muted-foreground/60">
                       {historyLimit - historyUsage > 0
                         ? `${historyLimit - historyUsage} restantes`
-                        : "Limite atteinte — les plus anciennes seront remplacées"}
+                        : "Limite atteinte"}
                     </span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-1.5">
@@ -1017,18 +1115,29 @@ export default function LensHistory() {
                           ? "bg-destructive"
                           : historyUsage / historyLimit > 0.7
                             ? "bg-yellow-500"
-                            : "bg-primary"
+                            : "bg-emerald-500"
                       )}
                       style={{ width: `${Math.min(100, (historyUsage / historyLimit) * 100)}%` }}
                     />
                   </div>
+                  {plan === "free" && (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Plan Free — <a href="/pricing" className="text-primary hover:underline font-medium">Passez au Standard pour 200 analyses</a>
+                    </p>
+                  )}
+                  {plan === "standard" && (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Plan Standard — <a href="/pricing" className="text-primary hover:underline font-medium">Passez au Pro pour un historique illimité</a>
+                    </p>
+                  )}
                 </div>
               </div>
-            )}
-            {historyLimit === null && historyUsage > 0 && (
-              <p className="text-xs text-muted-foreground">
-                {historyUsage} analyses · Historique illimité (Pro)
-              </p>
+            ) : (
+              historyUsage > 0 && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{historyUsage} analyses · Historique illimité ∞</span>
+                </div>
+              )
             )}
 
             {/* Filters + Delete all */}
@@ -1127,8 +1236,19 @@ export default function LensHistory() {
                   <EmptyState />
                 ) : (
                   filtered.map((item) => (
-                    <motion.div key={item.id} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}>
-                      <ScanCard item={item} onQualified={handleSignalQualified} onDelete={handleDeleteSignal} />
+                    <motion.div
+                      key={item.id}
+                      variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }}
+                      layout
+                    >
+                      <ScanCard
+                        item={item}
+                        onQualified={handleSignalQualified}
+                        onDelete={handleDeleteSignal}
+                        isSelected={selectedIds.has(item.id)}
+                        onToggleSelect={toggleSelect}
+                        selectionMode={selectionMode}
+                      />
                     </motion.div>
                   ))
                 )}
@@ -1200,6 +1320,94 @@ export default function LensHistory() {
         </Tabs>
 
         <EstimationDetailDialog item={viewHistoryItem} onClose={() => setViewHistoryItem(null)} plan={plan} onReEstimate={handleReEstimate} />
+
+        {/* ── Delete Single Modal ── */}
+        <Dialog open={deleteModalId !== null} onOpenChange={(open) => !open && setDeleteModalId(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Supprimer cette analyse ?</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Cette action est irréversible. L'analyse sera définitivement supprimée.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setDeleteModalId(null)} disabled={deletingId}>Annuler</Button>
+              <Button variant="destructive" onClick={confirmDeleteSignal} disabled={deletingId}>
+                {deletingId ? <><Loader2 className="h-4 w-4 animate-spin" />Suppression…</> : "Supprimer"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Delete All Modal ── */}
+        <Dialog open={deleteAllModal} onOpenChange={(open) => { if (!open) { setDeleteAllModal(false); setDeleteAllConfirmText(""); } }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-destructive">Supprimer toutes vos analyses ?</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Cette action est irréversible. Toutes vos analyses et résultats seront définitivement perdus.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Tapez <span className="font-mono font-bold text-foreground">SUPPRIMER</span> pour confirmer :
+              </p>
+              <Input
+                value={deleteAllConfirmText}
+                onChange={(e) => setDeleteAllConfirmText(e.target.value)}
+                placeholder="SUPPRIMER"
+                className="h-9 text-sm font-mono"
+              />
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => { setDeleteAllModal(false); setDeleteAllConfirmText(""); }} disabled={deletingAll}>Annuler</Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteAll}
+                disabled={deletingAll || deleteAllConfirmText !== "SUPPRIMER"}
+              >
+                {deletingAll ? <><Loader2 className="h-4 w-4 animate-spin" />Suppression…</> : "Tout supprimer"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Multi-select Action Bar ── */}
+        <AnimatePresence>
+          {selectionMode && (
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+            >
+              <div className="flex items-center gap-3 bg-card border border-border rounded-xl shadow-lg px-4 py-2.5">
+                <Checkbox
+                  checked={selectedIds.size === filtered.length && filtered.length > 0}
+                  onCheckedChange={(checked) => checked ? selectAll() : clearSelection()}
+                />
+                <span className="text-sm font-medium tabular-nums">
+                  {selectedIds.size} sélectionnée{selectedIds.size !== 1 ? "s" : ""}
+                </span>
+                <div className="w-px h-5 bg-border" />
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-8 text-xs gap-1.5"
+                  disabled={deletingBatch}
+                  onClick={handleDeleteBatch}
+                >
+                  {deletingBatch ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  Supprimer la sélection
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={clearSelection}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
