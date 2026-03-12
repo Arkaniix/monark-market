@@ -55,6 +55,20 @@ interface ModelStatsResponse {
   total: number;
 }
 
+interface ObservationTimelinePoint {
+  date: string;
+  ebay_sold: number;
+  leboncoin_scrape: number;
+  ebay_active: number;
+  scraper_disappear: number;
+  crowdsource: number;
+  total: number;
+}
+
+interface ObservationTimelineResponse {
+  points: ObservationTimelinePoint[];
+}
+
 // ---- Helpers ----
 
 const SOURCE_COLORS: Record<string, string> = {
