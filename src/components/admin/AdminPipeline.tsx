@@ -267,6 +267,22 @@ export default function AdminPipeline() {
     onError: () => toast({ title: "Erreur", description: "La purge a échoué", variant: "destructive" }),
   });
 
+  // Fetch observations timeline (fallback to mock in dev)
+  const { data: timeline, isLoading: timelineLoading } = useQuery({
+    queryKey: ["admin-observations-timeline"],
+    queryFn: async () => {
+      try {
+        return await adminApiGet<ObservationTimelineResponse>("/admin/observations/timeline");
+      } catch {
+        if (import.meta.env.DEV) return { points: MOCK_TIMELINE };
+        throw new Error("API unavailable");
+      }
+    },
+    staleTime: 60000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
   const ms = status?.market_stats;
   const po = status?.price_observations;
   const ca = status?.cache;
