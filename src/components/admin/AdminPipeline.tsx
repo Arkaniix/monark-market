@@ -12,8 +12,9 @@ import {
   BarChart3, Database, HardDrive, Loader2, RefreshCw, Trash2,
   TrendingUp, TrendingDown, Clock, ArrowUpRight, ArrowDownRight,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, subDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 // ---- Types ----
 
@@ -52,6 +53,20 @@ interface ModelStat {
 interface ModelStatsResponse {
   models: ModelStat[];
   total: number;
+}
+
+interface ObservationTimelinePoint {
+  date: string;
+  ebay_sold: number;
+  leboncoin_scrape: number;
+  ebay_active: number;
+  scraper_disappear: number;
+  crowdsource: number;
+  total: number;
+}
+
+interface ObservationTimelineResponse {
+  points: ObservationTimelinePoint[];
 }
 
 // ---- Helpers ----
@@ -131,6 +146,34 @@ const MOCK_MODELS: ModelStat[] = [
   { model_id: 10, model_name: "RX 6600 XT", category: "gpu", observations: 31, median_price: 170, p25: 150, p75: 195, trend_30d_pct: -9.8, liquidity: 0.42, confidence: 0.54, data_quality: "limited" },
   { model_id: 11, model_name: "GTX 1660 Super", category: "gpu", observations: 18, median_price: 120, p25: 100, p75: 140, trend_30d_pct: -12.3, liquidity: 0.35, confidence: 0.41, data_quality: "insufficient" },
 ];
+
+// Generate 30 days of mock timeline data
+const MOCK_TIMELINE: ObservationTimelinePoint[] = Array.from({ length: 30 }, (_, i) => {
+  const d = subDays(new Date(), 29 - i);
+  const base = 40 + Math.round(Math.sin(i * 0.4) * 10 + Math.random() * 8);
+  const ebay_sold = Math.round(base * 0.58);
+  const leboncoin = Math.round(base * 0.18);
+  const ebay_active = Math.round(base * 0.15);
+  const disappear = Math.round(base * 0.07);
+  const crowd = Math.round(base * 0.02);
+  return {
+    date: format(d, "dd/MM"),
+    ebay_sold,
+    leboncoin_scrape: leboncoin,
+    ebay_active,
+    scraper_disappear: disappear,
+    crowdsource: crowd,
+    total: ebay_sold + leboncoin + ebay_active + disappear + crowd,
+  };
+});
+
+const CHART_SOURCE_COLORS: Record<string, string> = {
+  ebay_sold: "hsl(152, 69%, 41%)",
+  leboncoin_scrape: "hsl(217, 91%, 60%)",
+  ebay_active: "hsl(45, 93%, 58%)",
+  scraper_disappear: "hsl(215, 14%, 50%)",
+  crowdsource: "hsl(270, 67%, 58%)",
+};
 
 // ---- Component ----
 
@@ -222,6 +265,22 @@ export default function AdminPipeline() {
       qc.invalidateQueries({ queryKey: ["admin-pipeline-status"] });
     },
     onError: () => toast({ title: "Erreur", description: "La purge a échoué", variant: "destructive" }),
+  });
+
+  // Fetch observations timeline (fallback to mock in dev)
+  const { data: timeline, isLoading: timelineLoading } = useQuery({
+    queryKey: ["admin-observations-timeline"],
+    queryFn: async () => {
+      try {
+        return await adminApiGet<ObservationTimelineResponse>("/admin/observations/timeline");
+      } catch {
+        if (import.meta.env.DEV) return { points: MOCK_TIMELINE };
+        throw new Error("API unavailable");
+      }
+    },
+    staleTime: 60000,
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
   const ms = status?.market_stats;
@@ -350,6 +409,61 @@ export default function AdminPipeline() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Chart — Observations Timeline */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            Évolution des observations (30 derniers jours)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {timelineLoading ? (
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />Chargement…
+            </div>
+          ) : !timeline?.points?.length ? (
+            <div className="text-center py-12 text-sm text-muted-foreground">Aucune donnée disponible</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={timeline.points} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                <defs>
+                  {Object.entries(CHART_SOURCE_COLORS).map(([key, color]) => (
+                    <linearGradient key={key} id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    color: "hsl(var(--foreground))",
+                  }}
+                  labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                />
+                <Legend
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
+                  formatter={(value: string) => SOURCE_LABELS[value] ?? value}
+                />
+                <Area type="monotone" dataKey="ebay_sold" name="ebay_sold" stackId="1" stroke={CHART_SOURCE_COLORS.ebay_sold} fill={`url(#grad-ebay_sold)`} strokeWidth={1.5} />
+                <Area type="monotone" dataKey="leboncoin_scrape" name="leboncoin_scrape" stackId="1" stroke={CHART_SOURCE_COLORS.leboncoin_scrape} fill={`url(#grad-leboncoin_scrape)`} strokeWidth={1.5} />
+                <Area type="monotone" dataKey="ebay_active" name="ebay_active" stackId="1" stroke={CHART_SOURCE_COLORS.ebay_active} fill={`url(#grad-ebay_active)`} strokeWidth={1.5} />
+                <Area type="monotone" dataKey="scraper_disappear" name="scraper_disappear" stackId="1" stroke={CHART_SOURCE_COLORS.scraper_disappear} fill={`url(#grad-scraper_disappear)`} strokeWidth={1.5} />
+                <Area type="monotone" dataKey="crowdsource" name="crowdsource" stackId="1" stroke={CHART_SOURCE_COLORS.crowdsource} fill={`url(#grad-crowdsource)`} strokeWidth={1.5} />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Table — Stats par Modèle */}
       <Card>
