@@ -147,6 +147,34 @@ const MOCK_MODELS: ModelStat[] = [
   { model_id: 11, model_name: "GTX 1660 Super", category: "gpu", observations: 18, median_price: 120, p25: 100, p75: 140, trend_30d_pct: -12.3, liquidity: 0.35, confidence: 0.41, data_quality: "insufficient" },
 ];
 
+// Generate 30 days of mock timeline data
+const MOCK_TIMELINE: ObservationTimelinePoint[] = Array.from({ length: 30 }, (_, i) => {
+  const d = subDays(new Date(), 29 - i);
+  const base = 40 + Math.round(Math.sin(i * 0.4) * 10 + Math.random() * 8);
+  const ebay_sold = Math.round(base * 0.58);
+  const leboncoin = Math.round(base * 0.18);
+  const ebay_active = Math.round(base * 0.15);
+  const disappear = Math.round(base * 0.07);
+  const crowd = Math.round(base * 0.02);
+  return {
+    date: format(d, "dd/MM"),
+    ebay_sold,
+    leboncoin_scrape: leboncoin,
+    ebay_active,
+    scraper_disappear: disappear,
+    crowdsource: crowd,
+    total: ebay_sold + leboncoin + ebay_active + disappear + crowd,
+  };
+});
+
+const CHART_SOURCE_COLORS: Record<string, string> = {
+  ebay_sold: "hsl(152, 69%, 41%)",
+  leboncoin_scrape: "hsl(217, 91%, 60%)",
+  ebay_active: "hsl(45, 93%, 58%)",
+  scraper_disappear: "hsl(215, 14%, 50%)",
+  crowdsource: "hsl(270, 67%, 58%)",
+};
+
 // ---- Component ----
 
 export default function AdminPipeline() {
