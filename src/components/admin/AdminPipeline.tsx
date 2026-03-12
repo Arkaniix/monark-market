@@ -12,8 +12,9 @@ import {
   BarChart3, Database, HardDrive, Loader2, RefreshCw, Trash2,
   TrendingUp, TrendingDown, Clock, ArrowUpRight, ArrowDownRight,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, subDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 // ---- Types ----
 
