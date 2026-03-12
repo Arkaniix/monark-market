@@ -410,6 +410,61 @@ export default function AdminPipeline() {
         </Card>
       </div>
 
+      {/* Chart — Observations Timeline */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            Évolution des observations (30 derniers jours)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {timelineLoading ? (
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />Chargement…
+            </div>
+          ) : !timeline?.points?.length ? (
+            <div className="text-center py-12 text-sm text-muted-foreground">Aucune donnée disponible</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={timeline.points} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                <defs>
+                  {Object.entries(CHART_SOURCE_COLORS).map(([key, color]) => (
+                    <linearGradient key={key} id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    color: "hsl(var(--foreground))",
+                  }}
+                  labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                />
+                <Legend
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
+                  formatter={(value: string) => SOURCE_LABELS[value] ?? value}
+                />
+                <Area type="monotone" dataKey="ebay_sold" name="ebay_sold" stackId="1" stroke={CHART_SOURCE_COLORS.ebay_sold} fill={`url(#grad-ebay_sold)`} strokeWidth={1.5} />
+                <Area type="monotone" dataKey="leboncoin_scrape" name="leboncoin_scrape" stackId="1" stroke={CHART_SOURCE_COLORS.leboncoin_scrape} fill={`url(#grad-leboncoin_scrape)`} strokeWidth={1.5} />
+                <Area type="monotone" dataKey="ebay_active" name="ebay_active" stackId="1" stroke={CHART_SOURCE_COLORS.ebay_active} fill={`url(#grad-ebay_active)`} strokeWidth={1.5} />
+                <Area type="monotone" dataKey="scraper_disappear" name="scraper_disappear" stackId="1" stroke={CHART_SOURCE_COLORS.scraper_disappear} fill={`url(#grad-scraper_disappear)`} strokeWidth={1.5} />
+                <Area type="monotone" dataKey="crowdsource" name="crowdsource" stackId="1" stroke={CHART_SOURCE_COLORS.crowdsource} fill={`url(#grad-crowdsource)`} strokeWidth={1.5} />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Table — Stats par Modèle */}
       <Card>
         <CardHeader className="pb-3">
