@@ -1084,7 +1084,7 @@ export default function LensHistory() {
             </motion.div>
 
             {/* History limit gauge */}
-            {historyLimit != null && (
+            {historyLimit != null ? (
               <div className="space-y-2">
                 {historyUsage / historyLimit > 0.8 && (
                   <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs flex items-center gap-2">
@@ -1100,11 +1100,11 @@ export default function LensHistory() {
                 )}
                 <div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                    <span>Historique : {historyUsage} / {historyLimit} analyses</span>
+                    <span>{historyUsage} / {historyLimit} analyses</span>
                     <span className="text-muted-foreground/60">
                       {historyLimit - historyUsage > 0
                         ? `${historyLimit - historyUsage} restantes`
-                        : "Limite atteinte — les plus anciennes seront remplacées"}
+                        : "Limite atteinte"}
                     </span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-1.5">
@@ -1115,18 +1115,29 @@ export default function LensHistory() {
                           ? "bg-destructive"
                           : historyUsage / historyLimit > 0.7
                             ? "bg-yellow-500"
-                            : "bg-primary"
+                            : "bg-emerald-500"
                       )}
                       style={{ width: `${Math.min(100, (historyUsage / historyLimit) * 100)}%` }}
                     />
                   </div>
+                  {plan === "free" && (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Plan Free — <a href="/pricing" className="text-primary hover:underline font-medium">Passez au Standard pour 200 analyses</a>
+                    </p>
+                  )}
+                  {plan === "standard" && (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Plan Standard — <a href="/pricing" className="text-primary hover:underline font-medium">Passez au Pro pour un historique illimité</a>
+                    </p>
+                  )}
                 </div>
               </div>
-            )}
-            {historyLimit === null && historyUsage > 0 && (
-              <p className="text-xs text-muted-foreground">
-                {historyUsage} analyses · Historique illimité (Pro)
-              </p>
+            ) : (
+              historyUsage > 0 && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{historyUsage} analyses · Historique illimité ∞</span>
+                </div>
+              )
             )}
 
             {/* Filters + Delete all */}
