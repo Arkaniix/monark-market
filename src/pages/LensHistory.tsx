@@ -847,27 +847,97 @@ export default function LensHistory() {
     }));
   };
 
-  const handleDeleteSignal = async (signalId: number) => {
-    if (!window.confirm("Supprimer cette analyse ?")) return;
+  // ── Delete single modal ──
+  const [deleteModalId, setDeleteModalId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState(false);
+
+  const handleDeleteSignal = (signalId: number) => {
+    setDeleteModalId(signalId);
+  };
+
+  const confirmDeleteSignal = async () => {
+    if (!deleteModalId) return;
+    setDeletingId(true);
     try {
-      await apiFetch(`${LENS.HISTORY_ITEM(signalId)}`, { method: 'DELETE' });
-      setDeletedIds(prev => new Set(prev).add(signalId));
+      await apiFetch(`${LENS.SIGNAL(deleteModalId)}`, { method: 'DELETE' });
+      setDeletedIds(prev => new Set(prev).add(deleteModalId));
       toast.success("Analyse supprimée");
     } catch {
       toast.error("Erreur lors de la suppression");
+    } finally {
+      setDeletingId(false);
+      setDeleteModalId(null);
     }
   };
 
-  const handleDeleteAll = async () => {
-    if (!window.confirm("Supprimer TOUTES vos analyses ? Cette action est irréversible.")) return;
-    if (!window.confirm("Êtes-vous vraiment sûr ? Toutes vos analyses et résultats seront perdus.")) return;
+  // ── Delete all modal ──
+  const [deleteAllModal, setDeleteAllModal] = useState(false);
+  const [deleteAllConfirmText, setDeleteAllConfirmText] = useState("");
+  const [deletingAll, setDeletingAll] = useState(false);
+
+  const handleDeleteAll = () => {
+    setDeleteAllModal(true);
+    setDeleteAllConfirmText("");
+  };
+
+  const confirmDeleteAll = async () => {
+    setDeletingAll(true);
     try {
-      const result = await apiFetch<{ count: number }>(`${LENS.HISTORY}?confirm=true`, { method: 'DELETE' });
+      const result = await apiFetch<{ count: number }>(`${LENS.SIGNALS}?confirm=true`, { method: 'DELETE' });
       setDeletedIds(new Set());
+      setSelectedIds(new Set());
       refreshLens();
       toast.success(`${result?.count ?? 0} analyses supprimées`);
     } catch {
       toast.error("Erreur lors de la suppression");
+    } finally {
+      setDeletingAll(false);
+      setDeleteAllModal(false);
+      setDeleteAllConfirmText("");
+    }
+  };
+
+  // ── Multi-select ──
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [deletingBatch, setDeletingBatch] = useState(false);
+  const selectionMode = selectedIds.size > 0;
+
+  const toggleSelect = useCallback((id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(filtered.map(i => i.id)));
+  }, [filtered]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleDeleteBatch = async () => {
+    if (selectedIds.size === 0) return;
+    setDeletingBatch(true);
+    try {
+      await apiFetch(LENS.SIGNALS_DELETE_BATCH, {
+        method: 'POST',
+        body: { signal_ids: Array.from(selectedIds) },
+      });
+      setDeletedIds(prev => {
+        const next = new Set(prev);
+        selectedIds.forEach(id => next.add(id));
+        return next;
+      });
+      toast.success(`${selectedIds.size} analyse(s) supprimée(s)`);
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    } finally {
+      setDeletingBatch(false);
     }
   };
 
