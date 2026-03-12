@@ -181,7 +181,14 @@ function buildTitle(item: LensHistoryItem): string {
 }
 
 // ── Scan Card ──
-function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQualified?: (id: number, level: string, deepData: any) => void; onDelete?: (id: number) => void }) {
+function ScanCard({ item, onQualified, onDelete, isSelected, onToggleSelect, selectionMode }: {
+  item: LensHistoryItem;
+  onQualified?: (id: number, level: string, deepData: any) => void;
+  onDelete?: (id: number) => void;
+  isSelected?: boolean;
+  onToggleSelect?: (id: number) => void;
+  selectionMode?: boolean;
+}) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [qualifying, setQualifying] = useState(false);
@@ -231,10 +238,29 @@ function ScanCard({ item, onQualified, onDelete }: { item: LensHistoryItem; onQu
   const priceDropped = hasPriceChange && item.price < item.previous_price!;
 
   return (
-    <Card className="hover:border-primary/30 transition-colors group overflow-hidden">
+    <Card className={cn(
+      "hover:border-primary/30 transition-colors group overflow-hidden",
+      isSelected && "border-primary/50 bg-primary/5"
+    )}>
       <CardContent className="p-0">
         {/* ── Header bar: meta badges ── */}
         <div className="flex items-center gap-1.5 px-4 py-2.5 bg-muted/30 border-b border-border/40 flex-wrap">
+          {/* Selection checkbox */}
+          {(selectionMode || isSelected) && (
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onToggleSelect?.(item.id)}
+              className="mr-1"
+            />
+          )}
+          {!selectionMode && !isSelected && (
+            <div
+              className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer mr-1"
+              onClick={(e) => { e.stopPropagation(); onToggleSelect?.(item.id); }}
+            >
+              <Square className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+            </div>
+          )}
           <Badge variant="outline" className={cn("text-[10px] px-2 py-0.5", platform.class)}>
             {platform.label}
           </Badge>
