@@ -10,7 +10,7 @@ import { adminApiGet } from "@/lib/api/adminApi";
 import { useEffect, useState } from "react";
 import { Search, Plus, Edit, PieChart, RefreshCw, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { AddModelModal } from "./models/AddModelModal";
+import { ModelFormModal } from "./models/ModelFormModal";
 import { Category } from "./models/types";
 import { qualityBadge } from "./adminHelpers";
 
