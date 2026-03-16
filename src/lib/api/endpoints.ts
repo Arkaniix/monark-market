@@ -223,7 +223,7 @@ export const ADMIN = {
   REJECTS_EXPORT: '/v1/admin/rejects/export/csv',
   CRON: '/v1/admin/cron',
   CRON_RUN: (id: string) => `/v1/admin/cron/${id}/run`,
-  OBSERVATIONS_TIMELINE: '/admin/observations/timeline',
+  OBSERVATIONS_TIMELINE: '/v1/admin/observations/timeline',
   OBSERVATORY: '/v1/admin/observatory',
   OBSERVATORY_MISSION: '/v1/admin/observatory/mission',
   OBSERVATORY_EXPORT: '/v1/admin/observatory/export',
