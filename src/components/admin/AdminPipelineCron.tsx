@@ -153,7 +153,7 @@ export default function AdminPipelineCron() {
   // --- Section 1: KPIs ---
   const { data: status, isLoading: statusLoading, isError: statusError } = useQuery({
     queryKey: ["admin-pipeline-status"],
-    queryFn: () => adminApiGet<PipelineStatus>("/admin/jobs/status"),
+    queryFn: () => adminApiGet<PipelineStatus>("/v1/admin/jobs/status"),
     staleTime: 30000,
     retry: 1,
     refetchOnWindowFocus: false,
@@ -161,7 +161,7 @@ export default function AdminPipelineCron() {
 
   // Recompute mutation
   const recompute = useMutation({
-    mutationFn: () => adminApiFetch<{ models_computed: number; duration_s: number }>("/admin/jobs/recompute-stats", { method: "POST" }),
+    mutationFn: () => adminApiFetch<{ models_computed: number; duration_s: number }>("/v1/admin/jobs/recompute-stats", { method: "POST" }),
     onSuccess: (data) => {
       toast({ title: "Recalcul terminé", description: `${data.models_computed} modèles recalculés en ${data.duration_s}s` });
       qc.invalidateQueries({ queryKey: ["admin-pipeline-status"] });
@@ -172,7 +172,7 @@ export default function AdminPipelineCron() {
 
   // Purge mutation
   const purge = useMutation({
-    mutationFn: () => adminApiFetch<{ purged: number }>("/admin/jobs/purge-cache", { method: "POST" }),
+    mutationFn: () => adminApiFetch<{ purged: number }>("/v1/admin/jobs/purge-cache", { method: "POST" }),
     onSuccess: (data) => {
       toast({ title: "Cache purgé", description: `${data.purged} entrées supprimées` });
       qc.invalidateQueries({ queryKey: ["admin-pipeline-status"] });
@@ -221,7 +221,7 @@ export default function AdminPipelineCron() {
     queryFn: () => {
       const params = new URLSearchParams({ limit: "50", sort_by: sortBy });
       if (category !== "all") params.set("category", category);
-      return adminApiGet<ModelStatsResponse>(`/admin/market-stats?${params}`);
+      return adminApiGet<ModelStatsResponse>(`/v1/admin/jobs/market-stats?${params}`);
     },
     staleTime: 30000,
     retry: 1,
