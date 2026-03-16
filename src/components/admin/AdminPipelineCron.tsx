@@ -221,7 +221,7 @@ export default function AdminPipelineCron() {
     queryFn: () => {
       const params = new URLSearchParams({ limit: "50", sort_by: sortBy });
       if (category !== "all") params.set("category", category);
-      return adminApiGet<ModelStatsResponse>(`/admin/market-stats?${params}`);
+      return adminApiGet<ModelStatsResponse>(`/v1/admin/jobs/market-stats?${params}`);
     },
     staleTime: 30000,
     retry: 1,
