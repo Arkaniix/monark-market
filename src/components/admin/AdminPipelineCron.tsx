@@ -116,7 +116,20 @@ const CHART_SOURCES = Object.keys(CHART_SOURCE_COLORS);
 
 function relativeDate(d: string | null) {
   if (!d) return "—";
-  return formatDistanceToNow(new Date(d), { addSuffix: true, locale: fr });
+
+  const parsed = new Date(d);
+  if (Number.isNaN(parsed.getTime())) return "—";
+
+  try {
+    return formatDistanceToNow(parsed, { addSuffix: true, locale: fr });
+  } catch {
+    return "—";
+  }
+}
+
+function formatCount(value: unknown) {
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num.toLocaleString("fr-FR") : "0";
 }
 
 function cronStatusBadge(status: CronScraper["last_run_status"]) {
