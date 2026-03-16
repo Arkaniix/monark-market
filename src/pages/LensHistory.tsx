@@ -1003,10 +1003,11 @@ export default function LensHistory() {
   };
 
   // Stats from API
-  const signalCount = lensStats?.total_signals ?? lensScans.length;
-  const qualifiedCount = lensStats?.qualified ?? lensScans.filter(s => s.is_qualified).length;
+  const signalCount = Math.max(0, (lensStats?.total_signals ?? lensScans.length) - deletedCountAdjust);
+  const qualifiedCount = Math.max(0, (lensStats?.qualified ?? lensScans.filter(s => s.is_qualified).length));
   const decisionCount = lensScans.filter(s => s.has_deep_analysis).length;
   const totalCredits = lensStats?.credits_earned ?? 0;
+  const adjustedHistoryUsage = Math.max(0, historyUsage - deletedCountAdjust);
   const hasMorePages = lensTotal > lensPage * 50;
 
   const handleReEstimate = (item: EnhancedEstimationHistoryItem) => {
