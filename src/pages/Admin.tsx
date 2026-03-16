@@ -77,8 +77,6 @@ export default function Admin() {
         return <AdminSubscriptions />;
       case "credits":
         return <AdminCredits />;
-      case "jobs":
-        return <AdminJobs />;
       case "ads":
         return <AdminAds />;
       case "ingest":
