@@ -905,6 +905,7 @@ export default function LensHistory() {
   // ── Multi-select (state only — callbacks defined after filtered) ──
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [deletingBatch, setDeletingBatch] = useState(false);
+  const [batchDeleteModal, setBatchDeleteModal] = useState(false);
   const selectionMode = selectedIds.size > 0;
 
   const toggleSelect = useCallback((id: number) => {
