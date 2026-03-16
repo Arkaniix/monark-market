@@ -274,8 +274,8 @@ export default function AdminPipelineCron() {
                   <Clock className="h-3.5 w-3.5" />
                   Dernière MAJ : {relativeDate(ms?.last_run_at ?? null)}
                 </div>
-                <div className="text-sm">Modèles calculés : <span className="font-semibold text-foreground">{ms?.models_computed ?? 0}</span></div>
-                <div className="text-sm">Planification : <span className="font-semibold text-foreground">{ms?.schedule ?? "—"}</span></div>
+                <div className="text-sm">Modèles calculés : <span className="font-semibold text-foreground">{formatCount(ms?.models_computed)}</span></div>
+                <div className="text-sm">Planification : <span className="font-semibold text-foreground">{String(ms?.schedule ?? "—")}</span></div>
                 <Button
                   size="sm"
                   className="w-full mt-2"
@@ -314,7 +314,10 @@ export default function AdminPipelineCron() {
                   Dernière import : {relativeDate(po?.last_import_at ?? null)}
                 </div>
                 <div className="space-y-1.5 pt-1">
-                  {Object.entries(po?.by_source ?? {}).sort((a, b) => b[1] - a[1]).map(([src, count]) => (
+                  {Object.entries(po?.by_source ?? {})
+                    .map(([src, raw]) => [src, typeof raw === "number" ? raw : (typeof raw === "object" && raw !== null ? (raw as any).count ?? 0 : Number(raw) || 0)] as [string, number])
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([src, count]) => (
                     <div key={src} className="flex items-center gap-2 text-xs">
                       <span className="w-24 truncate text-muted-foreground">{SOURCE_LABELS[src] ?? src}</span>
                       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
@@ -323,7 +326,7 @@ export default function AdminPipelineCron() {
                           style={{ width: `${totalObs ? (count / totalObs) * 100 : 0}%` }}
                         />
                       </div>
-                      <span className="w-10 text-right font-medium text-foreground">{count}</span>
+                      <span className="w-10 text-right font-medium text-foreground">{formatCount(count)}</span>
                     </div>
                   ))}
                 </div>
@@ -347,14 +350,14 @@ export default function AdminPipelineCron() {
               <ErrorMessage message="Données indisponibles" />
             ) : (
               <>
-                <div className="text-sm">Entrées basiques : <span className="font-semibold text-foreground">{ca?.basic_entries ?? 0}</span></div>
+                <div className="text-sm">Entrées basiques : <span className="font-semibold text-foreground">{formatCount(ca?.basic_entries)}</span></div>
                 <div className="text-sm">
                   Entrées expirées :{" "}
-                  <span className={`font-semibold ${(ca?.expired_entries ?? 0) > 0 ? "text-orange-400" : "text-foreground"}`}>
-                    {ca?.expired_entries ?? 0}
+                  <span className={`font-semibold ${(Number(ca?.expired_entries) || 0) > 0 ? "text-orange-400" : "text-foreground"}`}>
+                    {formatCount(ca?.expired_entries)}
                   </span>
                 </div>
-                <div className="text-sm">Entrées deep : <span className="font-semibold text-foreground">{ca?.deep_entries ?? 0}</span></div>
+                <div className="text-sm">Entrées deep : <span className="font-semibold text-foreground">{formatCount(ca?.deep_entries)}</span></div>
                 <Button
                   size="sm"
                   variant="outline"
