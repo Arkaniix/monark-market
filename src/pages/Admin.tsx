@@ -11,19 +11,12 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminSubscriptions from "@/components/admin/AdminSubscriptions";
 import AdminCredits from "@/components/admin/AdminCredits";
-import AdminAds from "@/components/admin/AdminAds";
-import AdminIngest from "@/components/admin/AdminIngest";
+import AdminCompta from "@/components/admin/AdminCompta";
 import AdminModels from "@/components/admin/AdminModels";
-import AdminMetrics from "@/components/admin/AdminMetrics";
-import AdminExternal from "@/components/admin/AdminExternal";
+import AdminObservatory from "@/components/admin/AdminObservatory";
+import AdminPipelineCron from "@/components/admin/AdminPipelineCron";
 import AdminHealth from "@/components/admin/AdminHealth";
 import AdminLogs from "@/components/admin/AdminLogs";
-import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
-import AdminRejects from "@/components/admin/AdminRejects";
-import AdminRegimes from "@/components/admin/AdminRegimes";
-import AdminObservatory from "@/components/admin/AdminObservatory";
-import AdminCompta from "@/components/admin/AdminCompta";
-import AdminPipelineCron from "@/components/admin/AdminPipelineCron";
 
 const LOADING_TIMEOUT_MS = 8000;
 
@@ -36,12 +29,9 @@ export default function Admin() {
   
   const { data: roleData, isLoading, isError, error, refetch } = useUserRole();
 
-  // Timeout detection for loading state
   useEffect(() => {
     if (isLoading) {
-      const timer = setTimeout(() => {
-        setLoadingTimeout(true);
-      }, LOADING_TIMEOUT_MS);
+      const timer = setTimeout(() => setLoadingTimeout(true), LOADING_TIMEOUT_MS);
       return () => clearTimeout(timer);
     } else {
       setLoadingTimeout(false);
@@ -51,17 +41,11 @@ export default function Admin() {
   useEffect(() => {
     if (!isLoading && !isError) {
       if (roleData?.role !== 'admin') {
-        toast({
-          title: "Accès refusé",
-          description: "Vous n'avez pas les permissions nécessaires",
-          variant: "destructive"
-        });
+        toast({ title: "Accès refusé", description: "Vous n'avez pas les permissions nécessaires", variant: "destructive" });
         navigate("/home");
       }
     }
-    
     if (isError && !loadingTimeout) {
-      // If error fetching role, redirect to home
       console.error("Error checking admin status:", error);
       navigate("/home");
     }
@@ -69,42 +53,17 @@ export default function Admin() {
 
   const renderSection = () => {
     switch (activeSection) {
-      case "dashboard":
-        return <AdminDashboard />;
-      case "users":
-        return <AdminUsers />;
-      case "subscriptions":
-        return <AdminSubscriptions />;
-      case "credits":
-        return <AdminCredits />;
-      case "ads":
-        return <AdminAds />;
-      case "ingest":
-        return <AdminIngest />;
-      case "rejects":
-        return <AdminRejects />;
-      case "models":
-        return <AdminModels />;
-      case "metrics":
-        return <AdminMetrics />;
-      case "regimes":
-        return <AdminRegimes />;
-      case "observatory":
-        return <AdminObservatory />;
-      case "compta":
-        return <AdminCompta />;
-      case "pipeline":
-        return <AdminPipelineCron />;
-      case "external":
-        return <AdminExternal />;
-      case "health":
-        return <AdminHealth />;
-      case "logs":
-        return <AdminLogs />;
-      case "settings":
-        return <AdminSystemSettings />;
-      default:
-        return <AdminDashboard />;
+      case "dashboard": return <AdminDashboard />;
+      case "users": return <AdminUsers />;
+      case "subscriptions": return <AdminSubscriptions />;
+      case "credits": return <AdminCredits />;
+      case "compta": return <AdminCompta />;
+      case "models": return <AdminModels />;
+      case "observatory": return <AdminObservatory />;
+      case "pipeline": return <AdminPipelineCron />;
+      case "health": return <AdminHealth />;
+      case "logs": return <AdminLogs />;
+      default: return <AdminDashboard />;
     }
   };
 
@@ -113,7 +72,6 @@ export default function Admin() {
     refetch();
   };
 
-  // Show timeout message after 8 seconds
   if ((isLoading && loadingTimeout) || (isError && loadingTimeout)) {
     return (
       <div className="container mx-auto py-8">
@@ -122,20 +80,14 @@ export default function Admin() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Données admin indisponibles</AlertTitle>
             <AlertDescription>
-              {isMockMode 
+              {isMockMode
                 ? "Le mock provider met du temps à répondre. Les données admin peuvent être incomplètes."
-                : "L'API n'est pas joignable ou met trop de temps à répondre."
-              }
+                : "L'API n'est pas joignable ou met trop de temps à répondre."}
             </AlertDescription>
           </Alert>
           <div className="flex gap-3">
-            <Button onClick={handleRetry} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Réessayer
-            </Button>
-            <Button onClick={() => navigate("/home")} variant="ghost">
-              Retour à l'accueil
-            </Button>
+            <Button onClick={handleRetry} variant="outline"><RefreshCw className="h-4 w-4 mr-2" />Réessayer</Button>
+            <Button onClick={() => navigate("/home")} variant="ghost">Retour à l'accueil</Button>
           </div>
         </div>
       </div>
@@ -153,15 +105,12 @@ export default function Admin() {
     );
   }
 
-  if (roleData?.role !== 'admin') {
-    return null;
-  }
+  if (roleData?.role !== 'admin') return null;
 
   return (
     <div className="min-h-screen bg-background">
       <div className="flex">
         <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-        
         <div className="flex-1 ml-64">
           <div className="border-b bg-card">
             <div className="container mx-auto py-6 px-8">
@@ -176,7 +125,6 @@ export default function Admin() {
               </div>
             </div>
           </div>
-
           <div className="container mx-auto py-8 px-8">
             {renderSection()}
           </div>
