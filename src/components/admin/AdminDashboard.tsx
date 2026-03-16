@@ -1,28 +1,38 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, CreditCard, Briefcase, Package, AlertTriangle, CheckCircle2, XCircle, AlertCircle, TrendingUp, FileX } from "lucide-react";
+import { Users, Activity, Radio, Package, AlertTriangle, CheckCircle2, AlertCircle, TrendingUp, FileX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminApiGet } from "@/lib/api/adminApi";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 
-interface DashboardStats {
-  totalUsers: number;
-  activeSubscriptions: number;
-  totalJobs: number | null;
-  totalAds: number | null;
+interface DashboardResponse {
+  users: { total: number; active_subscribers: number };
+  data: {
+    total_observations: number;
+    observations_7d: number;
+    total_signals: number;
+    signals_7d: number;
+    total_models: number;
+    models_with_stats: number;
+  };
+  cache: { basic_entries: number; expired_entries: number; deep_entries: number };
+  pipeline: { last_stats_run: string | null; scraper_status: string };
+  charts: {
+    observations_7d: { date: string; count: number }[];
+    signals_7d: { date: string; count: number }[];
+  };
+  alerts: { critical_errors: number; failed_scrapers: number; stale_stats: boolean };
 }
 
-interface AlertStats {
-  criticalErrors: number | null;
-  failedJobs: number | null;
-  unreviewedRejects: number | null;
+function formatCount(value: unknown): string {
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num.toLocaleString("fr-FR") : "0";
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<DashboardStats>({ totalUsers: 0, activeSubscriptions: 0, totalJobs: null, totalAds: null });
-  const [alertStats, setAlertStats] = useState<AlertStats>({ criticalErrors: null, failedJobs: null, unreviewedRejects: null });
+  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -30,74 +40,35 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      // Supabase data (users + subscriptions)
-      const [usersCount, subsCount] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('user_subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-      ]);
-
-      let totalJobs: number | null = null;
-      let totalAds: number | null = null;
-      let failedJobs: number | null = null;
-      let unreviewedRejects: number | null = null;
-      let criticalErrors: number | null = null;
-
-      // API data (pipeline) — graceful failures
-      try {
-        const sysData = await adminApiGet<any>('/v1/admin/system');
-        totalAds = sysData?.total_ads ?? null;
-      } catch {}
-
-      try {
-        const jobsData = await adminApiGet<any>('/v1/admin/jobs?page_size=1');
-        totalJobs = jobsData?.total ?? null;
-      } catch {}
-
-      try {
-        const failedData = await adminApiGet<any>('/v1/admin/jobs?status=failed&page_size=1');
-        failedJobs = failedData?.total ?? null;
-      } catch {}
-
-      try {
-        const rejectsData = await adminApiGet<any>('/v1/admin/rejects/stats');
-        unreviewedRejects = rejectsData?.unreviewed ?? null;
-      } catch {}
-
-      try {
-        const logsData = await adminApiGet<any>('/v1/admin/logs?level=error&page_size=1');
-        criticalErrors = logsData?.total ?? null;
-      } catch {}
-
-      setStats({
-        totalUsers: usersCount.count || 0,
-        activeSubscriptions: subsCount.count || 0,
-        totalJobs,
-        totalAds,
-      });
-
-      setAlertStats({ criticalErrors, failedJobs, unreviewedRejects });
+      const data = await adminApiGet<DashboardResponse>('/v1/admin/dashboard');
+      setDashboard(data);
     } catch (error) {
-      console.error('Error loading stats:', error);
-      toast({ title: "Erreur", description: "Impossible de charger les statistiques", variant: "destructive" });
+      console.error('Error loading dashboard:', error);
+      toast({ title: "Erreur", description: "Impossible de charger le dashboard", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
-  const StatValue = ({ value }: { value: number | null }) => {
-    if (loading) return <Skeleton className="h-8 w-16" />;
-    if (value === null) return <span className="text-sm text-muted-foreground">API indisponible</span>;
-    return <div className="text-2xl font-bold">{value}</div>;
-  };
-
-  const AlertValue = ({ value, variant }: { value: number | null; variant: string }) => {
-    if (value === null) return <Badge variant="outline">—</Badge>;
-    return <Badge variant={value > 0 ? (variant as any) : 'outline'}>{value}</Badge>;
-  };
-
-  // Determine system status
-  const hasAlerts = (alertStats.criticalErrors ?? 0) > 0 || (alertStats.failedJobs ?? 0) > 0;
+  const hasAlerts = (dashboard?.alerts.critical_errors ?? 0) > 0
+    || (dashboard?.alerts.failed_scrapers ?? 0) > 0
+    || (dashboard?.alerts.stale_stats === true);
   const systemStatus = hasAlerts ? 'degraded' : 'healthy';
+
+  const AlertValue = ({ value, variant }: { value: number | boolean | null | undefined; variant: string }) => {
+    if (value === null || value === undefined) return <Badge variant="outline">—</Badge>;
+    if (typeof value === "boolean") {
+      return <Badge variant={value ? (variant as any) : 'outline'}>{value ? "Oui" : "Non"}</Badge>;
+    }
+    return <Badge variant={value > 0 ? (variant as any) : 'outline'}>{formatCount(value)}</Badge>;
+  };
+
+  const tooltipStyle = {
+    backgroundColor: "hsl(var(--card))",
+    border: "1px solid hsl(var(--border))",
+    borderRadius: "8px",
+    fontSize: "12px",
+  };
 
   return (
     <div className="space-y-8">
@@ -114,47 +85,49 @@ export default function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{stats.totalUsers}</div>}
+            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{formatCount(dashboard?.users.total)}</div>}
             <p className="text-xs text-muted-foreground">Total des comptes</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Abonnements</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Observations</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{stats.activeSubscriptions}</div>}
-            <p className="text-xs text-muted-foreground">Plans actifs</p>
+            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{formatCount(dashboard?.data.total_observations)}</div>}
+            <p className="text-xs text-muted-foreground">+{formatCount(dashboard?.data.observations_7d)} cette semaine</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jobs</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Signaux</CardTitle>
+            <Radio className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <StatValue value={stats.totalJobs} />
-            <p className="text-xs text-muted-foreground">Scraps lancés</p>
+            {loading ? <Skeleton className="h-8 w-16" /> : <div className="text-2xl font-bold">{formatCount(dashboard?.data.total_signals)}</div>}
+            <p className="text-xs text-muted-foreground">+{formatCount(dashboard?.data.signals_7d)} cette semaine</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Annonces</CardTitle>
+            <CardTitle className="text-sm font-medium">Modèles couverts</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <StatValue value={stats.totalAds} />
-            <p className="text-xs text-muted-foreground">Dans la base</p>
+            {loading ? <Skeleton className="h-8 w-16" /> : (
+              <div className="text-2xl font-bold">
+                {formatCount(dashboard?.data.models_with_stats)}<span className="text-base font-normal text-muted-foreground"> / {formatCount(dashboard?.data.total_models)}</span>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">avec stats marché</p>
           </CardContent>
         </Card>
       </div>
 
       {/* System Status & Alerts */}
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className={`border-2 ${
-          systemStatus === 'healthy' ? 'border-green-500/30' : 'border-yellow-500/30'
-        }`}>
+        <Card className={`border-2 ${systemStatus === 'healthy' ? 'border-green-500/30' : 'border-yellow-500/30'}`}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {systemStatus === 'healthy' ? <CheckCircle2 className="h-8 w-8 text-green-500" /> : <AlertCircle className="h-8 w-8 text-yellow-500" />}
@@ -184,51 +157,75 @@ export default function AdminDashboard() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Erreurs critiques</span>
-                <AlertValue value={alertStats.criticalErrors} variant="destructive" />
+                <AlertValue value={dashboard?.alerts.critical_errors} variant="destructive" />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Jobs échoués</span>
-                <AlertValue value={alertStats.failedJobs} variant="destructive" />
+                <span className="text-sm text-muted-foreground">Scrapers en échec</span>
+                <AlertValue value={dashboard?.alerts.failed_scrapers} variant="destructive" />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Rejets non reviewés</span>
-                <AlertValue value={alertStats.unreviewedRejects} variant="secondary" />
+                <span className="text-sm text-muted-foreground">Stats obsolètes</span>
+                <AlertValue value={dashboard?.alerts.stale_stats} variant="secondary" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts placeholder */}
+      {/* Charts */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Briefcase className="h-5 w-5" />Jobs par jour</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5" />Observations par jour</CardTitle>
             <CardDescription>Derniers 7 jours</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-48 flex items-center justify-center bg-muted/30 rounded-lg">
-              <div className="text-center">
-                <FileX className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Données indisponibles</p>
-                <p className="text-xs text-muted-foreground">Endpoint à implémenter</p>
+            {loading ? (
+              <Skeleton className="h-48 w-full" />
+            ) : (dashboard?.charts.observations_7d?.length ?? 0) > 0 ? (
+              <ResponsiveContainer width="100%" height={192}>
+                <BarChart data={dashboard!.charts.observations_7d}>
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="count" fill="hsl(152, 69%, 41%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-48 flex items-center justify-center bg-muted/30 rounded-lg">
+                <div className="text-center">
+                  <FileX className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Aucune donnée</p>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" />Annonces ingérées</CardTitle>
+            <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" />Signaux par jour</CardTitle>
             <CardDescription>Derniers 7 jours</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-48 flex items-center justify-center bg-muted/30 rounded-lg">
-              <div className="text-center">
-                <FileX className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Données indisponibles</p>
-                <p className="text-xs text-muted-foreground">Endpoint à implémenter</p>
+            {loading ? (
+              <Skeleton className="h-48 w-full" />
+            ) : (dashboard?.charts.signals_7d?.length ?? 0) > 0 ? (
+              <ResponsiveContainer width="100%" height={192}>
+                <BarChart data={dashboard!.charts.signals_7d}>
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="count" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-48 flex items-center justify-center bg-muted/30 rounded-lg">
+                <div className="text-center">
+                  <FileX className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Aucune donnée</p>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
