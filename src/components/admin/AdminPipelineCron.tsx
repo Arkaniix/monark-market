@@ -161,7 +161,7 @@ export default function AdminPipelineCron() {
 
   // Recompute mutation
   const recompute = useMutation({
-    mutationFn: () => adminApiFetch<{ models_computed: number; duration_s: number }>("/admin/jobs/recompute-stats", { method: "POST" }),
+    mutationFn: () => adminApiFetch<{ models_computed: number; duration_s: number }>("/v1/admin/jobs/recompute-stats", { method: "POST" }),
     onSuccess: (data) => {
       toast({ title: "Recalcul terminé", description: `${data.models_computed} modèles recalculés en ${data.duration_s}s` });
       qc.invalidateQueries({ queryKey: ["admin-pipeline-status"] });
