@@ -107,11 +107,10 @@ export default function AdminModels() {
     }
   };
 
-  const handleModelAdded = (newModel: AdminModel) => {
-    setModels(prev => [...prev, newModel]);
-    if (summary) {
-      setSummary({ ...summary, total_models: summary.total_models + 1 });
-    }
+  const handleModelSaved = () => {
+    setIsAddModalOpen(false);
+    setEditModelId(null);
+    fetchData();
   };
 
   const filteredModels = models.filter(model => {
