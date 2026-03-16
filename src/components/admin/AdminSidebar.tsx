@@ -1,20 +1,18 @@
-import { LayoutDashboard, Users, CreditCard, Coins, Briefcase, Package, Database, Cpu, TrendingUp, Plug, Activity, FileText, Settings, AlertTriangle, BarChart3, Telescope, Receipt } from "lucide-react";
+import { LayoutDashboard, Users, Receipt, Cpu, Telescope, Briefcase, Activity, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 
 interface AdminSidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
-  rejectsBadge?: number;
 }
 
 interface MenuGroup {
   label: string;
-  items: { id: string; label: string; icon: any; badge?: number }[];
+  items: { id: string; label: string; icon: any }[];
 }
 
-export default function AdminSidebar({ activeSection, onSectionChange, rejectsBadge = 0 }: AdminSidebarProps) {
+export default function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarProps) {
   const groups: MenuGroup[] = [
     {
       label: "VUE D'ENSEMBLE",
@@ -23,39 +21,30 @@ export default function AdminSidebar({ activeSection, onSectionChange, rejectsBa
       ],
     },
     {
-      label: "UTILISATEURS & BUSINESS",
+      label: "BUSINESS",
       items: [
         { id: "users", label: "Utilisateurs", icon: Users },
-        { id: "subscriptions", label: "Abonnements", icon: CreditCard },
-        { id: "credits", label: "Crédits & Politiques", icon: Coins },
         { id: "compta", label: "Comptabilité", icon: Receipt },
       ],
     },
     {
-      label: "PIPELINE DE DONNÉES",
+      label: "CATALOGUE & DONNÉES",
       items: [
-        { id: "ads", label: "Annonces", icon: Package },
-        { id: "ingest", label: "Ingestion & Qualité", icon: Database },
-        { id: "rejects", label: "Rejets d'ingestion", icon: AlertTriangle, badge: rejectsBadge },
-        { id: "models", label: "Modèles & Catalogue", icon: Cpu },
+        { id: "models", label: "Catalogue", icon: Cpu },
+        { id: "observatory", label: "Observatoire", icon: Telescope },
       ],
     },
     {
-      label: "INTELLIGENCE MARCHÉ",
+      label: "PIPELINE",
       items: [
-        { id: "observatory", label: "Observatoire", icon: Telescope },
-        { id: "metrics", label: "Analyses de marché", icon: TrendingUp },
-        { id: "regimes", label: "Régimes de marché", icon: BarChart3 },
+        { id: "pipeline", label: "Pipeline & CRON", icon: Briefcase },
       ],
     },
     {
       label: "SYSTÈME",
       items: [
         { id: "health", label: "Santé système", icon: Activity },
-        { id: "pipeline", label: "Pipeline & CRON", icon: Briefcase },
-        { id: "external", label: "Intégrations externes", icon: Plug },
         { id: "logs", label: "Logs & Audit", icon: FileText },
-        { id: "settings", label: "Paramètres", icon: Settings },
       ],
     },
   ];
@@ -86,11 +75,6 @@ export default function AdminSidebar({ activeSection, onSectionChange, rejectsBa
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     <span className="truncate">{item.label}</span>
-                    {item.badge && item.badge > 0 ? (
-                      <Badge variant="destructive" className="ml-auto h-5 min-w-5 text-[10px] px-1.5">
-                        {item.badge}
-                      </Badge>
-                    ) : null}
                   </button>
                 );
               })}
