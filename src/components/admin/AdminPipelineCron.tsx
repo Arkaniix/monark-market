@@ -172,7 +172,7 @@ export default function AdminPipelineCron() {
 
   // Purge mutation
   const purge = useMutation({
-    mutationFn: () => adminApiFetch<{ purged: number }>("/admin/jobs/purge-cache", { method: "POST" }),
+    mutationFn: () => adminApiFetch<{ purged: number }>("/v1/admin/jobs/purge-cache", { method: "POST" }),
     onSuccess: (data) => {
       toast({ title: "Cache purgé", description: `${data.purged} entrées supprimées` });
       qc.invalidateQueries({ queryKey: ["admin-pipeline-status"] });
