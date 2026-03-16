@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { adminApiGet } from "@/lib/api/adminApi";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Plus, Edit, PieChart, RefreshCw, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ModelFormModal } from "./models/ModelFormModal";
