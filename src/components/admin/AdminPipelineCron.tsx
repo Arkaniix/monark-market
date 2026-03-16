@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { adminApiGet, adminApiFetch } from "@/lib/api/adminApi";
+import { ADMIN } from "@/lib/api/endpoints";
 import {
   BarChart3, Database, HardDrive, Loader2, RefreshCw, Trash2,
-  TrendingUp, TrendingDown, Clock, ArrowUpRight, ArrowDownRight,
+  TrendingUp, Clock, ArrowUpRight, ArrowDownRight, Play, AlertCircle,
 } from "lucide-react";
-import { formatDistanceToNow, subDays, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
@@ -58,10 +59,10 @@ interface ModelStatsResponse {
 interface ObservationTimelinePoint {
   date: string;
   ebay_sold: number;
-  leboncoin_scrape: number;
   ebay_active: number;
   scraper_disappear: number;
   crowdsource: number;
+  newprice: number;
   total: number;
 }
 
@@ -69,23 +70,46 @@ interface ObservationTimelineResponse {
   points: ObservationTimelinePoint[];
 }
 
+interface CronScraper {
+  id: string;
+  name: string;
+  description: string;
+  schedule: string;
+  is_active: boolean;
+  last_run_at: string | null;
+  next_run_at: string | null;
+  last_7d_count: number;
+  last_run_status: "success" | "error" | "running" | null;
+  last_run_duration_s: number | null;
+}
+
 // ---- Helpers ----
 
 const SOURCE_COLORS: Record<string, string> = {
   ebay_sold: "bg-emerald-500",
-  leboncoin_scrape: "bg-blue-500",
   ebay_active: "bg-yellow-500",
   scraper_disappear: "bg-muted-foreground",
   crowdsource: "bg-purple-500",
+  newprice: "bg-teal-500",
 };
 
 const SOURCE_LABELS: Record<string, string> = {
   ebay_sold: "eBay Sold",
-  leboncoin_scrape: "Leboncoin",
   ebay_active: "eBay Active",
   scraper_disappear: "Disparues",
   crowdsource: "Communauté",
+  newprice: "Prix Neufs",
 };
+
+const CHART_SOURCE_COLORS: Record<string, string> = {
+  ebay_sold: "hsl(152, 69%, 41%)",
+  ebay_active: "hsl(45, 93%, 58%)",
+  scraper_disappear: "hsl(215, 14%, 50%)",
+  crowdsource: "hsl(270, 67%, 58%)",
+  newprice: "hsl(175, 70%, 41%)",
+};
+
+const CHART_SOURCES = Object.keys(CHART_SOURCE_COLORS);
 
 function qualityBadge(q: string) {
   switch (q) {
@@ -107,120 +131,41 @@ function relativeDate(d: string | null) {
   return formatDistanceToNow(new Date(d), { addSuffix: true, locale: fr });
 }
 
-// ---- Mock Data (DEV fallback) ----
+function cronStatusBadge(status: CronScraper["last_run_status"]) {
+  switch (status) {
+    case "success":
+      return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Succès</Badge>;
+    case "error":
+      return <Badge className="bg-destructive/20 text-destructive border-destructive/30">Erreur</Badge>;
+    case "running":
+      return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse">En cours</Badge>;
+    default:
+      return <Badge variant="outline" className="text-muted-foreground">—</Badge>;
+  }
+}
 
-const MOCK_STATUS: PipelineStatus = {
-  market_stats: {
-    last_run_at: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-    models_computed: 35,
-    schedule: "Toutes les heures",
-  },
-  price_observations: {
-    total: 1566,
-    last_import_at: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
-    by_source: {
-      ebay_sold: 912,
-      leboncoin_scrape: 273,
-      ebay_active: 262,
-      scraper_disappear: 112,
-      crowdsource: 7,
-    },
-  },
-  cache: {
-    basic_entries: 1248,
-    expired_entries: 37,
-    deep_entries: 89,
-  },
-};
-
-const MOCK_MODELS: ModelStat[] = [
-  { model_id: 1, model_name: "RTX 4090", category: "gpu", observations: 312, median_price: 1650, p25: 1500, p75: 1800, trend_30d_pct: -2.4, liquidity: 0.87, confidence: 0.94, data_quality: "excellent" },
-  { model_id: 2, model_name: "RTX 4070 Ti", category: "gpu", observations: 245, median_price: 580, p25: 520, p75: 640, trend_30d_pct: -5.1, liquidity: 0.82, confidence: 0.91, data_quality: "excellent" },
-  { model_id: 3, model_name: "RX 7900 XTX", category: "gpu", observations: 189, median_price: 780, p25: 720, p75: 850, trend_30d_pct: 1.3, liquidity: 0.73, confidence: 0.88, data_quality: "good" },
-  { model_id: 4, model_name: "RTX 3080", category: "gpu", observations: 156, median_price: 420, p25: 380, p75: 470, trend_30d_pct: -8.2, liquidity: 0.91, confidence: 0.95, data_quality: "excellent" },
-  { model_id: 5, model_name: "Ryzen 7 5800X", category: "cpu", observations: 134, median_price: 155, p25: 130, p75: 175, trend_30d_pct: -3.7, liquidity: 0.78, confidence: 0.85, data_quality: "good" },
-  { model_id: 6, model_name: "i9-13900K", category: "cpu", observations: 98, median_price: 340, p25: 300, p75: 380, trend_30d_pct: -1.2, liquidity: 0.65, confidence: 0.79, data_quality: "good" },
-  { model_id: 7, model_name: "RTX 3060 Ti", category: "gpu", observations: 87, median_price: 250, p25: 220, p75: 280, trend_30d_pct: -6.5, liquidity: 0.88, confidence: 0.82, data_quality: "good" },
-  { model_id: 8, model_name: "Samsung 990 Pro 2TB", category: "ssd", observations: 64, median_price: 145, p25: 130, p75: 160, trend_30d_pct: -4.0, liquidity: 0.55, confidence: 0.72, data_quality: "limited" },
-  { model_id: 9, model_name: "DDR5 6000 32GB", category: "ram", observations: 42, median_price: 95, p25: 80, p75: 110, trend_30d_pct: 2.1, liquidity: 0.48, confidence: 0.61, data_quality: "limited" },
-  { model_id: 10, model_name: "RX 6600 XT", category: "gpu", observations: 31, median_price: 170, p25: 150, p75: 195, trend_30d_pct: -9.8, liquidity: 0.42, confidence: 0.54, data_quality: "limited" },
-  { model_id: 11, model_name: "GTX 1660 Super", category: "gpu", observations: 18, median_price: 120, p25: 100, p75: 140, trend_30d_pct: -12.3, liquidity: 0.35, confidence: 0.41, data_quality: "insufficient" },
-];
-
-// Generate 30 days of mock timeline data
-const MOCK_TIMELINE: ObservationTimelinePoint[] = Array.from({ length: 30 }, (_, i) => {
-  const d = subDays(new Date(), 29 - i);
-  const base = 40 + Math.round(Math.sin(i * 0.4) * 10 + Math.random() * 8);
-  const ebay_sold = Math.round(base * 0.58);
-  const leboncoin = Math.round(base * 0.18);
-  const ebay_active = Math.round(base * 0.15);
-  const disappear = Math.round(base * 0.07);
-  const crowd = Math.round(base * 0.02);
-  return {
-    date: format(d, "dd/MM"),
-    ebay_sold,
-    leboncoin_scrape: leboncoin,
-    ebay_active,
-    scraper_disappear: disappear,
-    crowdsource: crowd,
-    total: ebay_sold + leboncoin + ebay_active + disappear + crowd,
-  };
-});
-
-const CHART_SOURCE_COLORS: Record<string, string> = {
-  ebay_sold: "hsl(152, 69%, 41%)",
-  leboncoin_scrape: "hsl(217, 91%, 60%)",
-  ebay_active: "hsl(45, 93%, 58%)",
-  scraper_disappear: "hsl(215, 14%, 50%)",
-  crowdsource: "hsl(270, 67%, 58%)",
-};
+function ErrorMessage({ message }: { message: string }) {
+  return (
+    <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+      <AlertCircle className="h-4 w-4 text-destructive" />
+      <span>{message}</span>
+    </div>
+  );
+}
 
 // ---- Component ----
 
-export default function AdminPipeline() {
+export default function AdminPipelineCron() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [category, setCategory] = useState("all");
   const [sortBy, setSortBy] = useState("observations");
+  const [cooldowns, setCooldowns] = useState<Record<string, boolean>>({});
 
-  // Fetch pipeline status (fallback to mock in dev)
-  const { data: status, isLoading: statusLoading } = useQuery({
+  // --- Section 1: KPIs ---
+  const { data: status, isLoading: statusLoading, isError: statusError } = useQuery({
     queryKey: ["admin-pipeline-status"],
-    queryFn: async () => {
-      try {
-        return await adminApiGet<PipelineStatus>("/admin/jobs/status");
-      } catch {
-        if (import.meta.env.DEV) return MOCK_STATUS;
-        throw new Error("API unavailable");
-      }
-    },
-    staleTime: 30000,
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
-
-  // Fetch model stats (fallback to mock in dev)
-  const { data: modelStats, isLoading: statsLoading } = useQuery({
-    queryKey: ["admin-market-stats", category, sortBy],
-    queryFn: async () => {
-      try {
-        const params = new URLSearchParams({ limit: "50", sort_by: sortBy });
-        if (category !== "all") params.set("category", category);
-        return await adminApiGet<ModelStatsResponse>(`/admin/market-stats?${params}`);
-      } catch {
-        if (import.meta.env.DEV) {
-          let filtered = MOCK_MODELS;
-          if (category !== "all") filtered = filtered.filter(m => m.category === category);
-          filtered = [...filtered].sort((a, b) => {
-            if (sortBy === "median") return (b.median_price ?? 0) - (a.median_price ?? 0);
-            if (sortBy === "confidence") return (b.confidence ?? 0) - (a.confidence ?? 0);
-            return b.observations - a.observations;
-          });
-          return { models: filtered, total: filtered.length };
-        }
-        throw new Error("API unavailable");
-      }
-    },
+    queryFn: () => adminApiGet<PipelineStatus>(ADMIN.SYSTEM.replace("/v1", "")),
     staleTime: 30000,
     retry: 1,
     refetchOnWindowFocus: false,
@@ -228,17 +173,7 @@ export default function AdminPipeline() {
 
   // Recompute mutation
   const recompute = useMutation({
-    mutationFn: async () => {
-      try {
-        return await adminApiFetch<{ models_computed: number; duration_s: number }>("/admin/jobs/recompute-stats", { method: "POST" });
-      } catch {
-        if (import.meta.env.DEV) {
-          await new Promise(r => setTimeout(r, 1500));
-          return { models_computed: 35, duration_s: 2.3 };
-        }
-        throw new Error("API unavailable");
-      }
-    },
+    mutationFn: () => adminApiFetch<{ models_computed: number; duration_s: number }>("/admin/jobs/recompute-stats", { method: "POST" }),
     onSuccess: (data) => {
       toast({ title: "Recalcul terminé", description: `${data.models_computed} modèles recalculés en ${data.duration_s}s` });
       qc.invalidateQueries({ queryKey: ["admin-pipeline-status"] });
@@ -249,17 +184,7 @@ export default function AdminPipeline() {
 
   // Purge mutation
   const purge = useMutation({
-    mutationFn: async () => {
-      try {
-        return await adminApiFetch<{ purged: number }>("/admin/jobs/purge-cache", { method: "POST" });
-      } catch {
-        if (import.meta.env.DEV) {
-          await new Promise(r => setTimeout(r, 800));
-          return { purged: 37 };
-        }
-        throw new Error("API unavailable");
-      }
-    },
+    mutationFn: () => adminApiFetch<{ purged: number }>("/admin/jobs/purge-cache", { method: "POST" }),
     onSuccess: (data) => {
       toast({ title: "Cache purgé", description: `${data.purged} entrées supprimées` });
       qc.invalidateQueries({ queryKey: ["admin-pipeline-status"] });
@@ -267,18 +192,50 @@ export default function AdminPipeline() {
     onError: () => toast({ title: "Erreur", description: "La purge a échoué", variant: "destructive" }),
   });
 
-  // Fetch observations timeline (fallback to mock in dev)
-  const { data: timeline, isLoading: timelineLoading } = useQuery({
-    queryKey: ["admin-observations-timeline"],
-    queryFn: async () => {
-      try {
-        return await adminApiGet<ObservationTimelineResponse>("/admin/observations/timeline");
-      } catch {
-        if (import.meta.env.DEV) return { points: MOCK_TIMELINE };
-        throw new Error("API unavailable");
-      }
+  // --- Section 2: CRON ---
+  const { data: cronData, isLoading: cronLoading, isError: cronError } = useQuery({
+    queryKey: ["admin-cron"],
+    queryFn: () => adminApiGet<{ scrapers: CronScraper[] }>(ADMIN.CRON),
+    staleTime: 30000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  const runCron = useMutation({
+    mutationFn: (id: string) => adminApiFetch(ADMIN.CRON_RUN(id), { method: "POST" }),
+    onSuccess: () => {
+      toast({ title: "Scraper lancé", description: "Le scraper a été lancé en arrière-plan" });
+      qc.invalidateQueries({ queryKey: ["admin-cron"] });
     },
+    onError: () => toast({ title: "Erreur", description: "Impossible de lancer le scraper", variant: "destructive" }),
+  });
+
+  const handleRunCron = useCallback((id: string) => {
+    runCron.mutate(id);
+    setCooldowns(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => {
+      setCooldowns(prev => ({ ...prev, [id]: false }));
+    }, 30000);
+  }, [runCron]);
+
+  // --- Section 3: Timeline ---
+  const { data: timeline, isLoading: timelineLoading, isError: timelineError } = useQuery({
+    queryKey: ["admin-observations-timeline"],
+    queryFn: () => adminApiGet<ObservationTimelineResponse>(ADMIN.OBSERVATIONS_TIMELINE),
     staleTime: 60000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  // --- Section 4: Model Stats ---
+  const { data: modelStats, isLoading: statsLoading, isError: statsError } = useQuery({
+    queryKey: ["admin-market-stats", category, sortBy],
+    queryFn: () => {
+      const params = new URLSearchParams({ limit: "50", sort_by: sortBy });
+      if (category !== "all") params.set("category", category);
+      return adminApiGet<ModelStatsResponse>(`/admin/market-stats?${params}`);
+    },
+    staleTime: 30000,
     retry: 1,
     refetchOnWindowFocus: false,
   });
@@ -291,11 +248,11 @@ export default function AdminPipeline() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Jobs & Pipeline</h2>
-        <p className="text-muted-foreground text-sm mt-1">Statistiques de marché, observations et cache</p>
+        <h2 className="text-2xl font-bold">Pipeline & CRON</h2>
+        <p className="text-muted-foreground text-sm mt-1">Scrapers, statistiques de marché, observations et cache</p>
       </div>
 
-      {/* 3 Cards */}
+      {/* Section 1: KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Card 1 — Stats Marché */}
         <Card>
@@ -308,6 +265,8 @@ export default function AdminPipeline() {
           <CardContent className="space-y-3">
             {statusLoading ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Chargement…</div>
+            ) : statusError ? (
+              <ErrorMessage message="Données indisponibles" />
             ) : (
               <>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -344,6 +303,8 @@ export default function AdminPipeline() {
           <CardContent className="space-y-3">
             {statusLoading ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Chargement…</div>
+            ) : statusError ? (
+              <ErrorMessage message="Données indisponibles" />
             ) : (
               <>
                 <div className="text-sm">Total : <span className="font-semibold text-foreground">{totalObs.toLocaleString("fr-FR")} observations</span></div>
@@ -381,6 +342,8 @@ export default function AdminPipeline() {
           <CardContent className="space-y-3">
             {statusLoading ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Chargement…</div>
+            ) : statusError ? (
+              <ErrorMessage message="Données indisponibles" />
             ) : (
               <>
                 <div className="text-sm">Entrées basiques : <span className="font-semibold text-foreground">{ca?.basic_entries ?? 0}</span></div>
@@ -410,7 +373,93 @@ export default function AdminPipeline() {
         </Card>
       </div>
 
-      {/* Chart — Observations Timeline */}
+      {/* Section 2: Scrapers & CRON */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Play className="h-4 w-4 text-primary" />
+            Scrapers & tâches planifiées
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {cronLoading ? (
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />Chargement…
+            </div>
+          ) : cronError ? (
+            <ErrorMessage message="Impossible de charger les scrapers" />
+          ) : !cronData?.scrapers?.length ? (
+            <div className="text-center py-12 text-sm text-muted-foreground">Aucun scraper configuré</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Nom</TableHead>
+                    <TableHead className="text-xs">Schedule</TableHead>
+                    <TableHead className="text-xs">Dernière exécution</TableHead>
+                    <TableHead className="text-xs">Prochaine exécution</TableHead>
+                    <TableHead className="text-xs text-right">Résultats (7j)</TableHead>
+                    <TableHead className="text-xs">Statut</TableHead>
+                    <TableHead className="text-xs">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cronData.scrapers.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell>
+                        <div>
+                          <span className="text-sm font-medium">{s.name}</span>
+                          {s.description && (
+                            <p className="text-xs text-muted-foreground truncate max-w-[200px]">{s.description}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{s.schedule}</TableCell>
+                      <TableCell className="text-sm">
+                        <div>
+                          <span>{relativeDate(s.last_run_at)}</span>
+                          {s.last_run_duration_s != null && (
+                            <span className="text-xs text-muted-foreground ml-1">({s.last_run_duration_s}s)</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">{relativeDate(s.next_run_at)}</TableCell>
+                      <TableCell className="text-right text-sm font-medium">{s.last_7d_count.toLocaleString("fr-FR")}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {s.is_active ? (
+                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Actif</Badge>
+                          ) : (
+                            <Badge className="bg-destructive/20 text-destructive border-destructive/30">Inactif</Badge>
+                          )}
+                          {cronStatusBadge(s.last_run_status)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRunCron(s.id)}
+                          disabled={cooldowns[s.id] || runCron.isPending}
+                        >
+                          {cooldowns[s.id] ? (
+                            <><Loader2 className="h-3.5 w-3.5 animate-spin" />Lancé</>
+                          ) : (
+                            <><Play className="h-3.5 w-3.5" />Lancer</>
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Section 3: Observations Timeline */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -423,16 +472,18 @@ export default function AdminPipeline() {
             <div className="flex items-center justify-center py-12 text-sm text-muted-foreground gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />Chargement…
             </div>
+          ) : timelineError ? (
+            <ErrorMessage message="Données indisponibles" />
           ) : !timeline?.points?.length ? (
             <div className="text-center py-12 text-sm text-muted-foreground">Aucune donnée disponible</div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={timeline.points} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                 <defs>
-                  {Object.entries(CHART_SOURCE_COLORS).map(([key, color]) => (
+                  {CHART_SOURCES.map((key) => (
                     <linearGradient key={key} id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-                      <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+                      <stop offset="5%" stopColor={CHART_SOURCE_COLORS[key]} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={CHART_SOURCE_COLORS[key]} stopOpacity={0.05} />
                     </linearGradient>
                   ))}
                 </defs>
@@ -454,18 +505,25 @@ export default function AdminPipeline() {
                   wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
                   formatter={(value: string) => SOURCE_LABELS[value] ?? value}
                 />
-                <Area type="monotone" dataKey="ebay_sold" name="ebay_sold" stackId="1" stroke={CHART_SOURCE_COLORS.ebay_sold} fill={`url(#grad-ebay_sold)`} strokeWidth={1.5} />
-                <Area type="monotone" dataKey="leboncoin_scrape" name="leboncoin_scrape" stackId="1" stroke={CHART_SOURCE_COLORS.leboncoin_scrape} fill={`url(#grad-leboncoin_scrape)`} strokeWidth={1.5} />
-                <Area type="monotone" dataKey="ebay_active" name="ebay_active" stackId="1" stroke={CHART_SOURCE_COLORS.ebay_active} fill={`url(#grad-ebay_active)`} strokeWidth={1.5} />
-                <Area type="monotone" dataKey="scraper_disappear" name="scraper_disappear" stackId="1" stroke={CHART_SOURCE_COLORS.scraper_disappear} fill={`url(#grad-scraper_disappear)`} strokeWidth={1.5} />
-                <Area type="monotone" dataKey="crowdsource" name="crowdsource" stackId="1" stroke={CHART_SOURCE_COLORS.crowdsource} fill={`url(#grad-crowdsource)`} strokeWidth={1.5} />
+                {CHART_SOURCES.map((key) => (
+                  <Area
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    name={key}
+                    stackId="1"
+                    stroke={CHART_SOURCE_COLORS[key]}
+                    fill={`url(#grad-${key})`}
+                    strokeWidth={1.5}
+                  />
+                ))}
               </AreaChart>
             </ResponsiveContainer>
           )}
         </CardContent>
       </Card>
 
-      {/* Table — Stats par Modèle */}
+      {/* Section 4: Stats par Modèle */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -501,6 +559,8 @@ export default function AdminPipeline() {
             <div className="flex items-center justify-center py-12 text-sm text-muted-foreground gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />Chargement…
             </div>
+          ) : statsError ? (
+            <ErrorMessage message="Données indisponibles" />
           ) : !modelStats?.models?.length ? (
             <div className="text-center py-12 text-sm text-muted-foreground">Aucune donnée disponible</div>
           ) : (

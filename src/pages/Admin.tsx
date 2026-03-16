@@ -94,7 +94,7 @@ export default function Admin() {
       case "compta":
         return <AdminCompta />;
       case "pipeline":
-        return <AdminPipeline />;
+        return <AdminPipelineCron />;
       case "external":
         return <AdminExternal />;
       case "health":
