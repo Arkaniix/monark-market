@@ -72,6 +72,7 @@ function categoryBadge(name: string) {
 }
 
 export default function AdminModels() {
+  const navigate = useNavigate();
   const [models, setModels] = useState<AdminModel[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [summary, setSummary] = useState<ModelsSummary | null>(null);
