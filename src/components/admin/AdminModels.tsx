@@ -260,7 +260,11 @@ export default function AdminModels() {
                       <TableCell className="text-right">{model.observations_count}</TableCell>
                       <TableCell className="text-right">{model.signals_count}</TableCell>
                       <TableCell>{model.data_quality ? qualityBadge(model.data_quality) : "—"}</TableCell>
-                      <TableCell><Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button></TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => { setEditModelId(model.id); setIsAddModalOpen(true); }}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
