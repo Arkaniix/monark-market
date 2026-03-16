@@ -887,11 +887,12 @@ export default function LensHistory() {
   const confirmDeleteAll = async () => {
     setDeletingAll(true);
     try {
-      const result = await apiFetch<{ count: number }>(`${LENS.SIGNALS}?confirm=true`, { method: 'DELETE' });
+      const result = await apiFetch<{ status: string; signals_deleted: number }>(`${LENS.SIGNALS}?confirm=true`, { method: 'DELETE' });
       setDeletedIds(new Set());
       setSelectedIds(new Set());
+      setDeletedCountAdjust(0);
       refreshLens();
-      toast.success(`${result?.count ?? 0} analyses supprimées`);
+      toast.success(`${result?.signals_deleted ?? 0} analyses supprimées`);
     } catch {
       toast.error("Erreur lors de la suppression");
     } finally {
