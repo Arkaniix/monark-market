@@ -165,7 +165,7 @@ export default function AdminPipelineCron() {
   // --- Section 1: KPIs ---
   const { data: status, isLoading: statusLoading, isError: statusError } = useQuery({
     queryKey: ["admin-pipeline-status"],
-    queryFn: () => adminApiGet<PipelineStatus>(ADMIN.SYSTEM.replace("/v1", "")),
+    queryFn: () => adminApiGet<PipelineStatus>("/admin/jobs/status"),
     staleTime: 30000,
     retry: 1,
     refetchOnWindowFocus: false,
