@@ -116,7 +116,20 @@ const CHART_SOURCES = Object.keys(CHART_SOURCE_COLORS);
 
 function relativeDate(d: string | null) {
   if (!d) return "—";
-  return formatDistanceToNow(new Date(d), { addSuffix: true, locale: fr });
+
+  const parsed = new Date(d);
+  if (Number.isNaN(parsed.getTime())) return "—";
+
+  try {
+    return formatDistanceToNow(parsed, { addSuffix: true, locale: fr });
+  } catch {
+    return "—";
+  }
+}
+
+function formatCount(value: unknown) {
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num.toLocaleString("fr-FR") : "0";
 }
 
 function cronStatusBadge(status: CronScraper["last_run_status"]) {
@@ -413,7 +426,7 @@ export default function AdminPipelineCron() {
                         </div>
                       </TableCell>
                       <TableCell className="text-sm">{relativeDate(s.next_run_at)}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">{s.last_7d_count.toLocaleString("fr-FR")}</TableCell>
+                      <TableCell className="text-right text-sm font-medium">{formatCount(s.last_7d_count)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {s.is_active ? (
