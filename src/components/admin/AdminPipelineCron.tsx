@@ -314,7 +314,10 @@ export default function AdminPipelineCron() {
                   Dernière import : {relativeDate(po?.last_import_at ?? null)}
                 </div>
                 <div className="space-y-1.5 pt-1">
-                  {Object.entries(po?.by_source ?? {}).sort((a, b) => b[1] - a[1]).map(([src, count]) => (
+                  {Object.entries(po?.by_source ?? {})
+                    .map(([src, raw]) => [src, typeof raw === "number" ? raw : (typeof raw === "object" && raw !== null ? (raw as any).count ?? 0 : Number(raw) || 0)] as [string, number])
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([src, count]) => (
                     <div key={src} className="flex items-center gap-2 text-xs">
                       <span className="w-24 truncate text-muted-foreground">{SOURCE_LABELS[src] ?? src}</span>
                       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
@@ -323,7 +326,7 @@ export default function AdminPipelineCron() {
                           style={{ width: `${totalObs ? (count / totalObs) * 100 : 0}%` }}
                         />
                       </div>
-                      <span className="w-10 text-right font-medium text-foreground">{count}</span>
+                      <span className="w-10 text-right font-medium text-foreground">{formatCount(count)}</span>
                     </div>
                   ))}
                 </div>
