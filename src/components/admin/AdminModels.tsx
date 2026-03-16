@@ -187,10 +187,16 @@ export default function AdminModels() {
           <CardTitle>Modèles matériels ({filteredModels.length})</CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={fetchData}><RefreshCw className="h-4 w-4" /></Button>
-            <Button onClick={() => setIsAddModalOpen(true)}><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
+            <Button onClick={() => { setEditModelId(null); setIsAddModalOpen(true); }}><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
           </div>
         </CardHeader>
-        <AddModelModal open={isAddModalOpen} onOpenChange={setIsAddModalOpen} categories={categories} onModelAdded={handleModelAdded} />
+        <ModelFormModal
+          open={isAddModalOpen}
+          onOpenChange={(v) => { setIsAddModalOpen(v); if (!v) setEditModelId(null); }}
+          modelId={editModelId}
+          categories={categories}
+          onModelSaved={handleModelSaved}
+        />
         <CardContent>
           <div className="flex gap-4 mb-4">
             <div className="relative flex-1">
