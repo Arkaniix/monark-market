@@ -426,7 +426,7 @@ export default function AdminPipelineCron() {
                         </div>
                       </TableCell>
                       <TableCell className="text-sm">{relativeDate(s.next_run_at)}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">{s.last_7d_count.toLocaleString("fr-FR")}</TableCell>
+                      <TableCell className="text-right text-sm font-medium">{formatCount(s.last_7d_count)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {s.is_active ? (
