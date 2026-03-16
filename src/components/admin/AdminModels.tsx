@@ -79,6 +79,7 @@ export default function AdminModels() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editModelId, setEditModelId] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => { fetchData(); }, []);
