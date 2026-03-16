@@ -350,14 +350,14 @@ export default function AdminPipelineCron() {
               <ErrorMessage message="Données indisponibles" />
             ) : (
               <>
-                <div className="text-sm">Entrées basiques : <span className="font-semibold text-foreground">{ca?.basic_entries ?? 0}</span></div>
+                <div className="text-sm">Entrées basiques : <span className="font-semibold text-foreground">{formatCount(ca?.basic_entries)}</span></div>
                 <div className="text-sm">
                   Entrées expirées :{" "}
-                  <span className={`font-semibold ${(ca?.expired_entries ?? 0) > 0 ? "text-orange-400" : "text-foreground"}`}>
-                    {ca?.expired_entries ?? 0}
+                  <span className={`font-semibold ${(Number(ca?.expired_entries) || 0) > 0 ? "text-orange-400" : "text-foreground"}`}>
+                    {formatCount(ca?.expired_entries)}
                   </span>
                 </div>
-                <div className="text-sm">Entrées deep : <span className="font-semibold text-foreground">{ca?.deep_entries ?? 0}</span></div>
+                <div className="text-sm">Entrées deep : <span className="font-semibold text-foreground">{formatCount(ca?.deep_entries)}</span></div>
                 <Button
                   size="sm"
                   variant="outline"
