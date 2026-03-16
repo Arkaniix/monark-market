@@ -855,12 +855,16 @@ export default function LensHistory() {
     setDeleteModalId(signalId);
   };
 
+  // Local counter adjustments after deletes
+  const [deletedCountAdjust, setDeletedCountAdjust] = useState(0);
+
   const confirmDeleteSignal = async () => {
     if (!deleteModalId) return;
     setDeletingId(true);
     try {
       await apiFetch(`${LENS.SIGNAL(deleteModalId)}`, { method: 'DELETE' });
       setDeletedIds(prev => new Set(prev).add(deleteModalId));
+      setDeletedCountAdjust(prev => prev + 1);
       toast.success("Analyse supprimée");
     } catch {
       toast.error("Erreur lors de la suppression");
@@ -883,11 +887,12 @@ export default function LensHistory() {
   const confirmDeleteAll = async () => {
     setDeletingAll(true);
     try {
-      const result = await apiFetch<{ count: number }>(`${LENS.SIGNALS}?confirm=true`, { method: 'DELETE' });
+      const result = await apiFetch<{ status: string; signals_deleted: number }>(`${LENS.SIGNALS}?confirm=true`, { method: 'DELETE' });
       setDeletedIds(new Set());
       setSelectedIds(new Set());
+      setDeletedCountAdjust(0);
       refreshLens();
-      toast.success(`${result?.count ?? 0} analyses supprimées`);
+      toast.success(`${result?.signals_deleted ?? 0} analyses supprimées`);
     } catch {
       toast.error("Erreur lors de la suppression");
     } finally {
@@ -900,6 +905,7 @@ export default function LensHistory() {
   // ── Multi-select (state only — callbacks defined after filtered) ──
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [deletingBatch, setDeletingBatch] = useState(false);
+  const [batchDeleteModal, setBatchDeleteModal] = useState(false);
   const selectionMode = selectedIds.size > 0;
 
   const toggleSelect = useCallback((id: number) => {
@@ -979,25 +985,29 @@ export default function LensHistory() {
         method: 'POST',
         body: { signal_ids: Array.from(selectedIds) },
       });
+      const count = selectedIds.size;
       setDeletedIds(prev => {
         const next = new Set(prev);
         selectedIds.forEach(id => next.add(id));
         return next;
       });
-      toast.success(`${selectedIds.size} analyse(s) supprimée(s)`);
+      setDeletedCountAdjust(prev => prev + count);
+      toast.success(`${count} analyse(s) supprimée(s)`);
       setSelectedIds(new Set());
     } catch {
       toast.error("Erreur lors de la suppression");
     } finally {
       setDeletingBatch(false);
+      setBatchDeleteModal(false);
     }
   };
 
   // Stats from API
-  const signalCount = lensStats?.total_signals ?? lensScans.length;
-  const qualifiedCount = lensStats?.qualified ?? lensScans.filter(s => s.is_qualified).length;
+  const signalCount = Math.max(0, (lensStats?.total_signals ?? lensScans.length) - deletedCountAdjust);
+  const qualifiedCount = Math.max(0, (lensStats?.qualified ?? lensScans.filter(s => s.is_qualified).length));
   const decisionCount = lensScans.filter(s => s.has_deep_analysis).length;
   const totalCredits = lensStats?.credits_earned ?? 0;
+  const adjustedHistoryUsage = Math.max(0, historyUsage - deletedCountAdjust);
   const hasMorePages = lensTotal > lensPage * 50;
 
   const handleReEstimate = (item: EnhancedEstimationHistoryItem) => {
@@ -1086,11 +1096,11 @@ export default function LensHistory() {
             {/* History limit gauge */}
             {historyLimit != null ? (
               <div className="space-y-2">
-                {historyUsage / historyLimit > 0.8 && (
+                {adjustedHistoryUsage / historyLimit > 0.8 && (
                   <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                     <span>
-                      Votre historique approche de la limite ({historyUsage}/{historyLimit}).
+                      Votre historique approche de la limite ({adjustedHistoryUsage}/{historyLimit}).
                       Les analyses les plus anciennes seront automatiquement remplacées.
                     </span>
                     <a href="/pricing" className="text-primary hover:underline ml-auto whitespace-nowrap font-medium">
@@ -1100,26 +1110,31 @@ export default function LensHistory() {
                 )}
                 <div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                    <span>{historyUsage} / {historyLimit} analyses</span>
+                    <span>{adjustedHistoryUsage} / {historyLimit} analyses</span>
                     <span className="text-muted-foreground/60">
-                      {historyLimit - historyUsage > 0
-                        ? `${historyLimit - historyUsage} restantes`
+                      {historyLimit - adjustedHistoryUsage > 0
+                        ? `${historyLimit - adjustedHistoryUsage} restantes`
                         : "Limite atteinte"}
                     </span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-1.5">
+                  <div className="w-full rounded-full h-2" style={{ backgroundColor: "#2a2a35" }}>
                     <div
-                      className={cn(
-                        "h-1.5 rounded-full transition-all",
-                        historyUsage / historyLimit > 0.9
-                          ? "bg-destructive"
-                          : historyUsage / historyLimit > 0.7
-                            ? "bg-yellow-500"
-                            : "bg-emerald-500"
-                      )}
-                      style={{ width: `${Math.min(100, (historyUsage / historyLimit) * 100)}%` }}
+                      className="h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${Math.min(100, (adjustedHistoryUsage / historyLimit) * 100)}%`,
+                        background: adjustedHistoryUsage / historyLimit > 0.9
+                          ? "linear-gradient(90deg, hsl(0 72% 51%), hsl(0 84% 60%))"
+                          : adjustedHistoryUsage / historyLimit > 0.7
+                            ? "linear-gradient(90deg, hsl(38 92% 50%), hsl(25 95% 53%))"
+                            : "linear-gradient(90deg, hsl(226 70% 55%), hsl(263 70% 50%))",
+                      }}
                     />
                   </div>
+                  {adjustedHistoryUsage / historyLimit > 0.9 && (
+                    <p className="text-[11px] text-orange-400 mt-1">
+                      ⚠️ Vos analyses les plus anciennes seront automatiquement supprimées
+                    </p>
+                  )}
                   {plan === "free" && (
                     <p className="text-[11px] text-muted-foreground mt-1">
                       Plan Free — <a href="/pricing" className="text-primary hover:underline font-medium">Passez au Standard pour 200 analyses</a>
@@ -1133,9 +1148,9 @@ export default function LensHistory() {
                 </div>
               </div>
             ) : (
-              historyUsage > 0 && (
+              adjustedHistoryUsage > 0 && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{historyUsage} analyses · Historique illimité ∞</span>
+                  <span>{adjustedHistoryUsage} analyses · Historique illimité ∞</span>
                 </div>
               )
             )}
@@ -1341,11 +1356,14 @@ export default function LensHistory() {
 
         {/* ── Delete All Modal ── */}
         <Dialog open={deleteAllModal} onOpenChange={(open) => { if (!open) { setDeleteAllModal(false); setDeleteAllConfirmText(""); } }}>
-          <DialogContent className="max-w-sm">
+          <DialogContent className="max-w-sm border-destructive/30 bg-destructive/5 backdrop-blur-lg">
             <DialogHeader>
-              <DialogTitle className="text-destructive">Supprimer toutes vos analyses ?</DialogTitle>
+              <DialogTitle className="text-destructive flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Supprimer tout l'historique ?
+              </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                Cette action est irréversible. Toutes vos analyses et résultats seront définitivement perdus.
+                Cette action supprimera définitivement toutes vos analyses. Cette opération est irréversible.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
@@ -1356,7 +1374,7 @@ export default function LensHistory() {
                 value={deleteAllConfirmText}
                 onChange={(e) => setDeleteAllConfirmText(e.target.value)}
                 placeholder="SUPPRIMER"
-                className="h-9 text-sm font-mono"
+                className="h-9 text-sm font-mono border-destructive/30 focus-visible:ring-destructive/50"
               />
             </div>
             <DialogFooter className="gap-2 sm:gap-0">
@@ -1366,7 +1384,25 @@ export default function LensHistory() {
                 onClick={confirmDeleteAll}
                 disabled={deletingAll || deleteAllConfirmText !== "SUPPRIMER"}
               >
-                {deletingAll ? <><Loader2 className="h-4 w-4 animate-spin" />Suppression…</> : "Tout supprimer"}
+                {deletingAll ? <><Loader2 className="h-4 w-4 animate-spin" />Suppression…</> : "Confirmer la suppression"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Batch Delete Confirmation Modal ── */}
+        <Dialog open={batchDeleteModal} onOpenChange={(open) => !open && setBatchDeleteModal(false)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Supprimer {selectedIds.size} analyse{selectedIds.size !== 1 ? "s" : ""} ?</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Cette action est irréversible. Les analyses sélectionnées seront définitivement supprimées.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setBatchDeleteModal(false)} disabled={deletingBatch}>Annuler</Button>
+              <Button variant="destructive" onClick={handleDeleteBatch} disabled={deletingBatch}>
+                {deletingBatch ? <><Loader2 className="h-4 w-4 animate-spin" />Suppression…</> : `Supprimer (${selectedIds.size})`}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1382,27 +1418,36 @@ export default function LensHistory() {
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
             >
-              <div className="flex items-center gap-3 bg-card border border-border rounded-xl shadow-lg px-4 py-2.5">
+              <div className="flex items-center gap-3 bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-2xl px-4 py-2.5">
                 <Checkbox
                   checked={selectedIds.size === filtered.length && filtered.length > 0}
                   onCheckedChange={(checked) => checked ? selectAll() : clearSelection()}
                 />
                 <span className="text-sm font-medium tabular-nums">
-                  {selectedIds.size} sélectionnée{selectedIds.size !== 1 ? "s" : ""}
+                  {selectedIds.size} analyse{selectedIds.size !== 1 ? "s" : ""} sélectionnée{selectedIds.size !== 1 ? "s" : ""}
                 </span>
                 <div className="w-px h-5 bg-border" />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs gap-1.5"
+                  onClick={selectAll}
+                >
+                  Tout sélectionner
+                </Button>
                 <Button
                   size="sm"
                   variant="destructive"
                   className="h-8 text-xs gap-1.5"
                   disabled={deletingBatch}
-                  onClick={handleDeleteBatch}
+                  onClick={() => setBatchDeleteModal(true)}
                 >
-                  {deletingBatch ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  <Trash2 className="h-3.5 w-3.5" />
                   Supprimer la sélection
                 </Button>
                 <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={clearSelection}>
                   <X className="h-3.5 w-3.5" />
+                  Annuler
                 </Button>
               </div>
             </motion.div>
