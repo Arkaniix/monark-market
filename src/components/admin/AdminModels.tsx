@@ -241,7 +241,14 @@ export default function AdminModels() {
                 <TableBody>
                   {filteredModels.map((model) => (
                     <TableRow key={model.id}>
-                      <TableCell className="font-medium">{model.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <span
+                          className="cursor-pointer hover:text-primary hover:underline transition-colors"
+                          onClick={() => navigate(`/catalog/${model.id}`)}
+                        >
+                          {model.name}
+                        </span>
+                      </TableCell>
                       <TableCell>{categoryBadge(model.category_name || '—')}</TableCell>
                       <TableCell className="text-muted-foreground">{model.manufacturer || '—'}</TableCell>
                       <TableCell className="text-right">
