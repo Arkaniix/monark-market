@@ -232,6 +232,8 @@ export const ADMIN = {
   BILLING_CLIENT_HISTORY: (userId: number) => `/v1/admin/billing/client/${userId}/history`,
   BILLING_EXPORT: '/v1/admin/billing/export',
   MODELS: '/v1/admin/models',
+  MODEL_DETAIL: (id: number) => `/v1/admin/models/${id}`,
+  MODEL_IMAGE: (id: number) => `/v1/admin/models/${id}/image`,
   CATEGORIES: '/v1/admin/categories',
 } as const;
 

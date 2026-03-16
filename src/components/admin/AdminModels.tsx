@@ -10,7 +10,7 @@ import { adminApiGet } from "@/lib/api/adminApi";
 import { useEffect, useState } from "react";
 import { Search, Plus, Edit, PieChart, RefreshCw, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { AddModelModal } from "./models/AddModelModal";
+import { ModelFormModal } from "./models/ModelFormModal";
 import { Category } from "./models/types";
 import { qualityBadge } from "./adminHelpers";
 
@@ -79,6 +79,7 @@ export default function AdminModels() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editModelId, setEditModelId] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => { fetchData(); }, []);
@@ -106,11 +107,10 @@ export default function AdminModels() {
     }
   };
 
-  const handleModelAdded = (newModel: AdminModel) => {
-    setModels(prev => [...prev, newModel]);
-    if (summary) {
-      setSummary({ ...summary, total_models: summary.total_models + 1 });
-    }
+  const handleModelSaved = () => {
+    setIsAddModalOpen(false);
+    setEditModelId(null);
+    fetchData();
   };
 
   const filteredModels = models.filter(model => {
@@ -187,10 +187,16 @@ export default function AdminModels() {
           <CardTitle>Modèles matériels ({filteredModels.length})</CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={fetchData}><RefreshCw className="h-4 w-4" /></Button>
-            <Button onClick={() => setIsAddModalOpen(true)}><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
+            <Button onClick={() => { setEditModelId(null); setIsAddModalOpen(true); }}><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
           </div>
         </CardHeader>
-        <AddModelModal open={isAddModalOpen} onOpenChange={setIsAddModalOpen} categories={categories} onModelAdded={handleModelAdded} />
+        <ModelFormModal
+          open={isAddModalOpen}
+          onOpenChange={(v) => { setIsAddModalOpen(v); if (!v) setEditModelId(null); }}
+          modelId={editModelId}
+          categories={categories}
+          onModelSaved={handleModelSaved}
+        />
         <CardContent>
           <div className="flex gap-4 mb-4">
             <div className="relative flex-1">
@@ -254,7 +260,11 @@ export default function AdminModels() {
                       <TableCell className="text-right">{model.observations_count}</TableCell>
                       <TableCell className="text-right">{model.signals_count}</TableCell>
                       <TableCell>{model.data_quality ? qualityBadge(model.data_quality) : "—"}</TableCell>
-                      <TableCell><Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button></TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => { setEditModelId(model.id); setIsAddModalOpen(true); }}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
