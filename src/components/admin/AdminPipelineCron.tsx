@@ -274,8 +274,8 @@ export default function AdminPipelineCron() {
                   <Clock className="h-3.5 w-3.5" />
                   Dernière MAJ : {relativeDate(ms?.last_run_at ?? null)}
                 </div>
-                <div className="text-sm">Modèles calculés : <span className="font-semibold text-foreground">{ms?.models_computed ?? 0}</span></div>
-                <div className="text-sm">Planification : <span className="font-semibold text-foreground">{ms?.schedule ?? "—"}</span></div>
+                <div className="text-sm">Modèles calculés : <span className="font-semibold text-foreground">{formatCount(ms?.models_computed)}</span></div>
+                <div className="text-sm">Planification : <span className="font-semibold text-foreground">{String(ms?.schedule ?? "—")}</span></div>
                 <Button
                   size="sm"
                   className="w-full mt-2"
