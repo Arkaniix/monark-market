@@ -1096,11 +1096,11 @@ export default function LensHistory() {
             {/* History limit gauge */}
             {historyLimit != null ? (
               <div className="space-y-2">
-                {historyUsage / historyLimit > 0.8 && (
+                {adjustedHistoryUsage / historyLimit > 0.8 && (
                   <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                     <span>
-                      Votre historique approche de la limite ({historyUsage}/{historyLimit}).
+                      Votre historique approche de la limite ({adjustedHistoryUsage}/{historyLimit}).
                       Les analyses les plus anciennes seront automatiquement remplacées.
                     </span>
                     <a href="/pricing" className="text-primary hover:underline ml-auto whitespace-nowrap font-medium">
@@ -1110,26 +1110,31 @@ export default function LensHistory() {
                 )}
                 <div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                    <span>{historyUsage} / {historyLimit} analyses</span>
+                    <span>{adjustedHistoryUsage} / {historyLimit} analyses</span>
                     <span className="text-muted-foreground/60">
-                      {historyLimit - historyUsage > 0
-                        ? `${historyLimit - historyUsage} restantes`
+                      {historyLimit - adjustedHistoryUsage > 0
+                        ? `${historyLimit - adjustedHistoryUsage} restantes`
                         : "Limite atteinte"}
                     </span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-1.5">
+                  <div className="w-full rounded-full h-2" style={{ backgroundColor: "#2a2a35" }}>
                     <div
-                      className={cn(
-                        "h-1.5 rounded-full transition-all",
-                        historyUsage / historyLimit > 0.9
-                          ? "bg-destructive"
-                          : historyUsage / historyLimit > 0.7
-                            ? "bg-yellow-500"
-                            : "bg-emerald-500"
-                      )}
-                      style={{ width: `${Math.min(100, (historyUsage / historyLimit) * 100)}%` }}
+                      className="h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${Math.min(100, (adjustedHistoryUsage / historyLimit) * 100)}%`,
+                        background: adjustedHistoryUsage / historyLimit > 0.9
+                          ? "linear-gradient(90deg, hsl(0 72% 51%), hsl(0 84% 60%))"
+                          : adjustedHistoryUsage / historyLimit > 0.7
+                            ? "linear-gradient(90deg, hsl(38 92% 50%), hsl(25 95% 53%))"
+                            : "linear-gradient(90deg, hsl(226 70% 55%), hsl(263 70% 50%))",
+                      }}
                     />
                   </div>
+                  {adjustedHistoryUsage / historyLimit > 0.9 && (
+                    <p className="text-[11px] text-orange-400 mt-1">
+                      ⚠️ Vos analyses les plus anciennes seront automatiquement supprimées
+                    </p>
+                  )}
                   {plan === "free" && (
                     <p className="text-[11px] text-muted-foreground mt-1">
                       Plan Free — <a href="/pricing" className="text-primary hover:underline font-medium">Passez au Standard pour 200 analyses</a>
@@ -1143,9 +1148,9 @@ export default function LensHistory() {
                 </div>
               </div>
             ) : (
-              historyUsage > 0 && (
+              adjustedHistoryUsage > 0 && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{historyUsage} analyses · Historique illimité ∞</span>
+                  <span>{adjustedHistoryUsage} analyses · Historique illimité ∞</span>
                 </div>
               )
             )}
