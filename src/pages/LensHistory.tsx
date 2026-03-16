@@ -855,12 +855,16 @@ export default function LensHistory() {
     setDeleteModalId(signalId);
   };
 
+  // Local counter adjustments after deletes
+  const [deletedCountAdjust, setDeletedCountAdjust] = useState(0);
+
   const confirmDeleteSignal = async () => {
     if (!deleteModalId) return;
     setDeletingId(true);
     try {
       await apiFetch(`${LENS.SIGNAL(deleteModalId)}`, { method: 'DELETE' });
       setDeletedIds(prev => new Set(prev).add(deleteModalId));
+      setDeletedCountAdjust(prev => prev + 1);
       toast.success("Analyse supprimée");
     } catch {
       toast.error("Erreur lors de la suppression");
