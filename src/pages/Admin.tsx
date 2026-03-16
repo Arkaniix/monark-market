@@ -11,7 +11,6 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminSubscriptions from "@/components/admin/AdminSubscriptions";
 import AdminCredits from "@/components/admin/AdminCredits";
-import AdminJobs from "@/components/admin/AdminJobs";
 import AdminAds from "@/components/admin/AdminAds";
 import AdminIngest from "@/components/admin/AdminIngest";
 import AdminModels from "@/components/admin/AdminModels";
@@ -24,7 +23,7 @@ import AdminRejects from "@/components/admin/AdminRejects";
 import AdminRegimes from "@/components/admin/AdminRegimes";
 import AdminObservatory from "@/components/admin/AdminObservatory";
 import AdminCompta from "@/components/admin/AdminCompta";
-import AdminPipeline from "@/components/admin/AdminPipeline";
+import AdminPipelineCron from "@/components/admin/AdminPipelineCron";
 
 const LOADING_TIMEOUT_MS = 8000;
 
@@ -78,8 +77,6 @@ export default function Admin() {
         return <AdminSubscriptions />;
       case "credits":
         return <AdminCredits />;
-      case "jobs":
-        return <AdminJobs />;
       case "ads":
         return <AdminAds />;
       case "ingest":
@@ -97,7 +94,7 @@ export default function Admin() {
       case "compta":
         return <AdminCompta />;
       case "pipeline":
-        return <AdminPipeline />;
+        return <AdminPipelineCron />;
       case "external":
         return <AdminExternal />;
       case "health":
