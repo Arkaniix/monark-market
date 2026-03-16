@@ -985,17 +985,20 @@ export default function LensHistory() {
         method: 'POST',
         body: { signal_ids: Array.from(selectedIds) },
       });
+      const count = selectedIds.size;
       setDeletedIds(prev => {
         const next = new Set(prev);
         selectedIds.forEach(id => next.add(id));
         return next;
       });
-      toast.success(`${selectedIds.size} analyse(s) supprimée(s)`);
+      setDeletedCountAdjust(prev => prev + count);
+      toast.success(`${count} analyse(s) supprimée(s)`);
       setSelectedIds(new Set());
     } catch {
       toast.error("Erreur lors de la suppression");
     } finally {
       setDeletingBatch(false);
+      setBatchDeleteModal(false);
     }
   };
 
