@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { adminApiGet, adminApiFetch } from "@/lib/api/adminApi";
 import { ADMIN } from "@/lib/api/endpoints";
+import { qualityBadge } from "./adminHelpers";
 import {
   BarChart3, Database, HardDrive, Loader2, RefreshCw, Trash2,
   TrendingUp, Clock, ArrowUpRight, ArrowDownRight, Play, AlertCircle,
