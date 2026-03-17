@@ -203,7 +203,7 @@ export default function AdminUsers() {
                         <Button size="icon" variant="ghost" onClick={() => setDetailUserId(user.id)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {user.role !== "admin" && (
+                        {(user.plan_name || "").toLowerCase() !== "admin" && (
                           <CreditAdjustDialog
                             userId={user.id}
                             userName={user.display_name || user.email}

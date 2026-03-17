@@ -203,7 +203,7 @@ export function UserDetailModal({ userId, onClose, onRefreshList, onOpenCreditAd
                         <div><span className="text-xs text-muted-foreground">Reçus total</span><p className="text-emerald-400 font-medium">+{detail.credits_received_total ?? 0}</p></div>
                         <div><span className="text-xs text-muted-foreground">Dépensés total</span><p className="text-destructive font-medium">-{detail.credits_spent_total ?? 0}</p></div>
                       </div>
-                      {detail.role !== "admin" && (
+                      {detail.current_plan !== "admin" && (
                         <Button
                           variant="outline"
                           size="sm"
