@@ -238,6 +238,10 @@ export const ADMIN = {
   MODEL_DETAIL: (id: number) => `/v1/admin/models/${id}`,
   MODEL_IMAGE: (id: number) => `/v1/admin/models/${id}/image`,
   CATEGORIES: '/v1/admin/categories',
+  ANALYTICS_DECOTE: '/v1/admin/analytics/decote',
+  ANALYTICS_PRICE_HISTORY: (modelId: number) => `/v1/admin/analytics/price-history/${modelId}`,
+  MODEL_VARIANTS: (modelId: number) => `/v1/admin/models/${modelId}/variants`,
+  VARIANT_UPDATE: (variantId: number) => `/v1/admin/variants/${variantId}`,
 } as const;
 
 // ============= Health =============

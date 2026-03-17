@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Receipt, Cpu, Telescope, Briefcase, Activity, FileText } from "lucide-react";
+import { LayoutDashboard, Users, Receipt, Cpu, Telescope, BarChart3, Briefcase, Activity, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 
@@ -32,6 +32,7 @@ export default function AdminSidebar({ activeSection, onSectionChange }: AdminSi
       items: [
         { id: "models", label: "Catalogue", icon: Cpu },
         { id: "observatory", label: "Observatoire", icon: Telescope },
+        { id: "analytics", label: "Analytics", icon: BarChart3 },
       ],
     },
     {
