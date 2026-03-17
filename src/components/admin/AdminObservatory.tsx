@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, Download, AlertTriangle, Search, Zap, TrendingUp, TrendingDown, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { RefreshCw, Download, AlertTriangle, Search, Zap, TrendingUp, TrendingDown, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { adminApiFetch, adminApiDownload } from "@/lib/api/adminApi";
 import { ADMIN } from "@/lib/api/endpoints";
 import type { ObservatoryResponse, ObservatoryModel } from "@/types/admin";
+import { VariantsPanel } from "./VariantsPanel";
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return "—";
@@ -53,6 +54,7 @@ export default function AdminObservatory() {
   const [missionPages, setMissionPages] = useState(3);
   const [missionKeyword, setMissionKeyword] = useState("");
   const [missionLoading, setMissionLoading] = useState(false);
+  const [expandedModelId, setExpandedModelId] = useState<number | null>(null);
   const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
@@ -193,6 +195,7 @@ export default function AdminObservatory() {
               <TableRow>
                 <TableHead>Modèle</TableHead>
                 <TableHead>Cat.</TableHead>
+                <TableHead className="text-right">Variantes</TableHead>
                 <TableHead className="text-right">Annonces</TableHead>
                 <TableHead className="text-right">Outliers</TableHead>
                 <TableHead>Confiance</TableHead>
@@ -213,60 +216,85 @@ export default function AdminObservatory() {
                 const catCls = CATEGORY_COLORS[m.category] || "bg-muted text-muted-foreground";
                 const rowCls = m.ads_active === 0 ? "bg-red-500/5" : m.regime === "shock" ? "bg-yellow-500/5" : "";
                 return (
-                  <TableRow key={m.model_id} className={rowCls}>
-                    <TableCell className="font-medium max-w-[200px] truncate">
-                      {(m.data_quality_score ?? 100) < 30 && <AlertTriangle className="h-3 w-3 text-yellow-400 inline mr-1" />}
-                      {m.manufacturer} {m.model_name}
-                    </TableCell>
-                    <TableCell><Badge variant="outline" className={`text-[10px] ${catCls}`}>{m.category}</Badge></TableCell>
-                    <TableCell className={`text-right ${m.ads_active === 0 ? "text-red-400 font-bold" : ""}`}>{m.ads_active}/{m.ads_total}</TableCell>
-                    <TableCell className="text-right">{m.ads_outlier_count > 0 ? <Badge variant="destructive" className="text-[10px]">{m.ads_outlier_count}</Badge> : "—"}</TableCell>
-                    <TableCell className="min-w-[80px]">
-                      {m.avg_model_confidence != null ? (
-                        <Progress value={m.avg_model_confidence * 100} className="h-2" />
-                      ) : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">{m.price_median != null ? `${m.price_median.toFixed(0)}€` : "—"}</TableCell>
-                    <TableCell className="text-right text-xs text-muted-foreground">{m.price_p25 != null && m.price_p75 != null ? `${m.price_p25.toFixed(0)}€ – ${m.price_p75.toFixed(0)}€` : "—"}</TableCell>
-                    <TableCell className="text-right">
-                      {m.trend_7d_pct != null ? (
-                        <span className={m.trend_7d_pct >= 0 ? "text-green-400" : "text-red-400"}>
-                          {m.trend_7d_pct >= 0 ? "↑" : "↓"}{Math.abs(m.trend_7d_pct).toFixed(1)}%
-                        </span>
-                      ) : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {m.trend_30d_pct != null ? (
-                        <span className={m.trend_30d_pct >= 0 ? "text-green-400" : "text-red-400"}>
-                          {m.trend_30d_pct >= 0 ? "↑" : "↓"}{Math.abs(m.trend_30d_pct).toFixed(1)}%
-                        </span>
-                      ) : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {regime ? (
-                        <Badge variant="outline" className={`text-[10px] gap-1 ${regime.cls}`}>{regime.icon}{regime.label}</Badge>
-                      ) : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {m.new_price_eur != null ? (
-                        <div>
-                          <span>{m.new_price_eur.toFixed(0)}€</span>
-                          {m.new_price_source && <p className="text-[9px] text-muted-foreground">{m.new_price_source}</p>}
-                        </div>
-                      ) : "—"}
-                    </TableCell>
-                    <TableCell className="min-w-[70px]">
-                      {m.data_quality_score != null ? (
-                        <Progress value={m.data_quality_score} className="h-2" />
-                      ) : "—"}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(m.last_ad_seen_at)}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => openMission(m)}>
-                        <Search className="h-3 w-3 mr-1" /> Scanner
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <React.Fragment key={m.model_id}>
+                    <TableRow className={rowCls}>
+                      <TableCell className="font-medium max-w-[200px] truncate">
+                        {(m.data_quality_score ?? 100) < 30 && <AlertTriangle className="h-3 w-3 text-yellow-400 inline mr-1" />}
+                        {m.manufacturer} {m.model_name}
+                      </TableCell>
+                      <TableCell><Badge variant="outline" className={`text-[10px] ${catCls}`}>{m.category}</Badge></TableCell>
+                      <TableCell className="text-right text-sm">
+                        {m.variants_count > 0 ? (
+                          <span
+                            className="flex items-center justify-end gap-1 cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => setExpandedModelId(prev => prev === m.model_id ? null : m.model_id)}
+                          >
+                            {expandedModelId === m.model_id
+                              ? <ChevronDown className="h-3 w-3" />
+                              : <ChevronRight className="h-3 w-3" />}
+                            <span>{m.variants_count}</span>
+                            {m.variants_with_data > 0 && (
+                              <Badge variant="outline" className="text-[9px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                                {m.variants_with_data} actives
+                              </Badge>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className={`text-right ${m.ads_active === 0 ? "text-red-400 font-bold" : ""}`}>{m.ads_active}/{m.ads_total}</TableCell>
+                      <TableCell className="text-right">{m.ads_outlier_count > 0 ? <Badge variant="destructive" className="text-[10px]">{m.ads_outlier_count}</Badge> : "—"}</TableCell>
+                      <TableCell className="min-w-[80px]">
+                        {m.avg_model_confidence != null ? (
+                          <Progress value={m.avg_model_confidence * 100} className="h-2" />
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">{m.price_median != null ? `${m.price_median.toFixed(0)}€` : "—"}</TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground">{m.price_p25 != null && m.price_p75 != null ? `${m.price_p25.toFixed(0)}€ – ${m.price_p75.toFixed(0)}€` : "—"}</TableCell>
+                      <TableCell className="text-right">
+                        {m.trend_7d_pct != null ? (
+                          <span className={m.trend_7d_pct >= 0 ? "text-green-400" : "text-red-400"}>
+                            {m.trend_7d_pct >= 0 ? "↑" : "↓"}{Math.abs(m.trend_7d_pct).toFixed(1)}%
+                          </span>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {m.trend_30d_pct != null ? (
+                          <span className={m.trend_30d_pct >= 0 ? "text-green-400" : "text-red-400"}>
+                            {m.trend_30d_pct >= 0 ? "↑" : "↓"}{Math.abs(m.trend_30d_pct).toFixed(1)}%
+                          </span>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {regime ? (
+                          <Badge variant="outline" className={`text-[10px] gap-1 ${regime.cls}`}>{regime.icon}{regime.label}</Badge>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {m.new_price_eur != null ? (
+                          <div>
+                            <span>{m.new_price_eur.toFixed(0)}€</span>
+                            {m.new_price_source && <p className="text-[9px] text-muted-foreground">{m.new_price_source}</p>}
+                          </div>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="min-w-[70px]">
+                        {m.data_quality_score != null ? (
+                          <Progress value={m.data_quality_score} className="h-2" />
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(m.last_ad_seen_at)}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => openMission(m)}>
+                          <Search className="h-3 w-3 mr-1" /> Scanner
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {expandedModelId === m.model_id && (
+                      <VariantsPanel modelId={m.model_id} modelName={`${m.manufacturer} ${m.model_name}`} colSpan={15} />
+                    )}
+                  </React.Fragment>
                 );
               })}
             </TableBody>

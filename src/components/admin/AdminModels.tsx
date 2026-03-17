@@ -7,7 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { adminApiGet } from "@/lib/api/adminApi";
-import { ADMIN } from "@/lib/api/endpoints";
 import { useEffect, useState } from "react";
 import { Search, Plus, Edit, PieChart, RefreshCw, AlertCircle, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ModelFormModal } from "./models/ModelFormModal";
 import { Category } from "./models/types";
 import { qualityBadge } from "./adminHelpers";
-import type { ModelVariantsResponse, VariantDetail } from "@/types/admin";
+import { VariantsPanel } from "./VariantsPanel";
 
 // ---- Types ----
 
@@ -71,149 +70,6 @@ function categoryBadge(name: string) {
   if (lower.includes("ssd"))
     return <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/20 uppercase text-[10px]">{name}</Badge>;
   return <Badge variant="outline" className="uppercase text-[10px]">{name}</Badge>;
-}
-
-// ---- Tier badge colors ----
-
-const TIER_COLORS: Record<string, string> = {
-  premium: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  high: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  mid: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  entry: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30",
-  reference: "bg-white/10 text-white border-white/20",
-};
-
-function tierBadge(tier: string | null) {
-  if (!tier) return <Badge variant="outline" className="text-[10px]">—</Badge>;
-  const cls = TIER_COLORS[tier.toLowerCase()] || "bg-muted text-muted-foreground";
-  return <Badge variant="outline" className={`text-[10px] capitalize ${cls}`}>{tier}</Badge>;
-}
-
-// ---- Variants expand panel ----
-
-function VariantsPanel({ modelId, modelName }: { modelId: number; modelName: string }) {
-  const [data, setData] = useState<ModelVariantsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await adminApiGet<ModelVariantsResponse>(ADMIN.MODEL_VARIANTS(modelId));
-        if (!cancelled) setData(res);
-      } catch (e: any) {
-        if (!cancelled) setError(e.message || "Erreur");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [modelId]);
-
-  const formatPrice = (v: number | null) => v == null ? "—" : `${Math.round(v).toLocaleString("fr-FR")} €`;
-
-  if (loading) return (
-    <TableRow>
-      <TableCell colSpan={9} className="bg-muted/30 p-4">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-48" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-
-  if (error) return (
-    <TableRow>
-      <TableCell colSpan={9} className="bg-muted/30 p-4 text-destructive text-sm">
-        <AlertCircle className="h-4 w-4 inline mr-2" />{error}
-      </TableCell>
-    </TableRow>
-  );
-
-  if (!data || data.variants.length === 0) return (
-    <TableRow>
-      <TableCell colSpan={9} className="bg-muted/30 p-4 text-center text-muted-foreground text-sm">
-        Aucune variante trouvée pour {modelName}
-      </TableCell>
-    </TableRow>
-  );
-
-  return (
-    <TableRow>
-      <TableCell colSpan={9} className="bg-muted/30 p-0">
-        <div className="p-4 space-y-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h4 className="text-sm font-semibold">Variantes de {modelName}</h4>
-            <Badge variant="outline" className="text-xs">{data.total_variants} variantes</Badge>
-            {Object.entries(data.tier_summary).map(([tier, count]) => (
-              <Badge key={tier} variant="outline" className={`text-[10px] capitalize ${TIER_COLORS[tier.toLowerCase()] || "bg-muted text-muted-foreground"}`}>
-                {tier}: {count}
-              </Badge>
-            ))}
-          </div>
-          <div className="rounded border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Marque</TableHead>
-                  <TableHead>Variante</TableHead>
-                  <TableHead>Tier</TableHead>
-                  <TableHead className="text-right">Delta prix</TableHead>
-                  <TableHead className="text-right">Prix neuf EUR</TableHead>
-                  <TableHead>Specs</TableHead>
-                  <TableHead className="text-right">Observations</TableHead>
-                  <TableHead className="text-right">Signaux</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TooltipProvider>
-                  {data.variants.map((v) => (
-                    <TableRow key={v.id}>
-                      <TableCell className="text-sm">{v.brand}</TableCell>
-                      <TableCell className="font-medium text-sm">{v.variant_name}</TableCell>
-                      <TableCell>{tierBadge(v.tier)}</TableCell>
-                      <TableCell className="text-right">
-                        {v.price_delta_pct != null ? (
-                          <span className={v.price_delta_pct > 0 ? "text-emerald-400" : v.price_delta_pct < 0 ? "text-destructive" : "text-muted-foreground"}>
-                            {v.price_delta_pct > 0 ? "+" : ""}{v.price_delta_pct.toFixed(1)}%
-                          </span>
-                        ) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {v.new_price_eur != null ? (
-                          v.new_price_source ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="cursor-help">{formatPrice(v.new_price_eur)}</span>
-                              </TooltipTrigger>
-                              <TooltipContent>{v.new_price_source}</TooltipContent>
-                            </Tooltip>
-                          ) : formatPrice(v.new_price_eur)
-                        ) : "—"}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {[
-                          v.boost_clock_mhz ? `${v.boost_clock_mhz} MHz` : null,
-                          v.length_mm ? `${v.length_mm} mm` : null,
-                        ].filter(Boolean).join(" · ") || "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-sm">{v.observations_count}</TableCell>
-                      <TableCell className="text-right text-sm">{v.signals_count}</TableCell>
-                    </TableRow>
-                  ))}
-                </TooltipProvider>
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
 }
 
 // ---- Main ----
