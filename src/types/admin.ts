@@ -26,6 +26,8 @@ export interface ObservatoryModel {
   last_job_status: string | null;
   last_metrics_date: string | null;
   data_quality_score: number | null;
+  variants_count: number;
+  variants_with_data: number;
 }
 
 export interface ObservatorySummary {
