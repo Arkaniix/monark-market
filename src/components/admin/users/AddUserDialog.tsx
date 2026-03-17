@@ -19,18 +19,14 @@ export function AddUserDialog({ open, onOpenChange, onUserCreated }: AddUserDial
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("basic");
   const [plan, setPlan] = useState("free");
-  const [credits, setCredits] = useState(10);
   const [loading, setLoading] = useState(false);
 
   const resetForm = () => {
     setEmail("");
     setDisplayName("");
     setPassword("");
-    setRole("basic");
     setPlan("free");
-    setCredits(10);
   };
 
   const handleCreate = async () => {
@@ -51,9 +47,7 @@ export function AddUserDialog({ open, onOpenChange, onUserCreated }: AddUserDial
           email,
           display_name: displayName || undefined,
           password,
-          role,
           current_plan: plan,
-          credits_balance: credits,
         }),
       });
       toast.success("Utilisateur créé");
@@ -89,34 +83,17 @@ export function AddUserDialog({ open, onOpenChange, onUserCreated }: AddUserDial
             <Label>Mot de passe * (min. 8 caractères)</Label>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Rôle</Label>
-              <Select value={role} onValueChange={setRole}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="basic">Basic</SelectItem>
-                  <SelectItem value="standard">Standard</SelectItem>
-                  <SelectItem value="pro">Pro</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Plan</Label>
-              <Select value={plan} onValueChange={setPlan}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="free">Free</SelectItem>
-                  <SelectItem value="standard">Standard (11.99€)</SelectItem>
-                  <SelectItem value="pro">Pro (22.99€)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
           <div>
-            <Label>Crédits initiaux</Label>
-            <Input type="number" value={credits} onChange={(e) => setCredits(parseInt(e.target.value) || 0)} />
+            <Label>Plan</Label>
+            <Select value={plan} onValueChange={setPlan}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Free (10 crédits/mois)</SelectItem>
+                <SelectItem value="standard">Standard (180 crédits/mois)</SelectItem>
+                <SelectItem value="pro">Pro (600 crédits/mois)</SelectItem>
+                <SelectItem value="admin">Admin (crédits illimités)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

@@ -23,12 +23,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { UserDetailModal } from "./users/UserDetailModal";
 import { AddUserDialog } from "./users/AddUserDialog";
 
-const ROLE_COLORS: Record<string, string> = {
+const PLAN_COLORS: Record<string, string> = {
   admin: "bg-red-500/20 text-red-400 border-red-500/30",
   pro: "bg-violet-500/20 text-violet-400 border-violet-500/30",
-  elite: "bg-amber-500/20 text-amber-400 border-amber-500/30",
   standard: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  basic: "bg-muted text-muted-foreground border-border",
+  free: "bg-muted text-muted-foreground border-border",
 };
 
 function CreditAdjustDialog({
@@ -124,7 +123,7 @@ export default function AdminUsers() {
   const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === "Enter") handleSearch(); };
   const refetchUsers = () => queryClient.invalidateQueries({ queryKey: ["admin-users"] });
 
-  const roleBadgeClass = (role: string) => ROLE_COLORS[role] || ROLE_COLORS.basic;
+  const planBadgeClass = (plan: string) => PLAN_COLORS[plan?.toLowerCase()] || PLAN_COLORS.free;
 
   if (isLoading) return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (isError) return <Card><CardContent className="py-12 text-center"><p className="text-destructive">Erreur lors du chargement des utilisateurs</p></CardContent></Card>;
@@ -164,7 +163,6 @@ export default function AdminUsers() {
               <TableRow>
                 <TableHead>Nom</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Rôle</TableHead>
                 <TableHead>Plan</TableHead>
                 <TableHead>Crédits</TableHead>
                 <TableHead>Inscription</TableHead>
@@ -174,7 +172,7 @@ export default function AdminUsers() {
             </TableHeader>
             <TableBody>
               {users.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Aucun utilisateur trouvé</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Aucun utilisateur trouvé</TableCell></TableRow>
               ) : users.map((user) => {
                 const isInactive = (user as any).is_active === false;
                 return (
@@ -187,13 +185,12 @@ export default function AdminUsers() {
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{user.email}</TableCell>
                     <TableCell>
-                      <Badge className={roleBadgeClass(user.role)}>
-                        <Shield className="h-3 w-3 mr-1" />{user.role}
+                      <Badge className={planBadgeClass(user.plan_name || "free")}>
+                        <Shield className="h-3 w-3 mr-1" />{user.plan_name || "Free"}
                       </Badge>
                     </TableCell>
-                    <TableCell><Badge variant="secondary">{user.plan_name || "Free"}</Badge></TableCell>
                     <TableCell>
-                      {user.role === "admin" ? (
+                      {(user.plan_name || "").toLowerCase() === "admin" ? (
                         <span className="text-emerald-500 font-medium">∞</span>
                       ) : (
                         <span>{user.credits_balance ?? user.credits_remaining}</span>
@@ -206,7 +203,7 @@ export default function AdminUsers() {
                         <Button size="icon" variant="ghost" onClick={() => setDetailUserId(user.id)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {user.role !== "admin" && (
+                        {(user.plan_name || "").toLowerCase() !== "admin" && (
                           <CreditAdjustDialog
                             userId={user.id}
                             userName={user.display_name || user.email}

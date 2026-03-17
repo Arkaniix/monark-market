@@ -73,12 +73,11 @@ const REASON_LABELS: Record<string, string> = {
   signup_bonus: "Bonus inscription",
 };
 
-const ROLE_COLORS: Record<string, string> = {
+const PLAN_COLORS: Record<string, string> = {
   admin: "bg-red-500/20 text-red-400 border-red-500/30",
   pro: "bg-violet-500/20 text-violet-400 border-violet-500/30",
-  elite: "bg-amber-500/20 text-amber-400 border-amber-500/30",
   standard: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  basic: "bg-muted text-muted-foreground border-border",
+  free: "bg-muted text-muted-foreground border-border",
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -131,7 +130,7 @@ export function UserDetailModal({ userId, onClose, onRefreshList, onOpenCreditAd
     setUpdatingField(null);
   };
 
-  const roleBadgeClass = (role: string) => ROLE_COLORS[role] || ROLE_COLORS.basic;
+  const planBadgeClass = (plan: string) => PLAN_COLORS[plan?.toLowerCase()] || PLAN_COLORS.free;
   const platformBadgeClass = (p: string) => PLATFORM_COLORS[p.toLowerCase()] || "bg-muted text-muted-foreground border-border";
 
   return (
@@ -168,25 +167,6 @@ export function UserDetailModal({ userId, onClose, onRefreshList, onOpenCreditAd
                         <div><span className="text-xs text-muted-foreground">Nom</span><p className="font-medium text-sm">{detail.display_name || "Sans nom"}</p></div>
                         <div><span className="text-xs text-muted-foreground">Email</span><p className="font-medium text-sm">{detail.email}</p></div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Rôle</span>
-                          <Select
-                            value={detail.role}
-                            onValueChange={(val) => handleUpdateUser({ role: val })}
-                            disabled={!!updatingField}
-                          >
-                            <SelectTrigger className="w-32 h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="basic">Basic</SelectItem>
-                              <SelectItem value="standard">Standard</SelectItem>
-                              <SelectItem value="pro">Pro</SelectItem>
-                              <SelectItem value="elite">Elite</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">Plan</span>
                           <Select
                             value={detail.current_plan}
@@ -197,9 +177,10 @@ export function UserDetailModal({ userId, onClose, onRefreshList, onOpenCreditAd
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="free">Free</SelectItem>
-                              <SelectItem value="standard">Standard (11.99€)</SelectItem>
-                              <SelectItem value="pro">Pro (22.99€)</SelectItem>
+                              <SelectItem value="free">Free (10 crédits/mois)</SelectItem>
+                              <SelectItem value="standard">Standard (180 crédits/mois)</SelectItem>
+                              <SelectItem value="pro">Pro (600 crédits/mois)</SelectItem>
+                              <SelectItem value="admin">Admin (crédits illimités)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -216,13 +197,13 @@ export function UserDetailModal({ userId, onClose, onRefreshList, onOpenCreditAd
                     <CardContent className="pt-4 space-y-3">
                       <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5"><Coins className="h-3.5 w-3.5" />Crédits</h4>
                       <p className="text-3xl font-bold">
-                        {detail.role === "admin" ? <span className="text-emerald-500">∞</span> : detail.credits_balance}
+                        {detail.current_plan === "admin" ? <span className="text-emerald-500">∞</span> : detail.credits_balance}
                       </p>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div><span className="text-xs text-muted-foreground">Reçus total</span><p className="text-emerald-400 font-medium">+{detail.credits_received_total ?? 0}</p></div>
                         <div><span className="text-xs text-muted-foreground">Dépensés total</span><p className="text-destructive font-medium">-{detail.credits_spent_total ?? 0}</p></div>
                       </div>
-                      {detail.role !== "admin" && (
+                      {detail.current_plan !== "admin" && (
                         <Button
                           variant="outline"
                           size="sm"
