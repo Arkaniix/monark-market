@@ -19,18 +19,14 @@ export function AddUserDialog({ open, onOpenChange, onUserCreated }: AddUserDial
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("basic");
   const [plan, setPlan] = useState("free");
-  const [credits, setCredits] = useState(10);
   const [loading, setLoading] = useState(false);
 
   const resetForm = () => {
     setEmail("");
     setDisplayName("");
     setPassword("");
-    setRole("basic");
     setPlan("free");
-    setCredits(10);
   };
 
   const handleCreate = async () => {
