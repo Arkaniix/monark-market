@@ -163,7 +163,6 @@ export default function AdminUsers() {
               <TableRow>
                 <TableHead>Nom</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Rôle</TableHead>
                 <TableHead>Plan</TableHead>
                 <TableHead>Crédits</TableHead>
                 <TableHead>Inscription</TableHead>
