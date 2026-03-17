@@ -14,6 +14,7 @@ import AdminCredits from "@/components/admin/AdminCredits";
 import AdminCompta from "@/components/admin/AdminCompta";
 import AdminModels from "@/components/admin/AdminModels";
 import AdminObservatory from "@/components/admin/AdminObservatory";
+import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminPipelineCron from "@/components/admin/AdminPipelineCron";
 import AdminHealth from "@/components/admin/AdminHealth";
 import AdminLogs from "@/components/admin/AdminLogs";
