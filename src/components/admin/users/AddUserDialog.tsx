@@ -47,9 +47,7 @@ export function AddUserDialog({ open, onOpenChange, onUserCreated }: AddUserDial
           email,
           display_name: displayName || undefined,
           password,
-          role,
           current_plan: plan,
-          credits_balance: credits,
         }),
       });
       toast.success("Utilisateur créé");
