@@ -167,25 +167,6 @@ export function UserDetailModal({ userId, onClose, onRefreshList, onOpenCreditAd
                         <div><span className="text-xs text-muted-foreground">Nom</span><p className="font-medium text-sm">{detail.display_name || "Sans nom"}</p></div>
                         <div><span className="text-xs text-muted-foreground">Email</span><p className="font-medium text-sm">{detail.email}</p></div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Rôle</span>
-                          <Select
-                            value={detail.role}
-                            onValueChange={(val) => handleUpdateUser({ role: val })}
-                            disabled={!!updatingField}
-                          >
-                            <SelectTrigger className="w-32 h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="basic">Basic</SelectItem>
-                              <SelectItem value="standard">Standard</SelectItem>
-                              <SelectItem value="pro">Pro</SelectItem>
-                              <SelectItem value="elite">Elite</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">Plan</span>
                           <Select
                             value={detail.current_plan}
@@ -196,9 +177,10 @@ export function UserDetailModal({ userId, onClose, onRefreshList, onOpenCreditAd
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="free">Free</SelectItem>
-                              <SelectItem value="standard">Standard (11.99€)</SelectItem>
-                              <SelectItem value="pro">Pro (22.99€)</SelectItem>
+                              <SelectItem value="free">Free (10 crédits/mois)</SelectItem>
+                              <SelectItem value="standard">Standard (180 crédits/mois)</SelectItem>
+                              <SelectItem value="pro">Pro (600 crédits/mois)</SelectItem>
+                              <SelectItem value="admin">Admin (crédits illimités)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
