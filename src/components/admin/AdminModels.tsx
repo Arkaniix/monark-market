@@ -7,7 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { adminApiGet } from "@/lib/api/adminApi";
-import { ADMIN } from "@/lib/api/endpoints";
 import { useEffect, useState } from "react";
 import { Search, Plus, Edit, PieChart, RefreshCw, AlertCircle, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ModelFormModal } from "./models/ModelFormModal";
 import { Category } from "./models/types";
 import { qualityBadge } from "./adminHelpers";
-import type { ModelVariantsResponse, VariantDetail } from "@/types/admin";
+import { VariantsPanel } from "./VariantsPanel";
 
 // ---- Types ----
 
