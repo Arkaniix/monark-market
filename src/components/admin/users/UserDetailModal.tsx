@@ -197,7 +197,7 @@ export function UserDetailModal({ userId, onClose, onRefreshList, onOpenCreditAd
                     <CardContent className="pt-4 space-y-3">
                       <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5"><Coins className="h-3.5 w-3.5" />Crédits</h4>
                       <p className="text-3xl font-bold">
-                        {detail.role === "admin" ? <span className="text-emerald-500">∞</span> : detail.credits_balance}
+                        {detail.current_plan === "admin" ? <span className="text-emerald-500">∞</span> : detail.credits_balance}
                       </p>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div><span className="text-xs text-muted-foreground">Reçus total</span><p className="text-emerald-400 font-medium">+{detail.credits_received_total ?? 0}</p></div>
