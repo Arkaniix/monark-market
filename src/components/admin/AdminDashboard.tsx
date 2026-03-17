@@ -4,6 +4,8 @@ import { Users, Activity, Radio, Package, AlertTriangle, CheckCircle2, AlertCirc
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { adminApiGet } from "@/lib/api/adminApi";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 
@@ -23,12 +25,55 @@ interface DashboardResponse {
     observations_7d: { date: string; count: number }[];
     signals_7d: { date: string; count: number }[];
   };
-  alerts: { critical_errors: number; failed_scrapers: number; stale_stats: boolean };
+  alerts: {
+    critical_errors: number;
+    failed_scrapers: number;
+    stale_stats: boolean;
+    recent_errors?: { message: string; time: string }[];
+  };
+  coverage?: {
+    category: string;
+    total_models: number;
+    models_with_stats: number;
+    total_observations: number;
+  }[];
+  top_movers?: {
+    model_name: string;
+    category: string;
+    median_price: number;
+    trend_7d_pct: number;
+    trend_30d_pct: number | null;
+  }[];
+  scrapers_summary?: {
+    name: string;
+    schedule: string;
+    last_run_at: string | null;
+  }[];
 }
 
 function formatCount(value: unknown): string {
   const num = typeof value === "number" ? value : Number(value);
   return Number.isFinite(num) ? num.toLocaleString("fr-FR") : "0";
+}
+
+function timeAgo(dateStr: string | null): string {
+  if (!dateStr) return "";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `il y a ${mins}min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `il y a ${hours}h`;
+  return `il y a ${Math.floor(hours / 24)}j`;
+}
+
+const CATEGORY_BADGE: Record<string, string> = {
+  GPU: "bg-red-500/10 text-red-400 border-red-500/30",
+  CPU: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+  RAM: "bg-purple-500/10 text-purple-400 border-purple-500/30",
+  SSD: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
+};
+function categoryBadgeClass(cat: string) {
+  return CATEGORY_BADGE[cat.toUpperCase()] || "bg-muted text-muted-foreground";
 }
 
 export default function AdminDashboard() {
@@ -168,6 +213,20 @@ export default function AdminDashboard() {
                 <AlertValue value={dashboard?.alerts.stale_stats} variant="secondary" />
               </div>
             </div>
+            {dashboard?.alerts.recent_errors && dashboard.alerts.recent_errors.length > 0 && (
+              <div className="border-t pt-3 mt-3 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Dernières erreurs</p>
+                {dashboard.alerts.recent_errors.map((err, i) => (
+                  <div key={i} className="flex items-start gap-2 text-xs">
+                    <AlertTriangle className="h-3 w-3 text-destructive mt-0.5 shrink-0" />
+                    <div>
+                      <span className="text-foreground">{err.message}</span>
+                      <span className="text-muted-foreground ml-2">{timeAgo(err.time)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -229,6 +288,126 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Couverture données */}
+      {dashboard?.coverage && dashboard.coverage.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Package className="h-5 w-5" /> Couverture des données
+          </h3>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {dashboard.coverage.map((cat) => {
+              const pct = cat.total_models > 0
+                ? Math.round((cat.models_with_stats / cat.total_models) * 100)
+                : 0;
+              return (
+                <Card key={cat.category}>
+                  <CardContent className="pt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="outline" className={categoryBadgeClass(cat.category)}>
+                        {cat.category}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {cat.models_with_stats}/{cat.total_models}
+                      </span>
+                    </div>
+                    <Progress value={pct} className="h-2 mb-1" />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>{pct}% couverts</span>
+                      <span>{cat.total_observations.toLocaleString("fr-FR")} obs</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Top mouvements + Scrapers */}
+      {(dashboard?.top_movers?.length || dashboard?.scrapers_summary) && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {dashboard?.top_movers && dashboard.top_movers.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  Top mouvements de prix (7 jours)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Modèle</TableHead>
+                      <TableHead>Cat.</TableHead>
+                      <TableHead className="text-right">Médiane</TableHead>
+                      <TableHead className="text-right">7j</TableHead>
+                      <TableHead className="text-right">30j</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dashboard.top_movers.map((m, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium text-sm">{m.model_name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-[10px] ${categoryBadgeClass(m.category)}`}>
+                            {m.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right text-sm">
+                          {m.median_price ? `${m.median_price.toLocaleString("fr-FR")} €` : "—"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className={`text-sm font-medium ${m.trend_7d_pct >= 0 ? "text-emerald-400" : "text-destructive"}`}>
+                            {m.trend_7d_pct >= 0 ? "↑" : "↓"}{Math.abs(m.trend_7d_pct).toFixed(1)}%
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right text-sm text-muted-foreground">
+                          {m.trend_30d_pct != null
+                            ? `${m.trend_30d_pct >= 0 ? "+" : ""}${m.trend_30d_pct.toFixed(1)}%`
+                            : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          {dashboard?.scrapers_summary && dashboard.scrapers_summary.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Radio className="h-4 w-4 text-primary" />
+                  Scrapers
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nom</TableHead>
+                      <TableHead>Schedule</TableHead>
+                      <TableHead>Dernière exécution</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dashboard.scrapers_summary.map((s, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium text-sm">{s.name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{s.schedule}</TableCell>
+                        <TableCell className="text-sm">{s.last_run_at ? timeAgo(s.last_run_at) : "Jamais"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 }
