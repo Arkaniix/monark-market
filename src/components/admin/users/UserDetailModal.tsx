@@ -130,7 +130,7 @@ export function UserDetailModal({ userId, onClose, onRefreshList, onOpenCreditAd
     setUpdatingField(null);
   };
 
-  const roleBadgeClass = (role: string) => ROLE_COLORS[role] || ROLE_COLORS.basic;
+  const planBadgeClass = (plan: string) => PLAN_COLORS[plan?.toLowerCase()] || PLAN_COLORS.free;
   const platformBadgeClass = (p: string) => PLATFORM_COLORS[p.toLowerCase()] || "bg-muted text-muted-foreground border-border";
 
   return (
