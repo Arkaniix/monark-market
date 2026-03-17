@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { adminApiFetch, adminApiDownload } from "@/lib/api/adminApi";
 import { ADMIN } from "@/lib/api/endpoints";
 import type { ObservatoryResponse, ObservatoryModel } from "@/types/admin";
+import { VariantsPanel } from "./VariantsPanel";
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return "—";
