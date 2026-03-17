@@ -266,116 +266,114 @@ export function VariantsPanel({ modelId, modelName, colSpan = 10 }: VariantsPane
   );
 
   return (
-    <>
-      <TableRow>
-        <TableCell colSpan={colSpan} className="bg-muted/30 p-0">
-          <div className="p-4 space-y-3">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h4 className="text-sm font-semibold">Variantes de {modelName}</h4>
-              <Badge variant="outline" className="text-xs">{data.total_variants} variantes</Badge>
-              {Object.entries(data.tier_summary).map(([tier, count]) => (
-                <Badge key={tier} variant="outline" className={`text-[10px] capitalize ${TIER_COLORS[tier.toLowerCase()] || "bg-muted text-muted-foreground"}`}>
-                  {tier}: {count}
-                </Badge>
-              ))}
-            </div>
-            <div className="rounded border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Marque</TableHead>
-                    <TableHead>Variante</TableHead>
-                    <TableHead>Tier</TableHead>
-                    <TableHead className="text-right">Delta prix</TableHead>
-                    <TableHead className="text-right">Prix neuf EUR</TableHead>
-                    <TableHead className="text-right">Médiane occasion</TableHead>
-                    <TableHead>Specs</TableHead>
-                    <TableHead className="text-right">Observations</TableHead>
-                    <TableHead className="text-right">Signaux</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TooltipProvider>
-                    {data.variants.map((v) => (
-                      <TableRow key={v.id}>
-                        <TableCell className="text-sm">{v.brand}</TableCell>
-                        <TableCell className="font-medium text-sm">
-                          <span
-                            className="cursor-pointer hover:text-primary hover:underline transition-colors"
-                            onClick={() => navigate(`/variants/${v.id}`)}
-                          >
-                            {v.variant_name}
-                          </span>
-                        </TableCell>
-                        <TableCell>{tierBadge(v.tier)}</TableCell>
-                        <TableCell className="text-right">
-                          {v.price_delta_pct != null ? (
-                            <span className={v.price_delta_pct > 0 ? "text-emerald-400" : v.price_delta_pct < 0 ? "text-destructive" : "text-muted-foreground"}>
-                              {v.price_delta_pct > 0 ? "+" : ""}{v.price_delta_pct.toFixed(1)}%
-                            </span>
-                          ) : "—"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {v.new_price_eur != null ? (
-                            v.new_price_source ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="cursor-help">{formatPrice(v.new_price_eur)}</span>
-                                </TooltipTrigger>
-                                <TooltipContent>{v.new_price_source}</TooltipContent>
-                              </Tooltip>
-                            ) : formatPrice(v.new_price_eur)
-                          ) : "—"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {v.median_price != null ? (
-                            <div>
-                              <span>{formatPrice(v.median_price)}</span>
-                              {(v.min_price != null && v.max_price != null) && (
-                                <p className="text-[10px] text-muted-foreground">
-                                  {Math.round(v.min_price)} – {Math.round(v.max_price)} €
-                                </p>
-                              )}
-                            </div>
-                          ) : "—"}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {[
-                            v.boost_clock_mhz ? `${v.boost_clock_mhz} MHz` : null,
-                            v.length_mm ? `${v.length_mm} mm` : null,
-                          ].filter(Boolean).join(" · ") || "—"}
-                        </TableCell>
-                        <TableCell className="text-right text-sm">{v.observations_count}</TableCell>
-                        <TableCell className="text-right text-sm">{v.signals_count}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingVariant(v)}>
-                              <Edit className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/variants/${v.id}`)}>
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TooltipProvider>
-                </TableBody>
-              </Table>
-            </div>
+    <TableRow>
+      <TableCell colSpan={colSpan} className="!p-0 border-0">
+        <div className="bg-muted/20 border-y border-border/50 px-6 py-4 space-y-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h4 className="text-sm font-semibold">Variantes de {modelName}</h4>
+            <Badge variant="outline" className="text-xs">{data.total_variants} variantes</Badge>
+            {Object.entries(data.tier_summary).map(([tier, count]) => (
+              <Badge key={tier} variant="outline" className={`text-[10px] capitalize ${TIER_COLORS[tier.toLowerCase()] || "bg-muted text-muted-foreground"}`}>
+                {tier}: {count}
+              </Badge>
+            ))}
           </div>
-        </TableCell>
-      </TableRow>
+          <div className="rounded-md border border-border/50 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/40 text-muted-foreground text-xs">
+                  <th className="text-left px-3 py-2 font-medium">Marque</th>
+                  <th className="text-left px-3 py-2 font-medium">Variante</th>
+                  <th className="text-left px-3 py-2 font-medium">Tier</th>
+                  <th className="text-right px-3 py-2 font-medium">Delta prix</th>
+                  <th className="text-right px-3 py-2 font-medium">Prix neuf</th>
+                  <th className="text-right px-3 py-2 font-medium">Médiane</th>
+                  <th className="text-left px-3 py-2 font-medium">Specs</th>
+                  <th className="text-right px-3 py-2 font-medium">Obs.</th>
+                  <th className="text-right px-3 py-2 font-medium">Signaux</th>
+                  <th className="text-center px-3 py-2 font-medium w-20">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <TooltipProvider>
+                  {data.variants.map((v) => (
+                    <tr key={v.id} className="border-b border-border/30 hover:bg-muted/30 transition-colors">
+                      <td className="px-3 py-2 text-sm">{v.brand}</td>
+                      <td className="px-3 py-2 font-medium text-sm">
+                        <span
+                          className="cursor-pointer hover:text-primary hover:underline transition-colors"
+                          onClick={() => navigate(`/variants/${v.id}`)}
+                        >
+                          {v.variant_name}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2">{tierBadge(v.tier)}</td>
+                      <td className="px-3 py-2 text-right">
+                        {v.price_delta_pct != null ? (
+                          <span className={v.price_delta_pct > 0 ? "text-emerald-400" : v.price_delta_pct < 0 ? "text-destructive" : "text-muted-foreground"}>
+                            {v.price_delta_pct > 0 ? "+" : ""}{v.price_delta_pct.toFixed(1)}%
+                          </span>
+                        ) : "—"}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {v.new_price_eur != null ? (
+                          v.new_price_source ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help">{formatPrice(v.new_price_eur)}</span>
+                              </TooltipTrigger>
+                              <TooltipContent>{v.new_price_source}</TooltipContent>
+                            </Tooltip>
+                          ) : formatPrice(v.new_price_eur)
+                        ) : "—"}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {v.median_price != null ? (
+                          <div>
+                            <span>{formatPrice(v.median_price)}</span>
+                            {(v.min_price != null && v.max_price != null) && (
+                              <p className="text-[10px] text-muted-foreground">
+                                {Math.round(v.min_price)} – {Math.round(v.max_price)} €
+                              </p>
+                            )}
+                          </div>
+                        ) : "—"}
+                      </td>
+                      <td className="px-3 py-2 text-xs text-muted-foreground">
+                        {[
+                          v.boost_clock_mhz ? `${v.boost_clock_mhz} MHz` : null,
+                          v.length_mm ? `${v.length_mm} mm` : null,
+                        ].filter(Boolean).join(" · ") || "—"}
+                      </td>
+                      <td className="px-3 py-2 text-right text-sm">{v.observations_count}</td>
+                      <td className="px-3 py-2 text-right text-sm">{v.signals_count}</td>
+                      <td className="px-3 py-2 text-center">
+                        <div className="flex gap-1 justify-center">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingVariant(v)}>
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/variants/${v.id}`)}>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </TooltipProvider>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-      {editingVariant && (
-        <VariantEditModal
-          variant={editingVariant}
-          open={!!editingVariant}
-          onOpenChange={(v) => { if (!v) setEditingVariant(null); }}
-          onSaved={fetchVariants}
-        />
-      )}
-    </>
+        {editingVariant && (
+          <VariantEditModal
+            variant={editingVariant}
+            open={!!editingVariant}
+            onOpenChange={(v) => { if (!v) setEditingVariant(null); }}
+            onSaved={fetchVariants}
+          />
+        )}
+      </TableCell>
+    </TableRow>
   );
 }
