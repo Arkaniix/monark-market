@@ -73,12 +73,11 @@ const REASON_LABELS: Record<string, string> = {
   signup_bonus: "Bonus inscription",
 };
 
-const ROLE_COLORS: Record<string, string> = {
+const PLAN_COLORS: Record<string, string> = {
   admin: "bg-red-500/20 text-red-400 border-red-500/30",
   pro: "bg-violet-500/20 text-violet-400 border-violet-500/30",
-  elite: "bg-amber-500/20 text-amber-400 border-amber-500/30",
   standard: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  basic: "bg-muted text-muted-foreground border-border",
+  free: "bg-muted text-muted-foreground border-border",
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
