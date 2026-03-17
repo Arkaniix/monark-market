@@ -61,6 +61,7 @@ export default function Admin() {
       case "compta": return <AdminCompta />;
       case "models": return <AdminModels />;
       case "observatory": return <AdminObservatory />;
+      case "analytics": return <AdminAnalytics />;
       case "pipeline": return <AdminPipelineCron />;
       case "health": return <AdminHealth />;
       case "logs": return <AdminLogs />;
