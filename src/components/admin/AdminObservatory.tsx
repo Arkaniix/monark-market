@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, Download, AlertTriangle, Search, Zap, TrendingUp, TrendingDown, Loader2 } from "lucide-react";
+import { RefreshCw, Download, AlertTriangle, Search, Zap, TrendingUp, TrendingDown, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
