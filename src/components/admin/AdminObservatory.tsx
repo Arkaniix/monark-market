@@ -54,6 +54,7 @@ export default function AdminObservatory() {
   const [missionPages, setMissionPages] = useState(3);
   const [missionKeyword, setMissionKeyword] = useState("");
   const [missionLoading, setMissionLoading] = useState(false);
+  const [expandedModelId, setExpandedModelId] = useState<number | null>(null);
   const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
