@@ -123,7 +123,7 @@ export default function AdminUsers() {
   const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === "Enter") handleSearch(); };
   const refetchUsers = () => queryClient.invalidateQueries({ queryKey: ["admin-users"] });
 
-  const roleBadgeClass = (role: string) => ROLE_COLORS[role] || ROLE_COLORS.basic;
+  const planBadgeClass = (plan: string) => PLAN_COLORS[plan?.toLowerCase()] || PLAN_COLORS.free;
 
   if (isLoading) return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (isError) return <Card><CardContent className="py-12 text-center"><p className="text-destructive">Erreur lors du chargement des utilisateurs</p></CardContent></Card>;
