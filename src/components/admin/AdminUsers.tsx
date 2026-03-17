@@ -185,13 +185,12 @@ export default function AdminUsers() {
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{user.email}</TableCell>
                     <TableCell>
-                      <Badge className={roleBadgeClass(user.role)}>
-                        <Shield className="h-3 w-3 mr-1" />{user.role}
+                      <Badge className={planBadgeClass(user.plan_name || "free")}>
+                        <Shield className="h-3 w-3 mr-1" />{user.plan_name || "Free"}
                       </Badge>
                     </TableCell>
-                    <TableCell><Badge variant="secondary">{user.plan_name || "Free"}</Badge></TableCell>
                     <TableCell>
-                      {user.role === "admin" ? (
+                      {(user.plan_name || "").toLowerCase() === "admin" ? (
                         <span className="text-emerald-500 font-medium">∞</span>
                       ) : (
                         <span>{user.credits_balance ?? user.credits_remaining}</span>
