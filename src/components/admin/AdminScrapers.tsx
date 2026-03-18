@@ -75,19 +75,19 @@ function ScraperCard({ scraper: s, onAction, onConfig, onLogs, loadingAction }: 
           <>
             <div className="space-y-1">
               <Progress
-                value={s.percent}
+                value={s.percent ?? 0}
                 className="h-2"
                 style={{ ["--progress-color" as string]: s.status === "running" ? "hsl(142 71% 45%)" : "hsl(45 93% 47%)" } as React.CSSProperties}
               />
               <p className="text-muted-foreground tabular-nums">
-                {s.progress}/{s.total} modèles ({s.percent.toFixed(1)}%)
+                {s.progress ?? 0}/{s.total ?? 0} modèles ({(s.percent ?? 0).toFixed(1)}%)
               </p>
             </div>
             {s.current_model && <p className="truncate">→ <span className="text-foreground font-medium">{s.current_model}</span></p>}
             <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-muted-foreground">
-              {s.stats.items_inserted != null && <span>{s.stats.items_inserted} obs</span>}
-              {s.stats.items_matched != null && <span>{s.stats.items_matched} match</span>}
-              {(s.stats.errors ?? 0) > 0 && <span className="text-destructive">{s.stats.errors} err</span>}
+              {s.stats?.items_inserted != null && <span>{s.stats.items_inserted} obs</span>}
+              {s.stats?.items_matched != null && <span>{s.stats.items_matched} match</span>}
+              {(s.stats?.errors ?? 0) > 0 && <span className="text-destructive">{s.stats.errors} err</span>}
             </div>
             {s.started_at && <p className="text-muted-foreground">depuis {elapsed(s.started_at)}</p>}
           </>
