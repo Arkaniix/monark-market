@@ -265,10 +265,21 @@ export default function AdminScrapers() {
   const pollingRef = useRef<ReturnType<typeof setInterval>>();
   const { toast } = useToast();
 
-  // Merge: WS is source of truth when connected, REST fallback
-  const scraperList: ScraperInfo[] = Object.keys(wsScrapers).length > 0
-    ? Object.values(wsScrapers)
-    : restScrapers;
+  // Merge: REST as base, WS overlay for real-time fields only
+  const scraperList: ScraperInfo[] = restScrapers.length > 0
+    ? restScrapers.map((rest) => {
+        const ws = wsScrapers[rest.name];
+        if (!ws) return rest;
+        return {
+          ...rest,
+          ...ws,
+          label: rest.label,
+          description: rest.description,
+          schedule: rest.schedule,
+          timer: rest.timer,
+        };
+      })
+    : Object.values(wsScrapers);
 
   // Initial REST fetch
   const fetchList = useCallback(async () => {
