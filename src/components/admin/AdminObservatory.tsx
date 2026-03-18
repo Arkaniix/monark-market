@@ -195,7 +195,7 @@ export default function AdminObservatory() {
               <TableRow>
                 <TableHead>Modèle</TableHead>
                 <TableHead>Cat.</TableHead>
-                <TableHead className="text-right">Variantes</TableHead>
+                <TableHead className="text-right w-[130px]">Variantes</TableHead>
                 <TableHead className="text-right">Annonces</TableHead>
                 <TableHead className="text-right">Outliers</TableHead>
                 <TableHead>Confiance</TableHead>
@@ -223,22 +223,23 @@ export default function AdminObservatory() {
                         {m.manufacturer} {m.model_name}
                       </TableCell>
                       <TableCell><Badge variant="outline" className={`text-[10px] ${catCls}`}>{m.category}</Badge></TableCell>
-                      <TableCell className="text-right text-sm">
+                      <TableCell className="text-right">
                         {m.variants_count > 0 ? (
-                          <span
-                            className="flex items-center justify-end gap-1 cursor-pointer hover:text-primary transition-colors"
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="ml-auto h-7 px-2 gap-1.5 font-medium tabular-nums"
                             onClick={() => setExpandedModelId(prev => prev === m.model_id ? null : m.model_id)}
+                            title={m.variants_with_data > 0 ? `${m.variants_with_data} variantes actives` : "Aucune variante active"}
                           >
                             {expandedModelId === m.model_id
                               ? <ChevronDown className="h-3 w-3" />
                               : <ChevronRight className="h-3 w-3" />}
                             <span>{m.variants_count}</span>
                             {m.variants_with_data > 0 && (
-                              <Badge variant="outline" className="text-[9px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                                {m.variants_with_data} actives
-                              </Badge>
+                              <span className="text-[10px] text-muted-foreground">({m.variants_with_data})</span>
                             )}
-                          </span>
+                          </Button>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
