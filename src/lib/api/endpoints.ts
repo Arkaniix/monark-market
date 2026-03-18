@@ -242,6 +242,15 @@ export const ADMIN = {
   ANALYTICS_PRICE_HISTORY: (modelId: number) => `/v1/admin/analytics/price-history/${modelId}`,
   MODEL_VARIANTS: (modelId: number) => `/v1/admin/models/${modelId}/variants`,
   VARIANT_UPDATE: (variantId: number) => `/v1/admin/variants/${variantId}`,
+  SCRAPERS_LIST: '/v1/admin/scrapers/list',
+  SCRAPER_STATUS: (name: string) => `/v1/admin/scrapers/${name}/status`,
+  SCRAPER_LOGS: (name: string, lines = 100) => `/v1/admin/scrapers/${name}/logs?lines=${lines}`,
+  SCRAPER_START: (name: string) => `/v1/admin/scrapers/${name}/start`,
+  SCRAPER_STOP: (name: string) => `/v1/admin/scrapers/${name}/stop`,
+  SCRAPER_PAUSE: (name: string) => `/v1/admin/scrapers/${name}/pause`,
+  SCRAPER_RESUME: (name: string) => `/v1/admin/scrapers/${name}/resume`,
+  SCRAPER_CONFIG: (name: string) => `/v1/admin/scrapers/${name}/config`,
+  SCRAPERS_WS: '/v1/admin/scrapers/ws',
 } as const;
 
 // ============= Health =============
