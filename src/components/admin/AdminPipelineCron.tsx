@@ -200,8 +200,8 @@ export default function AdminPipelineCron() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Pipeline & CRON</h2>
-        <p className="text-muted-foreground text-sm mt-1">Scrapers, statistiques de marché, observations et cache</p>
+        <h2 className="text-2xl font-bold">Pipeline & Données</h2>
+        <p className="text-muted-foreground text-sm mt-1">Statistiques de marché, observations et cache</p>
       </div>
 
       {/* Section 1: KPI Cards */}
