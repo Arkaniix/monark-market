@@ -182,3 +182,30 @@ export interface ModelVariantsResponse {
   tier_summary: Record<string, number>;
   variants: VariantDetail[];
 }
+
+// ============= Scrapers =============
+export interface ScraperStats {
+  items_found?: number;
+  items_matched?: number;
+  items_inserted?: number;
+  errors?: number;
+}
+
+export interface ScraperInfo {
+  name: string;
+  label: string;
+  description: string;
+  status: "running" | "paused" | "idle" | "error" | "completed";
+  pid: number | null;
+  current_model: string | null;
+  progress: number;
+  total: number;
+  percent: number;
+  stats: ScraperStats;
+  error_message: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  updated_at: string | null;
+  timer: string;
+  schedule: string;
+}

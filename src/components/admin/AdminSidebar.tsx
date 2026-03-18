@@ -39,6 +39,7 @@ export default function AdminSidebar({ activeSection, onSectionChange }: AdminSi
       label: "PIPELINE",
       items: [
         { id: "pipeline", label: "Pipeline & CRON", icon: Briefcase },
+        { id: "scrapers", label: "Scrapers", icon: Terminal },
       ],
     },
     {
