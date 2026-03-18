@@ -137,7 +137,7 @@ export default function AdminPipelineCron() {
   const qc = useQueryClient();
   const [category, setCategory] = useState("all");
   const [sortBy, setSortBy] = useState("observations");
-  const [cooldowns, setCooldowns] = useState<Record<string, boolean>>({});
+  
 
   // --- Section 1: KPIs ---
   const { data: status, isLoading: statusLoading, isError: statusError } = useQuery({
