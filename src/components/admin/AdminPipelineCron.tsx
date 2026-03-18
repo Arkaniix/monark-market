@@ -169,31 +169,6 @@ export default function AdminPipelineCron() {
     onError: () => toast({ title: "Erreur", description: "La purge a échoué", variant: "destructive" }),
   });
 
-  // --- Section 2: CRON ---
-  const { data: cronData, isLoading: cronLoading, isError: cronError } = useQuery({
-    queryKey: ["admin-cron"],
-    queryFn: () => adminApiGet<{ scrapers: CronScraper[] }>(ADMIN.CRON),
-    staleTime: 30000,
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
-
-  const runCron = useMutation({
-    mutationFn: (id: string) => adminApiFetch(ADMIN.CRON_RUN(id), { method: "POST" }),
-    onSuccess: () => {
-      toast({ title: "Scraper lancé", description: "Le scraper a été lancé en arrière-plan" });
-      qc.invalidateQueries({ queryKey: ["admin-cron"] });
-    },
-    onError: () => toast({ title: "Erreur", description: "Impossible de lancer le scraper", variant: "destructive" }),
-  });
-
-  const handleRunCron = useCallback((id: string) => {
-    runCron.mutate(id);
-    setCooldowns(prev => ({ ...prev, [id]: true }));
-    setTimeout(() => {
-      setCooldowns(prev => ({ ...prev, [id]: false }));
-    }, 30000);
-  }, [runCron]);
 
   // --- Section 3: Timeline ---
   const { data: timeline, isLoading: timelineLoading, isError: timelineError } = useQuery({
