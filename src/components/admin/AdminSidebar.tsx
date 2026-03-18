@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Receipt, Cpu, Telescope, BarChart3, Briefcase, Activity, FileText } from "lucide-react";
+import { LayoutDashboard, Users, Receipt, Cpu, Telescope, BarChart3, Briefcase, Activity, FileText, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 
