@@ -71,18 +71,6 @@ interface ObservationTimelineResponse {
   points: ObservationTimelinePoint[];
 }
 
-interface CronScraper {
-  id: string;
-  name: string;
-  description: string;
-  schedule: string;
-  is_active: boolean;
-  last_run_at: string | null;
-  next_run_at: string | null;
-  last_7d_count: number;
-  last_run_status: "success" | "error" | "running" | null;
-  last_run_duration_s: number | null;
-}
 
 // ---- Helpers ----
 
