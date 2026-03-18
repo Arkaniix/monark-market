@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { ADMIN } from "@/lib/api/endpoints";
 import { qualityBadge } from "./adminHelpers";
 import {
   BarChart3, Database, HardDrive, Loader2, RefreshCw, Trash2,
-  TrendingUp, Clock, ArrowUpRight, ArrowDownRight, Play, AlertCircle,
+  TrendingUp, Clock, ArrowUpRight, ArrowDownRight, AlertCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
