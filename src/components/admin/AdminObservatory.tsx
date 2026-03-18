@@ -195,50 +195,25 @@ export default function AdminObservatory() {
               <TableRow>
                 <TableHead>Modèle</TableHead>
                 <TableHead>Cat.</TableHead>
-                <TableHead className="text-right">Variantes</TableHead>
-                <TableHead className="text-right">Annonces</TableHead>
-                <TableHead className="text-right">Outliers</TableHead>
-                <TableHead>Confiance</TableHead>
-                <TableHead className="text-right">Prix médian</TableHead>
-                <TableHead className="text-right">P25–P75</TableHead>
-                <TableHead className="text-right">7j</TableHead>
-                <TableHead className="text-right">30j</TableHead>
-                <TableHead>Régime</TableHead>
-                <TableHead className="text-right">Prix neuf</TableHead>
-                <TableHead>Qualité</TableHead>
-                <TableHead>Dernier scan</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.models.map((m) => {
-                const regime = m.regime ? REGIME_BADGE[m.regime] : null;
-                const catCls = CATEGORY_COLORS[m.category] || "bg-muted text-muted-foreground";
-                const rowCls = m.ads_active === 0 ? "bg-red-500/5" : m.regime === "shock" ? "bg-yellow-500/5" : "";
-                return (
-                  <React.Fragment key={m.model_id}>
-                    <TableRow className={rowCls}>
-                      <TableCell className="font-medium max-w-[200px] truncate">
-                        {(m.data_quality_score ?? 100) < 30 && <AlertTriangle className="h-3 w-3 text-yellow-400 inline mr-1" />}
-                        {m.manufacturer} {m.model_name}
-                      </TableCell>
-                      <TableCell><Badge variant="outline" className={`text-[10px] ${catCls}`}>{m.category}</Badge></TableCell>
-                      <TableCell className="text-right text-sm">
+                <TableHead className="text-right w-[130px]">Variantes</TableHead>
+...
+                      <TableCell className="text-right">
                         {m.variants_count > 0 ? (
-                          <span
-                            className="flex items-center justify-end gap-1 cursor-pointer hover:text-primary transition-colors"
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="ml-auto h-7 px-2 gap-1.5 font-medium tabular-nums"
                             onClick={() => setExpandedModelId(prev => prev === m.model_id ? null : m.model_id)}
+                            title={m.variants_with_data > 0 ? `${m.variants_with_data} variantes actives` : "Aucune variante active"}
                           >
                             {expandedModelId === m.model_id
                               ? <ChevronDown className="h-3 w-3" />
                               : <ChevronRight className="h-3 w-3" />}
                             <span>{m.variants_count}</span>
                             {m.variants_with_data > 0 && (
-                              <Badge variant="outline" className="text-[9px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                                {m.variants_with_data} actives
-                              </Badge>
+                              <span className="text-[10px] text-muted-foreground">({m.variants_with_data})</span>
                             )}
-                          </span>
+                          </Button>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
