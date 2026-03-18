@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { ADMIN } from "@/lib/api/endpoints";
 import { qualityBadge } from "./adminHelpers";
 import {
   BarChart3, Database, HardDrive, Loader2, RefreshCw, Trash2,
-  TrendingUp, Clock, ArrowUpRight, ArrowDownRight, Play, AlertCircle,
+  TrendingUp, Clock, ArrowUpRight, ArrowDownRight, AlertCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -71,18 +71,6 @@ interface ObservationTimelineResponse {
   points: ObservationTimelinePoint[];
 }
 
-interface CronScraper {
-  id: string;
-  name: string;
-  description: string;
-  schedule: string;
-  is_active: boolean;
-  last_run_at: string | null;
-  next_run_at: string | null;
-  last_7d_count: number;
-  last_run_status: "success" | "error" | "running" | null;
-  last_run_duration_s: number | null;
-}
 
 // ---- Helpers ----
 
@@ -132,18 +120,6 @@ function formatCount(value: unknown) {
   return Number.isFinite(num) ? num.toLocaleString("fr-FR") : "0";
 }
 
-function cronStatusBadge(status: CronScraper["last_run_status"]) {
-  switch (status) {
-    case "success":
-      return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Succès</Badge>;
-    case "error":
-      return <Badge className="bg-destructive/20 text-destructive border-destructive/30">Erreur</Badge>;
-    case "running":
-      return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse">En cours</Badge>;
-    default:
-      return <Badge variant="outline" className="text-muted-foreground">—</Badge>;
-  }
-}
 
 function ErrorMessage({ message }: { message: string }) {
   return (
@@ -161,7 +137,7 @@ export default function AdminPipelineCron() {
   const qc = useQueryClient();
   const [category, setCategory] = useState("all");
   const [sortBy, setSortBy] = useState("observations");
-  const [cooldowns, setCooldowns] = useState<Record<string, boolean>>({});
+  
 
   // --- Section 1: KPIs ---
   const { data: status, isLoading: statusLoading, isError: statusError } = useQuery({
@@ -193,31 +169,6 @@ export default function AdminPipelineCron() {
     onError: () => toast({ title: "Erreur", description: "La purge a échoué", variant: "destructive" }),
   });
 
-  // --- Section 2: CRON ---
-  const { data: cronData, isLoading: cronLoading, isError: cronError } = useQuery({
-    queryKey: ["admin-cron"],
-    queryFn: () => adminApiGet<{ scrapers: CronScraper[] }>(ADMIN.CRON),
-    staleTime: 30000,
-    retry: 1,
-    refetchOnWindowFocus: false,
-  });
-
-  const runCron = useMutation({
-    mutationFn: (id: string) => adminApiFetch(ADMIN.CRON_RUN(id), { method: "POST" }),
-    onSuccess: () => {
-      toast({ title: "Scraper lancé", description: "Le scraper a été lancé en arrière-plan" });
-      qc.invalidateQueries({ queryKey: ["admin-cron"] });
-    },
-    onError: () => toast({ title: "Erreur", description: "Impossible de lancer le scraper", variant: "destructive" }),
-  });
-
-  const handleRunCron = useCallback((id: string) => {
-    runCron.mutate(id);
-    setCooldowns(prev => ({ ...prev, [id]: true }));
-    setTimeout(() => {
-      setCooldowns(prev => ({ ...prev, [id]: false }));
-    }, 30000);
-  }, [runCron]);
 
   // --- Section 3: Timeline ---
   const { data: timeline, isLoading: timelineLoading, isError: timelineError } = useQuery({
@@ -249,8 +200,8 @@ export default function AdminPipelineCron() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Pipeline & CRON</h2>
-        <p className="text-muted-foreground text-sm mt-1">Scrapers, statistiques de marché, observations et cache</p>
+        <h2 className="text-2xl font-bold">Pipeline & Données</h2>
+        <p className="text-muted-foreground text-sm mt-1">Statistiques de marché, observations et cache</p>
       </div>
 
       {/* Section 1: KPI Cards */}
@@ -377,93 +328,7 @@ export default function AdminPipelineCron() {
         </Card>
       </div>
 
-      {/* Section 2: Scrapers & CRON */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Play className="h-4 w-4 text-primary" />
-            Scrapers & tâches planifiées
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {cronLoading ? (
-            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />Chargement…
-            </div>
-          ) : cronError ? (
-            <ErrorMessage message="Impossible de charger les scrapers" />
-          ) : !cronData?.scrapers?.length ? (
-            <div className="text-center py-12 text-sm text-muted-foreground">Aucun scraper configuré</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Nom</TableHead>
-                    <TableHead className="text-xs">Schedule</TableHead>
-                    <TableHead className="text-xs">Dernière exécution</TableHead>
-                    <TableHead className="text-xs">Prochaine exécution</TableHead>
-                    <TableHead className="text-xs text-right">Résultats (7j)</TableHead>
-                    <TableHead className="text-xs">Statut</TableHead>
-                    <TableHead className="text-xs">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {cronData.scrapers.map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell>
-                        <div>
-                          <span className="text-sm font-medium">{s.name}</span>
-                          {s.description && (
-                            <p className="text-xs text-muted-foreground truncate max-w-[200px]">{s.description}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{s.schedule}</TableCell>
-                      <TableCell className="text-sm">
-                        <div>
-                          <span>{relativeDate(s.last_run_at)}</span>
-                          {s.last_run_duration_s != null && (
-                            <span className="text-xs text-muted-foreground ml-1">({s.last_run_duration_s}s)</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">{relativeDate(s.next_run_at)}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">{formatCount(s.last_7d_count)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {s.is_active ? (
-                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Actif</Badge>
-                          ) : (
-                            <Badge className="bg-destructive/20 text-destructive border-destructive/30">Inactif</Badge>
-                          )}
-                          {cronStatusBadge(s.last_run_status)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRunCron(s.id)}
-                          disabled={cooldowns[s.id] || runCron.isPending}
-                        >
-                          {cooldowns[s.id] ? (
-                            <><Loader2 className="h-3.5 w-3.5 animate-spin" />Lancé</>
-                          ) : (
-                            <><Play className="h-3.5 w-3.5" />Lancer</>
-                          )}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Section 3: Observations Timeline */}
+      {/* Section 2: Observations Timeline */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">

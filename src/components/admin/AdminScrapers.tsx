@@ -75,19 +75,19 @@ function ScraperCard({ scraper: s, onAction, onConfig, onLogs, loadingAction }: 
           <>
             <div className="space-y-1">
               <Progress
-                value={s.percent}
+                value={s.percent ?? 0}
                 className="h-2"
                 style={{ ["--progress-color" as string]: s.status === "running" ? "hsl(142 71% 45%)" : "hsl(45 93% 47%)" } as React.CSSProperties}
               />
               <p className="text-muted-foreground tabular-nums">
-                {s.progress}/{s.total} modèles ({s.percent.toFixed(1)}%)
+                {s.progress ?? 0}/{s.total ?? 0} modèles ({(s.percent ?? 0).toFixed(1)}%)
               </p>
             </div>
             {s.current_model && <p className="truncate">→ <span className="text-foreground font-medium">{s.current_model}</span></p>}
             <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-muted-foreground">
-              {s.stats.items_inserted != null && <span>{s.stats.items_inserted} obs</span>}
-              {s.stats.items_matched != null && <span>{s.stats.items_matched} match</span>}
-              {(s.stats.errors ?? 0) > 0 && <span className="text-destructive">{s.stats.errors} err</span>}
+              {s.stats?.items_inserted != null && <span>{s.stats.items_inserted} obs</span>}
+              {s.stats?.items_matched != null && <span>{s.stats.items_matched} match</span>}
+              {(s.stats?.errors ?? 0) > 0 && <span className="text-destructive">{s.stats.errors} err</span>}
             </div>
             {s.started_at && <p className="text-muted-foreground">depuis {elapsed(s.started_at)}</p>}
           </>
@@ -96,7 +96,7 @@ function ScraperCard({ scraper: s, onAction, onConfig, onLogs, loadingAction }: 
         ) : (
           <>
             <p className="text-muted-foreground">Dernier run : {timeAgo(s.completed_at || s.updated_at)}</p>
-            <p className="text-muted-foreground">Programmé : <span className="text-foreground">{s.schedule}</span></p>
+            <p className="text-muted-foreground">Programmé : <span className="text-foreground">{s.schedule ?? "—"}</span></p>
           </>
         )}
       </CardContent>
@@ -265,10 +265,21 @@ export default function AdminScrapers() {
   const pollingRef = useRef<ReturnType<typeof setInterval>>();
   const { toast } = useToast();
 
-  // Merge: WS is source of truth when connected, REST fallback
-  const scraperList: ScraperInfo[] = Object.keys(wsScrapers).length > 0
-    ? Object.values(wsScrapers)
-    : restScrapers;
+  // Merge: REST as base, WS overlay for real-time fields only
+  const scraperList: ScraperInfo[] = restScrapers.length > 0
+    ? restScrapers.map((rest) => {
+        const ws = wsScrapers[rest.name];
+        if (!ws) return rest;
+        return {
+          ...rest,
+          ...ws,
+          label: rest.label,
+          description: rest.description,
+          schedule: rest.schedule,
+          timer: rest.timer,
+        };
+      })
+    : Object.values(wsScrapers);
 
   // Initial REST fetch
   const fetchList = useCallback(async () => {
