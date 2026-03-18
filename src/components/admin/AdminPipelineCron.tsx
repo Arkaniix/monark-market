@@ -120,18 +120,6 @@ function formatCount(value: unknown) {
   return Number.isFinite(num) ? num.toLocaleString("fr-FR") : "0";
 }
 
-function cronStatusBadge(status: CronScraper["last_run_status"]) {
-  switch (status) {
-    case "success":
-      return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Succès</Badge>;
-    case "error":
-      return <Badge className="bg-destructive/20 text-destructive border-destructive/30">Erreur</Badge>;
-    case "running":
-      return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse">En cours</Badge>;
-    default:
-      return <Badge variant="outline" className="text-muted-foreground">—</Badge>;
-  }
-}
 
 function ErrorMessage({ message }: { message: string }) {
   return (
