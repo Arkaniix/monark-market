@@ -147,19 +147,84 @@ function ScraperCard({ scraper: s, onAction, onConfig, onLogs, loadingAction }: 
   );
 }
 
+// ============= Schedule helpers =============
+type Frequency = "hourly" | "daily" | "weekly" | "biweekly";
+
+interface ScheduleState {
+  frequency: Frequency;
+  day: string;
+  hour: number;
+  minute: number;
+}
+
+const DAY_MAP: Record<string, string> = { Mon: "Lun", Tue: "Mar", Wed: "Mer", Thu: "Jeu", Fri: "Ven", Sat: "Sam", Sun: "Dim" };
+const DAY_MAP_INV: Record<string, string> = Object.fromEntries(Object.entries(DAY_MAP).map(([k, v]) => [v, k]));
+const DAYS_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const MINUTES = [0, 15, 30, 45];
+
+function toOnCalendar(s: ScheduleState): string {
+  const mm = String(s.minute).padStart(2, "0");
+  const hh = String(s.hour).padStart(2, "0");
+  if (s.frequency === "hourly") return `*-*-* *:${mm}:00`;
+  if (s.frequency === "daily") return `*-*-* ${hh}:${mm}:00`;
+  if (s.frequency === "weekly") return `${s.day} *-*-* ${hh}:${mm}:00`;
+  // biweekly
+  return `${s.day} *-*-1..7,15..21 ${hh}:${mm}:00`;
+}
+
+function parseOnCalendar(raw: string): ScheduleState | null {
+  const s = raw.trim();
+  // hourly: *-*-* *:MM:00
+  let m = s.match(/^\*-\*-\*\s+\*:(\d{2}):00$/);
+  if (m) return { frequency: "hourly", day: "", hour: 0, minute: parseInt(m[1]) };
+  // daily: *-*-* HH:MM:00
+  m = s.match(/^\*-\*-\*\s+(\d{2}):(\d{2}):00$/);
+  if (m) return { frequency: "daily", day: "", hour: parseInt(m[1]), minute: parseInt(m[2]) };
+  // biweekly: Day *-*-1..7,15..21 HH:MM:00
+  m = s.match(/^(\w{3})\s+\*-\*-1\.\.7,15\.\.21\s+(\d{2}):(\d{2}):00$/);
+  if (m) return { frequency: "biweekly", day: m[1], hour: parseInt(m[2]), minute: parseInt(m[3]) };
+  // weekly: Day *-*-* HH:MM:00
+  m = s.match(/^(\w{3})\s+\*-\*-\*\s+(\d{2}):(\d{2}):00$/);
+  if (m) return { frequency: "weekly", day: m[1], hour: parseInt(m[2]), minute: parseInt(m[3]) };
+  return null;
+}
+
+function scheduleSummary(s: ScheduleState): string {
+  const mm = String(s.minute).padStart(2, "0");
+  const hh = String(s.hour).padStart(2, "0");
+  if (s.frequency === "hourly") return s.minute === 0 ? "Toutes les heures" : `Toutes les heures à :${mm}`;
+  if (s.frequency === "daily") return `Tous les jours à ${hh}:${mm}`;
+  const dayFr = DAY_MAP[s.day] ?? s.day;
+  if (s.frequency === "weekly") return `Tous les ${dayFr.toLowerCase()}s à ${hh}:${mm}`;
+  return `Un ${dayFr.toLowerCase()} sur deux à ${hh}:${mm}`;
+}
+
 // ============= Config modal =============
 function ScraperConfigModal({ scraper, open, onClose }: { scraper: ScraperInfo | null; open: boolean; onClose: () => void }) {
-  const [schedule, setSchedule] = useState("");
+  const [state, setState] = useState<ScheduleState>({ frequency: "daily", day: "Mon", hour: 3, minute: 0 });
+  const [fallbackRaw, setFallbackRaw] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => { if (scraper) setSchedule(scraper.schedule); }, [scraper]);
+  useEffect(() => {
+    if (!scraper) return;
+    const parsed = parseOnCalendar(scraper.schedule);
+    if (parsed) {
+      setState(parsed);
+      setFallbackRaw(null);
+    } else {
+      setFallbackRaw(scraper.schedule);
+    }
+  }, [scraper]);
+
+  const scheduleValue = fallbackRaw ?? toOnCalendar(state);
 
   const handleSave = async () => {
     if (!scraper) return;
     setSaving(true);
     try {
-      await adminApiFetch(ADMIN.SCRAPER_CONFIG(scraper.name), { method: "PATCH", body: JSON.stringify({ schedule }) });
+      await adminApiFetch(ADMIN.SCRAPER_CONFIG(scraper.name), { method: "PATCH", body: JSON.stringify({ schedule: scheduleValue }) });
       toast({ title: "Configuration enregistrée" });
       onClose();
     } catch (e: any) {
@@ -169,20 +234,117 @@ function ScraperConfigModal({ scraper, open, onClose }: { scraper: ScraperInfo |
     }
   };
 
+  const setField = <K extends keyof ScheduleState>(k: K, v: ScheduleState[K]) => {
+    setFallbackRaw(null);
+    setState((prev) => ({ ...prev, [k]: v }));
+  };
+
+  const showDays = state.frequency === "weekly" || state.frequency === "biweekly";
+  const showHour = state.frequency !== "hourly";
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Configuration — {scraper?.label}</DialogTitle>
-          <DialogDescription>Modifier le schedule systemd OnCalendar</DialogDescription>
+          <DialogDescription>Programmez la fréquence d'exécution du scraper</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="schedule">Schedule</Label>
-            <Input id="schedule" value={schedule} onChange={(e) => setSchedule(e.target.value)} placeholder="Mon *-*-* 03:00:00" />
-            <p className="text-[10px] text-muted-foreground">Format systemd OnCalendar (ex : Mon *-*-* 03:00:00)</p>
+
+        {fallbackRaw != null ? (
+          <div className="space-y-3 py-2">
+            <div className="flex items-center gap-2 text-xs text-yellow-400">
+              <Settings className="h-3.5 w-3.5" />
+              <span>Format avancé — édition manuelle</span>
+            </div>
+            <Input value={fallbackRaw} onChange={(e) => setFallbackRaw(e.target.value)} className="font-mono text-sm" />
+            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => { setFallbackRaw(null); setState({ frequency: "daily", day: "Mon", hour: 3, minute: 0 }); }}>
+              Passer en mode visuel
+            </Button>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-5 py-2">
+            {/* Frequency */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Fréquence</Label>
+              <div className="grid grid-cols-4 gap-1.5">
+                {([
+                  ["hourly", "Toutes les heures"],
+                  ["daily", "Quotidien"],
+                  ["weekly", "Hebdomadaire"],
+                  ["biweekly", "Bimensuel"],
+                ] as const).map(([val, label]) => (
+                  <Button
+                    key={val}
+                    type="button"
+                    size="sm"
+                    variant={state.frequency === val ? "default" : "outline"}
+                    className="h-8 text-xs"
+                    onClick={() => setField("frequency", val)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Day picker */}
+            {showDays && (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Jour</Label>
+                <div className="flex gap-1">
+                  {DAYS_ORDER.map((d) => (
+                    <Button
+                      key={d}
+                      type="button"
+                      size="sm"
+                      variant={state.day === d ? "default" : "outline"}
+                      className="h-8 flex-1 text-xs px-0"
+                      onClick={() => setField("day", d)}
+                    >
+                      {DAY_MAP[d]}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Time picker */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">{showHour ? "Heure" : "Minutes"}</Label>
+              <div className="flex gap-2">
+                {showHour && (
+                  <Select value={String(state.hour)} onValueChange={(v) => setField("hour", parseInt(v))}>
+                    <SelectTrigger className="w-24 h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HOURS.map((h) => (
+                        <SelectItem key={h} value={String(h)} className="text-sm">{String(h).padStart(2, "0")}h</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                <Select value={String(state.minute)} onValueChange={(v) => setField("minute", parseInt(v))}>
+                  <SelectTrigger className="w-24 h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MINUTES.map((m) => (
+                      <SelectItem key={m} value={String(m)} className="text-sm">{String(m).padStart(2, "0")}min</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div className="rounded-md bg-muted/50 border px-3 py-2 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{scheduleSummary(state)}</span>
+              <span className="block text-[10px] font-mono mt-0.5 text-muted-foreground">{toOnCalendar(state)}</span>
+            </div>
+          </div>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Annuler</Button>
           <Button onClick={handleSave} disabled={saving}>
