@@ -18,6 +18,7 @@ import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminPipelineCron from "@/components/admin/AdminPipelineCron";
 import AdminHealth from "@/components/admin/AdminHealth";
 import AdminLogs from "@/components/admin/AdminLogs";
+import AdminScrapers from "@/components/admin/AdminScrapers";
 
 const LOADING_TIMEOUT_MS = 8000;
 
