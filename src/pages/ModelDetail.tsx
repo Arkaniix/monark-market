@@ -44,7 +44,7 @@ export default function ModelDetail() {
   // API queries
   const { data: model, isLoading: modelLoading, error: modelError } = useModelDetail(id);
   const { data: priceHistory, isLoading: historyLoading } = useModelPriceHistory(id, selectedPeriod);
-  const { data: adsData, isLoading: adsLoading } = useModelAds(id, adsPage, 10);
+  
   const { data: similarModels, isLoading: similarLoading } = useSimilarModels(id, 6);
   
   const toggleWatchlist = useToggleModelWatchlist();
