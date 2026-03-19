@@ -59,22 +59,45 @@ interface ListingsCount {
 }
 
 // Platform visual config
-const PLATFORM_VISUALS: Record<string, { icon: React.ComponentType<{ className?: string }>; colorClass: string; barClass: string }> = {
-  "ebay_sold":   { icon: ShoppingBag, colorClass: "text-emerald-500 dark:text-emerald-400", barClass: "bg-emerald-500/70" },
-  "ebay":        { icon: ShoppingBag, colorClass: "text-blue-500 dark:text-blue-400", barClass: "bg-blue-500/70" },
-  "disappeared": { icon: Eye,         colorClass: "text-amber-500 dark:text-amber-400", barClass: "bg-amber-500/70" },
-  "community":   { icon: Users,       colorClass: "text-purple-500 dark:text-purple-400", barClass: "bg-purple-500/70" },
-  "leboncoin":   { icon: Store,       colorClass: "text-orange-500 dark:text-orange-400", barClass: "bg-orange-500/70" },
-  "facebook":    { icon: Smartphone,  colorClass: "text-sky-500 dark:text-sky-400", barClass: "bg-sky-500/70" },
-  "vinted":      { icon: Shirt,       colorClass: "text-teal-500 dark:text-teal-400", barClass: "bg-teal-500/70" },
-  "ldlc":        { icon: Monitor,     colorClass: "text-red-500 dark:text-red-400", barClass: "bg-red-500/70" },
-  "amazon":      { icon: ShoppingCart, colorClass: "text-amber-600 dark:text-amber-400", barClass: "bg-amber-600/70" },
+const PLATFORM_VISUALS: Record<string, { icon: React.ComponentType<{ className?: string }>; colorClass: string; barClass: string; bgClass: string; borderClass: string }> = {
+  "ebay":        { icon: ShoppingBag, colorClass: "text-blue-400", barClass: "bg-blue-500", bgClass: "bg-blue-500/10", borderClass: "border-blue-500/30" },
+  "leboncoin":   { icon: Store,       colorClass: "text-orange-400", barClass: "bg-orange-500", bgClass: "bg-orange-500/10", borderClass: "border-orange-500/30" },
+  "facebook":    { icon: Smartphone,  colorClass: "text-sky-400", barClass: "bg-sky-500", bgClass: "bg-sky-500/10", borderClass: "border-sky-500/30" },
+  "vinted":      { icon: Shirt,       colorClass: "text-teal-400", barClass: "bg-teal-500", bgClass: "bg-teal-500/10", borderClass: "border-teal-500/30" },
+  "ldlc":        { icon: Monitor,     colorClass: "text-red-400", barClass: "bg-red-500", bgClass: "bg-red-500/10", borderClass: "border-red-500/30" },
+  "amazon":      { icon: ShoppingCart, colorClass: "text-amber-400", barClass: "bg-amber-500", bgClass: "bg-amber-500/10", borderClass: "border-amber-500/30" },
 };
 
-function getPlatformVisual(platform: string) {
-  const key = platform.toLowerCase().replace(/[\s_-]+/g, "");
-  return PLATFORM_VISUALS[key] ?? { icon: Package, colorClass: "text-muted-foreground", barClass: "bg-muted-foreground/50" };
+const EBAY_SOURCES = ['ebay_sold', 'ebay_active', 'scraper_disappear'];
+
+function aggregatePlatforms(byPlatform: PlatformCount[]) {
+  const aggregated = new Map<string, { label: string; count: number; totalPrice: number }>();
+  for (const p of byPlatform) {
+    const key = EBAY_SOURCES.includes(p.platform) ? 'ebay' : p.platform === 'crowdsource' ? null : p.platform;
+    if (!key) continue;
+    const existing = aggregated.get(key) || { label: key === 'ebay' ? 'eBay' : p.label, count: 0, totalPrice: 0 };
+    existing.count += p.count;
+    existing.totalPrice += p.count * p.avg_price;
+    aggregated.set(key, existing);
+  }
+  return Array.from(aggregated.entries()).map(([key, p]) => ({
+    key,
+    label: p.label,
+    count: p.count,
+    avg_price: p.count > 0 ? Math.round(p.totalPrice / p.count) : 0,
+  })).sort((a, b) => b.count - a.count);
 }
+
+function getPlatformVisual(platform: string) {
+  return PLATFORM_VISUALS[platform] ?? { icon: Package, colorClass: "text-violet-400", barClass: "bg-violet-500", bgClass: "bg-violet-500/10", borderClass: "border-violet-500/30" };
+}
+
+const CONDITION_STYLES: Record<string, string> = {
+  "neuf": "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  "comme neuf": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  "pour pièces": "bg-red-500/15 text-red-400 border-red-500/30",
+  "pour pieces": "bg-red-500/15 text-red-400 border-red-500/30",
+};
 
 export default function ModelDetail() {
   const { id } = useParams();
