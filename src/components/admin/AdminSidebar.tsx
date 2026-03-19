@@ -32,7 +32,7 @@ export default function AdminSidebar({ activeSection, onSectionChange }: AdminSi
       items: [
         { id: "models", label: "Catalogue", icon: Cpu },
         { id: "observatory", label: "Observatoire", icon: Telescope },
-        { id: "analytics", label: "Analytics", icon: BarChart3 },
+        { id: "analytics", label: "Analytics", icon: TrendingUp },
       ],
     },
     {
