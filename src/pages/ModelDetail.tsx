@@ -39,7 +39,7 @@ export default function ModelDetail() {
   const [selectedPeriod, setSelectedPeriod] = useState<"7" | "30" | "90">("30");
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
-  const [adsPage, setAdsPage] = useState(1);
+  
 
   // API queries
   const { data: model, isLoading: modelLoading, error: modelError } = useModelDetail(id);
