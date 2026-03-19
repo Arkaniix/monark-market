@@ -117,7 +117,7 @@ function ScraperCard({ scraper: s, onAction, onConfig, onLogs, loadingAction }: 
         ) : (
           <>
             <p className="text-muted-foreground">Dernier run : {timeAgo(s.completed_at || s.updated_at)}</p>
-            <p className="text-muted-foreground">Programmé : <span className="text-foreground">{s.schedule ?? "—"}</span></p>
+            <p className="text-muted-foreground">Programmé : <span className="text-foreground">{formatScheduleFr(s.schedule)}</span></p>
           </>
         )}
       </CardContent>
