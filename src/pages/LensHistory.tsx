@@ -1096,7 +1096,18 @@ export default function LensHistory() {
             {/* History limit gauge */}
             {historyLimit != null ? (
               <div className="space-y-2">
-                {adjustedHistoryUsage / historyLimit > 0.8 && (
+                {adjustedHistoryUsage >= historyLimit && (
+                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      ⚠ Votre historique est plein ({adjustedHistoryUsage}/{historyLimit}). Les nouvelles analyses remplaceront les plus anciennes.
+                    </span>
+                    <a href="/pricing" className="text-primary hover:underline ml-auto whitespace-nowrap font-medium">
+                      Voir les plans →
+                    </a>
+                  </div>
+                )}
+                {adjustedHistoryUsage < historyLimit && adjustedHistoryUsage / historyLimit > 0.8 && (
                   <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                     <span>
