@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   RefreshCw, Download, AlertTriangle, Search, Zap, TrendingUp, TrendingDown,
-  Loader2, ChevronDown, ChevronRight, Settings2, X, Eye,
+  Loader2, ChevronDown, ChevronRight, Settings2, X, Eye, Activity,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
