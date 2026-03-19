@@ -750,6 +750,7 @@ export default function AdminObservatory() {
                   {visibleOptCols.has("regime") && <TableHead>Régime</TableHead>}
                   {visibleOptCols.has("volume_30d") && <TableHead className="text-right">Vol. 30j</TableHead>}
                   {visibleOptCols.has("variants_count") && <TableHead className="text-right">Var.</TableHead>}
+                  {visibleOptCols.has("diagnostic") && <TableHead>Diagnostic</TableHead>}
                   <TableHead>Activité</TableHead>
                   <TableHead className="w-10"></TableHead>
                 </TableRow>
