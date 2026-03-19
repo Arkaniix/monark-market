@@ -74,6 +74,7 @@ export const MARKET = {
   MODEL_SUMMARY: (modelId: string | number) => `/v1/market/models/${modelId}/summary`,
   MODEL_HISTORY: (modelId: string | number) => `/v1/market/models/${modelId}/history`,
   INGEST_SOLD: '/v1/market/ingest_sold', // POST
+  LISTINGS_COUNT: (modelId: string | number) => `/v1/market/models/${modelId}/listings-count`,
 } as const;
 
 // ============= Categories =============

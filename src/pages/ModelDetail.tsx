@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,10 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { 
   TrendingUp, TrendingDown, Bell, Heart, Clock, 
-  ExternalLink, Activity, BarChart3, MapPin, Sparkles, Info, Layers
+  Activity, BarChart3, Sparkles, Info, Layers,
+  Store, ShoppingBag, ShoppingCart, Monitor, Smartphone, Shirt, Package, Eye, Users
 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
@@ -21,7 +24,6 @@ import {
 import { 
   useModelDetail, 
   useModelPriceHistory, 
-  useModelAds, 
   useSimilarModels,
   useToggleModelWatchlist
 } from "@/hooks/useModelDetail";
@@ -31,6 +33,48 @@ import { ImageGallery } from "@/components/model/ImageGallery";
 import { ModelCardImage } from "@/components/catalog/ModelCardImage";
 import { VariantsSection } from "@/components/model/VariantsSection";
 import { toast } from "@/hooks/use-toast";
+import { apiGet } from "@/lib/api/client";
+import { MARKET } from "@/lib/api/endpoints";
+
+// ============= Types for listings count =============
+interface PlatformCount {
+  platform: string;
+  label: string;
+  count: number;
+  avg_price: number;
+}
+
+interface ConditionCount {
+  condition: string;
+  label: string;
+  count: number;
+}
+
+interface ListingsCount {
+  model_id: number;
+  period: string;
+  total: number;
+  by_platform: PlatformCount[];
+  by_condition?: ConditionCount[];
+}
+
+// Platform visual config
+const PLATFORM_VISUALS: Record<string, { icon: React.ComponentType<{ className?: string }>; colorClass: string; barClass: string }> = {
+  "ebay_sold":   { icon: ShoppingBag, colorClass: "text-emerald-500 dark:text-emerald-400", barClass: "bg-emerald-500/70" },
+  "ebay":        { icon: ShoppingBag, colorClass: "text-blue-500 dark:text-blue-400", barClass: "bg-blue-500/70" },
+  "disappeared": { icon: Eye,         colorClass: "text-amber-500 dark:text-amber-400", barClass: "bg-amber-500/70" },
+  "community":   { icon: Users,       colorClass: "text-purple-500 dark:text-purple-400", barClass: "bg-purple-500/70" },
+  "leboncoin":   { icon: Store,       colorClass: "text-orange-500 dark:text-orange-400", barClass: "bg-orange-500/70" },
+  "facebook":    { icon: Smartphone,  colorClass: "text-sky-500 dark:text-sky-400", barClass: "bg-sky-500/70" },
+  "vinted":      { icon: Shirt,       colorClass: "text-teal-500 dark:text-teal-400", barClass: "bg-teal-500/70" },
+  "ldlc":        { icon: Monitor,     colorClass: "text-red-500 dark:text-red-400", barClass: "bg-red-500/70" },
+  "amazon":      { icon: ShoppingCart, colorClass: "text-amber-600 dark:text-amber-400", barClass: "bg-amber-600/70" },
+};
+
+function getPlatformVisual(platform: string) {
+  const key = platform.toLowerCase().replace(/[\s_-]+/g, "");
+  return PLATFORM_VISUALS[key] ?? { icon: Package, colorClass: "text-muted-foreground", barClass: "bg-muted-foreground/50" };
+}
 
 export default function ModelDetail() {
   const { id } = useParams();
@@ -39,13 +83,19 @@ export default function ModelDetail() {
   const [selectedPeriod, setSelectedPeriod] = useState<"7" | "30" | "90">("30");
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
-  const [adsPage, setAdsPage] = useState(1);
 
   // API queries
   const { data: model, isLoading: modelLoading, error: modelError } = useModelDetail(id);
   const { data: priceHistory, isLoading: historyLoading } = useModelPriceHistory(id, selectedPeriod);
-  const { data: adsData, isLoading: adsLoading } = useModelAds(id, adsPage, 10);
   const { data: similarModels, isLoading: similarLoading } = useSimilarModels(id, 6);
+
+  // Listings count query
+  const { data: listingsCount, isLoading: listingsLoading, error: listingsError } = useQuery<ListingsCount>({
+    queryKey: ['listings-count', id],
+    queryFn: () => apiGet<ListingsCount>(MARKET.LISTINGS_COUNT(id!)),
+    enabled: !!id,
+    retry: false,
+  });
   
   const toggleWatchlist = useToggleModelWatchlist();
   
@@ -457,7 +507,8 @@ export default function ModelDetail() {
                 Volume d'annonces
               </TabsTrigger>
               <TabsTrigger value="ads">
-                Annonces en cours
+                <Activity className="h-4 w-4 mr-2" />
+                Activité marché
               </TabsTrigger>
               {model.specs && (
                 <TabsTrigger value="specs">Fiche technique</TabsTrigger>
@@ -806,90 +857,101 @@ export default function ModelDetail() {
             </Card>
           </TabsContent>
 
-          {/* Ads Tab */}
+          {/* Market Activity Tab */}
           <TabsContent value="ads">
             <Card>
-              <CardHeader>
-                <CardTitle>Annonces récentes</CardTitle>
-                <CardDescription>
-                  Les dernières annonces pour ce modèle
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {adsLoading ? (
+              <CardContent className="pt-6 space-y-6">
+                {listingsLoading ? (
                   <div className="space-y-4">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />
-                    ))}
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
                   </div>
-                ) : adsData?.items.length ? (
-                  <div className="space-y-4">
-                    {adsData.items.map((ad) => (
-                      <div
-                        key={ad.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="space-y-1">
-                          <p className="font-medium line-clamp-1">{ad.title}</p>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <MapPin className="h-3 w-3" />
-                            {ad.city}, {ad.region}
-                            <span>•</span>
-                            <Badge variant="outline" className="text-xs">{ad.condition}</Badge>
-                            <span>•</span>
-                            <span>{ad.platform}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="text-xl font-bold">{ad.price}€</p>
-                            {ad.score && (
-                              <Badge variant={ad.score >= 80 ? "default" : "secondary"}>
-                                Score: {ad.score}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" asChild>
-                              <a href={ad.url} target="_blank" rel="noopener noreferrer">
-                                Voir l'annonce
-                                <ExternalLink className="h-4 w-4 ml-1" />
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Pagination */}
-                    {adsData.total_pages > 1 && (
-                      <div className="flex justify-center gap-2 pt-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setAdsPage((p) => Math.max(1, p - 1))}
-                          disabled={adsPage === 1}
-                        >
-                          Précédent
-                        </Button>
-                        <span className="flex items-center px-4 text-sm text-muted-foreground">
-                          Page {adsPage} / {adsData.total_pages}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setAdsPage((p) => Math.min(adsData.total_pages, p + 1))}
-                          disabled={adsPage === adsData.total_pages}
-                        >
-                          Suivant
-                        </Button>
-                      </div>
-                    )}
+                ) : listingsError || !listingsCount ? (
+                  <div className="text-center py-12">
+                    <Activity className="h-10 w-10 mx-auto text-muted-foreground/40 mb-4" />
+                    <p className="text-muted-foreground">
+                      Pas encore de données de marché pour ce modèle.
+                    </p>
+                    <p className="text-sm text-muted-foreground/70 mt-1">
+                      Les données seront disponibles après le prochain cycle de scraping.
+                    </p>
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">
-                    Aucune annonce récente pour ce modèle.
-                  </p>
+                  <>
+                    {/* Section 1 — Total */}
+                    <div className="text-center py-4">
+                      <p className="text-4xl font-bold tracking-tight">{listingsCount.total.toLocaleString("fr-FR")}</p>
+                      <p className="text-lg text-muted-foreground mt-1">
+                        observations sur {listingsCount.period || "30 jours"}
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 mt-0.5">
+                        Annonces détectées sur les plateformes surveillées
+                      </p>
+                    </div>
+
+                    <Separator />
+
+                    {/* Section 2 — Par plateforme */}
+                    {listingsCount.by_platform.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                          Par plateforme
+                        </h3>
+                        <div className="space-y-2">
+                          {listingsCount.by_platform
+                            .sort((a, b) => b.count - a.count)
+                            .map((p) => {
+                              const visual = getPlatformVisual(p.platform);
+                              const Icon = visual.icon;
+                              const pct = listingsCount.total > 0 ? (p.count / listingsCount.total) * 100 : 0;
+                              return (
+                                <div key={p.platform} className="flex items-center gap-3 py-2 px-3 rounded-lg border border-border/50 bg-muted/20">
+                                  <Icon className={`h-4 w-4 flex-shrink-0 ${visual.colorClass}`} />
+                                  <span className="text-sm font-medium min-w-[140px]">{p.label}</span>
+                                  <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full transition-all ${visual.barClass}`}
+                                      style={{ width: `${Math.max(pct, 2)}%` }}
+                                    />
+                                  </div>
+                                  <Badge variant="default" className="text-xs tabular-nums">{p.count}</Badge>
+                                  <span className="text-sm text-muted-foreground tabular-nums min-w-[70px] text-right">
+                                    ~{p.avg_price.toLocaleString("fr-FR")} €
+                                  </span>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 3 — Par condition */}
+                    {listingsCount.by_condition && listingsCount.by_condition.length > 0 && (
+                      <>
+                        <Separator />
+                        <div>
+                          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                            Par état
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {listingsCount.by_condition.map((c) => (
+                              <Badge key={c.condition} variant="secondary" className="text-sm py-1 px-3">
+                                {c.label} ({c.count})
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Section 4 — Disclaimer */}
+                    <Separator />
+                    <p className="text-xs text-muted-foreground/60 italic text-center">
+                      Données agrégées — Monark ne stocke ni n'affiche les annonces individuelles des plateformes tierces.
+                    </p>
+                  </>
                 )}
               </CardContent>
             </Card>
