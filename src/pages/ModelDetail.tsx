@@ -21,7 +21,6 @@ import {
 import { 
   useModelDetail, 
   useModelPriceHistory, 
-  useModelAds, 
   useSimilarModels,
   useToggleModelWatchlist
 } from "@/hooks/useModelDetail";
