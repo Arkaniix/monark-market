@@ -503,10 +503,13 @@ export function VariantsPanel({ modelId, modelName, colSpan = 10, diagnosticsByN
                       <td className="px-3 py-2 text-right text-sm">{v.signals_count}</td>
                       <td className="px-3 py-2 text-center">
                         <div className="flex gap-1 justify-center">
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingVariant(v)}>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setDetailVariant(v)} title="Détail">
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingVariant(v)} title="Modifier">
                             <Edit className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/variants/${v.id}`)}>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/variants/${v.id}`)} title="Fiche">
                             <ExternalLink className="h-3.5 w-3.5" />
                           </Button>
                         </div>
