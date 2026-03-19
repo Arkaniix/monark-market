@@ -47,6 +47,27 @@ function elapsed(iso: string | null) {
   try { return formatDistanceToNow(new Date(iso), { locale: fr }); } catch { return null; }
 }
 
+// ============= Format schedule in French =============
+function formatScheduleFr(schedule: string | null | undefined): string {
+  if (!schedule) return "—";
+  const dayMap: Record<string, string> = {
+    Mon: "lundi", Tue: "mardi", Wed: "mercredi",
+    Thu: "jeudi", Fri: "vendredi", Sat: "samedi", Sun: "dimanche",
+  };
+  const timeMatch = schedule.match(/(\*|\d{1,2}):(\d{2}):\d{2}$/);
+  const hour = timeMatch?.[1];
+  const minute = timeMatch?.[2] || "00";
+  const timeStr = hour === "*" ? `toutes les heures à :${minute}` : `${parseInt(hour!)}h${minute !== "00" ? minute : ""}`;
+
+  if (schedule.match(/\*-\*-\*\s+\*:/)) return `Toutes les heures à :${minute}`;
+  if (schedule.match(/^\*-\*-\*\s+\d/)) return `Tous les jours à ${timeStr}`;
+  const weeklyMatch = schedule.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\*-\*-\*\s+/);
+  if (weeklyMatch) return `Tous les ${dayMap[weeklyMatch[1]]}s à ${timeStr}`;
+  const biweeklyMatch = schedule.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\*-\*-/);
+  if (biweeklyMatch && schedule.includes("..")) return `Un ${dayMap[biweeklyMatch[1]]} sur deux à ${timeStr}`;
+  return schedule;
+}
+
 // ============= ScraperCard =============
 interface ScraperCardProps {
   scraper: ScraperInfo;
