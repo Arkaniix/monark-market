@@ -124,10 +124,12 @@ function ModelDetailSheet({
   model,
   open,
   onClose,
+  diagnostic,
 }: {
   model: ObservatoryModel | null;
   open: boolean;
   onClose: () => void;
+  diagnostic?: ModelDiagnostic | null;
 }) {
   const [priceData, setPriceData] = useState<PriceHistoryResponse | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
