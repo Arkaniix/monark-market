@@ -943,7 +943,7 @@ export default function AdminObservatory() {
 
                       {/* Variants sub-rows */}
                       {isExpanded && (
-                        <VariantsPanel modelId={m.model_id} modelName={`${m.manufacturer} ${m.model_name}`} colSpan={colCount + 1} diagnosticsByName={diagnostics?.byModel} />
+                        <VariantsPanel modelId={m.model_id} modelName={`${m.manufacturer} ${m.model_name}`} colSpan={colCount + 1} diagnosticsByName={diagnostics?.byModel} filterDiagOnly={quickFilters.has("has_diag")} />
                       )}
                     </React.Fragment>
                   );
