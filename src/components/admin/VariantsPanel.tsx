@@ -343,14 +343,21 @@ interface VariantsPanelProps {
   modelId: number;
   modelName: string;
   colSpan?: number;
+  diagnosticsByName?: Map<string, VariantDiagnostic>;
 }
 
-export function VariantsPanel({ modelId, modelName, colSpan = 10 }: VariantsPanelProps) {
+export function VariantsPanel({ modelId, modelName, colSpan = 10, diagnosticsByName }: VariantsPanelProps) {
   const navigate = useNavigate();
   const [data, setData] = useState<ModelVariantsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingVariant, setEditingVariant] = useState<VariantDetail | null>(null);
+  const [detailVariant, setDetailVariant] = useState<VariantDetail | null>(null);
+
+  const getVariantDiag = (v: VariantDetail): VariantDiagnostic | null => {
+    if (!diagnosticsByName) return null;
+    return diagnosticsByName.get(v.variant_name.toLowerCase()) ?? null;
+  };
 
   const fetchVariants = async () => {
     setLoading(true);
