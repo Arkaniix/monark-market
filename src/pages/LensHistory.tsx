@@ -862,7 +862,7 @@ export default function LensHistory() {
     if (!deleteModalId) return;
     setDeletingId(true);
     try {
-      await apiFetch(`${LENS.SIGNAL(deleteModalId)}`, { method: 'DELETE' });
+      await apiFetch(`${LENS.HISTORY_ITEM(deleteModalId)}`, { method: 'DELETE' });
       setDeletedIds(prev => new Set(prev).add(deleteModalId));
       setDeletedCountAdjust(prev => prev + 1);
       toast.success("Analyse supprimée");
