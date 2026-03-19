@@ -456,7 +456,7 @@ export function VariantsPanel({ modelId, modelName, colSpan = 10, diagnosticsByN
                       <td className="px-3 py-2 font-medium text-sm">
                         <span
                           className="cursor-pointer hover:text-primary hover:underline transition-colors"
-                          onClick={() => navigate(`/variants/${v.id}`)}
+                          onClick={() => setDetailVariant(v)}
                         >
                           {v.variant_name}
                         </span>
