@@ -436,6 +436,10 @@ export default function AdminObservatory() {
         if (quickFilters.has("no_data") && (m.price_median == null || m.data_quality_score == null)) return true;
         if (quickFilters.has("shock") && m.regime === "shock") return true;
         if (quickFilters.has("stale") && isStale(m.last_ad_seen_at)) return true;
+        if (quickFilters.has("has_diag") && diagnostics) {
+          const diag = diagnostics.byModel.get(m.model_name.toLowerCase());
+          if (diag && diag.flags.length > 0) return true;
+        }
         return false;
       });
     }
