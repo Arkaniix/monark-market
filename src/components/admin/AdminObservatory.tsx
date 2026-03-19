@@ -877,6 +877,33 @@ export default function AdminObservatory() {
                             {m.variants_count > 0 ? `${m.variants_count} (${m.variants_with_data})` : "—"}
                           </TableCell>
                         )}
+                        {visibleOptCols.has("diagnostic") && (
+                          <TableCell>
+                            {(() => {
+                              const diag = getModelDiag(m);
+                              if (!diag || diag.flags.length === 0) return <span className="text-muted-foreground text-sm">—</span>;
+                              const topFlag = diag.flags[0];
+                              const severity = FLAG_SEVERITY[topFlag] ?? "low";
+                              return (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center gap-1">
+                                      <Badge variant="outline" className={`text-[10px] ${getFlagSeverityClass(topFlag)}`}>{topFlag}</Badge>
+                                      {diag.flags.length > 1 && <span className="text-[10px] text-muted-foreground">+{diag.flags.length - 1}</span>}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs">
+                                    <div className="flex flex-wrap gap-1">
+                                      {diag.flags.map((f) => (
+                                        <Badge key={f} variant="outline" className={`text-[10px] ${getFlagSeverityClass(f)}`}>{f}</Badge>
+                                      ))}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            })()}
+                          </TableCell>
+                        )}
 
                         {/* Activity */}
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(m.last_ad_seen_at)}</TableCell>
