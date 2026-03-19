@@ -955,7 +955,7 @@ export default function AdminObservatory() {
       )}
 
       {/* Detail Sheet */}
-      <ModelDetailSheet model={detailModel} open={!!detailModel} onClose={() => setDetailModel(null)} />
+      <ModelDetailSheet model={detailModel} open={!!detailModel} onClose={() => setDetailModel(null)} diagnostic={detailModel ? getModelDiag(detailModel) : null} />
 
       {/* Mission Modal */}
       <Dialog open={!!missionModal} onOpenChange={() => setMissionModal(null)}>
