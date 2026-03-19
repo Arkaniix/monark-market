@@ -47,6 +47,27 @@ function elapsed(iso: string | null) {
   try { return formatDistanceToNow(new Date(iso), { locale: fr }); } catch { return null; }
 }
 
+// ============= Format schedule in French =============
+function formatScheduleFr(schedule: string | null | undefined): string {
+  if (!schedule) return "—";
+  const dayMap: Record<string, string> = {
+    Mon: "lundi", Tue: "mardi", Wed: "mercredi",
+    Thu: "jeudi", Fri: "vendredi", Sat: "samedi", Sun: "dimanche",
+  };
+  const timeMatch = schedule.match(/(\*|\d{1,2}):(\d{2}):\d{2}$/);
+  const hour = timeMatch?.[1];
+  const minute = timeMatch?.[2] || "00";
+  const timeStr = hour === "*" ? `toutes les heures à :${minute}` : `${parseInt(hour!)}h${minute !== "00" ? minute : ""}`;
+
+  if (schedule.match(/\*-\*-\*\s+\*:/)) return `Toutes les heures à :${minute}`;
+  if (schedule.match(/^\*-\*-\*\s+\d/)) return `Tous les jours à ${timeStr}`;
+  const weeklyMatch = schedule.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\*-\*-\*\s+/);
+  if (weeklyMatch) return `Tous les ${dayMap[weeklyMatch[1]]}s à ${timeStr}`;
+  const biweeklyMatch = schedule.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+\*-\*-/);
+  if (biweeklyMatch && schedule.includes("..")) return `Un ${dayMap[biweeklyMatch[1]]} sur deux à ${timeStr}`;
+  return schedule;
+}
+
 // ============= ScraperCard =============
 interface ScraperCardProps {
   scraper: ScraperInfo;
@@ -96,7 +117,7 @@ function ScraperCard({ scraper: s, onAction, onConfig, onLogs, loadingAction }: 
         ) : (
           <>
             <p className="text-muted-foreground">Dernier run : {timeAgo(s.completed_at || s.updated_at)}</p>
-            <p className="text-muted-foreground">Programmé : <span className="text-foreground">{s.schedule ?? "—"}</span></p>
+            <p className="text-muted-foreground">Programmé : <span className="text-foreground">{formatScheduleFr(s.schedule)}</span></p>
           </>
         )}
       </CardContent>
@@ -476,11 +497,35 @@ export default function AdminScrapers() {
         : action === "pause" ? ADMIN.SCRAPER_PAUSE(name)
         : ADMIN.SCRAPER_RESUME(name);
       await adminApiFetch(endpoint, { method: "POST" });
-      toast({ title: "Commande envoyée" });
+      toast({ title: "Commande envoyée", description: `${action} → ${name}` });
+
+      const expectedStatus = action === "start" ? "running"
+        : action === "stop" ? "idle"
+        : action === "pause" ? "paused"
+        : "running";
+
+      let attempts = 0;
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        try {
+          const data = await adminApiGet<{ scrapers: ScraperInfo[] }>(ADMIN.SCRAPERS_LIST);
+          setRestScrapers(data.scrapers);
+          const target = data.scrapers.find(s => s.name === name);
+          if (target?.status === expectedStatus || attempts >= 10) {
+            clearInterval(pollInterval);
+            setLoadingAction(null);
+            if (target?.status === expectedStatus) {
+              toast({ title: "Statut mis à jour", description: `${name} → ${target.status}` });
+            }
+          }
+        } catch { /* silent */ }
+      }, 3000);
+
+      setTimeout(() => { clearInterval(pollInterval); setLoadingAction(null); }, 30000);
     } catch (e: any) {
       toast({ title: "Erreur", description: e.message, variant: "destructive" });
+      setLoadingAction(null);
     }
-    setTimeout(() => setLoadingAction(null), 5000);
   };
 
   // Log selection
