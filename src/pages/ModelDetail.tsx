@@ -883,99 +883,95 @@ export default function ModelDetail() {
           {/* Market Activity Tab */}
           <TabsContent value="ads">
             <Card>
-              <CardContent className="pt-6 space-y-6">
+              <CardContent className="pt-6 space-y-5">
                 {listingsLoading ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-16 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                ) : listingsError || !listingsCount ? (
-                  <div className="text-center py-12">
-                    <Activity className="h-10 w-10 mx-auto text-muted-foreground/40 mb-4" />
-                    <p className="text-muted-foreground">
-                      Pas encore de données de marché pour ce modèle.
-                    </p>
-                    <p className="text-sm text-muted-foreground/70 mt-1">
-                      Les données seront disponibles après le prochain cycle de scraping.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Section 1 — Total */}
-                    <div className="text-center py-4">
-                      <p className="text-4xl font-bold tracking-tight">{listingsCount.total.toLocaleString("fr-FR")}</p>
-                      <p className="text-lg text-muted-foreground mt-1">
-                        observations sur {listingsCount.period || "30 jours"}
-                      </p>
-                      <p className="text-xs text-muted-foreground/70 mt-0.5">
-                        Annonces détectées sur les plateformes surveillées
-                      </p>
+                  <div className="space-y-3">
+                    <Skeleton className="h-8 w-48" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <Skeleton className="h-24" />
+                      <Skeleton className="h-24" />
                     </div>
+                  </div>
+                ) : listingsError || !listingsCount || listingsCount.total === 0 ? (
+                  <div className="text-center py-10">
+                    <Store className="h-9 w-9 mx-auto text-muted-foreground/30 mb-3" />
+                    <p className="text-muted-foreground text-sm">
+                      Données de marché en cours de collecte
+                    </p>
+                  </div>
+                ) : (() => {
+                  const platforms = aggregatePlatforms(listingsCount.by_platform);
+                  const maxCount = Math.max(...platforms.map(p => p.count), 1);
+                  return (
+                    <>
+                      {/* Header compact */}
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base font-semibold">Activité marché</h3>
+                        <Badge variant="secondary" className="tabular-nums">
+                          {listingsCount.total.toLocaleString("fr-FR")} observations · {listingsCount.period || "30j"}
+                        </Badge>
+                      </div>
 
-                    <Separator />
-
-                    {/* Section 2 — Par plateforme */}
-                    {listingsCount.by_platform.length > 0 && (
-                      <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                          Par plateforme
-                        </h3>
-                        <div className="space-y-2">
-                          {listingsCount.by_platform
-                            .sort((a, b) => b.count - a.count)
-                            .map((p) => {
-                              const visual = getPlatformVisual(p.platform);
-                              const Icon = visual.icon;
-                              const pct = listingsCount.total > 0 ? (p.count / listingsCount.total) * 100 : 0;
-                              return (
-                                <div key={p.platform} className="flex items-center gap-3 py-2 px-3 rounded-lg border border-border/50 bg-muted/20">
-                                  <Icon className={`h-4 w-4 flex-shrink-0 ${visual.colorClass}`} />
-                                  <span className="text-sm font-medium min-w-[140px]">{p.label}</span>
-                                  <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
-                                    <div
-                                      className={`h-full rounded-full transition-all ${visual.barClass}`}
-                                      style={{ width: `${Math.max(pct, 2)}%` }}
-                                    />
+                      {/* Platform cards grid */}
+                      {platforms.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {platforms.map((p) => {
+                            const visual = getPlatformVisual(p.key);
+                            const Icon = visual.icon;
+                            const pct = (p.count / maxCount) * 100;
+                            return (
+                              <div
+                                key={p.key}
+                                className={`rounded-lg border ${visual.borderClass} ${visual.bgClass} p-4 space-y-2`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Icon className={`h-4 w-4 ${visual.colorClass}`} />
+                                    <span className="font-semibold text-sm">{p.label}</span>
                                   </div>
-                                  <Badge variant="default" className="text-xs tabular-nums">{p.count}</Badge>
-                                  <span className="text-sm text-muted-foreground tabular-nums min-w-[70px] text-right">
+                                  <span className="text-xs text-muted-foreground tabular-nums">
                                     ~{p.avg_price.toLocaleString("fr-FR")} €
                                   </span>
                                 </div>
+                                <div className="flex items-end justify-between gap-3">
+                                  <span className="text-2xl font-bold tabular-nums">{p.count.toLocaleString("fr-FR")}</span>
+                                  <div className="flex-1 h-2 bg-muted/50 rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full ${visual.barClass}`}
+                                      style={{ width: `${Math.max(pct, 4)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Conditions */}
+                      {listingsCount.by_condition && listingsCount.by_condition.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Par état</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {listingsCount.by_condition.map((c) => {
+                              const style = CONDITION_STYLES[c.label.toLowerCase()] ?? "";
+                              return (
+                                <Badge key={c.condition} variant="outline" className={`text-xs py-1 px-2.5 ${style}`}>
+                                  {c.label} ({c.count})
+                                </Badge>
                               );
                             })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Section 3 — Par condition */}
-                    {listingsCount.by_condition && listingsCount.by_condition.length > 0 && (
-                      <>
-                        <Separator />
-                        <div>
-                          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                            Par état
-                          </h3>
-                          <div className="flex flex-wrap gap-2">
-                            {listingsCount.by_condition.map((c) => (
-                              <Badge key={c.condition} variant="secondary" className="text-sm py-1 px-3">
-                                {c.label} ({c.count})
-                              </Badge>
-                            ))}
                           </div>
                         </div>
-                      </>
-                    )}
+                      )}
 
-                    {/* Section 4 — Disclaimer */}
-                    <Separator />
-                    <p className="text-xs text-muted-foreground/60 italic text-center">
-                      Données agrégées — Monark ne stocke ni n'affiche les annonces individuelles des plateformes tierces.
-                    </p>
-                  </>
-                )}
+                      {/* Disclaimer */}
+                      <p className="text-[11px] text-muted-foreground/50 italic">
+                        Données agrégées — Monark ne stocke ni n'affiche les annonces individuelles des plateformes tierces.
+                      </p>
+                    </>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
