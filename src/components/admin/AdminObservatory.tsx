@@ -72,6 +72,37 @@ const SOURCE_COLORS: Record<string, string> = {
 
 type QuickFilter = "all" | "no_ads" | "no_data" | "shock" | "stale";
 
+// ============= Flag severity config =============
+const FLAG_SEVERITY: Record<string, "high" | "medium" | "low"> = {
+  RESULTS_NOT_MATCHED: "high", RESULTS_NOT_MATCHED_LDLC: "high", RESULTS_NOT_MATCHED_MATERIEL: "high",
+  MAINSTREAM_NOT_FOUND: "high", MATCHING_ERROR: "high", FETCH_FAILED: "high",
+  ZERO_MATCHED: "medium", LOW_MATCH_RATE: "medium", SOFT_BLOCK: "medium", SEARCH_TERM_TOO_LONG: "medium",
+  NEAR_MISS_LDLC: "medium", NEAR_MISS_MATERIEL: "medium", NEAR_MISS_AMAZON: "medium",
+  ZERO_RESULTS: "low", HTTP_503_AMAZON: "low", ZERO_RESULTS_ALL_SOURCES: "low",
+};
+
+const FLAG_SEVERITY_STYLES: Record<string, string> = {
+  high: "bg-destructive/20 text-destructive border-destructive/30",
+  medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  low: "bg-muted text-muted-foreground border-border",
+};
+
+function getFlagSeverityClass(flag: string): string {
+  const severity = FLAG_SEVERITY[flag] ?? (flag.startsWith("NEAR_MISS") ? "medium" : "low");
+  return FLAG_SEVERITY_STYLES[severity] ?? FLAG_SEVERITY_STYLES.low;
+}
+
+interface ModelDiagnostic {
+  flags: string[];
+  category?: string;
+  sources?: Record<string, { status?: number; results?: number; near_misses?: number }>;
+}
+
+interface DiagnosticsData {
+  globalFlags: [string, number][];
+  byModel: Map<string, ModelDiagnostic>;
+}
+
 const OPTIONAL_COLUMNS = [
   { key: "p25_p75", label: "P25–P75" },
   { key: "trend_30d", label: "Tendance 30j" },
@@ -80,6 +111,7 @@ const OPTIONAL_COLUMNS = [
   { key: "regime", label: "Régime" },
   { key: "volume_30d", label: "Volume 30j" },
   { key: "variants_count", label: "Variantes" },
+  { key: "diagnostic", label: "Diagnostic" },
 ] as const;
 
 type OptColKey = typeof OPTIONAL_COLUMNS[number]["key"];
