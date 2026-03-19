@@ -70,7 +70,7 @@ const SOURCE_COLORS: Record<string, string> = {
   ebay_sold: "#3b82f6", ebay_active: "#22c55e", leboncoin: "#f97316", vinted: "#06b6d4", default: "#a855f7",
 };
 
-type QuickFilter = "all" | "no_ads" | "no_data" | "shock" | "stale";
+type QuickFilter = "all" | "no_ads" | "no_data" | "shock" | "stale" | "has_diag";
 
 // ============= Flag severity config =============
 const FLAG_SEVERITY: Record<string, "high" | "medium" | "low"> = {
@@ -436,6 +436,10 @@ export default function AdminObservatory() {
         if (quickFilters.has("no_data") && (m.price_median == null || m.data_quality_score == null)) return true;
         if (quickFilters.has("shock") && m.regime === "shock") return true;
         if (quickFilters.has("stale") && isStale(m.last_ad_seen_at)) return true;
+        if (quickFilters.has("has_diag") && diagnostics) {
+          const diag = diagnostics.byModel.get(m.model_name.toLowerCase());
+          if (diag && diag.flags.length > 0) return true;
+        }
         return false;
       });
     }
@@ -453,7 +457,7 @@ export default function AdminObservatory() {
     if (sortFns[sortBy]) models.sort(sortFns[sortBy]);
 
     return models;
-  }, [data, category, debouncedSearch, quickFilters, sortBy]);
+  }, [data, category, debouncedSearch, quickFilters, sortBy, diagnostics]);
 
   // Dynamic KPIs
   const dynamicSummary = useMemo(() => {
@@ -702,7 +706,8 @@ export default function AdminObservatory() {
               { key: "no_data" as QuickFilter, label: "Sans données" },
               { key: "shock" as QuickFilter, label: "En shock" },
               { key: "stale" as QuickFilter, label: "Données périmées" },
-            ]).map((f) => (
+              { key: "has_diag" as QuickFilter, label: "Avec diagnostic", icon: <Activity className="h-3 w-3 mr-1" /> },
+            ] as { key: QuickFilter; label: string; icon?: React.ReactNode }[]).map((f) => (
               <Button
                 key={f.key}
                 size="sm"
@@ -710,7 +715,7 @@ export default function AdminObservatory() {
                 className="h-7 text-xs"
                 onClick={() => toggleQuickFilter(f.key)}
               >
-                {f.label}
+                {f.icon}{f.label}
               </Button>
             ))}
           </div>
@@ -789,6 +794,26 @@ export default function AdminObservatory() {
                             <span className="font-medium">{m.manufacturer} {m.model_name}</span>
                           </button>
                           <Badge variant="outline" className={`text-[9px] ml-2 ${catCls}`}>{m.category}</Badge>
+                          {(() => {
+                            const diag = getModelDiag(m);
+                            if (!diag || diag.flags.length === 0) return null;
+                            const severity = FLAG_SEVERITY[diag.flags[0]] ?? "low";
+                            const dotColor = severity === "high" ? "bg-destructive" : severity === "medium" ? "bg-yellow-500" : "bg-muted-foreground";
+                            return (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className={`inline-block h-2 w-2 rounded-full ml-1.5 ${dotColor}`} />
+                                </TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-xs">
+                                  <div className="flex flex-wrap gap-1">
+                                    {diag.flags.map((f) => (
+                                      <Badge key={f} variant="outline" className={`text-[10px] ${getFlagSeverityClass(f)}`}>{f}</Badge>
+                                    ))}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            );
+                          })()}
                         </TableCell>
 
                         {/* Ads */}
@@ -918,7 +943,7 @@ export default function AdminObservatory() {
 
                       {/* Variants sub-rows */}
                       {isExpanded && (
-                        <VariantsPanel modelId={m.model_id} modelName={`${m.manufacturer} ${m.model_name}`} colSpan={colCount + 1} diagnosticsByName={diagnostics?.byModel} />
+                        <VariantsPanel modelId={m.model_id} modelName={`${m.manufacturer} ${m.model_name}`} colSpan={colCount + 1} diagnosticsByName={diagnostics?.byModel} filterDiagOnly={quickFilters.has("has_diag")} />
                       )}
                     </React.Fragment>
                   );
