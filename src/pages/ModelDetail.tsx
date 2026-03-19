@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { 
   TrendingUp, TrendingDown, Bell, Heart, Clock, 
-  ExternalLink, Activity, BarChart3, MapPin, Sparkles, Info, Layers,
+  Activity, BarChart3, Sparkles, Info, Layers,
   Store, ShoppingBag, ShoppingCart, Monitor, Smartphone, Shirt, Package, Eye, Users
 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
