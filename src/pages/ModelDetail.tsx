@@ -92,10 +92,7 @@ export default function ModelDetail() {
   // Listings count query
   const { data: listingsCount, isLoading: listingsLoading, error: listingsError } = useQuery<ListingsCount>({
     queryKey: ['listings-count', id],
-    queryFn: async () => {
-      const res = await apiClient.get(MARKET.LISTINGS_COUNT(id!));
-      return res.data;
-    },
+    queryFn: () => apiGet<ListingsCount>(MARKET.LISTINGS_COUNT(id!)),
     enabled: !!id,
     retry: false,
   });
