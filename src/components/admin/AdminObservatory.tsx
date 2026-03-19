@@ -600,6 +600,28 @@ export default function AdminObservatory() {
         </div>
       )}
 
+      {/* Global Diagnostics Summary */}
+      {diagnostics && diagnostics.globalFlags.length > 0 && (
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-1.5 text-sm font-semibold">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              Diagnostic scrapers
+              <span className="text-xs font-normal text-muted-foreground ml-1">
+                ({diagnostics.globalFlags.reduce((s, [, c]) => s + c, 0)} flags · {diagnostics.byModel.size} modèles avec problèmes)
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {diagnostics.globalFlags.map(([flag, count]) => (
+                <Badge key={flag} variant="outline" className={`text-[11px] gap-1 ${getFlagSeverityClass(flag)}`}>
+                  {flag} <span className="font-bold">{count}</span>
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filter Bar */}
       <Card>
         <CardContent className="p-4 space-y-3">
