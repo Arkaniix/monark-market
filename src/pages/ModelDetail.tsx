@@ -14,7 +14,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { 
   TrendingUp, TrendingDown, Bell, Heart, Clock, 
   Activity, BarChart3, Sparkles, Info, Layers,
-  Store, ShoppingBag, ShoppingCart, Monitor, Smartphone, Shirt, Package, Eye, Users
+  Store, ShoppingBag, ShoppingCart, Monitor, Smartphone, Shirt, Package
 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
