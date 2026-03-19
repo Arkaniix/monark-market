@@ -70,7 +70,7 @@ const SOURCE_COLORS: Record<string, string> = {
   ebay_sold: "#3b82f6", ebay_active: "#22c55e", leboncoin: "#f97316", vinted: "#06b6d4", default: "#a855f7",
 };
 
-type QuickFilter = "all" | "no_ads" | "no_data" | "shock" | "stale";
+type QuickFilter = "all" | "no_ads" | "no_data" | "shock" | "stale" | "has_diag";
 
 // ============= Flag severity config =============
 const FLAG_SEVERITY: Record<string, "high" | "medium" | "low"> = {
