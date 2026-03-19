@@ -251,6 +251,8 @@ export const ADMIN = {
   SCRAPER_RESUME: (name: string) => `/v1/admin/scrapers/${name}/resume`,
   SCRAPER_CONFIG: (name: string) => `/v1/admin/scrapers/${name}/config`,
   SCRAPERS_WS: '/v1/admin/scrapers/ws',
+  SCRAPER_REPORT: (name: string) => `/v1/admin/scrapers/${name}/report`,
+  SCRAPER_LOGS_DOWNLOAD: (name: string) => `/v1/admin/scrapers/${name}/logs/download`,
 } as const;
 
 // ============= Health =============
