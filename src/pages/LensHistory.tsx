@@ -887,7 +887,7 @@ export default function LensHistory() {
   const confirmDeleteAll = async () => {
     setDeletingAll(true);
     try {
-      const result = await apiFetch<{ status: string; signals_deleted: number }>(`${LENS.SIGNALS}?confirm=true`, { method: 'DELETE' });
+      const result = await apiFetch<{ status: string; signals_deleted: number }>(`${LENS.HISTORY}?confirm=true`, { method: 'DELETE' });
       setDeletedIds(new Set());
       setSelectedIds(new Set());
       setDeletedCountAdjust(0);
