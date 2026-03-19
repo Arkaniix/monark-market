@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertCircle, Edit, ExternalLink, Loader2 } from "lucide-react";
+import { AlertCircle, Edit, ExternalLink, Loader2, Activity, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { adminApiGet, adminApiFetch } from "@/lib/api/adminApi";
 import { ADMIN } from "@/lib/api/endpoints";
@@ -29,6 +31,151 @@ export function tierBadge(tier: string | null) {
   if (!tier) return <Badge variant="outline" className="text-[10px]">—</Badge>;
   const cls = TIER_COLORS[tier.toLowerCase()] || "bg-muted text-muted-foreground";
   return <Badge variant="outline" className={`text-[10px] capitalize ${cls}`}>{tier}</Badge>;
+}
+
+// ---- Diagnostic types & helpers ----
+
+export interface VariantDiagnostic {
+  flags: string[];
+  category?: string;
+  sources?: Record<string, { status?: number; results?: number; near_misses?: number }>;
+}
+
+const FLAG_SEVERITY: Record<string, "high" | "medium" | "low"> = {
+  RESULTS_NOT_MATCHED: "high", RESULTS_NOT_MATCHED_LDLC: "high", RESULTS_NOT_MATCHED_MATERIEL: "high",
+  MAINSTREAM_NOT_FOUND: "high", MATCHING_ERROR: "high", FETCH_FAILED: "high",
+  ZERO_MATCHED: "medium", LOW_MATCH_RATE: "medium", SOFT_BLOCK: "medium", SEARCH_TERM_TOO_LONG: "medium",
+  NEAR_MISS_LDLC: "medium", NEAR_MISS_MATERIEL: "medium", NEAR_MISS_AMAZON: "medium",
+  ZERO_RESULTS: "low", HTTP_503_AMAZON: "low", ZERO_RESULTS_ALL_SOURCES: "low",
+};
+
+const FLAG_SEVERITY_STYLES: Record<string, string> = {
+  high: "bg-destructive/20 text-destructive border-destructive/30",
+  medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  low: "bg-muted text-muted-foreground border-border",
+};
+
+function getFlagSeverityClass(flag: string): string {
+  const severity = FLAG_SEVERITY[flag] ?? (flag.startsWith("NEAR_MISS") ? "medium" : "low");
+  return FLAG_SEVERITY_STYLES[severity] ?? FLAG_SEVERITY_STYLES.low;
+}
+
+const NOT_FOUND_CATEGORIES: Record<string, { label: string; cls: string }> = {
+  not_found_unknown: { label: "À investiguer", cls: "bg-destructive/20 text-destructive border-destructive/30" },
+  not_found_brand: { label: "Marque niche", cls: "bg-muted text-muted-foreground border-border" },
+  not_found_discontinued: { label: "Discontinué", cls: "bg-muted text-muted-foreground border-border" },
+};
+
+// ---- Variant Detail Sheet ----
+
+function VariantDetailSheet({
+  variant,
+  open,
+  onClose,
+  diagnostic,
+}: {
+  variant: VariantDetail | null;
+  open: boolean;
+  onClose: () => void;
+  diagnostic?: VariantDiagnostic | null;
+}) {
+  if (!variant) return null;
+  const v = variant;
+  const fmtPrice = (val: number | null) => val == null ? "—" : `${Math.round(val).toLocaleString("fr-FR")} €`;
+
+  const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+    <div className="flex justify-between py-1.5 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{value}</span>
+    </div>
+  );
+
+  return (
+    <Sheet open={open} onOpenChange={(val) => !val && onClose()}>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2 flex-wrap">
+            {v.brand} {v.variant_name}
+            {v.tier && tierBadge(v.tier)}
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="mt-6 space-y-6">
+          <div className="space-y-0">
+            <InfoRow label="Marque" value={v.brand} />
+            <Separator />
+            <InfoRow label="Tier" value={v.tier ? <span className="capitalize">{v.tier}</span> : "—"} />
+            <Separator />
+            <InfoRow label="Delta prix" value={
+              v.price_delta_pct != null ? (
+                <span className={v.price_delta_pct > 0 ? "text-emerald-400" : v.price_delta_pct < 0 ? "text-destructive" : ""}>
+                  {v.price_delta_pct > 0 ? "+" : ""}{v.price_delta_pct.toFixed(1)}%
+                </span>
+              ) : "—"
+            } />
+            <Separator />
+            <InfoRow label="Prix neuf" value={
+              v.new_price_eur != null ? (
+                <span>{fmtPrice(v.new_price_eur)} {v.new_price_source && <span className="text-xs text-muted-foreground">({v.new_price_source})</span>}</span>
+              ) : "—"
+            } />
+            <Separator />
+            <InfoRow label="MAJ prix neuf" value={v.new_price_updated_at ? new Date(v.new_price_updated_at).toLocaleDateString("fr-FR") : "—"} />
+            <Separator />
+            <InfoRow label="Prix médian occasion" value={fmtPrice(v.median_price)} />
+            <Separator />
+            <InfoRow label="Min – Max" value={v.min_price != null && v.max_price != null ? `${Math.round(v.min_price)} – ${Math.round(v.max_price)} €` : "—"} />
+            <Separator />
+            <InfoRow label="Observations" value={v.observations_count} />
+            <Separator />
+            <InfoRow label="Signaux" value={v.signals_count} />
+            <Separator />
+            <InfoRow label="Boost Clock" value={v.boost_clock_mhz ? `${v.boost_clock_mhz} MHz` : "—"} />
+            <Separator />
+            <InfoRow label="Core Clock" value={v.core_clock_mhz ? `${v.core_clock_mhz} MHz` : "—"} />
+            <Separator />
+            <InfoRow label="Mémoire" value={v.memory_gb ? `${v.memory_gb} GB` : "—"} />
+            <Separator />
+            <InfoRow label="Longueur" value={v.length_mm ? `${v.length_mm} mm` : "—"} />
+            <Separator />
+            <InfoRow label="Couleur" value={v.color || "—"} />
+            <Separator />
+            <InfoRow label="Prix USD" value={v.price_usd != null ? `$${v.price_usd}` : "—"} />
+          </div>
+
+          {/* Diagnostic flags */}
+          {diagnostic && diagnostic.flags.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                <Activity className="h-4 w-4 text-muted-foreground" /> Diagnostic scraper
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {diagnostic.flags.map((f) => (
+                  <Badge key={f} variant="outline" className={`text-[10px] ${getFlagSeverityClass(f)}`}>{f}</Badge>
+                ))}
+              </div>
+              {diagnostic.category && (
+                <p className="text-xs text-muted-foreground">
+                  Catégorie : <span className="font-medium text-foreground">
+                    {NOT_FOUND_CATEGORIES[diagnostic.category]?.label ?? diagnostic.category}
+                  </span>
+                </p>
+              )}
+              {diagnostic.sources && Object.keys(diagnostic.sources).length > 0 && (
+                <div className="text-[11px] text-muted-foreground space-y-0.5">
+                  {Object.entries(diagnostic.sources).map(([src, info]) => (
+                    <p key={src}>
+                      <span className="font-medium text-foreground">{src}</span>: status {info.status ?? "?"}{info.results != null && <>, {info.results} résultats → {info.near_misses ?? 0} proches</>}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
 }
 
 // ---- Variant Edit Modal ----
@@ -196,14 +343,21 @@ interface VariantsPanelProps {
   modelId: number;
   modelName: string;
   colSpan?: number;
+  diagnosticsByName?: Map<string, VariantDiagnostic>;
 }
 
-export function VariantsPanel({ modelId, modelName, colSpan = 10 }: VariantsPanelProps) {
+export function VariantsPanel({ modelId, modelName, colSpan = 10, diagnosticsByName }: VariantsPanelProps) {
   const navigate = useNavigate();
   const [data, setData] = useState<ModelVariantsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingVariant, setEditingVariant] = useState<VariantDetail | null>(null);
+  const [detailVariant, setDetailVariant] = useState<VariantDetail | null>(null);
+
+  const getVariantDiag = (v: VariantDetail): VariantDiagnostic | null => {
+    if (!diagnosticsByName) return null;
+    return diagnosticsByName.get(v.variant_name.toLowerCase()) ?? null;
+  };
 
   const fetchVariants = async () => {
     setLoading(true);
@@ -302,7 +456,7 @@ export function VariantsPanel({ modelId, modelName, colSpan = 10 }: VariantsPane
                       <td className="px-3 py-2 font-medium text-sm">
                         <span
                           className="cursor-pointer hover:text-primary hover:underline transition-colors"
-                          onClick={() => navigate(`/variants/${v.id}`)}
+                          onClick={() => setDetailVariant(v)}
                         >
                           {v.variant_name}
                         </span>
@@ -349,10 +503,13 @@ export function VariantsPanel({ modelId, modelName, colSpan = 10 }: VariantsPane
                       <td className="px-3 py-2 text-right text-sm">{v.signals_count}</td>
                       <td className="px-3 py-2 text-center">
                         <div className="flex gap-1 justify-center">
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingVariant(v)}>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setDetailVariant(v)} title="Détail">
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingVariant(v)} title="Modifier">
                             <Edit className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/variants/${v.id}`)}>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/variants/${v.id}`)} title="Fiche">
                             <ExternalLink className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -373,6 +530,13 @@ export function VariantsPanel({ modelId, modelName, colSpan = 10 }: VariantsPane
             onSaved={fetchVariants}
           />
         )}
+
+        <VariantDetailSheet
+          variant={detailVariant}
+          open={!!detailVariant}
+          onClose={() => setDetailVariant(null)}
+          diagnostic={detailVariant ? getVariantDiag(detailVariant) : null}
+        />
       </TableCell>
     </TableRow>
   );
