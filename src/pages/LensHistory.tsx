@@ -862,7 +862,7 @@ export default function LensHistory() {
     if (!deleteModalId) return;
     setDeletingId(true);
     try {
-      await apiFetch(`${LENS.SIGNAL(deleteModalId)}`, { method: 'DELETE' });
+      await apiFetch(`${LENS.HISTORY_ITEM(deleteModalId)}`, { method: 'DELETE' });
       setDeletedIds(prev => new Set(prev).add(deleteModalId));
       setDeletedCountAdjust(prev => prev + 1);
       toast.success("Analyse supprimée");
@@ -887,7 +887,7 @@ export default function LensHistory() {
   const confirmDeleteAll = async () => {
     setDeletingAll(true);
     try {
-      const result = await apiFetch<{ status: string; signals_deleted: number }>(`${LENS.SIGNALS}?confirm=true`, { method: 'DELETE' });
+      const result = await apiFetch<{ status: string; signals_deleted: number }>(`${LENS.HISTORY}?confirm=true`, { method: 'DELETE' });
       setDeletedIds(new Set());
       setSelectedIds(new Set());
       setDeletedCountAdjust(0);
@@ -981,7 +981,7 @@ export default function LensHistory() {
     if (selectedIds.size === 0) return;
     setDeletingBatch(true);
     try {
-      await apiFetch(LENS.SIGNALS_DELETE_BATCH, {
+      await apiFetch(LENS.HISTORY_DELETE_BATCH, {
         method: 'POST',
         body: { signal_ids: Array.from(selectedIds) },
       });
@@ -1096,7 +1096,18 @@ export default function LensHistory() {
             {/* History limit gauge */}
             {historyLimit != null ? (
               <div className="space-y-2">
-                {adjustedHistoryUsage / historyLimit > 0.8 && (
+                {adjustedHistoryUsage >= historyLimit && (
+                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      ⚠ Votre historique est plein ({adjustedHistoryUsage}/{historyLimit}). Les nouvelles analyses remplaceront les plus anciennes.
+                    </span>
+                    <a href="/pricing" className="text-primary hover:underline ml-auto whitespace-nowrap font-medium">
+                      Voir les plans →
+                    </a>
+                  </div>
+                )}
+                {adjustedHistoryUsage < historyLimit && adjustedHistoryUsage / historyLimit > 0.8 && (
                   <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                     <span>
