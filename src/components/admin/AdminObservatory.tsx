@@ -230,6 +230,36 @@ function ModelDetailSheet({
             <InfoRow label="Variantes" value={`${model.variants_count} (${model.variants_with_data} actives)`} />
           </div>
 
+          {/* Diagnostic flags */}
+          {diagnostic && diagnostic.flags.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                <Activity className="h-4 w-4 text-muted-foreground" /> Diagnostic scraper
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {diagnostic.flags.map((f) => (
+                  <Badge key={f} variant="outline" className={`text-[10px] ${getFlagSeverityClass(f)}`}>{f}</Badge>
+                ))}
+              </div>
+              {diagnostic.category && (
+                <p className="text-xs text-muted-foreground">
+                  Catégorie : <span className="font-medium text-foreground">
+                    {diagnostic.category === "not_found_unknown" ? "À investiguer" : diagnostic.category === "not_found_brand" ? "Marque niche" : diagnostic.category === "not_found_discontinued" ? "Discontinué" : diagnostic.category}
+                  </span>
+                </p>
+              )}
+              {diagnostic.sources && Object.keys(diagnostic.sources).length > 0 && (
+                <div className="text-[11px] text-muted-foreground space-y-0.5">
+                  {Object.entries(diagnostic.sources).map(([src, info]) => (
+                    <p key={src}>
+                      <span className="font-medium text-foreground">{src}</span>: status {info.status ?? "?"}{info.results != null && <>, {info.results} résultats → {info.near_misses ?? 0} proches</>}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Price chart */}
           <div>
             <h4 className="text-sm font-semibold mb-3">Historique des prix (90j)</h4>
