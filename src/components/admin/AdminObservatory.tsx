@@ -457,7 +457,7 @@ export default function AdminObservatory() {
     if (sortFns[sortBy]) models.sort(sortFns[sortBy]);
 
     return models;
-  }, [data, category, debouncedSearch, quickFilters, sortBy]);
+  }, [data, category, debouncedSearch, quickFilters, sortBy, diagnostics]);
 
   // Dynamic KPIs
   const dynamicSummary = useMemo(() => {
