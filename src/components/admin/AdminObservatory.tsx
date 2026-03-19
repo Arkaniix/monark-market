@@ -321,6 +321,9 @@ export default function AdminObservatory() {
   const [missionKeyword, setMissionKeyword] = useState("");
   const [missionLoading, setMissionLoading] = useState(false);
 
+  // Diagnostics
+  const [diagnostics, setDiagnostics] = useState<DiagnosticsData | null>(null);
+
   const { toast } = useToast();
 
   // Debounce search
