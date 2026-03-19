@@ -530,6 +530,13 @@ export function VariantsPanel({ modelId, modelName, colSpan = 10, diagnosticsByN
             onSaved={fetchVariants}
           />
         )}
+
+        <VariantDetailSheet
+          variant={detailVariant}
+          open={!!detailVariant}
+          onClose={() => setDetailVariant(null)}
+          diagnostic={detailVariant ? getVariantDiag(detailVariant) : null}
+        />
       </TableCell>
     </TableRow>
   );
