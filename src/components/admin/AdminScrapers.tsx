@@ -502,12 +502,14 @@ function ReportDialog({
   const [report, setReport] = useState<ScraperReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [nfFilter, setNfFilter] = useState<string>("all");
   const { toast } = useToast();
 
   useEffect(() => {
     if (!open || !scraperName) return;
     setLoading(true);
     setReport(null);
+    setNfFilter("all");
     adminApiGet<ScraperReport>(ADMIN.SCRAPER_REPORT(scraperName))
       .then(setReport)
       .catch(() => setReport(null))
@@ -527,9 +529,33 @@ function ReportDialog({
   const r = report?.report;
   const skippedAndFailed = [...(r?.models_skipped ?? []), ...(r?.models_failed ?? [])];
 
+  // Flag summary — merge top-level and diagnostic_summary
+  const flagSummary = useMemo(() => {
+    const fs = r?.flag_summary ?? r?.diagnostic_summary?.flag_summary;
+    if (!fs || Object.keys(fs).length === 0) return null;
+    return Object.entries(fs).sort((a, b) => b[1] - a[1]);
+  }, [r]);
+
+  // Not found details with default filter
+  const notFoundDetails = r?.not_found_details;
+  const hasUnknown = notFoundDetails?.some((d) => d.category === "not_found_unknown");
+
+  const activeNfFilter = useMemo(() => {
+    if (nfFilter !== "all") return nfFilter;
+    return hasUnknown ? "not_found_unknown" : "all";
+  }, [nfFilter, hasUnknown]);
+
+  const filteredNotFound = useMemo(() => {
+    if (!notFoundDetails) return [];
+    if (activeNfFilter === "all") return notFoundDetails;
+    return notFoundDetails.filter((d) => d.category === activeNfFilter);
+  }, [notFoundDetails, activeNfFilter]);
+
+  const vs = r?.variants_summary;
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Rapport — {scraperLabel}</DialogTitle>
           <DialogDescription>
@@ -568,6 +594,127 @@ function ReportDialog({
                   <p className={`text-sm font-semibold ${r.errors_count > 0 ? "text-destructive" : ""}`}>{r.errors_count}</p>
                 </div>
               </div>
+
+              {/* Section 1: Flag Summary */}
+              {flagSummary && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-medium">
+                    <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+                    Flags de diagnostic ({flagSummary.reduce((s, [, c]) => s + c, 0)})
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {flagSummary.map(([flag, count]) => (
+                      <Badge key={flag} variant="outline" className={`text-[11px] gap-1 ${getFlagSeverityClass(flag)}`}>
+                        {flag} <span className="font-bold">{count}</span>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Section 2: Not Found Details */}
+              {notFoundDetails && notFoundDetails.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-medium">
+                    <AlertTriangle className="h-3.5 w-3.5 text-yellow-400" />
+                    Détails des problèmes ({notFoundDetails.length})
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[
+                      { key: "all", label: "Tous" },
+                      { key: "not_found_unknown", label: "À investiguer" },
+                      { key: "not_found_brand", label: "Marque niche" },
+                      { key: "not_found_discontinued", label: "Discontinué" },
+                    ].map((f) => {
+                      const count = f.key === "all" ? notFoundDetails.length : notFoundDetails.filter((d) => d.category === f.key).length;
+                      if (count === 0 && f.key !== "all") return null;
+                      return (
+                        <Button
+                          key={f.key}
+                          size="sm"
+                          variant={activeNfFilter === f.key ? "default" : "outline"}
+                          className="h-6 text-[11px] px-2"
+                          onClick={() => setNfFilter(f.key)}
+                        >
+                          {f.label} ({count})
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <div className="rounded-lg border overflow-hidden">
+                    <ScrollArea className="max-h-[200px]">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="h-8 text-[11px]">Modèle</TableHead>
+                            <TableHead className="h-8 text-[11px]">Catégorie</TableHead>
+                            <TableHead className="h-8 text-[11px]">Flags</TableHead>
+                            <TableHead className="h-8 text-[11px]">Sources</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredNotFound.map((d, i) => {
+                            const catCfg = NOT_FOUND_CATEGORIES[d.category as keyof typeof NOT_FOUND_CATEGORIES];
+                            return (
+                              <TableRow key={i}>
+                                <TableCell className="py-1.5 text-[11px] font-medium max-w-[150px] truncate">{d.name}</TableCell>
+                                <TableCell className="py-1.5">
+                                  {catCfg ? (
+                                    <Badge variant="outline" className={`text-[10px] ${catCfg.cls}`}>{catCfg.label}</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-[10px]">{d.category ?? "—"}</Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell className="py-1.5">
+                                  <div className="flex flex-wrap gap-1">
+                                    {d.flags.map((f) => (
+                                      <Badge key={f} variant="outline" className={`text-[10px] ${getFlagSeverityClass(f)}`}>{f}</Badge>
+                                    ))}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="py-1.5 text-[10px] text-muted-foreground">
+                                  {d.sources ? Object.entries(d.sources).map(([src, info]) => (
+                                    <span key={src} className="mr-2">
+                                      {src}: {info.status ?? "?"}
+                                      {info.results != null && <> ({info.results}→{info.near_misses ?? 0})</>}
+                                    </span>
+                                  )) : "—"}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  </div>
+                </div>
+              )}
+
+              {/* Section 3: Variants Summary */}
+              {vs && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-medium">
+                    <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+                    Résumé variantes
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {([
+                      { key: "found_cache", label: "Cache TopAchat", cls: "text-emerald-400" },
+                      { key: "found_http", label: "HTTP (LDLC/Mat.)", cls: "text-emerald-400" },
+                      { key: "not_found_brand", label: "Marque niche", cls: "text-muted-foreground" },
+                      { key: "not_found_discontinued", label: "Discontinué", cls: "text-muted-foreground" },
+                      { key: "not_found_unknown", label: "À investiguer", cls: vs.not_found_unknown > 0 ? "text-destructive" : "text-muted-foreground" },
+                      { key: "skipped_resume", label: "Déjà scrapé", cls: "text-muted-foreground" },
+                      { key: "error", label: "Erreurs", cls: vs.error > 0 ? "text-destructive" : "text-muted-foreground" },
+                    ] as { key: keyof typeof vs; label: string; cls: string }[]).map(({ key, label, cls }) => (
+                      <div key={key} className="rounded-lg border bg-muted/30 p-2">
+                        <p className="text-[10px] text-muted-foreground truncate">{label}</p>
+                        <p className={`text-sm font-semibold ${cls}`}>{vs[key]}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Skipped / failed models */}
               {skippedAndFailed.length > 0 && (
