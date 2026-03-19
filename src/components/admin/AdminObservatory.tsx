@@ -794,6 +794,26 @@ export default function AdminObservatory() {
                             <span className="font-medium">{m.manufacturer} {m.model_name}</span>
                           </button>
                           <Badge variant="outline" className={`text-[9px] ml-2 ${catCls}`}>{m.category}</Badge>
+                          {(() => {
+                            const diag = getModelDiag(m);
+                            if (!diag || diag.flags.length === 0) return null;
+                            const severity = FLAG_SEVERITY[diag.flags[0]] ?? "low";
+                            const dotColor = severity === "high" ? "bg-destructive" : severity === "medium" ? "bg-yellow-500" : "bg-muted-foreground";
+                            return (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className={`inline-block h-2 w-2 rounded-full ml-1.5 ${dotColor}`} />
+                                </TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-xs">
+                                  <div className="flex flex-wrap gap-1">
+                                    {diag.flags.map((f) => (
+                                      <Badge key={f} variant="outline" className={`text-[10px] ${getFlagSeverityClass(f)}`}>{f}</Badge>
+                                    ))}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            );
+                          })()}
                         </TableCell>
 
                         {/* Ads */}
