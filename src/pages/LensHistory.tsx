@@ -981,7 +981,7 @@ export default function LensHistory() {
     if (selectedIds.size === 0) return;
     setDeletingBatch(true);
     try {
-      await apiFetch(LENS.SIGNALS_DELETE_BATCH, {
+      await apiFetch(LENS.HISTORY_DELETE_BATCH, {
         method: 'POST',
         body: { signal_ids: Array.from(selectedIds) },
       });

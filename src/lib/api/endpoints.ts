@@ -185,6 +185,7 @@ export const LENS = {
   QUICK: '/v1/lens/quick',
   HISTORY: '/v1/lens/history',
   HISTORY_ITEM: (id: number) => `/v1/lens/history/${id}`,
+  HISTORY_DELETE_BATCH: '/v1/lens/history/delete-batch',
   SIGNAL: (id: number) => `/v1/lens/signals/${id}`,
   SIGNALS: '/v1/lens/signals',
   SIGNALS_DELETE_BATCH: '/v1/lens/signals/delete-batch',
