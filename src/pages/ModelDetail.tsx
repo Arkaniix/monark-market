@@ -21,6 +21,7 @@ import {
 import { 
   useModelDetail, 
   useModelPriceHistory, 
+  useModelAds, 
   useSimilarModels,
   useToggleModelWatchlist
 } from "@/hooks/useModelDetail";
@@ -38,12 +39,12 @@ export default function ModelDetail() {
   const [selectedPeriod, setSelectedPeriod] = useState<"7" | "30" | "90">("30");
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
-  
+  const [adsPage, setAdsPage] = useState(1);
 
   // API queries
   const { data: model, isLoading: modelLoading, error: modelError } = useModelDetail(id);
   const { data: priceHistory, isLoading: historyLoading } = useModelPriceHistory(id, selectedPeriod);
-  
+  const { data: adsData, isLoading: adsLoading } = useModelAds(id, adsPage, 10);
   const { data: similarModels, isLoading: similarLoading } = useSimilarModels(id, 6);
   
   const toggleWatchlist = useToggleModelWatchlist();
@@ -455,6 +456,9 @@ export default function ModelDetail() {
                 <Activity className="h-4 w-4 mr-2" />
                 Volume d'annonces
               </TabsTrigger>
+              <TabsTrigger value="ads">
+                Annonces en cours
+              </TabsTrigger>
               {model.specs && (
                 <TabsTrigger value="specs">Fiche technique</TabsTrigger>
               )}
@@ -797,6 +801,95 @@ export default function ModelDetail() {
                   <div className="h-[250px] flex items-center justify-center">
                     <p className="text-muted-foreground">Aucune donnée de volume disponible</p>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Ads Tab */}
+          <TabsContent value="ads">
+            <Card>
+              <CardHeader>
+                <CardTitle>Annonces récentes</CardTitle>
+                <CardDescription>
+                  Les dernières annonces pour ce modèle
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {adsLoading ? (
+                  <div className="space-y-4">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />
+                    ))}
+                  </div>
+                ) : adsData?.items.length ? (
+                  <div className="space-y-4">
+                    {adsData.items.map((ad) => (
+                      <div
+                        key={ad.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="space-y-1">
+                          <p className="font-medium line-clamp-1">{ad.title}</p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            {ad.city}, {ad.region}
+                            <span>•</span>
+                            <Badge variant="outline" className="text-xs">{ad.condition}</Badge>
+                            <span>•</span>
+                            <span>{ad.platform}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="text-xl font-bold">{ad.price}€</p>
+                            {ad.score && (
+                              <Badge variant={ad.score >= 80 ? "default" : "secondary"}>
+                                Score: {ad.score}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" asChild>
+                              <a href={ad.url} target="_blank" rel="noopener noreferrer">
+                                Voir l'annonce
+                                <ExternalLink className="h-4 w-4 ml-1" />
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Pagination */}
+                    {adsData.total_pages > 1 && (
+                      <div className="flex justify-center gap-2 pt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAdsPage((p) => Math.max(1, p - 1))}
+                          disabled={adsPage === 1}
+                        >
+                          Précédent
+                        </Button>
+                        <span className="flex items-center px-4 text-sm text-muted-foreground">
+                          Page {adsPage} / {adsData.total_pages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAdsPage((p) => Math.min(adsData.total_pages, p + 1))}
+                          disabled={adsPage === adsData.total_pages}
+                        >
+                          Suivant
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    Aucune annonce récente pour ce modèle.
+                  </p>
                 )}
               </CardContent>
             </Card>
