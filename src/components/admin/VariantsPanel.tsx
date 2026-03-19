@@ -344,9 +344,10 @@ interface VariantsPanelProps {
   modelName: string;
   colSpan?: number;
   diagnosticsByName?: Map<string, VariantDiagnostic>;
+  filterDiagOnly?: boolean;
 }
 
-export function VariantsPanel({ modelId, modelName, colSpan = 10, diagnosticsByName }: VariantsPanelProps) {
+export function VariantsPanel({ modelId, modelName, colSpan = 10, diagnosticsByName, filterDiagOnly = false }: VariantsPanelProps) {
   const navigate = useNavigate();
   const [data, setData] = useState<ModelVariantsResponse | null>(null);
   const [loading, setLoading] = useState(true);
