@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,10 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { 
   TrendingUp, TrendingDown, Bell, Heart, Clock, 
-  ExternalLink, Activity, BarChart3, MapPin, Sparkles, Info, Layers
+  ExternalLink, Activity, BarChart3, MapPin, Sparkles, Info, Layers,
+  Store, ShoppingBag, ShoppingCart, Monitor, Smartphone, Shirt, Package, Eye, Users
 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
@@ -21,7 +24,6 @@ import {
 import { 
   useModelDetail, 
   useModelPriceHistory, 
-  useModelAds, 
   useSimilarModels,
   useToggleModelWatchlist
 } from "@/hooks/useModelDetail";
@@ -31,6 +33,48 @@ import { ImageGallery } from "@/components/model/ImageGallery";
 import { ModelCardImage } from "@/components/catalog/ModelCardImage";
 import { VariantsSection } from "@/components/model/VariantsSection";
 import { toast } from "@/hooks/use-toast";
+import { apiClient } from "@/lib/api/client";
+import { MARKET } from "@/lib/api/endpoints";
+
+// ============= Types for listings count =============
+interface PlatformCount {
+  platform: string;
+  label: string;
+  count: number;
+  avg_price: number;
+}
+
+interface ConditionCount {
+  condition: string;
+  label: string;
+  count: number;
+}
+
+interface ListingsCount {
+  model_id: number;
+  period: string;
+  total: number;
+  by_platform: PlatformCount[];
+  by_condition?: ConditionCount[];
+}
+
+// Platform visual config
+const PLATFORM_VISUALS: Record<string, { icon: React.ComponentType<{ className?: string }>; colorClass: string; barClass: string }> = {
+  "ebay_sold":   { icon: ShoppingBag, colorClass: "text-emerald-500 dark:text-emerald-400", barClass: "bg-emerald-500/70" },
+  "ebay":        { icon: ShoppingBag, colorClass: "text-blue-500 dark:text-blue-400", barClass: "bg-blue-500/70" },
+  "disappeared": { icon: Eye,         colorClass: "text-amber-500 dark:text-amber-400", barClass: "bg-amber-500/70" },
+  "community":   { icon: Users,       colorClass: "text-purple-500 dark:text-purple-400", barClass: "bg-purple-500/70" },
+  "leboncoin":   { icon: Store,       colorClass: "text-orange-500 dark:text-orange-400", barClass: "bg-orange-500/70" },
+  "facebook":    { icon: Smartphone,  colorClass: "text-sky-500 dark:text-sky-400", barClass: "bg-sky-500/70" },
+  "vinted":      { icon: Shirt,       colorClass: "text-teal-500 dark:text-teal-400", barClass: "bg-teal-500/70" },
+  "ldlc":        { icon: Monitor,     colorClass: "text-red-500 dark:text-red-400", barClass: "bg-red-500/70" },
+  "amazon":      { icon: ShoppingCart, colorClass: "text-amber-600 dark:text-amber-400", barClass: "bg-amber-600/70" },
+};
+
+function getPlatformVisual(platform: string) {
+  const key = platform.toLowerCase().replace(/[\s_-]+/g, "");
+  return PLATFORM_VISUALS[key] ?? { icon: Package, colorClass: "text-muted-foreground", barClass: "bg-muted-foreground/50" };
+}
 
 export default function ModelDetail() {
   const { id } = useParams();
@@ -39,13 +83,22 @@ export default function ModelDetail() {
   const [selectedPeriod, setSelectedPeriod] = useState<"7" | "30" | "90">("30");
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
-  const [adsPage, setAdsPage] = useState(1);
 
   // API queries
   const { data: model, isLoading: modelLoading, error: modelError } = useModelDetail(id);
   const { data: priceHistory, isLoading: historyLoading } = useModelPriceHistory(id, selectedPeriod);
-  const { data: adsData, isLoading: adsLoading } = useModelAds(id, adsPage, 10);
   const { data: similarModels, isLoading: similarLoading } = useSimilarModels(id, 6);
+
+  // Listings count query
+  const { data: listingsCount, isLoading: listingsLoading, error: listingsError } = useQuery<ListingsCount>({
+    queryKey: ['listings-count', id],
+    queryFn: async () => {
+      const res = await apiClient.get(MARKET.LISTINGS_COUNT(id!));
+      return res.data;
+    },
+    enabled: !!id,
+    retry: false,
+  });
   
   const toggleWatchlist = useToggleModelWatchlist();
   
