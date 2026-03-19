@@ -537,6 +537,13 @@ export default function AdminObservatory() {
     adminApiDownload(url, "observatory.csv");
   };
 
+  // Helper to get diagnostic for a model
+  const getModelDiag = useCallback((m: ObservatoryModel): ModelDiagnostic | null => {
+    if (!diagnostics) return null;
+    const key = m.model_name.toLowerCase();
+    return diagnostics.byModel.get(key) ?? null;
+  }, [diagnostics]);
+
   const colCount = 7
     + (visibleOptCols.has("p25_p75") ? 1 : 0)
     + (visibleOptCols.has("trend_30d") ? 1 : 0)
@@ -545,6 +552,7 @@ export default function AdminObservatory() {
     + (visibleOptCols.has("regime") ? 1 : 0)
     + (visibleOptCols.has("volume_30d") ? 1 : 0)
     + (visibleOptCols.has("variants_count") ? 1 : 0)
+    + (visibleOptCols.has("diagnostic") ? 1 : 0)
     + 1; // actions
 
   // ============= Render =============
