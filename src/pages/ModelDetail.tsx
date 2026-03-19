@@ -33,7 +33,7 @@ import { ImageGallery } from "@/components/model/ImageGallery";
 import { ModelCardImage } from "@/components/catalog/ModelCardImage";
 import { VariantsSection } from "@/components/model/VariantsSection";
 import { toast } from "@/hooks/use-toast";
-import { apiClient } from "@/lib/api/client";
+import { apiGet } from "@/lib/api/client";
 import { MARKET } from "@/lib/api/endpoints";
 
 // ============= Types for listings count =============
