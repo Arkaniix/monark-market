@@ -357,6 +357,49 @@ export default function AdminObservatory() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
+  // Fetch diagnostics from scraper reports
+  useEffect(() => {
+    (async () => {
+      try {
+        const scrapers = await adminApiGet<{ scrapers: { name: string; status: string }[] }>(ADMIN.SCRAPERS_LIST);
+        const completedScrapers = scrapers.scrapers?.filter((s) => s.status === "completed" || s.status === "error") ?? [];
+        const globalFlagMap: Record<string, number> = {};
+        const modelMap = new Map<string, ModelDiagnostic>();
+
+        await Promise.all(completedScrapers.map(async (s) => {
+          try {
+            const report = await adminApiGet<{
+              report: {
+                flag_summary?: Record<string, number>;
+                diagnostic_summary?: { flag_summary: Record<string, number> };
+                not_found_details?: { name: string; category?: string; flags: string[]; sources?: Record<string, { status?: number; results?: number; near_misses?: number }> }[];
+              };
+            }>(ADMIN.SCRAPER_REPORT(s.name));
+            const fs = report.report?.flag_summary ?? report.report?.diagnostic_summary?.flag_summary;
+            if (fs) {
+              for (const [flag, count] of Object.entries(fs)) {
+                globalFlagMap[flag] = (globalFlagMap[flag] ?? 0) + count;
+              }
+            }
+            for (const d of report.report?.not_found_details ?? []) {
+              const key = d.name.toLowerCase();
+              if (!modelMap.has(key)) {
+                modelMap.set(key, { flags: d.flags, category: d.category, sources: d.sources });
+              } else {
+                const existing = modelMap.get(key)!;
+                const mergedFlags = [...new Set([...existing.flags, ...d.flags])];
+                modelMap.set(key, { ...existing, flags: mergedFlags, category: d.category ?? existing.category, sources: { ...existing.sources, ...d.sources } });
+              }
+            }
+          } catch { /* silent */ }
+        }));
+
+        const globalFlags = Object.entries(globalFlagMap).sort((a, b) => b[1] - a[1]);
+        setDiagnostics({ globalFlags, byModel: modelMap });
+      } catch { /* silent */ }
+    })();
+  }, [lastRefresh]);
+
   // Quick filter toggle
   const toggleQuickFilter = (f: QuickFilter) => {
     setQuickFilters((prev) => {
