@@ -90,10 +90,69 @@ interface ScraperReport {
     items_matched: number;
     items_inserted: number;
     errors_count: number;
+    diagnostic_summary?: {
+      by_result: Record<string, number>;
+      flag_summary: Record<string, number>;
+      total_items: number;
+      items_with_flags: number;
+    };
+    flag_summary?: Record<string, number>;
+    not_found_details?: {
+      name: string;
+      category?: string;
+      flags: string[];
+      sources?: Record<string, { status?: number; results?: number; near_misses?: number }>;
+    }[];
+    variants_summary?: {
+      found_cache: number;
+      found_http: number;
+      not_found_discontinued: number;
+      not_found_brand: number;
+      not_found_unknown: number;
+      skipped_resume: number;
+      error: number;
+    };
   };
   started_at: string;
   completed_at: string;
 }
+
+// ============= Flag severity config =============
+const FLAG_SEVERITY: Record<string, "high" | "medium" | "low"> = {
+  RESULTS_NOT_MATCHED: "high",
+  RESULTS_NOT_MATCHED_LDLC: "high",
+  RESULTS_NOT_MATCHED_MATERIEL: "high",
+  MAINSTREAM_NOT_FOUND: "high",
+  MATCHING_ERROR: "high",
+  FETCH_FAILED: "high",
+  ZERO_MATCHED: "medium",
+  LOW_MATCH_RATE: "medium",
+  NEAR_MISS_LDLC: "medium",
+  NEAR_MISS_MATERIEL: "medium",
+  NEAR_MISS_AMAZON: "medium",
+  SOFT_BLOCK: "medium",
+  SEARCH_TERM_TOO_LONG: "medium",
+  ZERO_RESULTS: "low",
+  HTTP_503_AMAZON: "low",
+  ZERO_RESULTS_ALL_SOURCES: "low",
+};
+
+const FLAG_SEVERITY_STYLES: Record<string, string> = {
+  high: "bg-destructive/20 text-destructive border-destructive/30",
+  medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  low: "bg-muted text-muted-foreground border-border",
+};
+
+function getFlagSeverityClass(flag: string): string {
+  const severity = FLAG_SEVERITY[flag] ?? (flag.startsWith("NEAR_MISS") ? "medium" : "low");
+  return FLAG_SEVERITY_STYLES[severity] ?? FLAG_SEVERITY_STYLES.low;
+}
+
+const NOT_FOUND_CATEGORIES = {
+  not_found_unknown: { label: "À investiguer", cls: "bg-destructive/20 text-destructive border-destructive/30" },
+  not_found_brand: { label: "Marque niche", cls: "bg-muted text-muted-foreground border-border" },
+  not_found_discontinued: { label: "Discontinué", cls: "bg-muted text-muted-foreground border-border" },
+} as const;
 
 // ============= Download logs helper =============
 async function downloadLogs(name: string) {
