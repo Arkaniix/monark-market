@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Play, Square, Pause, PlayCircle, Settings, ScrollText, Wifi, WifiOff, Loader2, ChevronDown } from "lucide-react";
+import { Play, Square, Pause, PlayCircle, Settings, ScrollText, Wifi, WifiOff, Loader2, Download, BarChart3, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -11,8 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { adminApiFetch, adminApiGet } from "@/lib/api/adminApi";
+import { API_BASE_URL, getAccessToken } from "@/lib/api/client";
 import { ADMIN } from "@/lib/api/endpoints";
 import { useScraperWebSocket } from "@/hooks/useScraperWebSocket";
 import type { ScraperInfo } from "@/types/admin";
@@ -47,6 +50,13 @@ function elapsed(iso: string | null) {
   try { return formatDistanceToNow(new Date(iso), { locale: fr }); } catch { return null; }
 }
 
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}min`;
+  return `${m}min`;
+}
+
 // ============= Format schedule in French =============
 function formatScheduleFr(schedule: string | null | undefined): string {
   if (!schedule) return "—";
@@ -68,17 +78,50 @@ function formatScheduleFr(schedule: string | null | undefined): string {
   return schedule;
 }
 
+// ============= Report types =============
+interface ScraperReport {
+  report: {
+    duration_s: number;
+    models_total: number;
+    models_processed: number;
+    models_skipped: { name: string; reason: string }[];
+    models_failed: { name: string; reason: string }[];
+    items_found: number;
+    items_matched: number;
+    items_inserted: number;
+    errors_count: number;
+  };
+  started_at: string;
+  completed_at: string;
+}
+
+// ============= Download logs helper =============
+async function downloadLogs(name: string) {
+  const token = getAccessToken();
+  const url = `${API_BASE_URL}${ADMIN.SCRAPER_LOGS_DOWNLOAD(name)}`;
+  const resp = await fetch(url, { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+  if (!resp.ok) throw new Error(`Download failed: ${resp.status}`);
+  const blob = await resp.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${name}_${new Date().toISOString().slice(0, 10)}.log`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 // ============= ScraperCard =============
 interface ScraperCardProps {
   scraper: ScraperInfo;
-  onAction: (name: string, action: string) => Promise<void>;
+  onAction: (name: string, action: string) => void;
   onConfig: (s: ScraperInfo) => void;
   onLogs: (name: string) => void;
+  onReport: (name: string, label: string) => void;
   loadingAction: string | null;
 }
 
-function ScraperCard({ scraper: s, onAction, onConfig, onLogs, loadingAction }: ScraperCardProps) {
+function ScraperCard({ scraper: s, onAction, onConfig, onLogs, onReport, loadingAction }: ScraperCardProps) {
   const isActive = s.status === "running" || s.status === "paused";
+  const canShowReport = s.status === "completed" || s.status === "error";
   const actionKey = `${s.name}:`;
 
   return (
@@ -163,6 +206,11 @@ function ScraperCard({ scraper: s, onAction, onConfig, onLogs, loadingAction }: 
             <ScrollText className="h-3 w-3" /> Logs
           </Button>
         )}
+        {canShowReport && (
+          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 ml-auto" onClick={() => onReport(s.name, s.label)}>
+            <BarChart3 className="h-3 w-3" /> Rapport
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
@@ -179,7 +227,6 @@ interface ScheduleState {
 }
 
 const DAY_MAP: Record<string, string> = { Mon: "Lun", Tue: "Mar", Wed: "Mer", Thu: "Jeu", Fri: "Ven", Sat: "Sam", Sun: "Dim" };
-const DAY_MAP_INV: Record<string, string> = Object.fromEntries(Object.entries(DAY_MAP).map(([k, v]) => [v, k]));
 const DAYS_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = [0, 15, 30, 45];
@@ -190,22 +237,17 @@ function toOnCalendar(s: ScheduleState): string {
   if (s.frequency === "hourly") return `*-*-* *:${mm}:00`;
   if (s.frequency === "daily") return `*-*-* ${hh}:${mm}:00`;
   if (s.frequency === "weekly") return `${s.day} *-*-* ${hh}:${mm}:00`;
-  // biweekly
   return `${s.day} *-*-1..7,15..21 ${hh}:${mm}:00`;
 }
 
 function parseOnCalendar(raw: string): ScheduleState | null {
   const s = raw.trim();
-  // hourly: *-*-* *:MM:00
   let m = s.match(/^\*-\*-\*\s+\*:(\d{2}):00$/);
   if (m) return { frequency: "hourly", day: "", hour: 0, minute: parseInt(m[1]) };
-  // daily: *-*-* HH:MM:00
   m = s.match(/^\*-\*-\*\s+(\d{2}):(\d{2}):00$/);
   if (m) return { frequency: "daily", day: "", hour: parseInt(m[1]), minute: parseInt(m[2]) };
-  // biweekly: Day *-*-1..7,15..21 HH:MM:00
   m = s.match(/^(\w{3})\s+\*-\*-1\.\.7,15\.\.21\s+(\d{2}):(\d{2}):00$/);
   if (m) return { frequency: "biweekly", day: m[1], hour: parseInt(m[2]), minute: parseInt(m[3]) };
-  // weekly: Day *-*-* HH:MM:00
   m = s.match(/^(\w{3})\s+\*-\*-\*\s+(\d{2}):(\d{2}):00$/);
   if (m) return { frequency: "weekly", day: m[1], hour: parseInt(m[2]), minute: parseInt(m[3]) };
   return null;
@@ -231,12 +273,8 @@ function ScraperConfigModal({ scraper, open, onClose }: { scraper: ScraperInfo |
   useEffect(() => {
     if (!scraper) return;
     const parsed = parseOnCalendar(scraper.schedule);
-    if (parsed) {
-      setState(parsed);
-      setFallbackRaw(null);
-    } else {
-      setFallbackRaw(scraper.schedule);
-    }
+    if (parsed) { setState(parsed); setFallbackRaw(null); }
+    else { setFallbackRaw(scraper.schedule); }
   }, [scraper]);
 
   const scheduleValue = fallbackRaw ?? toOnCalendar(state);
@@ -250,9 +288,7 @@ function ScraperConfigModal({ scraper, open, onClose }: { scraper: ScraperInfo |
       onClose();
     } catch (e: any) {
       toast({ title: "Erreur", description: e.message, variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   const setField = <K extends keyof ScheduleState>(k: K, v: ScheduleState[K]) => {
@@ -284,81 +320,39 @@ function ScraperConfigModal({ scraper, open, onClose }: { scraper: ScraperInfo |
           </div>
         ) : (
           <div className="space-y-5 py-2">
-            {/* Frequency */}
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Fréquence</Label>
               <div className="grid grid-cols-4 gap-1.5">
-                {([
-                  ["hourly", "Toutes les heures"],
-                  ["daily", "Quotidien"],
-                  ["weekly", "Hebdomadaire"],
-                  ["biweekly", "Bimensuel"],
-                ] as const).map(([val, label]) => (
-                  <Button
-                    key={val}
-                    type="button"
-                    size="sm"
-                    variant={state.frequency === val ? "default" : "outline"}
-                    className="h-8 text-xs"
-                    onClick={() => setField("frequency", val)}
-                  >
-                    {label}
-                  </Button>
+                {([["hourly", "Toutes les heures"], ["daily", "Quotidien"], ["weekly", "Hebdomadaire"], ["biweekly", "Bimensuel"]] as const).map(([val, label]) => (
+                  <Button key={val} type="button" size="sm" variant={state.frequency === val ? "default" : "outline"} className="h-8 text-xs" onClick={() => setField("frequency", val)}>{label}</Button>
                 ))}
               </div>
             </div>
-
-            {/* Day picker */}
             {showDays && (
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Jour</Label>
                 <div className="flex gap-1">
                   {DAYS_ORDER.map((d) => (
-                    <Button
-                      key={d}
-                      type="button"
-                      size="sm"
-                      variant={state.day === d ? "default" : "outline"}
-                      className="h-8 flex-1 text-xs px-0"
-                      onClick={() => setField("day", d)}
-                    >
-                      {DAY_MAP[d]}
-                    </Button>
+                    <Button key={d} type="button" size="sm" variant={state.day === d ? "default" : "outline"} className="h-8 flex-1 text-xs px-0" onClick={() => setField("day", d)}>{DAY_MAP[d]}</Button>
                   ))}
                 </div>
               </div>
             )}
-
-            {/* Time picker */}
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">{showHour ? "Heure" : "Minutes"}</Label>
               <div className="flex gap-2">
                 {showHour && (
                   <Select value={String(state.hour)} onValueChange={(v) => setField("hour", parseInt(v))}>
-                    <SelectTrigger className="w-24 h-9 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {HOURS.map((h) => (
-                        <SelectItem key={h} value={String(h)} className="text-sm">{String(h).padStart(2, "0")}h</SelectItem>
-                      ))}
-                    </SelectContent>
+                    <SelectTrigger className="w-24 h-9 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>{HOURS.map((h) => <SelectItem key={h} value={String(h)} className="text-sm">{String(h).padStart(2, "0")}h</SelectItem>)}</SelectContent>
                   </Select>
                 )}
                 <Select value={String(state.minute)} onValueChange={(v) => setField("minute", parseInt(v))}>
-                  <SelectTrigger className="w-24 h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MINUTES.map((m) => (
-                      <SelectItem key={m} value={String(m)} className="text-sm">{String(m).padStart(2, "0")}min</SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectTrigger className="w-24 h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>{MINUTES.map((m) => <SelectItem key={m} value={String(m)} className="text-sm">{String(m).padStart(2, "0")}min</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
-
-            {/* Summary */}
             <div className="rounded-md bg-muted/50 border px-3 py-2 text-sm text-muted-foreground">
               <span className="font-medium text-foreground">{scheduleSummary(state)}</span>
               <span className="block text-[10px] font-mono mt-0.5 text-muted-foreground">{toOnCalendar(state)}</span>
@@ -372,6 +366,187 @@ function ScraperConfigModal({ scraper, open, onClose }: { scraper: ScraperInfo |
             {saving && <Loader2 className="h-3 w-3 animate-spin mr-1" />}
             Enregistrer
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============= Start dialog =============
+function StartDialog({
+  scraper,
+  open,
+  onClose,
+  onConfirm,
+}: {
+  scraper: { name: string; label: string } | null;
+  open: boolean;
+  onClose: () => void;
+  onConfirm: (name: string, mode: "resume" | "full") => void;
+}) {
+  const [mode, setMode] = useState<"resume" | "full">("resume");
+
+  useEffect(() => { if (open) setMode("resume"); }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Lancer {scraper?.label}</DialogTitle>
+          <DialogDescription>Choisissez le mode de scraping</DialogDescription>
+        </DialogHeader>
+        <RadioGroup value={mode} onValueChange={(v) => setMode(v as "resume" | "full")} className="space-y-3 py-2">
+          <div
+            className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-accent/50 cursor-pointer"
+            onClick={() => setMode("resume")}
+          >
+            <RadioGroupItem value="resume" id="resume" className="mt-0.5" />
+            <div>
+              <Label htmlFor="resume" className="font-medium cursor-pointer">Scraper les manquants</Label>
+              <p className="text-xs text-muted-foreground">Ne traite que les modèles pas encore scrapés lors du dernier run.</p>
+            </div>
+          </div>
+          <div
+            className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-accent/50 cursor-pointer"
+            onClick={() => setMode("full")}
+          >
+            <RadioGroupItem value="full" id="full" className="mt-0.5" />
+            <div>
+              <Label htmlFor="full" className="font-medium cursor-pointer">Tout scraper</Label>
+              <p className="text-xs text-muted-foreground">Rescrape tous les modèles, même ceux déjà traités. Plus long mais plus complet.</p>
+            </div>
+          </div>
+        </RadioGroup>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Annuler</Button>
+          <Button onClick={() => scraper && onConfirm(scraper.name, mode)}>
+            <Play className="h-3 w-3 mr-1" /> Lancer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============= Report dialog =============
+function ReportDialog({
+  scraperName,
+  scraperLabel,
+  open,
+  onClose,
+}: {
+  scraperName: string | null;
+  scraperLabel: string;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [report, setReport] = useState<ScraperReport | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!open || !scraperName) return;
+    setLoading(true);
+    setReport(null);
+    adminApiGet<ScraperReport>(ADMIN.SCRAPER_REPORT(scraperName))
+      .then(setReport)
+      .catch(() => setReport(null))
+      .finally(() => setLoading(false));
+  }, [open, scraperName]);
+
+  const handleDownload = async () => {
+    if (!scraperName) return;
+    setDownloading(true);
+    try {
+      await downloadLogs(scraperName);
+    } catch (e: any) {
+      toast({ title: "Erreur téléchargement", description: e.message, variant: "destructive" });
+    } finally { setDownloading(false); }
+  };
+
+  const r = report?.report;
+  const skippedAndFailed = [...(r?.models_skipped ?? []), ...(r?.models_failed ?? [])];
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Rapport — {scraperLabel}</DialogTitle>
+          <DialogDescription>
+            {report?.started_at && report?.completed_at
+              ? `${new Date(report.started_at).toLocaleDateString("fr-FR")} — ${new Date(report.completed_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`
+              : "Dernier rapport disponible"}
+          </DialogDescription>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : !r ? (
+          <div className="text-center py-12 text-muted-foreground text-sm">Aucun rapport disponible pour ce scraper.</div>
+        ) : (
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            <div className="space-y-4 pb-2">
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <p className="text-[11px] text-muted-foreground">Durée</p>
+                  <p className="text-sm font-semibold">{formatDuration(r.duration_s)}</p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <p className="text-[11px] text-muted-foreground">Modèles</p>
+                  <p className="text-sm font-semibold">{r.models_processed}/{r.models_total} <span className="text-muted-foreground font-normal">traités</span></p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <p className="text-[11px] text-muted-foreground">Observations</p>
+                  <p className="text-sm font-semibold">{r.items_inserted.toLocaleString("fr-FR")} <span className="text-muted-foreground font-normal">insérées</span></p>
+                  <p className="text-[11px] text-muted-foreground">{r.items_matched.toLocaleString("fr-FR")} matchées / {r.items_found.toLocaleString("fr-FR")} trouvées</p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <p className="text-[11px] text-muted-foreground">Erreurs</p>
+                  <p className={`text-sm font-semibold ${r.errors_count > 0 ? "text-destructive" : ""}`}>{r.errors_count}</p>
+                </div>
+              </div>
+
+              {/* Skipped / failed models */}
+              {skippedAndFailed.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-medium">
+                    <AlertTriangle className="h-3.5 w-3.5 text-yellow-400" />
+                    Modèles non traités ({skippedAndFailed.length})
+                  </div>
+                  <div className="rounded-lg border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="h-8 text-xs">Modèle</TableHead>
+                          <TableHead className="h-8 text-xs">Raison</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {skippedAndFailed.map((m, i) => (
+                          <TableRow key={i}>
+                            <TableCell className="py-1.5 text-xs font-medium">{m.name}</TableCell>
+                            <TableCell className="py-1.5 text-xs text-muted-foreground">{m.reason}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        )}
+
+        <DialogFooter className="pt-2 border-t">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownload} disabled={downloading || !scraperName}>
+            {downloading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+            Télécharger les logs
+          </Button>
+          <Button variant="outline" onClick={onClose}>Fermer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -392,12 +567,14 @@ function ScraperLogsPanel({
   selectedScraper,
   onSelect,
   onClear,
+  onDownload,
 }: {
   scraperNames: string[];
   logs: string[];
   selectedScraper: string;
   onSelect: (name: string) => void;
   onClear: () => void;
+  onDownload: (name: string) => void;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [logs.length]);
@@ -419,7 +596,14 @@ function ScraperLogsPanel({
             </SelectContent>
           </Select>
         </div>
-        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onClear}>Effacer</Button>
+        <div className="flex items-center gap-1">
+          {selectedScraper && (
+            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => onDownload(selectedScraper)}>
+              <Download className="h-3 w-3" /> Télécharger
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onClear}>Effacer</Button>
+        </div>
       </div>
       <ScrollArea className="h-[300px]">
         <div className="p-3 font-mono text-[11px] leading-relaxed space-y-px min-h-full bg-[hsl(230,25%,9%)]">
@@ -444,6 +628,8 @@ export default function AdminScrapers() {
   const [configScraper, setConfigScraper] = useState<ScraperInfo | null>(null);
   const [selectedLogScraper, setSelectedLogScraper] = useState("");
   const [localLogs, setLocalLogs] = useState<string[]>([]);
+  const [startDialog, setStartDialog] = useState<{ name: string; label: string } | null>(null);
+  const [reportDialog, setReportDialog] = useState<{ name: string; label: string } | null>(null);
   const logsPanelRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval>>();
   const { toast } = useToast();
@@ -453,14 +639,7 @@ export default function AdminScrapers() {
     ? restScrapers.map((rest) => {
         const ws = wsScrapers[rest.name];
         if (!ws) return rest;
-        return {
-          ...rest,
-          ...ws,
-          label: rest.label,
-          description: rest.description,
-          schedule: rest.schedule,
-          timer: rest.timer,
-        };
+        return { ...rest, ...ws, label: rest.label, description: rest.description, schedule: rest.schedule, timer: rest.timer };
       })
     : Object.values(wsScrapers);
 
@@ -476,19 +655,25 @@ export default function AdminScrapers() {
 
   // Polling fallback when WS disconnected
   useEffect(() => {
-    if (!connected) {
-      pollingRef.current = setInterval(fetchList, 10000);
-    } else {
-      clearInterval(pollingRef.current);
-    }
+    if (!connected) { pollingRef.current = setInterval(fetchList, 10000); }
+    else { clearInterval(pollingRef.current); }
     return () => clearInterval(pollingRef.current);
   }, [connected, fetchList]);
 
   // Merge WS logs with local
   const displayedLogs = [...localLogs, ...wsLogs];
 
-  // Actions
+  // Actions — intercept "start" to show dialog
   const handleAction = async (name: string, action: string) => {
+    if (action === "start") {
+      const label = scraperList.find(s => s.name === name)?.label || name;
+      setStartDialog({ name, label });
+      return;
+    }
+    await executeAction(name, action);
+  };
+
+  const executeAction = async (name: string, action: string, body?: object) => {
     const key = `${name}:${action}`;
     setLoadingAction(key);
     try {
@@ -496,7 +681,7 @@ export default function AdminScrapers() {
         : action === "stop" ? ADMIN.SCRAPER_STOP(name)
         : action === "pause" ? ADMIN.SCRAPER_PAUSE(name)
         : ADMIN.SCRAPER_RESUME(name);
-      await adminApiFetch(endpoint, { method: "POST" });
+      await adminApiFetch(endpoint, { method: "POST", ...(body ? { body: JSON.stringify(body) } : {}) });
       toast({ title: "Commande envoyée", description: `${action} → ${name}` });
 
       const expectedStatus = action === "start" ? "running"
@@ -520,11 +705,28 @@ export default function AdminScrapers() {
           }
         } catch { /* silent */ }
       }, 3000);
-
       setTimeout(() => { clearInterval(pollInterval); setLoadingAction(null); }, 30000);
     } catch (e: any) {
       toast({ title: "Erreur", description: e.message, variant: "destructive" });
       setLoadingAction(null);
+    }
+  };
+
+  const handleConfirmStart = (name: string, mode: "resume" | "full") => {
+    setStartDialog(null);
+    executeAction(name, "start", { mode });
+  };
+
+  const handleOpenReport = (name: string, label: string) => {
+    setReportDialog({ name, label });
+  };
+
+  const handleDownloadLogs = async (name: string) => {
+    try {
+      await downloadLogs(name);
+      toast({ title: "Téléchargement lancé" });
+    } catch (e: any) {
+      toast({ title: "Erreur téléchargement", description: e.message, variant: "destructive" });
     }
   };
 
@@ -533,7 +735,6 @@ export default function AdminScrapers() {
     unwatchLogs();
     setSelectedLogScraper(name);
     setLocalLogs([]);
-    // Fetch existing logs
     try {
       const data = await adminApiGet<{ lines: string[] }>(ADMIN.SCRAPER_LOGS(name));
       setLocalLogs(data.lines);
@@ -546,7 +747,6 @@ export default function AdminScrapers() {
     setTimeout(() => logsPanelRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   }, [selectLogScraper]);
 
-  // Cleanup
   useEffect(() => () => unwatchLogs(), [unwatchLogs]);
 
   return (
@@ -579,6 +779,7 @@ export default function AdminScrapers() {
             onAction={handleAction}
             onConfig={setConfigScraper}
             onLogs={handleLogsClick}
+            onReport={handleOpenReport}
             loadingAction={loadingAction}
           />
         ))}
@@ -598,11 +799,18 @@ export default function AdminScrapers() {
           selectedScraper={selectedLogScraper}
           onSelect={selectLogScraper}
           onClear={() => { setLocalLogs([]); }}
+          onDownload={handleDownloadLogs}
         />
       </div>
 
       {/* Config modal */}
       <ScraperConfigModal scraper={configScraper} open={!!configScraper} onClose={() => setConfigScraper(null)} />
+
+      {/* Start dialog */}
+      <StartDialog scraper={startDialog} open={!!startDialog} onClose={() => setStartDialog(null)} onConfirm={handleConfirmStart} />
+
+      {/* Report dialog */}
+      <ReportDialog scraperName={reportDialog?.name ?? null} scraperLabel={reportDialog?.label ?? ""} open={!!reportDialog} onClose={() => setReportDialog(null)} />
     </div>
   );
 }
