@@ -497,11 +497,35 @@ export default function AdminScrapers() {
         : action === "pause" ? ADMIN.SCRAPER_PAUSE(name)
         : ADMIN.SCRAPER_RESUME(name);
       await adminApiFetch(endpoint, { method: "POST" });
-      toast({ title: "Commande envoyée" });
+      toast({ title: "Commande envoyée", description: `${action} → ${name}` });
+
+      const expectedStatus = action === "start" ? "running"
+        : action === "stop" ? "idle"
+        : action === "pause" ? "paused"
+        : "running";
+
+      let attempts = 0;
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        try {
+          const data = await adminApiGet<{ scrapers: ScraperInfo[] }>(ADMIN.SCRAPERS_LIST);
+          setRestScrapers(data.scrapers);
+          const target = data.scrapers.find(s => s.name === name);
+          if (target?.status === expectedStatus || attempts >= 10) {
+            clearInterval(pollInterval);
+            setLoadingAction(null);
+            if (target?.status === expectedStatus) {
+              toast({ title: "Statut mis à jour", description: `${name} → ${target.status}` });
+            }
+          }
+        } catch { /* silent */ }
+      }, 3000);
+
+      setTimeout(() => { clearInterval(pollInterval); setLoadingAction(null); }, 30000);
     } catch (e: any) {
       toast({ title: "Erreur", description: e.message, variant: "destructive" });
+      setLoadingAction(null);
     }
-    setTimeout(() => setLoadingAction(null), 5000);
   };
 
   // Log selection

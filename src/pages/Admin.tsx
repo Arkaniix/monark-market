@@ -23,7 +23,27 @@ import AdminScrapers from "@/components/admin/AdminScrapers";
 const LOADING_TIMEOUT_MS = 8000;
 
 export default function Admin() {
-  const [activeSection, setActiveSection] = useState("dashboard");
+  const getInitialSection = () => {
+    const hash = window.location.hash.replace("#", "");
+    const validSections = ["dashboard", "users", "subscriptions", "credits", "compta", "models", "observatory", "analytics", "pipeline", "scrapers", "health", "logs"];
+    return validSections.includes(hash) ? hash : "dashboard";
+  };
+  const [activeSection, setActiveSection] = useState(getInitialSection);
+
+  useEffect(() => {
+    window.location.hash = activeSection;
+  }, [activeSection]);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (hash && hash !== activeSection) {
+        setActiveSection(hash);
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [activeSection]);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
