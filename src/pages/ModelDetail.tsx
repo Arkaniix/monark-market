@@ -507,7 +507,7 @@ export default function ModelDetail() {
                 Volume d'annonces
               </TabsTrigger>
               <TabsTrigger value="ads">
-                <Activity className="h-4 w-4 mr-2" />
+                <Store className="h-4 w-4 mr-2" />
                 Activité marché
               </TabsTrigger>
               {model.specs && (
