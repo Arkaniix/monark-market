@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   RefreshCw, Download, AlertTriangle, Search, Zap, TrendingUp, TrendingDown,
-  Loader2, ChevronDown, ChevronRight, Settings2, X, Eye,
+  Loader2, ChevronDown, ChevronRight, Settings2, X, Eye, Activity,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,6 +72,37 @@ const SOURCE_COLORS: Record<string, string> = {
 
 type QuickFilter = "all" | "no_ads" | "no_data" | "shock" | "stale";
 
+// ============= Flag severity config =============
+const FLAG_SEVERITY: Record<string, "high" | "medium" | "low"> = {
+  RESULTS_NOT_MATCHED: "high", RESULTS_NOT_MATCHED_LDLC: "high", RESULTS_NOT_MATCHED_MATERIEL: "high",
+  MAINSTREAM_NOT_FOUND: "high", MATCHING_ERROR: "high", FETCH_FAILED: "high",
+  ZERO_MATCHED: "medium", LOW_MATCH_RATE: "medium", SOFT_BLOCK: "medium", SEARCH_TERM_TOO_LONG: "medium",
+  NEAR_MISS_LDLC: "medium", NEAR_MISS_MATERIEL: "medium", NEAR_MISS_AMAZON: "medium",
+  ZERO_RESULTS: "low", HTTP_503_AMAZON: "low", ZERO_RESULTS_ALL_SOURCES: "low",
+};
+
+const FLAG_SEVERITY_STYLES: Record<string, string> = {
+  high: "bg-destructive/20 text-destructive border-destructive/30",
+  medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  low: "bg-muted text-muted-foreground border-border",
+};
+
+function getFlagSeverityClass(flag: string): string {
+  const severity = FLAG_SEVERITY[flag] ?? (flag.startsWith("NEAR_MISS") ? "medium" : "low");
+  return FLAG_SEVERITY_STYLES[severity] ?? FLAG_SEVERITY_STYLES.low;
+}
+
+interface ModelDiagnostic {
+  flags: string[];
+  category?: string;
+  sources?: Record<string, { status?: number; results?: number; near_misses?: number }>;
+}
+
+interface DiagnosticsData {
+  globalFlags: [string, number][];
+  byModel: Map<string, ModelDiagnostic>;
+}
+
 const OPTIONAL_COLUMNS = [
   { key: "p25_p75", label: "P25–P75" },
   { key: "trend_30d", label: "Tendance 30j" },
@@ -80,6 +111,7 @@ const OPTIONAL_COLUMNS = [
   { key: "regime", label: "Régime" },
   { key: "volume_30d", label: "Volume 30j" },
   { key: "variants_count", label: "Variantes" },
+  { key: "diagnostic", label: "Diagnostic" },
 ] as const;
 
 type OptColKey = typeof OPTIONAL_COLUMNS[number]["key"];
@@ -92,10 +124,12 @@ function ModelDetailSheet({
   model,
   open,
   onClose,
+  diagnostic,
 }: {
   model: ObservatoryModel | null;
   open: boolean;
   onClose: () => void;
+  diagnostic?: ModelDiagnostic | null;
 }) {
   const [priceData, setPriceData] = useState<PriceHistoryResponse | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
@@ -196,6 +230,36 @@ function ModelDetailSheet({
             <InfoRow label="Variantes" value={`${model.variants_count} (${model.variants_with_data} actives)`} />
           </div>
 
+          {/* Diagnostic flags */}
+          {diagnostic && diagnostic.flags.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                <Activity className="h-4 w-4 text-muted-foreground" /> Diagnostic scraper
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {diagnostic.flags.map((f) => (
+                  <Badge key={f} variant="outline" className={`text-[10px] ${getFlagSeverityClass(f)}`}>{f}</Badge>
+                ))}
+              </div>
+              {diagnostic.category && (
+                <p className="text-xs text-muted-foreground">
+                  Catégorie : <span className="font-medium text-foreground">
+                    {diagnostic.category === "not_found_unknown" ? "À investiguer" : diagnostic.category === "not_found_brand" ? "Marque niche" : diagnostic.category === "not_found_discontinued" ? "Discontinué" : diagnostic.category}
+                  </span>
+                </p>
+              )}
+              {diagnostic.sources && Object.keys(diagnostic.sources).length > 0 && (
+                <div className="text-[11px] text-muted-foreground space-y-0.5">
+                  {Object.entries(diagnostic.sources).map(([src, info]) => (
+                    <p key={src}>
+                      <span className="font-medium text-foreground">{src}</span>: status {info.status ?? "?"}{info.results != null && <>, {info.results} résultats → {info.near_misses ?? 0} proches</>}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Price chart */}
           <div>
             <h4 className="text-sm font-semibold mb-3">Historique des prix (90j)</h4>
@@ -257,6 +321,9 @@ export default function AdminObservatory() {
   const [missionKeyword, setMissionKeyword] = useState("");
   const [missionLoading, setMissionLoading] = useState(false);
 
+  // Diagnostics
+  const [diagnostics, setDiagnostics] = useState<DiagnosticsData | null>(null);
+
   const { toast } = useToast();
 
   // Debounce search
@@ -289,6 +356,49 @@ export default function AdminObservatory() {
     const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  // Fetch diagnostics from scraper reports
+  useEffect(() => {
+    (async () => {
+      try {
+        const scrapers = await adminApiGet<{ scrapers: { name: string; status: string }[] }>(ADMIN.SCRAPERS_LIST);
+        const completedScrapers = scrapers.scrapers?.filter((s) => s.status === "completed" || s.status === "error") ?? [];
+        const globalFlagMap: Record<string, number> = {};
+        const modelMap = new Map<string, ModelDiagnostic>();
+
+        await Promise.all(completedScrapers.map(async (s) => {
+          try {
+            const report = await adminApiGet<{
+              report: {
+                flag_summary?: Record<string, number>;
+                diagnostic_summary?: { flag_summary: Record<string, number> };
+                not_found_details?: { name: string; category?: string; flags: string[]; sources?: Record<string, { status?: number; results?: number; near_misses?: number }> }[];
+              };
+            }>(ADMIN.SCRAPER_REPORT(s.name));
+            const fs = report.report?.flag_summary ?? report.report?.diagnostic_summary?.flag_summary;
+            if (fs) {
+              for (const [flag, count] of Object.entries(fs)) {
+                globalFlagMap[flag] = (globalFlagMap[flag] ?? 0) + count;
+              }
+            }
+            for (const d of report.report?.not_found_details ?? []) {
+              const key = d.name.toLowerCase();
+              if (!modelMap.has(key)) {
+                modelMap.set(key, { flags: d.flags, category: d.category, sources: d.sources });
+              } else {
+                const existing = modelMap.get(key)!;
+                const mergedFlags = [...new Set([...existing.flags, ...d.flags])];
+                modelMap.set(key, { ...existing, flags: mergedFlags, category: d.category ?? existing.category, sources: { ...existing.sources, ...d.sources } });
+              }
+            }
+          } catch { /* silent */ }
+        }));
+
+        const globalFlags = Object.entries(globalFlagMap).sort((a, b) => b[1] - a[1]);
+        setDiagnostics({ globalFlags, byModel: modelMap });
+      } catch { /* silent */ }
+    })();
+  }, [lastRefresh]);
 
   // Quick filter toggle
   const toggleQuickFilter = (f: QuickFilter) => {
@@ -427,6 +537,13 @@ export default function AdminObservatory() {
     adminApiDownload(url, "observatory.csv");
   };
 
+  // Helper to get diagnostic for a model
+  const getModelDiag = useCallback((m: ObservatoryModel): ModelDiagnostic | null => {
+    if (!diagnostics) return null;
+    const key = m.model_name.toLowerCase();
+    return diagnostics.byModel.get(key) ?? null;
+  }, [diagnostics]);
+
   const colCount = 7
     + (visibleOptCols.has("p25_p75") ? 1 : 0)
     + (visibleOptCols.has("trend_30d") ? 1 : 0)
@@ -435,6 +552,7 @@ export default function AdminObservatory() {
     + (visibleOptCols.has("regime") ? 1 : 0)
     + (visibleOptCols.has("volume_30d") ? 1 : 0)
     + (visibleOptCols.has("variants_count") ? 1 : 0)
+    + (visibleOptCols.has("diagnostic") ? 1 : 0)
     + 1; // actions
 
   // ============= Render =============
@@ -480,6 +598,28 @@ export default function AdminObservatory() {
           <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Régimes SHOCK</p><p className="text-2xl font-bold flex items-center gap-2">{dynamicSummary.shock}{dynamicSummary.shock > 0 && <Badge variant="destructive" className="text-[10px]">!</Badge>}</p></CardContent></Card>
           <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Qualité moyenne</p><Progress value={dynamicSummary.avgQuality} className="mt-2 h-2" /><p className="text-sm font-bold mt-1">{dynamicSummary.avgQuality}%</p></CardContent></Card>
         </div>
+      )}
+
+      {/* Global Diagnostics Summary */}
+      {diagnostics && diagnostics.globalFlags.length > 0 && (
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-1.5 text-sm font-semibold">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              Diagnostic scrapers
+              <span className="text-xs font-normal text-muted-foreground ml-1">
+                ({diagnostics.globalFlags.reduce((s, [, c]) => s + c, 0)} flags · {diagnostics.byModel.size} modèles avec problèmes)
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {diagnostics.globalFlags.map(([flag, count]) => (
+                <Badge key={flag} variant="outline" className={`text-[11px] gap-1 ${getFlagSeverityClass(flag)}`}>
+                  {flag} <span className="font-bold">{count}</span>
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Filter Bar */}
@@ -610,6 +750,7 @@ export default function AdminObservatory() {
                   {visibleOptCols.has("regime") && <TableHead>Régime</TableHead>}
                   {visibleOptCols.has("volume_30d") && <TableHead className="text-right">Vol. 30j</TableHead>}
                   {visibleOptCols.has("variants_count") && <TableHead className="text-right">Var.</TableHead>}
+                  {visibleOptCols.has("diagnostic") && <TableHead>Diagnostic</TableHead>}
                   <TableHead>Activité</TableHead>
                   <TableHead className="w-10"></TableHead>
                 </TableRow>
@@ -736,6 +877,33 @@ export default function AdminObservatory() {
                             {m.variants_count > 0 ? `${m.variants_count} (${m.variants_with_data})` : "—"}
                           </TableCell>
                         )}
+                        {visibleOptCols.has("diagnostic") && (
+                          <TableCell>
+                            {(() => {
+                              const diag = getModelDiag(m);
+                              if (!diag || diag.flags.length === 0) return <span className="text-muted-foreground text-sm">—</span>;
+                              const topFlag = diag.flags[0];
+                              const severity = FLAG_SEVERITY[topFlag] ?? "low";
+                              return (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center gap-1">
+                                      <Badge variant="outline" className={`text-[10px] ${getFlagSeverityClass(topFlag)}`}>{topFlag}</Badge>
+                                      {diag.flags.length > 1 && <span className="text-[10px] text-muted-foreground">+{diag.flags.length - 1}</span>}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs">
+                                    <div className="flex flex-wrap gap-1">
+                                      {diag.flags.map((f) => (
+                                        <Badge key={f} variant="outline" className={`text-[10px] ${getFlagSeverityClass(f)}`}>{f}</Badge>
+                                      ))}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            })()}
+                          </TableCell>
+                        )}
 
                         {/* Activity */}
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(m.last_ad_seen_at)}</TableCell>
@@ -787,7 +955,7 @@ export default function AdminObservatory() {
       )}
 
       {/* Detail Sheet */}
-      <ModelDetailSheet model={detailModel} open={!!detailModel} onClose={() => setDetailModel(null)} />
+      <ModelDetailSheet model={detailModel} open={!!detailModel} onClose={() => setDetailModel(null)} diagnostic={detailModel ? getModelDiag(detailModel) : null} />
 
       {/* Mission Modal */}
       <Dialog open={!!missionModal} onOpenChange={() => setMissionModal(null)}>
