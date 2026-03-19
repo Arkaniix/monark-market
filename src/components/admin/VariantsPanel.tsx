@@ -450,8 +450,14 @@ export function VariantsPanel({ modelId, modelName, colSpan = 10, diagnosticsByN
                 </tr>
               </thead>
               <tbody>
-                <TooltipProvider>
-                  {data.variants.map((v) => (
+              <TooltipProvider>
+                  {(filterDiagOnly
+                    ? data.variants.filter((v) => {
+                        const d = getVariantDiag(v);
+                        return d && d.flags.length > 0;
+                      })
+                    : data.variants
+                  ).map((v) => (
                     <tr key={v.id} className="border-b border-border/30 hover:bg-muted/30 transition-colors">
                       <td className="px-3 py-2 text-sm">{v.brand}</td>
                       <td className="px-3 py-2 font-medium text-sm">
