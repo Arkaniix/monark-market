@@ -706,7 +706,8 @@ export default function AdminObservatory() {
               { key: "no_data" as QuickFilter, label: "Sans données" },
               { key: "shock" as QuickFilter, label: "En shock" },
               { key: "stale" as QuickFilter, label: "Données périmées" },
-            ]).map((f) => (
+              { key: "has_diag" as QuickFilter, label: "Avec diagnostic", icon: <Activity className="h-3 w-3 mr-1" /> },
+            ] as { key: QuickFilter; label: string; icon?: React.ReactNode }[]).map((f) => (
               <Button
                 key={f.key}
                 size="sm"
@@ -714,7 +715,7 @@ export default function AdminObservatory() {
                 className="h-7 text-xs"
                 onClick={() => toggleQuickFilter(f.key)}
               >
-                {f.label}
+                {f.icon}{f.label}
               </Button>
             ))}
           </div>
