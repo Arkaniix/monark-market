@@ -859,7 +859,7 @@ export default function ModelDetail() {
                         />
                         <Area
                           type="monotone"
-                          dataKey="ads_count"
+                          dataKey="volume"
                           stroke="hsl(var(--accent))"
                           strokeWidth={2}
                           fill="url(#colorVolume)"
