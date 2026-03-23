@@ -52,7 +52,7 @@ const itemVariants = {
 export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
-  if (isLoading || !data) {
+  if (isLoading) {
     return (
       <section className="py-8">
         <div className="container">
@@ -60,6 +60,36 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
             <h2 className="text-2xl font-bold mb-2">Tendances du marché</h2>
             <p className="text-muted-foreground">Chargement...</p>
           </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Empty state when data is missing or all arrays are empty
+  const hasData = data && (
+    (Array.isArray(data.marketTrends) && data.marketTrends.length > 0) ||
+    (Array.isArray(data.topIncreases) && data.topIncreases.length > 0) ||
+    (Array.isArray(data.topDrops) && data.topDrops.length > 0)
+  );
+
+  if (!hasData) {
+    return (
+      <section className="py-8">
+        <div className="container">
+          <div className="mb-6 flex items-center gap-2">
+            <Activity className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold">Tendances du marché</h2>
+          </div>
+          <Card className="max-w-2xl mx-auto">
+            <CardContent className="py-12 text-center">
+              <BarChart3 className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Pas encore assez de données</h3>
+              <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                Les tendances seront disponibles quand suffisamment d'observations auront été collectées.
+                Les scrapers enrichissent la base de données en continu.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </section>
     );

@@ -22,6 +22,7 @@ export function useModelDetail(modelId: string | undefined) {
         images: model.images || [],
         variants: model.variants || [],
         variants_count: model.variants_count || 0,
+        new_price_eur: model.new_price_eur ?? null,
         kpi: {
           median_30d: model.market.median_price,
           var_7d_pct: model.market.var_7d_pct,

@@ -256,6 +256,7 @@ export const apiProvider: DataProvider = {
       variants_count: response?.variants_count || 0,
       market: marketData,
       is_in_watchlist: false,
+      new_price_eur: model?.new_price_eur ?? response?.new_price_eur ?? null,
     };
   },
   async getModelPriceHistory(modelId, period = '30') {

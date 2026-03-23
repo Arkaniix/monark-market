@@ -470,10 +470,33 @@ export default function Catalog() {
                             {/* Price & Variation */}
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-xl font-bold">
-                                  {model.fair_value_30d || model.price_median_30d || "N/A"}€
-                                </p>
-                                <p className="text-xs text-muted-foreground">Fair Value 30j</p>
+                                {(model.fair_value_30d != null && model.fair_value_30d > 0) || (model.price_median_30d != null && model.price_median_30d > 0) ? (
+                                  <>
+                                    <p className="text-xl font-bold">
+                                      {model.fair_value_30d || model.price_median_30d}€
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">Fair Value 30j</p>
+                                    {model.new_price_eur != null && model.new_price_eur > 0 && (
+                                      <div className="flex items-center gap-1.5 mt-0.5">
+                                        <span className="text-[10px] text-muted-foreground">Neuf : {model.new_price_eur} €</span>
+                                        {(() => {
+                                          const occasionPrice = model.fair_value_30d || model.price_median_30d || 0;
+                                          const savings = Math.round((1 - occasionPrice / model.new_price_eur) * 100);
+                                          return savings > 0 ? (
+                                            <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5 bg-emerald-500/15 text-emerald-500 border-emerald-500/30">
+                                              -{savings}%
+                                            </Badge>
+                                          ) : null;
+                                        })()}
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="text-sm italic text-muted-foreground">Données insuffisantes</p>
+                                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 mt-1 text-muted-foreground">Peu de données</Badge>
+                                  </>
+                                )}
                               </div>
                               {model.var_30d_pct !== null && (
                                 <TooltipProvider>

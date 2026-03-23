@@ -173,12 +173,12 @@ export const routes: RouteConfig[] = [
     requiresAdmin: true,
   },
 
-  // Debug page (dev or admin only - gère son propre contrôle d'accès)
-  {
+  // Debug page - only available in dev mode
+  ...(import.meta.env.DEV ? [{
     path: "/debug",
     component: Debug,
     requiresAuth: false,
-  },
+  }] : []),
 
   {
     path: "/deals",
