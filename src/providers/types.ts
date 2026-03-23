@@ -298,6 +298,8 @@ export interface ModelDetail {
     median_days_to_sell: number;
   };
   is_in_watchlist: boolean;
+  /** New retail price in EUR */
+  new_price_eur?: number | null;
 }
 
 export interface PriceHistoryPoint {
