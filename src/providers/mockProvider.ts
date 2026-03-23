@@ -1031,6 +1031,7 @@ export const mockProvider: DataProvider = {
       variants_count: model.category === 'GPU' ? generateMockVariants(model.name, model.id).length : 0,
       market: {
         median_price: model.median_price,
+        fair_value_30d: Math.round(model.median_price * 0.95),
         price_p25: Math.round(model.median_price * 0.85),
         price_p75: Math.round(model.median_price * 1.15),
         var_7d_pct: model.var_7d_pct,
@@ -1039,6 +1040,7 @@ export const mockProvider: DataProvider = {
         volume: model.volume,
         ads_count: model.ads_count,
         median_days_to_sell: 3 + (model.id % 8),
+        liquidity_score: model.liquidity || 0.5,
       },
       is_in_watchlist: isInWatchlist,
     };

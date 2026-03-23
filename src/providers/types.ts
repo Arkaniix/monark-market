@@ -288,14 +288,16 @@ export interface ModelDetail {
   variants_count?: number;
   market: {
     median_price: number;
+    fair_value_30d: number | null;
     price_p25: number;
     price_p75: number;
-    var_7d_pct: number;
-    var_30d_pct: number;
-    var_90d_pct: number;
+    var_7d_pct: number | null;
+    var_30d_pct: number | null;
+    var_90d_pct: number | null;
     volume: number;
     ads_count: number;
-    median_days_to_sell: number;
+    median_days_to_sell: number | null;
+    liquidity_score: number | null;
   };
   is_in_watchlist: boolean;
   /** New retail price in EUR */

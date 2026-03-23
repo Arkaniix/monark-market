@@ -346,12 +346,16 @@ export default function ModelDetail() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatPrice(model.kpi.median_30d)}</div>
-                <div className="flex items-center gap-1 mt-1">
-                  {getTrendIcon(model.kpi.var_30d_pct)}
-                  <span className={model.kpi.var_30d_pct < 0 ? "text-success" : "text-destructive"}>
-                    {formatPercent(model.kpi.var_30d_pct)}
-                  </span>
-                </div>
+                {model.kpi.var_30d_pct != null ? (
+                  <div className="flex items-center gap-1 mt-1">
+                    {getTrendIcon(model.kpi.var_30d_pct)}
+                    <span className={model.kpi.var_30d_pct < 0 ? "text-success" : "text-destructive"}>
+                      {formatPercent(model.kpi.var_30d_pct)}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">—</p>
+                )}
               </CardContent>
             </Card>
 
@@ -368,8 +372,8 @@ export default function ModelDetail() {
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs">
                       <p className="text-xs">
-                        Prix estimé raisonnable basé sur la médiane des 30 derniers jours, 
-                        excluant les annonces anormalement chères ou bon marché.
+                        Estimation pondérée du prix raisonnable, calculée à partir des transactions 
+                        des 30 derniers jours en excluant les valeurs extrêmes.
                       </p>
                     </TooltipContent>
                   </UITooltip>
@@ -378,14 +382,16 @@ export default function ModelDetail() {
               <CardContent>
                 <div className="text-2xl font-bold">{formatPrice(model.kpi.fair_value_30d)}</div>
                 {model.new_price_eur != null && model.new_price_eur > 0 && (
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-xs text-muted-foreground">Neuf : {model.new_price_eur} €</span>
+                  <div className="mt-1.5 space-y-0.5">
+                    <span className="text-xs text-muted-foreground">Neuf : {model.new_price_eur.toLocaleString('fr-FR')} €</span>
                     {(() => {
                       const savings = Math.round((1 - model.kpi.fair_value_30d / model.new_price_eur) * 100);
                       return savings > 0 ? (
-                        <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5 bg-emerald-500/15 text-emerald-500 border-emerald-500/30">
-                          -{savings}% vs neuf
-                        </Badge>
+                        <div>
+                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-emerald-500/15 text-emerald-500 border-emerald-500/30">
+                            -{savings}% vs neuf
+                          </Badge>
+                        </div>
                       ) : null;
                     })()}
                   </div>
@@ -454,7 +460,7 @@ export default function ModelDetail() {
                 </TooltipProvider>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{model.kpi.median_days_to_sell} jours</div>
+                <div className="text-2xl font-bold">{model.kpi.median_days_to_sell != null ? `${model.kpi.median_days_to_sell} jours` : '—'}</div>
               </CardContent>
             </Card>
 
