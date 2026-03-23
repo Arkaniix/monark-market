@@ -377,6 +377,19 @@ export default function ModelDetail() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatPrice(model.kpi.fair_value_30d)}</div>
+                {model.new_price_eur != null && model.new_price_eur > 0 && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-xs text-muted-foreground">Neuf : {model.new_price_eur} €</span>
+                    {(() => {
+                      const savings = Math.round((1 - model.kpi.fair_value_30d / model.new_price_eur) * 100);
+                      return savings > 0 ? (
+                        <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5 bg-emerald-500/15 text-emerald-500 border-emerald-500/30">
+                          -{savings}% vs neuf
+                        </Badge>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
