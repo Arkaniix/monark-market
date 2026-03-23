@@ -193,6 +193,8 @@ export interface CatalogModel {
   image_url?: string | null;
   /** Number of constructor variants (e.g. ASUS TUF, MSI Ventus) */
   variants_count?: number;
+  /** New retail price in EUR (from backend, may be null) */
+  new_price_eur?: number | null;
 }
 
 export interface CatalogResponse {
