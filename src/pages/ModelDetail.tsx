@@ -346,12 +346,16 @@ export default function ModelDetail() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatPrice(model.kpi.median_30d)}</div>
-                <div className="flex items-center gap-1 mt-1">
-                  {getTrendIcon(model.kpi.var_30d_pct)}
-                  <span className={model.kpi.var_30d_pct < 0 ? "text-success" : "text-destructive"}>
-                    {formatPercent(model.kpi.var_30d_pct)}
-                  </span>
-                </div>
+                {model.kpi.var_30d_pct != null ? (
+                  <div className="flex items-center gap-1 mt-1">
+                    {getTrendIcon(model.kpi.var_30d_pct)}
+                    <span className={model.kpi.var_30d_pct < 0 ? "text-success" : "text-destructive"}>
+                      {formatPercent(model.kpi.var_30d_pct)}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">—</p>
+                )}
               </CardContent>
             </Card>
 
