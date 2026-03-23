@@ -1,9 +1,13 @@
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { PricingTable, PLANS } from "@/components/pricing/PricingTable";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { Check, RefreshCw, Shield, Zap, HelpCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { apiGet } from "@/lib/api/client";
+import { BILLING } from "@/lib/api/endpoints";
 const FAQ_ITEMS = [{
   question: "Les crédits sont-ils cumulables ?",
   answer: "Non, les crédits sont remis à zéro à chaque nouveau cycle mensuel. Les crédits non utilisés et ceux gagnés via la collecte communautaire ne sont pas reportés au mois suivant."
