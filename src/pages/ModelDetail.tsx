@@ -372,8 +372,8 @@ export default function ModelDetail() {
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs">
                       <p className="text-xs">
-                        Prix estimé raisonnable basé sur la médiane des 30 derniers jours, 
-                        excluant les annonces anormalement chères ou bon marché.
+                        Estimation pondérée du prix raisonnable, calculée à partir des transactions 
+                        des 30 derniers jours en excluant les valeurs extrêmes.
                       </p>
                     </TooltipContent>
                   </UITooltip>
