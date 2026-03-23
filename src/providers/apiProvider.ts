@@ -217,8 +217,10 @@ export const apiProvider: DataProvider = {
     
     let marketData = {
       median_price: 0, price_p25: 0, price_p75: 0,
-      var_7d_pct: 0, var_30d_pct: 0, var_90d_pct: 0,
-      volume: 0, ads_count: 0, median_days_to_sell: 0,
+      var_7d_pct: null as number | null, var_30d_pct: null as number | null, var_90d_pct: null as number | null,
+      volume: 0, ads_count: 0, median_days_to_sell: null as number | null,
+      fair_value_30d: null as number | null,
+      liquidity_score: null as number | null,
     };
     
     try {
@@ -226,14 +228,16 @@ export const apiProvider: DataProvider = {
       if (summary) {
         marketData = {
           median_price: summary.price_median || 0,
+          fair_value_30d: summary.fair_value_30d ?? null,
           price_p25: summary.price_p25 || 0,
           price_p75: summary.price_p75 || 0,
-          var_7d_pct: summary.var_7d_pct || 0,
-          var_30d_pct: summary.var_30d_pct || 0,
-          var_90d_pct: summary.var_90d_pct || 0,
+          var_7d_pct: summary.var_7d_pct ?? null,
+          var_30d_pct: summary.var_30d_pct ?? null,
+          var_90d_pct: summary.var_90d_pct ?? null,
           volume: summary.ads_count || 0,
           ads_count: summary.ads_count || 0,
-          median_days_to_sell: summary.median_days_to_sell || 0,
+          median_days_to_sell: summary.median_days_to_sell ?? null,
+          liquidity_score: summary.liquidity_score ?? null,
         };
       }
     } catch (e) { console.warn('No market data for model', modelId); }
