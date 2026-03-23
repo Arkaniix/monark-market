@@ -454,7 +454,7 @@ export default function ModelDetail() {
                 </TooltipProvider>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{model.kpi.median_days_to_sell} jours</div>
+                <div className="text-2xl font-bold">{model.kpi.median_days_to_sell != null ? `${model.kpi.median_days_to_sell} jours` : '—'}</div>
               </CardContent>
             </Card>
 
