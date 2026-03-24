@@ -89,7 +89,7 @@ function normalizeEstimatorPayload(payload: unknown): V3EstimationResponse | nul
     };
   }
 
-  return wrappedData as V3EstimationResponse;
+  return wrappedData as unknown as V3EstimationResponse;
 }
 
 export function useEstimatorV3() {
@@ -115,7 +115,7 @@ export function useEstimatorV3() {
       const rawPayload: unknown = await res.json();
 
       if (!res.ok) {
-        const details = isObject(rawPayload) ? (rawPayload as V3ErrorResponse) : undefined;
+        const details = isObject(rawPayload) ? (rawPayload as unknown as V3ErrorResponse) : undefined;
         if (details?.error === "insufficient_credits") {
           throw new EstimatorError(
             "insufficient_credits",
