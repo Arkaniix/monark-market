@@ -760,7 +760,7 @@ export default function MyAccount() {
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                     <span className="text-sm">Analyse Estimator</span>
-                    <Badge variant="outline">3 crédits</Badge>
+                    <Badge variant="outline">2 crédits</Badge>
                   </div>
                 </div>
               </CardContent>

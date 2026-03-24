@@ -15,7 +15,7 @@ export type ScrapType = AnalysisType;
 export const CREDIT_COSTS: Record<CreditActionType, number> = {
   analysis_quick: 5,
   analysis_deep: 20,
-  estimator: 3,
+  estimator: 2,
   alert: 0, // Free
   export: 0, // Free but plan-gated
 };
