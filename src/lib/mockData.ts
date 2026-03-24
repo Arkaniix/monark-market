@@ -833,9 +833,9 @@ export const subscriptionPlans = [
   {
     name: "Free",
     price: 0,
-    credits: 20,
+    credits: 10,
     features: [
-      "20 crédits/mois",
+      "10 crédits/mois",
       "Market Score gratuit",
       "Catalogue complet",
       "Introduction plateforme",
@@ -844,9 +844,9 @@ export const subscriptionPlans = [
   {
     name: "Standard",
     price: 11.99,
-    credits: 200,
+    credits: 180,
     features: [
-      "200 crédits/mois",
+      "180 crédits/mois",
       "Estimator complet",
       "10 alertes actives",
       "Formation avancée",
@@ -856,10 +856,10 @@ export const subscriptionPlans = [
   },
   {
     name: "Pro",
-    price: 24.99,
-    credits: 800,
+    price: 22.99,
+    credits: 600,
     features: [
-      "800 crédits/mois",
+      "600 crédits/mois",
       "Scénarios comparatifs",
       "100 alertes + watchlist illimitée",
       "Export données",
