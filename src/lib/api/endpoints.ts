@@ -118,7 +118,7 @@ export const ADS = {
 export const ESTIMATOR = {
   RUN: '/v1/estimator/run',
   EVALUATE: '/v1/estimator/evaluate',
-  EVALUATE_V3: '/v1/estimator/evaluate-v3',
+  EVALUATE_V3: '/v1/estimator/evaluate',
   HISTORY: '/v1/estimator/history',
   GET_RUN: (runId: string | number) => `/v1/estimator/${runId}`,
   MODEL_VALUE: (modelId: string | number) => `/v1/estimator/models/${modelId}`,
