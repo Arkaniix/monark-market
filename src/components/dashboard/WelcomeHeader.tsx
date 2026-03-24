@@ -21,13 +21,15 @@ export function WelcomeHeader({
   const [extensionDetected] = useState(false);
 
   const formatDate = (date?: string) => {
-    if (!date) return "jamais";
+    if (!date) return null;
     const d = new Date(date);
+    if (isNaN(d.getTime())) return null;
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays === 0) return "aujourd'hui";
     if (diffDays === 1) return "hier";
     if (diffDays < 7) return `il y a ${diffDays} jours`;
+    if (diffDays > 30) return "plus d'un mois";
     return d.toLocaleDateString('fr-FR');
   };
 
