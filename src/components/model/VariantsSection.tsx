@@ -71,7 +71,7 @@ export function VariantsSection({ variants, variantsCount }: VariantsSectionProp
     val != null ? `${val.toLocaleString("fr-FR")} ${suffix}` : "—";
 
   const fmtPrice = (val: number | null | undefined) =>
-    val != null ? `~${Math.round(val)}$` : "—";
+    val != null ? `~${Math.round(val * 0.92)} €` : "—";
 
   return (
     <Card>
