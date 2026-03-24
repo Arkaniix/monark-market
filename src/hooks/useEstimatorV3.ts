@@ -17,38 +17,11 @@ function isObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null;
 }
 
-function normalizeNegotiationOffer(rawOffer: unknown, inputPrice: number) {
-  if (typeof rawOffer === "number") {
-    const savings = inputPrice > 0 ? inputPrice - rawOffer : 0;
-    const savingsPct = inputPrice > 0 ? (savings / inputPrice) * 100 : 0;
-    return {
-      price: rawOffer,
-      savings_eur: Number.isFinite(savings) ? savings : 0,
-      savings_pct: Number.isFinite(savingsPct) ? savingsPct : 0,
-    };
-  }
-
-  if (!isObject(rawOffer)) return null;
-
-  const price = typeof rawOffer.price === "number" ? rawOffer.price : inputPrice;
-  const savingsEur = typeof rawOffer.savings_eur === "number"
-    ? rawOffer.savings_eur
-    : (inputPrice > 0 ? inputPrice - price : 0);
-  const savingsPct = typeof rawOffer.savings_pct === "number"
-    ? rawOffer.savings_pct
-    : (inputPrice > 0 ? ((savingsEur / inputPrice) * 100) : 0);
-
-  return {
-    price,
-    savings_eur: Number.isFinite(savingsEur) ? savingsEur : 0,
-    savings_pct: Number.isFinite(savingsPct) ? savingsPct : 0,
-  };
-}
-
 function normalizeEstimatorPayload(payload: unknown): V3EstimationResponse | null {
   if (!isObject(payload)) return null;
 
-  const wrappedData = isObject(payload.data)
+  // Handle possible wrappers (data, result, results) or flat response
+  const data = isObject(payload.data)
     ? payload.data
     : isObject(payload.result)
       ? payload.result
@@ -56,40 +29,13 @@ function normalizeEstimatorPayload(payload: unknown): V3EstimationResponse | nul
         ? payload.results
         : payload;
 
-  if (!isObject(wrappedData)) return null;
-  if (!isObject(wrappedData.score) || !isObject(wrappedData.market) || !isObject(wrappedData.input)) {
+  if (!isObject(data)) return null;
+  if (!isObject(data.score) || !isObject(data.market) || !isObject(data.input)) {
     return null;
   }
 
-  const inputPrice = typeof wrappedData.input.price === "number" ? wrappedData.input.price : 0;
-  const negotiation = isObject(wrappedData.negotiation) ? wrappedData.negotiation : null;
-
-  if (negotiation) {
-    const aggressive = normalizeNegotiationOffer(
-      negotiation.aggressive ?? negotiation.aggressive_offer,
-      inputPrice
-    );
-    const compromise = normalizeNegotiationOffer(
-      negotiation.compromise ?? negotiation.compromise_offer,
-      inputPrice
-    );
-    const max = normalizeNegotiationOffer(
-      negotiation.max ?? negotiation.max_offer,
-      inputPrice
-    );
-
-    wrappedData.negotiation = {
-      aggressive: aggressive ?? { price: inputPrice, savings_eur: 0, savings_pct: 0 },
-      compromise: compromise ?? { price: inputPrice, savings_eur: 0, savings_pct: 0 },
-      max: max ?? { price: inputPrice, savings_eur: 0, savings_pct: 0 },
-      tip: typeof negotiation.tip === "string" ? negotiation.tip : "",
-      arguments: Array.isArray(negotiation.arguments)
-        ? negotiation.arguments.filter((arg): arg is string => typeof arg === "string")
-        : [],
-    };
-  }
-
-  return wrappedData as unknown as V3EstimationResponse;
+  // Return as-is — the API response structure is the source of truth
+  return data as unknown as V3EstimationResponse;
 }
 
 export function useEstimatorV3() {

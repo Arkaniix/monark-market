@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
-import type { V3WhatIf, V3WhatIfPricePoint, V3Verdict } from "@/types/estimatorV3";
-import { VERDICT_ICONS } from "@/types/estimatorV3";
+import type { V3WhatIf, V3Verdict } from "@/types/estimatorV3";
+import { VERDICT_ICONS, VERDICT_LABELS } from "@/types/estimatorV3";
 
 interface WhatIfSectionProps {
   whatIf: V3WhatIf;
@@ -27,7 +27,6 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
   const [highlightedIdx, setHighlightedIdx] = useState<number | null>(null);
   const pricePoints = whatIf?.price_points ?? [];
 
-  // Preset buttons from price_points with delta_pct != 0, plus the current
   const presetButtons = pricePoints.filter(p =>
     p.delta_pct === -20 || p.delta_pct === -10 || p.delta_pct === 0 || p.delta_pct === 10 || p.delta_pct === 20
   );
@@ -80,6 +79,7 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
                 {pricePoints.map((p, i) => {
                   const isCurrent = p.delta_pct === 0;
                   const isHighlighted = highlightedIdx === i || (highlightedIdx === null && isCurrent);
+                  const verdictLabel = VERDICT_LABELS[p.verdict] || p.verdict;
                   return (
                     <tr
                       key={i}
@@ -92,7 +92,7 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
                       <td className="py-2.5 text-center">{p.score}</td>
                       <td className="py-2.5 text-center">
                         <Badge className={`text-xs gap-1 border ${getVerdictBg(p.verdict)}`}>
-                          {VERDICT_ICONS[p.verdict]} {p.verdict_label}
+                          {VERDICT_ICONS[p.verdict]} {verdictLabel}
                         </Badge>
                       </td>
                       <td className={`py-2.5 text-right ${(p.margin_at_median_pct ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
@@ -110,6 +110,7 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
             {pricePoints.map((p, i) => {
               const isCurrent = p.delta_pct === 0;
               const isHighlighted = highlightedIdx === i || (highlightedIdx === null && isCurrent);
+              const verdictLabel = VERDICT_LABELS[p.verdict] || p.verdict;
               return (
                 <div
                   key={i}
@@ -122,7 +123,7 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
                       {isCurrent && <span className="text-xs text-muted-foreground ml-1">← actuel</span>}
                     </div>
                     <Badge className={`text-xs gap-1 border ${getVerdictBg(p.verdict)}`}>
-                      {VERDICT_ICONS[p.verdict]} {p.verdict_label}
+                      {VERDICT_ICONS[p.verdict]} {verdictLabel}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">

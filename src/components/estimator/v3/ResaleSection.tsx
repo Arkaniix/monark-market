@@ -13,7 +13,6 @@ interface ResaleSectionProps {
 function normalizePlatforms(resale: V3EstimationResponse["resale"]): Array<V3ResalePlatformData & { platform: string; platform_label: string }> {
   if (!resale?.platforms) return [];
 
-  // If it's already an array (old format), cast and return
   if (Array.isArray(resale.platforms)) {
     return (resale.platforms as any[]).map(p => ({
       ...p,
@@ -22,7 +21,6 @@ function normalizePlatforms(resale: V3EstimationResponse["resale"]): Array<V3Res
     }));
   }
 
-  // Object format: { "vinted": {...}, "leboncoin": {...} }
   return Object.entries(resale.platforms as Record<string, V3ResalePlatformData>).map(([key, data]) => ({
     ...data,
     platform: key,
@@ -72,17 +70,15 @@ function PlatformCard({ platform, isFirst }: { platform: ReturnType<typeof norma
   );
 }
 
-function ScenarioCard({ scenario, isOptimal }: { scenario: V3Scenario; isOptimal: boolean }) {
+function ScenarioCard({ scenario, label, icon, isOptimal }: { scenario: V3Scenario; label: string; icon: string; isOptimal: boolean }) {
   const marginPositive = (scenario.margin_eur ?? 0) >= 0;
-  const icons: Record<string, typeof Clock> = { quick: Timer, optimal: Clock, patient: Hourglass };
-  const Icon = icons[scenario.id] || Clock;
   const probabilityPct = scenario.probability_pct ?? 0;
   return (
     <Card className={isOptimal ? "border-2 border-primary/50" : ""}>
       <CardContent className="py-4 text-center space-y-2">
         <div className="flex items-center justify-center gap-2">
-          <Icon className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">{scenario.label}</span>
+          <span>{icon}</span>
+          <span className="text-sm font-medium">{label}</span>
           {isOptimal && <Badge className="text-[10px]">Recommandé</Badge>}
         </div>
         <p className="text-2xl font-bold">{scenario.sell_price ?? 0}€</p>
@@ -90,7 +86,6 @@ function ScenarioCard({ scenario, isOptimal }: { scenario: V3Scenario; isOptimal
           {marginPositive ? "+" : ""}{scenario.margin_eur ?? 0}€ ({marginPositive ? "+" : ""}{(scenario.margin_pct ?? 0).toFixed(0)}%)
         </p>
         <p className="text-xs text-muted-foreground">~{scenario.est_days ?? "?"}j</p>
-        {/* Probability bar */}
         <div className="space-y-1">
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
@@ -109,7 +104,6 @@ export default function ResaleSection({ result }: ResaleSectionProps) {
   const { resale, scenarios } = result;
   if (!resale && !scenarios) return null;
 
-  // Normalize and sort platforms: recommended first
   const sortedPlatforms = normalizePlatforms(resale)
     .sort((a, b) => (b.is_recommended ? 1 : 0) - (a.is_recommended ? 1 : 0));
 
@@ -130,7 +124,6 @@ export default function ResaleSection({ result }: ResaleSectionProps) {
       transition={{ duration: 0.4, delay: 0.2 }}
       className="space-y-6"
     >
-      {/* Resale platforms */}
       {sortedPlatforms.length > 0 && (
         <div>
           <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
@@ -144,17 +137,15 @@ export default function ResaleSection({ result }: ResaleSectionProps) {
         </div>
       )}
 
-      {/* Scenarios */}
       {scenarios && (
         <div>
           <h3 className="text-lg font-bold mb-3">📊 Scénarios de revente</h3>
           <div className="grid sm:grid-cols-3 gap-4">
-            <ScenarioCard scenario={scenarios.quick} isOptimal={false} />
-            <ScenarioCard scenario={scenarios.optimal} isOptimal={true} />
-            <ScenarioCard scenario={scenarios.patient} isOptimal={false} />
+            <ScenarioCard scenario={scenarios.quick} label="Vente rapide" icon="⏩" isOptimal={false} />
+            <ScenarioCard scenario={scenarios.optimal} label="Optimal" icon="✅" isOptimal={true} />
+            <ScenarioCard scenario={scenarios.patient} label="Patient" icon="⏳" isOptimal={false} />
           </div>
 
-          {/* Market context */}
           {(scenarios.timing || scenarios.saturation) && (
             <div className="grid sm:grid-cols-2 gap-4 mt-4">
               {scenarios.timing && (

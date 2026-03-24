@@ -32,53 +32,9 @@ function LevelBadge({ level, label }: { level: string; label: string }) {
   );
 }
 
-interface NormalizedNegotiationOffer {
-  price: number;
-  savings_eur: number;
-  savings_pct: number;
-}
-
-function parseNegotiationOffer(rawOffer: unknown, inputPrice: number): NormalizedNegotiationOffer | null {
-  if (typeof rawOffer === "number") {
-    const savings = inputPrice > 0 ? inputPrice - rawOffer : 0;
-    const savingsPct = inputPrice > 0 ? (savings / inputPrice) * 100 : 0;
-    return { price: rawOffer, savings_eur: savings, savings_pct: savingsPct };
-  }
-
-  if (!rawOffer || typeof rawOffer !== "object") return null;
-
-  const offer = rawOffer as Record<string, unknown>;
-  const price = typeof offer.price === "number" ? offer.price : inputPrice;
-  const savings = typeof offer.savings_eur === "number" ? offer.savings_eur : (inputPrice > 0 ? inputPrice - price : 0);
-  const savingsPct = typeof offer.savings_pct === "number" ? offer.savings_pct : (inputPrice > 0 ? (savings / inputPrice) * 100 : 0);
-
-  return {
-    price,
-    savings_eur: savings,
-    savings_pct: savingsPct,
-  };
-}
-
 export default function MarketAnalysisSection({ result }: MarketAnalysisSectionProps) {
   const { market, trends, liquidity, volatility, score, negotiation, input } = result;
   const inputPrice = input?.price ?? 0;
-  const negotiationData = negotiation as unknown as Record<string, unknown> | null;
-  const aggressiveOffer = parseNegotiationOffer(
-    negotiationData?.aggressive ?? negotiationData?.aggressive_offer,
-    inputPrice
-  );
-  const compromiseOffer = parseNegotiationOffer(
-    negotiationData?.compromise ?? negotiationData?.compromise_offer,
-    inputPrice
-  );
-  const maxOffer = parseNegotiationOffer(
-    negotiationData?.max ?? negotiationData?.max_offer,
-    inputPrice
-  );
-  const negotiationTip = typeof negotiationData?.tip === "string" ? negotiationData.tip : "";
-  const negotiationArguments = Array.isArray(negotiationData?.arguments)
-    ? negotiationData.arguments.filter((arg): arg is string => typeof arg === "string")
-    : [];
 
   return (
     <motion.div
@@ -110,12 +66,13 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
 
             {market.condition_adjusted && (
               <p className="text-sm text-muted-foreground">
-                Médiane pour « {market.condition_adjusted.condition_label} » :{" "}
-                <span className="font-medium text-foreground">{market.condition_adjusted.median_price}€</span>
-                {" "}(votre prix est{" "}
-                <span className={(market.condition_adjusted.price_vs_condition_pct ?? 0) <= 0 ? "text-green-600" : "text-red-600"}>
-                  {(market.condition_adjusted.price_vs_condition_pct ?? 0) > 0 ? "+" : ""}{(market.condition_adjusted.price_vs_condition_pct ?? 0).toFixed(0)}%
-                </span>)
+                Médiane pour cette condition :{" "}
+                <span className="font-medium text-foreground">
+                  {market.condition_adjusted.median_for_condition ?? "—"}€
+                </span>
+                {market.condition_adjusted.condition_sample_size != null && (
+                  <span className="text-xs"> ({market.condition_adjusted.condition_sample_size} observations)</span>
+                )}
               </p>
             )}
 
@@ -134,7 +91,6 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
 
       {/* Trends + Liquidity + Volatility grid */}
       <div className="grid sm:grid-cols-3 gap-4">
-        {/* Trends */}
         {trends && (
           <Card>
             <CardContent className="py-4 space-y-2">
@@ -151,7 +107,6 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
           </Card>
         )}
 
-        {/* Liquidity */}
         {liquidity && (
           <Card>
             <CardContent className="py-4 space-y-2">
@@ -169,7 +124,6 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
           </Card>
         )}
 
-        {/* Volatility */}
         {volatility && (
           <Card>
             <CardContent className="py-4 space-y-2">
@@ -234,12 +188,7 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
                   Confiance : {score.confidence.score != null ? score.confidence.score.toFixed(2) : "—"} ({score.confidence.level === "high" ? "Élevée" : score.confidence.level === "medium" ? "Moyenne" : "Faible"})
                 </p>
                 {(score.confidence.factors ?? []).map((f, i) => (
-                  <p key={i} className="text-xs text-muted-foreground flex items-center gap-1">
-                    <span className={f.impact === "positive" ? "text-green-500" : "text-red-500"}>
-                      {f.impact === "positive" ? "✓" : "✗"}
-                    </span>
-                    {f.label}
-                  </p>
+                  <p key={i} className="text-xs text-muted-foreground">• {f}</p>
                 ))}
               </div>
             </AccordionContent>
@@ -247,8 +196,8 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
         </Accordion>
       )}
 
-      {/* Negotiation */}
-      {negotiationData && (
+      {/* Negotiation — flat structure from API */}
+      {negotiation && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -256,47 +205,44 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* 3 cards */}
             <div className="grid sm:grid-cols-3 gap-3">
               <NegotiationCard
                 label="Agressive"
                 emoji="🔴"
-                price={aggressiveOffer?.price ?? inputPrice}
-                savings={aggressiveOffer?.savings_eur ?? 0}
-                savingsPct={aggressiveOffer?.savings_pct ?? 0}
+                price={negotiation.aggressive_offer}
+                savings={negotiation.savings_aggressive_eur}
+                savingsPct={negotiation.savings_aggressive_pct}
               />
               <NegotiationCard
                 label="Compromis"
                 emoji="🟡"
-                price={compromiseOffer?.price ?? inputPrice}
-                savings={compromiseOffer?.savings_eur ?? 0}
-                savingsPct={compromiseOffer?.savings_pct ?? 0}
+                price={negotiation.compromise_offer}
+                savings={negotiation.savings_compromise_eur}
+                savingsPct={negotiation.savings_compromise_pct}
               />
               <NegotiationCard
                 label="Maximum"
                 emoji="🟢"
-                price={maxOffer?.price ?? inputPrice}
-                savings={maxOffer?.savings_eur ?? 0}
-                savingsPct={maxOffer?.savings_pct ?? 0}
+                price={negotiation.max_price}
+                savings={0}
+                savingsPct={0}
               />
             </div>
 
-            {/* Tip */}
-            {negotiationTip && (
+            {negotiation.tip && (
               <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 p-3 flex items-start gap-2">
                 <Lightbulb className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-                <p className="text-sm">{negotiationTip}</p>
+                <p className="text-sm">{negotiation.tip}</p>
               </div>
             )}
 
-            {/* Arguments */}
-            {negotiationArguments.length > 0 && (
+            {Array.isArray(negotiation.arguments) && negotiation.arguments.length > 0 && (
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2">Arguments à utiliser :</p>
                 <ul className="space-y-1">
-                  {negotiationArguments.map((arg, i) => (
+                  {negotiation.arguments.map((arg, i) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                      <span>•</span>{arg}
+                      <span>•</span>{typeof arg === "string" ? arg : String(arg)}
                     </li>
                   ))}
                 </ul>

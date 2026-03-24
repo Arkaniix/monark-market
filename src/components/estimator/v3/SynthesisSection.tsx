@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Info, AlertCircle, Cpu, Monitor, MemoryStick, HardDrive } from "lucide-react";
+import { AlertTriangle, Info, Cpu, Monitor, MemoryStick, HardDrive } from "lucide-react";
 import type { V3EstimationResponse, V3PrimaryRisk, V3BundleComponent } from "@/types/estimatorV3";
 import { getVerdictColorClass, VERDICT_ICONS } from "@/types/estimatorV3";
 
@@ -89,14 +89,12 @@ function ComponentSynthesis({ result }: { result: V3EstimationResponse }) {
   return (
     <Card className={`border-2 shadow-lg ${verdictClass.split(" ").filter(c => c.startsWith("bg-") || c.startsWith("border-")).join(" ")}`}>
       <CardContent className="py-6 space-y-5">
-        {/* Credits used */}
         <div className="flex justify-end">
           <Badge variant="outline" className="text-[10px]">
             {result.credits_used} crédit{result.credits_used > 1 ? "s" : ""} utilisé{result.credits_used > 1 ? "s" : ""}
           </Badge>
         </div>
 
-        {/* Model header */}
         <div className="flex items-center gap-4">
           {model.image_url ? (
             <img src={model.image_url} alt={model.name} className="h-16 w-16 rounded-xl object-contain bg-muted" />
@@ -120,7 +118,6 @@ function ComponentSynthesis({ result }: { result: V3EstimationResponse }) {
           </div>
         </div>
 
-        {/* Score + Verdict */}
         <div className="grid sm:grid-cols-2 gap-4">
           <ScoreBar score={score.overall} color={score.verdict_color} />
           <div className="flex flex-col items-start sm:items-end justify-center gap-1">
@@ -133,10 +130,8 @@ function ComponentSynthesis({ result }: { result: V3EstimationResponse }) {
 
         <ConfidenceDots level={score.confidence.level} />
 
-        {/* Summary */}
         <p className="text-sm">{score.summary}</p>
 
-        {/* Median + gap */}
         <div className="flex items-center gap-3 text-sm">
           <span className="text-muted-foreground">
             Médiane du marché : <span className="font-medium text-foreground">{market.median_price}€</span>
@@ -148,10 +143,8 @@ function ComponentSynthesis({ result }: { result: V3EstimationResponse }) {
           </Badge>
         </div>
 
-        {/* Primary risk */}
         {primary_risk && <RiskAlert risk={primary_risk} />}
 
-        {/* Justifications */}
         {justifications.length > 0 && (
           <ul className="space-y-1.5 border-t pt-3">
             {justifications.map((j, i) => (
@@ -173,6 +166,8 @@ function BundleSynthesis({ result }: { result: V3EstimationResponse }) {
   const ba = bundle_analysis!;
   const verdictClass = getVerdictColorClass(score.verdict_color);
 
+  const bundleDiscountEur = Math.round((ba.sum_individual_fair_values ?? 0) * (ba.bundle_discount_pct ?? 0) / 100);
+
   return (
     <Card className={`border-2 shadow-lg ${verdictClass.split(" ").filter(c => c.startsWith("bg-") || c.startsWith("border-")).join(" ")}`}>
       <CardContent className="py-6 space-y-5">
@@ -182,7 +177,6 @@ function BundleSynthesis({ result }: { result: V3EstimationResponse }) {
           </Badge>
         </div>
 
-        {/* Bundle header */}
         <div>
           <h2 className="text-xl font-bold">
             Lot de {components?.length || 0} composants · {input.price}€
@@ -193,7 +187,6 @@ function BundleSynthesis({ result }: { result: V3EstimationResponse }) {
           </p>
         </div>
 
-        {/* Score + Verdict inline */}
         <div className="flex items-center gap-4 flex-wrap">
           <ScoreBar score={score.overall} color={score.verdict_color} />
           <Badge className={`text-base px-4 py-1.5 gap-2 border ${verdictClass}`}>
@@ -203,25 +196,23 @@ function BundleSynthesis({ result }: { result: V3EstimationResponse }) {
 
         <p className="text-sm">{score.summary}</p>
 
-        {/* Bundle analysis table */}
         <div className="rounded-lg border bg-muted/30 p-4 space-y-2 text-sm">
           <h4 className="font-medium text-muted-foreground mb-2">Analyse du lot</h4>
-          <div className="flex justify-between"><span>Valeur composants séparés</span><span className="font-medium">{ba.total_parts_value}€</span></div>
-          <div className="flex justify-between"><span>Décote bundle ({ba.bundle_discount_pct ?? 0}%)</span><span className="font-medium text-orange-500">-{ba.bundle_discount_eur ?? 0}€</span></div>
-          <div className="flex justify-between border-t pt-2"><span className="font-medium">Valeur estimée du lot</span><span className="font-bold">{ba.estimated_bundle_value ?? 0}€</span></div>
+          <div className="flex justify-between"><span>Valeur composants séparés</span><span className="font-medium">{ba.sum_individual_fair_values ?? 0}€</span></div>
+          <div className="flex justify-between"><span>Décote bundle ({ba.bundle_discount_pct ?? 0}%)</span><span className="font-medium text-orange-500">-{bundleDiscountEur}€</span></div>
+          <div className="flex justify-between border-t pt-2"><span className="font-medium">Valeur estimée du lot</span><span className="font-bold">{ba.bundle_fair_value ?? 0}€</span></div>
           <div className="flex justify-between">
             <span>Prix demandé</span>
-            <span className={(ba.price_vs_bundle_pct ?? 0) > 0 ? "text-red-500" : "text-green-500"}>
-              {input.price}€ ({(ba.price_vs_bundle_pct ?? 0) > 0 ? "+" : ""}{(ba.price_vs_bundle_pct ?? 0).toFixed(1)}%)
+            <span className={(ba.price_vs_bundle_fair_pct ?? 0) > 0 ? "text-red-500" : "text-green-500"}>
+              {input.price}€ ({(ba.price_vs_bundle_fair_pct ?? 0) > 0 ? "+" : ""}{(ba.price_vs_bundle_fair_pct ?? 0).toFixed(1)}%)
             </span>
           </div>
           <div className="flex justify-between border-t pt-2">
             <span>Économie vs achat séparé</span>
-            <span className="font-medium text-green-600">{ba.savings_vs_separate_eur}€ ({ba.savings_vs_separate_pct}%)</span>
+            <span className="font-medium text-green-600">{ba.savings_vs_individual_eur ?? 0}€ ({ba.savings_vs_individual_pct ?? 0}%)</span>
           </div>
         </div>
 
-        {/* Components list */}
         {components && components.length > 0 && (
           <div className="rounded-lg border p-4 space-y-2">
             <h4 className="text-sm font-medium text-muted-foreground mb-2">Composants</h4>
@@ -278,7 +269,7 @@ function ComponentRow({ comp }: { comp: V3BundleComponent }) {
 }
 
 // ============= Main export =============
-export default function SynthesisSection({ result }: SynthesisSectionProps) {
+export default function SynthesisSection({ result }: { result: V3EstimationResponse }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
