@@ -98,7 +98,7 @@ export function TrainingSection() {
               <CardContent className="p-6">
                 <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                   <GraduationCap className="h-5 w-5 text-primary" />
-                  7 modules de formation
+                  {modulesList.length} modules de formation
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   Une progression structurée de 45-60 minutes pour maîtriser tous les aspects de la revente hardware.

@@ -215,7 +215,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           
           <div className="mt-8 pt-8 border-t text-center">
             <p className="text-sm text-muted-foreground">
-              © 2025 <span className="font-semibold text-foreground">Monark</span>. Tous droits réservés.
+              © {new Date().getFullYear()} <span className="font-semibold text-foreground">Monark</span>. Tous droits réservés.
             </p>
           </div>
         </div>

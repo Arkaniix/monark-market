@@ -46,7 +46,10 @@ export function WelcomeHeader({
                 </h1>
               </div>
               <p className="text-muted-foreground text-lg">
-                Ta dernière analyse remonte à <span className="font-semibold text-foreground">{formatDate(lastAnalysisDate)}</span>
+                {formatDate(lastAnalysisDate)
+                  ? <>Ta dernière analyse remonte à <span className="font-semibold text-foreground">{formatDate(lastAnalysisDate)}</span></>
+                  : "Tu n'as pas encore d'analyse"
+                }
               </p>
               <div className="flex items-center gap-3 flex-wrap">
                 <Badge variant="outline" className="text-sm px-3 py-1.5">

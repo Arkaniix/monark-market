@@ -162,7 +162,7 @@ export function VariantsSection({ variants, variantsCount }: VariantsSectionProp
           </Table>
         </div>
         <p className="text-xs text-muted-foreground mt-3 italic">
-          💡 Les prix sont indicatifs (prix neuf PCPartPicker en USD) et ne reflètent pas les prix d'occasion Monark.
+          💡 Les prix sont estimés depuis les tarifs US (conversion approximative) et ne reflètent pas les prix d'occasion Monark.
         </p>
       </CardContent>
     </Card>
