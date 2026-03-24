@@ -164,7 +164,7 @@ export default function ModelDetail() {
   };
 
   // Format helpers
-  const formatPrice = (price: number) => `${price} €`;
+  const formatPrice = (price: number | null | undefined) => price != null ? `${price} €` : '—';
   const formatPercent = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("fr-FR", {
@@ -381,11 +381,11 @@ export default function ModelDetail() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatPrice(model.kpi.fair_value_30d)}</div>
-                {model.new_price_eur != null && model.new_price_eur > 0 && (
+                {model.kpi.fair_value_30d != null && model.new_price_eur != null && model.new_price_eur > 0 && (
                   <div className="mt-1.5 space-y-0.5">
                     <span className="text-xs text-muted-foreground">Neuf : {model.new_price_eur.toLocaleString('fr-FR')} €</span>
                     {(() => {
-                      const savings = Math.round((1 - model.kpi.fair_value_30d / model.new_price_eur) * 100);
+                      const savings = Math.round((1 - model.kpi.fair_value_30d / model.new_price_eur!) * 100);
                       return savings > 0 ? (
                         <div>
                           <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-emerald-500/15 text-emerald-500 border-emerald-500/30">

@@ -194,7 +194,7 @@ export const ACTION_COSTS: Record<string, ActionCost> = {
   estimator: {
     type: "estimator",
     displayName: "Estimation",
-    cost: 3,
+    cost: 2,
     description: "Analyse de prix détaillée",
   },
   export: {
@@ -541,8 +541,8 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
       state = {
         ...state,
         planName: "standard",
-        creditsRemaining: 200,
-        creditsFromPlan: 200,
+        creditsRemaining: 180,
+        creditsFromPlan: 180,
       };
       break;
       
@@ -551,7 +551,7 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
         ...state,
         planName: "standard",
         creditsRemaining: 8,
-        creditsFromPlan: 200,
+        creditsFromPlan: 180,
       };
       break;
       
@@ -560,7 +560,7 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
         ...state,
         planName: "pro",
         creditsRemaining: 0,
-        creditsFromPlan: 800,
+        creditsFromPlan: 600,
       };
       break;
       
@@ -568,8 +568,8 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
       state = {
         ...state,
         planName: "pro",
-        creditsRemaining: 600,
-        creditsFromPlan: 800,
+        creditsRemaining: 450,
+        creditsFromPlan: 600,
       };
       break;
       
@@ -577,8 +577,8 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
       state = {
         ...state,
         planName: "pro",
-        creditsRemaining: 800,
-        creditsFromPlan: 800,
+        creditsRemaining: 600,
+        creditsFromPlan: 600,
       };
       break;
       
@@ -588,7 +588,7 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
         ...state,
         planName: "pro",
         creditsRemaining: 180,
-        creditsFromPlan: 800,
+        creditsFromPlan: 600,
         creditsResetDate: nearResetDate.toISOString(),
       };
       break;
@@ -598,7 +598,7 @@ export function setDemoScenario(scenario: DemoScenario): MockSubscriptionState {
         ...state,
         planName: "standard",
         creditsRemaining: 25,
-        creditsFromPlan: 200,
+        creditsFromPlan: 180,
       };
       break;
   }

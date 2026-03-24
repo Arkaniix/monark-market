@@ -60,7 +60,7 @@ import {
 // Historique complet simulé (30 entrées)
 const generateFullHistory = () => {
   const actions = [
-    { action: "Analyse Estimator", cost: 3 },
+    { action: "Analyse Estimator", cost: 2 },
     { action: "Qualifier une annonce", cost: 5 },
     { action: "Décision complète (Estimator)", cost: 20 },
   ];
@@ -278,7 +278,7 @@ export default function MyAccount() {
       id: "standard", 
       name: "Standard", 
       price: 11.99, 
-      credits: 200,
+      credits: 180,
       features: ["10 alertes actives", "Estimator complet", "Formation avancée"],
       isPopular: true,
       hasAdvancedAnalysis: false,
@@ -288,8 +288,8 @@ export default function MyAccount() {
     { 
       id: "pro", 
       name: "Pro", 
-      price: 24.99, 
-      credits: 800,
+      price: 22.99, 
+      credits: 600,
       features: ["100 alertes", "Scénarios + export", "Support prioritaire"],
       hasAdvancedAnalysis: false,
       hasAdvancedStats: true,
@@ -760,7 +760,7 @@ export default function MyAccount() {
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                     <span className="text-sm">Analyse Estimator</span>
-                    <Badge variant="outline">3 crédits</Badge>
+                    <Badge variant="outline">2 crédits</Badge>
                   </div>
                 </div>
               </CardContent>
