@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import type { V3UpgradeHint } from "@/types/estimatorV3";
+import { LEVEL_LABELS } from "@/types/estimatorV3";
 
 interface SectionTeaserProps {
   title: string;
@@ -14,7 +15,7 @@ interface SectionTeaserProps {
 
 export default function SectionTeaser({ title, description, features, savingsHint, upgradeHint }: SectionTeaserProps) {
   const ctaLabel = upgradeHint
-    ? `Passer au plan ${upgradeHint.next_level_label}`
+    ? `Passer au plan ${LEVEL_LABELS[upgradeHint.next_level] || upgradeHint.next_level}`
     : "Voir les plans";
 
   return (
