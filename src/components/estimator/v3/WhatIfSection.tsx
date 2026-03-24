@@ -95,8 +95,8 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
                           {VERDICT_ICONS[p.verdict]} {p.verdict_label}
                         </Badge>
                       </td>
-                      <td className={`py-2.5 text-right ${p.margin_at_median_pct >= 0 ? "text-green-600" : "text-red-600"}`}>
-                        {p.margin_at_median_pct > 0 ? "+" : ""}{p.margin_at_median_pct.toFixed(0)}%
+                      <td className={`py-2.5 text-right ${(p.margin_at_median_pct ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        {(p.margin_at_median_pct ?? 0) > 0 ? "+" : ""}{(p.margin_at_median_pct ?? 0).toFixed(0)}%
                       </td>
                     </tr>
                   );
