@@ -174,7 +174,21 @@ export interface V3ResalePlatform {
 }
 
 export interface V3Resale {
-  platforms: V3ResalePlatform[];
+  best_platform: string | null;
+  platforms: Record<string, V3ResalePlatformData> | V3ResalePlatform[];
+}
+
+export interface V3ResalePlatformData {
+  recommended_price: number;
+  premium_price?: number;
+  floor_price?: number;
+  margin_eur: number;
+  margin_pct: number;
+  volume_30d: number;
+  est_sell_days: number;
+  sell_probability_30d_pct: number;
+  is_recommended: boolean;
+  note: string | null;
 }
 
 // ============= Response — Scenarios =============
