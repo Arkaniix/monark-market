@@ -1,15 +1,15 @@
 // Hook for V3 Estimator — calls POST /v1/estimator/evaluate
+// Uses raw fetch (not apiFetch) because the endpoint returns a flat JSON object
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api/client";
+import { API_BASE_URL, getAccessToken } from "@/lib/api/client";
 import type {
   V3EstimationRequest,
   V3EstimationResponse,
   V3ErrorResponse,
 } from "@/types/estimatorV3";
-import { ApiException } from "@/lib/api/client";
 
-const EVALUATE_V3_ENDPOINT = "/v1/estimator/evaluate";
+const EVALUATE_ENDPOINT = `${API_BASE_URL}/v1/estimator/evaluate`;
 
 export function useEstimatorV3() {
   const queryClient = useQueryClient();
@@ -17,32 +17,39 @@ export function useEstimatorV3() {
 
   const mutation = useMutation({
     mutationFn: async (request: V3EstimationRequest): Promise<V3EstimationResponse> => {
-      try {
-        const response = await apiFetch<V3EstimationResponse>(EVALUATE_V3_ENDPOINT, {
-          method: "POST",
-          body: request,
-          auth: true,
-        });
-        return response;
-      } catch (err) {
-        if (err instanceof ApiException) {
-          // Try to parse structured error
-          const details = err.details as V3ErrorResponse | undefined;
-          if (details?.error === "insufficient_credits") {
-            throw new EstimatorError(
-              "insufficient_credits",
-              details.message,
-              details.credits_required,
-              details.plan_level
-            );
-          }
-          if (details?.error === "validation_error") {
-            throw new EstimatorError("validation_error", details.message);
-          }
-          throw new EstimatorError("internal_error", err.message);
-        }
-        throw err;
+      const token = getAccessToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
+
+      const res = await fetch(EVALUATE_ENDPOINT, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(request),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const details = data as V3ErrorResponse | undefined;
+        if (details?.error === "insufficient_credits") {
+          throw new EstimatorError(
+            "insufficient_credits",
+            details.message,
+            details.credits_required,
+            details.plan_level
+          );
+        }
+        if (details?.error === "validation_error") {
+          throw new EstimatorError("validation_error", details.message);
+        }
+        throw new EstimatorError("internal_error", data?.message || res.statusText);
+      }
+
+      return data as V3EstimationResponse;
     },
     onSuccess: (result) => {
       setLastResult(result);
