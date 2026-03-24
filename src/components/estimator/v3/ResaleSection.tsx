@@ -1,16 +1,37 @@
 // Section 3 — Revente & Scénarios (Pro)
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, Clock, Timer, Hourglass } from "lucide-react";
-import type { V3EstimationResponse, V3ResalePlatform, V3Scenario } from "@/types/estimatorV3";
+import type { V3EstimationResponse, V3ResalePlatformData, V3Scenario } from "@/types/estimatorV3";
 
 interface ResaleSectionProps {
   result: V3EstimationResponse;
 }
 
-function PlatformCard({ platform, isFirst }: { platform: V3ResalePlatform; isFirst: boolean }) {
-  const marginPositive = platform.margin_eur >= 0;
+/** Normalize platforms from API (object keyed by name) into a renderable array */
+function normalizePlatforms(resale: V3EstimationResponse["resale"]): Array<V3ResalePlatformData & { platform: string; platform_label: string }> {
+  if (!resale?.platforms) return [];
+
+  // If it's already an array (old format), cast and return
+  if (Array.isArray(resale.platforms)) {
+    return (resale.platforms as any[]).map(p => ({
+      ...p,
+      platform: p.platform ?? "unknown",
+      platform_label: p.platform_label ?? p.platform ?? "—",
+    }));
+  }
+
+  // Object format: { "vinted": {...}, "leboncoin": {...} }
+  return Object.entries(resale.platforms as Record<string, V3ResalePlatformData>).map(([key, data]) => ({
+    ...data,
+    platform: key,
+    platform_label: key.charAt(0).toUpperCase() + key.slice(1),
+  }));
+}
+
+function PlatformCard({ platform, isFirst }: { platform: ReturnType<typeof normalizePlatforms>[number]; isFirst: boolean }) {
+  const marginPositive = (platform.margin_eur ?? 0) >= 0;
   return (
     <Card className={isFirst ? "border-2 border-primary/50" : ""}>
       <CardContent className="py-4">
@@ -26,21 +47,21 @@ function PlatformCard({ platform, isFirst }: { platform: V3ResalePlatform; isFir
         <div className="grid grid-cols-2 gap-y-2 text-sm">
           <div>
             <p className="text-xs text-muted-foreground">Prix conseillé</p>
-            <p className="font-bold">{platform.recommended_price}€</p>
+            <p className="font-bold">{platform.recommended_price ?? 0}€</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Marge</p>
             <p className={`font-bold ${marginPositive ? "text-green-600" : "text-red-600"}`}>
-              {marginPositive ? "+" : ""}{platform.margin_eur}€ ({marginPositive ? "+" : ""}{platform.margin_pct.toFixed(0)}%)
+              {marginPositive ? "+" : ""}{platform.margin_eur ?? 0}€ ({marginPositive ? "+" : ""}{(platform.margin_pct ?? 0).toFixed(0)}%)
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Volume</p>
-            <p className="text-sm">{platform.volume_30d} ventes/mois</p>
+            <p className="text-sm">{platform.volume_30d ?? 0} ventes/mois</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Délai · Proba</p>
-            <p className="text-sm">~{platform.est_sell_days}j · {platform.sell_probability_30d_pct}%</p>
+            <p className="text-sm">~{platform.est_sell_days ?? "?"}j · {platform.sell_probability_30d_pct ?? "?"}%</p>
           </div>
         </div>
         {platform.note && (
@@ -52,9 +73,10 @@ function PlatformCard({ platform, isFirst }: { platform: V3ResalePlatform; isFir
 }
 
 function ScenarioCard({ scenario, isOptimal }: { scenario: V3Scenario; isOptimal: boolean }) {
-  const marginPositive = scenario.margin_eur >= 0;
+  const marginPositive = (scenario.margin_eur ?? 0) >= 0;
   const icons: Record<string, typeof Clock> = { quick: Timer, optimal: Clock, patient: Hourglass };
   const Icon = icons[scenario.id] || Clock;
+  const probabilityPct = scenario.probability_pct ?? 0;
   return (
     <Card className={isOptimal ? "border-2 border-primary/50" : ""}>
       <CardContent className="py-4 text-center space-y-2">
@@ -63,20 +85,20 @@ function ScenarioCard({ scenario, isOptimal }: { scenario: V3Scenario; isOptimal
           <span className="text-sm font-medium">{scenario.label}</span>
           {isOptimal && <Badge className="text-[10px]">Recommandé</Badge>}
         </div>
-        <p className="text-2xl font-bold">{scenario.sell_price}€</p>
+        <p className="text-2xl font-bold">{scenario.sell_price ?? 0}€</p>
         <p className={`text-sm font-medium ${marginPositive ? "text-green-600" : "text-red-600"}`}>
-          {marginPositive ? "+" : ""}{scenario.margin_eur}€ ({marginPositive ? "+" : ""}{scenario.margin_pct.toFixed(0)}%)
+          {marginPositive ? "+" : ""}{scenario.margin_eur ?? 0}€ ({marginPositive ? "+" : ""}{(scenario.margin_pct ?? 0).toFixed(0)}%)
         </p>
-        <p className="text-xs text-muted-foreground">~{scenario.est_days}j</p>
+        <p className="text-xs text-muted-foreground">~{scenario.est_days ?? "?"}j</p>
         {/* Probability bar */}
         <div className="space-y-1">
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full ${scenario.probability_pct >= 70 ? "bg-green-500" : scenario.probability_pct >= 40 ? "bg-yellow-500" : "bg-orange-500"}`}
-              style={{ width: `${scenario.probability_pct}%` }}
+              className={`h-full rounded-full ${probabilityPct >= 70 ? "bg-green-500" : probabilityPct >= 40 ? "bg-yellow-500" : "bg-orange-500"}`}
+              style={{ width: `${probabilityPct}%` }}
             />
           </div>
-          <p className="text-[10px] text-muted-foreground">{scenario.probability_pct}% de chance</p>
+          <p className="text-[10px] text-muted-foreground">{probabilityPct}% de chance</p>
         </div>
       </CardContent>
     </Card>
@@ -87,10 +109,9 @@ export default function ResaleSection({ result }: ResaleSectionProps) {
   const { resale, scenarios } = result;
   if (!resale && !scenarios) return null;
 
-  // Sort platforms: recommended first
-  const sortedPlatforms = resale
-    ? [...resale.platforms].sort((a, b) => (b.is_recommended ? 1 : 0) - (a.is_recommended ? 1 : 0))
-    : [];
+  // Normalize and sort platforms: recommended first
+  const sortedPlatforms = normalizePlatforms(resale)
+    .sort((a, b) => (b.is_recommended ? 1 : 0) - (a.is_recommended ? 1 : 0));
 
   const timingColors: Record<string, string> = {
     good: "text-green-600", neutral: "text-muted-foreground", cautious: "text-orange-600", bad: "text-red-600",
@@ -134,28 +155,34 @@ export default function ResaleSection({ result }: ResaleSectionProps) {
           </div>
 
           {/* Market context */}
-          <div className="grid sm:grid-cols-2 gap-4 mt-4">
-            <Card>
-              <CardContent className="py-3">
-                <p className="text-sm">
-                  <span className="font-medium">Timing : </span>
-                  <span className={timingColors[scenarios.timing.timing] || ""}>
-                    {timingIcons[scenarios.timing.timing]} {scenarios.timing.label}
-                  </span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">{scenarios.timing.detail}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="py-3">
-                <p className="text-sm">
-                  <span className="font-medium">Saturation : </span>
-                  <span>{satIcons[scenarios.saturation.level]} {scenarios.saturation.label}</span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">{scenarios.saturation.detail}</p>
-              </CardContent>
-            </Card>
-          </div>
+          {(scenarios.timing || scenarios.saturation) && (
+            <div className="grid sm:grid-cols-2 gap-4 mt-4">
+              {scenarios.timing && (
+                <Card>
+                  <CardContent className="py-3">
+                    <p className="text-sm">
+                      <span className="font-medium">Timing : </span>
+                      <span className={timingColors[scenarios.timing.timing] || ""}>
+                        {timingIcons[scenarios.timing.timing] || ""} {scenarios.timing.label}
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">{scenarios.timing.detail}</p>
+                  </CardContent>
+                </Card>
+              )}
+              {scenarios.saturation && (
+                <Card>
+                  <CardContent className="py-3">
+                    <p className="text-sm">
+                      <span className="font-medium">Saturation : </span>
+                      <span>{satIcons[scenarios.saturation.level] || ""} {scenarios.saturation.label}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">{scenarios.saturation.detail}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </div>
       )}
     </motion.div>

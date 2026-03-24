@@ -28,7 +28,7 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
   const pricePoints = whatIf?.price_points ?? [];
 
   // Preset buttons from price_points with delta_pct != 0, plus the current
-  const presetButtons = whatIf.price_points.filter(p =>
+  const presetButtons = pricePoints.filter(p =>
     p.delta_pct === -20 || p.delta_pct === -10 || p.delta_pct === 0 || p.delta_pct === 10 || p.delta_pct === 20
   );
 
