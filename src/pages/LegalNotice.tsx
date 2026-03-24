@@ -184,8 +184,7 @@ export default function LegalNotice() {
               nous contacter :
             </p>
             <p>
-              <strong>Par email :</strong> contact@monark.fr<br />
-              <strong>Par courrier :</strong> [À compléter - Adresse postale complète]
+              <strong>Par email :</strong> contact@monark-market.fr
             </p>
           </CardContent>
         </Card>

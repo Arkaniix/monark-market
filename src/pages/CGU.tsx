@@ -14,7 +14,7 @@ export default function CGU() {
             <p>
               Les présentes Conditions Générales d'Utilisation (ci-après "CGU") régissent l'utilisation
               de la plateforme Monark (ci-après "la Plateforme"), accessible à l'adresse
-              [votre-domaine.com].
+              monark-market.fr.
             </p>
             <p>
               La Plateforme propose un service de suivi des prix du matériel informatique d'occasion,

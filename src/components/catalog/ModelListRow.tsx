@@ -78,7 +78,7 @@ export function ModelListRow({
             <p className="text-base font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-2">
               {model.name}
             </p>
-            <p className="text-sm text-muted-foreground mt-0.5">{model.brand}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{model.brand ?? "—"}</p>
             <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               <Badge variant="secondary" className="text-xs px-2 py-0.5">{model.category}</Badge>
               {model.variants_count != null && model.variants_count > 0 && (
