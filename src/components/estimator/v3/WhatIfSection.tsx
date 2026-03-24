@@ -127,8 +127,8 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                     <span>Score: {p.score}</span>
-                    <span className={p.margin_at_median_pct >= 0 ? "text-green-600" : "text-red-600"}>
-                      Marge: {p.margin_at_median_pct > 0 ? "+" : ""}{p.margin_at_median_pct.toFixed(0)}%
+                    <span className={(p.margin_at_median_pct ?? 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                      Marge: {(p.margin_at_median_pct ?? 0) > 0 ? "+" : ""}{(p.margin_at_median_pct ?? 0).toFixed(0)}%
                     </span>
                   </div>
                 </div>
