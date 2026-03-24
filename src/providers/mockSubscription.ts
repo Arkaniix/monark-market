@@ -194,7 +194,7 @@ export const ACTION_COSTS: Record<string, ActionCost> = {
   estimator: {
     type: "estimator",
     displayName: "Estimation",
-    cost: 3,
+    cost: 2,
     description: "Analyse de prix détaillée",
   },
   export: {

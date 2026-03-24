@@ -201,7 +201,7 @@ export function generateEnhancedEstimation(
       plan,
       plan_at_creation: plan,
       created_at: new Date().toISOString(),
-      credit_cost: 3,
+      credit_cost: 2,
     },
     opportunity,
     confidence,
