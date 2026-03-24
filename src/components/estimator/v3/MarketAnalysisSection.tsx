@@ -32,8 +32,53 @@ function LevelBadge({ level, label }: { level: string; label: string }) {
   );
 }
 
+interface NormalizedNegotiationOffer {
+  price: number;
+  savings_eur: number;
+  savings_pct: number;
+}
+
+function parseNegotiationOffer(rawOffer: unknown, inputPrice: number): NormalizedNegotiationOffer | null {
+  if (typeof rawOffer === "number") {
+    const savings = inputPrice > 0 ? inputPrice - rawOffer : 0;
+    const savingsPct = inputPrice > 0 ? (savings / inputPrice) * 100 : 0;
+    return { price: rawOffer, savings_eur: savings, savings_pct: savingsPct };
+  }
+
+  if (!rawOffer || typeof rawOffer !== "object") return null;
+
+  const offer = rawOffer as Record<string, unknown>;
+  const price = typeof offer.price === "number" ? offer.price : inputPrice;
+  const savings = typeof offer.savings_eur === "number" ? offer.savings_eur : (inputPrice > 0 ? inputPrice - price : 0);
+  const savingsPct = typeof offer.savings_pct === "number" ? offer.savings_pct : (inputPrice > 0 ? (savings / inputPrice) * 100 : 0);
+
+  return {
+    price,
+    savings_eur: savings,
+    savings_pct: savingsPct,
+  };
+}
+
 export default function MarketAnalysisSection({ result }: MarketAnalysisSectionProps) {
   const { market, trends, liquidity, volatility, score, negotiation, input } = result;
+  const inputPrice = input?.price ?? 0;
+  const negotiationData = negotiation as Record<string, unknown> | null;
+  const aggressiveOffer = parseNegotiationOffer(
+    negotiationData?.aggressive ?? negotiationData?.aggressive_offer,
+    inputPrice
+  );
+  const compromiseOffer = parseNegotiationOffer(
+    negotiationData?.compromise ?? negotiationData?.compromise_offer,
+    inputPrice
+  );
+  const maxOffer = parseNegotiationOffer(
+    negotiationData?.max ?? negotiationData?.max_offer,
+    inputPrice
+  );
+  const negotiationTip = typeof negotiationData?.tip === "string" ? negotiationData.tip : "";
+  const negotiationArguments = Array.isArray(negotiationData?.arguments)
+    ? negotiationData.arguments.filter((arg): arg is string => typeof arg === "string")
+    : [];
 
   return (
     <motion.div
@@ -54,7 +99,7 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
           <CardContent className="space-y-4">
             <PercentileBar
               distribution={market.distribution}
-              userPrice={input.price}
+              userPrice={inputPrice}
               verdictColor={score.verdict_color}
             />
             {market.percentile_label && (
@@ -203,7 +248,7 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
       )}
 
       {/* Negotiation */}
-      {negotiation && (
+      {negotiationData && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -216,43 +261,40 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
               <NegotiationCard
                 label="Agressive"
                 emoji="🔴"
-                price={negotiation.aggressive.price}
-                savings={negotiation.aggressive.savings_eur}
-                savingsPct={negotiation.aggressive.savings_pct}
-                inputPrice={input.price}
+                price={aggressiveOffer?.price ?? inputPrice}
+                savings={aggressiveOffer?.savings_eur ?? 0}
+                savingsPct={aggressiveOffer?.savings_pct ?? 0}
               />
               <NegotiationCard
                 label="Compromis"
                 emoji="🟡"
-                price={negotiation.compromise.price}
-                savings={negotiation.compromise.savings_eur}
-                savingsPct={negotiation.compromise.savings_pct}
-                inputPrice={input.price}
+                price={compromiseOffer?.price ?? inputPrice}
+                savings={compromiseOffer?.savings_eur ?? 0}
+                savingsPct={compromiseOffer?.savings_pct ?? 0}
               />
               <NegotiationCard
                 label="Maximum"
                 emoji="🟢"
-                price={negotiation.max.price}
-                savings={negotiation.max.savings_eur}
-                savingsPct={negotiation.max.savings_pct}
-                inputPrice={input.price}
+                price={maxOffer?.price ?? inputPrice}
+                savings={maxOffer?.savings_eur ?? 0}
+                savingsPct={maxOffer?.savings_pct ?? 0}
               />
             </div>
 
             {/* Tip */}
-            {negotiation.tip && (
+            {negotiationTip && (
               <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 p-3 flex items-start gap-2">
                 <Lightbulb className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-                <p className="text-sm">{negotiation.tip}</p>
+                <p className="text-sm">{negotiationTip}</p>
               </div>
             )}
 
             {/* Arguments */}
-            {(negotiation.arguments ?? []).length > 0 && (
+            {negotiationArguments.length > 0 && (
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2">Arguments à utiliser :</p>
                 <ul className="space-y-1">
-                  {(negotiation.arguments ?? []).map((arg, i) => (
+                  {negotiationArguments.map((arg, i) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                       <span>•</span>{arg}
                     </li>
@@ -268,16 +310,20 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
 }
 
 function NegotiationCard({
-  label, emoji, price, savings, savingsPct, inputPrice,
+  label, emoji, price, savings, savingsPct,
 }: {
-  label: string; emoji: string; price: number; savings: number; savingsPct: number; inputPrice: number;
+  label: string;
+  emoji: string;
+  price?: number | null;
+  savings?: number | null;
+  savingsPct?: number | null;
 }) {
   const isAtPrice = Math.abs(savings ?? 0) < 1;
   return (
     <Card className="text-center">
       <CardContent className="py-4 space-y-1">
         <p className="text-xs text-muted-foreground">{emoji} {label}</p>
-        <p className="text-2xl font-bold">{price ?? 0}€</p>
+        <p className="text-2xl font-bold">{price != null ? `${price}€` : "—"}</p>
         {isAtPrice ? (
           <p className="text-xs text-muted-foreground">= prix affiché</p>
         ) : (
