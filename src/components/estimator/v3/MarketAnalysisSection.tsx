@@ -197,6 +197,11 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
         </Accordion>
       )}
 
+      {/* Platform Context */}
+      {result.platform_context && (
+        <PlatformContextCard ctx={result.platform_context} inputPrice={inputPrice} />
+      )}
+
       {/* Negotiation — flat structure from API */}
       {negotiation && (
         <Card>
