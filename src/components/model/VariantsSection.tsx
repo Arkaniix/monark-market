@@ -117,7 +117,7 @@ export function VariantsSection({ variants, variantsCount }: VariantsSectionProp
                 </TableHead>
                 <TableHead>Couleur</TableHead>
                 <TableHead className="text-right">
-                  <SortHeader label="Prix neuf réf." colKey="price_usd" />
+                  <SortHeader label="Prix neuf réf. (est.)" colKey="price_usd" />
                 </TableHead>
               </TableRow>
             </TableHeader>
