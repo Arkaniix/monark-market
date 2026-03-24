@@ -60,7 +60,7 @@ import {
 // Historique complet simulé (30 entrées)
 const generateFullHistory = () => {
   const actions = [
-    { action: "Analyse Estimator", cost: 3 },
+    { action: "Analyse Estimator", cost: 2 },
     { action: "Qualifier une annonce", cost: 5 },
     { action: "Décision complète (Estimator)", cost: 20 },
   ];
