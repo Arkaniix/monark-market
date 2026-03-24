@@ -62,7 +62,7 @@ function parseNegotiationOffer(rawOffer: unknown, inputPrice: number): Normalize
 export default function MarketAnalysisSection({ result }: MarketAnalysisSectionProps) {
   const { market, trends, liquidity, volatility, score, negotiation, input } = result;
   const inputPrice = input?.price ?? 0;
-  const negotiationData = negotiation as Record<string, unknown> | null;
+  const negotiationData = negotiation as unknown as Record<string, unknown> | null;
   const aggressiveOffer = parseNegotiationOffer(
     negotiationData?.aggressive ?? negotiationData?.aggressive_offer,
     inputPrice
