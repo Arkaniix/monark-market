@@ -25,7 +25,7 @@ function getVerdictBg(verdict: V3Verdict) {
 
 export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps) {
   const [highlightedIdx, setHighlightedIdx] = useState<number | null>(null);
-  const currentIdx = whatIf.price_points.findIndex(p => p.delta_pct === 0);
+  const pricePoints = whatIf?.price_points ?? [];
 
   // Preset buttons from price_points with delta_pct != 0, plus the current
   const presetButtons = whatIf.price_points.filter(p =>
