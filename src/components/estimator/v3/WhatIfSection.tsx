@@ -139,9 +139,9 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
           {/* Reference prices */}
           <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
             <p className="text-xs font-medium text-muted-foreground mb-1.5">Repères :</p>
-            <p>Plafond d'achat : <span className="font-medium">{whatIf.reference_prices.buy_ceiling}€</span></p>
-            <p>Plancher de revente : <span className="font-medium">{whatIf.reference_prices.sell_floor}€</span></p>
-            <p>Achat optimal : <span className="font-medium">{whatIf.reference_prices.optimal_buy}€</span></p>
+            <p>Plafond d'achat : <span className="font-medium">{whatIf?.reference_prices?.buy_ceiling ?? "—"}€</span></p>
+            <p>Plancher de revente : <span className="font-medium">{whatIf?.reference_prices?.sell_floor ?? "—"}€</span></p>
+            <p>Achat optimal : <span className="font-medium">{whatIf?.reference_prices?.optimal_buy ?? "—"}€</span></p>
           </div>
         </CardContent>
       </Card>
