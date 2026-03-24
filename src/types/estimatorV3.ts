@@ -51,16 +51,16 @@ export type V3Verdict = "BUY" | "NEGOTIATE" | "WAIT" | "AVOID";
 
 export interface V3Score {
   overall: number;
-  base_score: number;
-  percentile_rank: number;
-  percentile_label: string;
+  base_score: number | null;
+  percentile_rank: number | null;
+  percentile_label: string | null;
   verdict: V3Verdict;
   verdict_label: string;
   verdict_description: string;
   verdict_color: "green" | "yellow" | "orange" | "red";
   summary: string;
   confidence: V3Confidence;
-  modifiers: V3ScoreModifiers;
+  modifiers: V3ScoreModifiers | null;
 }
 
 // ============= Response — Model =============
