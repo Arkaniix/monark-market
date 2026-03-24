@@ -1,4 +1,4 @@
-// Hook for V3 Estimator — calls POST /v1/estimator/evaluate-v3
+// Hook for V3 Estimator — calls POST /v1/estimator/evaluate
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
