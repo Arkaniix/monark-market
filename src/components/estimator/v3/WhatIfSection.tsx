@@ -107,7 +107,7 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
 
           {/* Cards — mobile */}
           <div className="sm:hidden space-y-2">
-            {whatIf.price_points.map((p, i) => {
+            {pricePoints.map((p, i) => {
               const isCurrent = p.delta_pct === 0;
               const isHighlighted = highlightedIdx === i || (highlightedIdx === null && isCurrent);
               return (
