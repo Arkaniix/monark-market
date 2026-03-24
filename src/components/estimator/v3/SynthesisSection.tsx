@@ -144,7 +144,7 @@ function ComponentSynthesis({ result }: { result: V3EstimationResponse }) {
           <span>·</span>
           <span className="text-muted-foreground">Votre prix :</span>
           <Badge variant="outline" className={priceDiffPct <= 0 ? "text-green-600 border-green-500/50" : "text-red-600 border-red-500/50"}>
-            {priceDiffPct > 0 ? "+" : ""}{priceDiffPct.toFixed(0)}%
+            {priceDiffPct > 0 ? "+" : ""}{priceDiffPct != null ? priceDiffPct.toFixed(0) : "—"}%
           </Badge>
         </div>
 
