@@ -101,9 +101,9 @@ export interface V3Market {
   median_price: number;
   fair_value: number | null;
   price_vs_median_pct: number;
-  percentile_rank: number;
-  percentile_label: string;
-  distribution: V3Distribution;
+  percentile_rank: number | null;
+  percentile_label: string | null;
+  distribution: V3Distribution | null;
   condition_adjusted: V3ConditionAdjusted | null;
   new_price: number | null;
   discount_vs_new_pct: number | null;
