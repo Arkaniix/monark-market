@@ -29,11 +29,6 @@ export interface Guide {
   url: string;
 }
 
-export const mockUserProgress: UserProgress = {
-  modules_completed: [],
-  total_modules: mockTrainingModules.length,
-  hours_spent: 0
-};
 
 export const mockTrainingModules: TrainingModule[] = [
   {
