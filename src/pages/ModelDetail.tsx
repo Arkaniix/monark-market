@@ -164,7 +164,7 @@ export default function ModelDetail() {
   };
 
   // Format helpers
-  const formatPrice = (price: number) => `${price} €`;
+  const formatPrice = (price: number | null | undefined) => price != null ? `${price} €` : '—';
   const formatPercent = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("fr-FR", {
