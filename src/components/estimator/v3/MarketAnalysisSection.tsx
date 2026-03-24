@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { TrendingUp, TrendingDown, Minus, BarChart3, Droplets, Activity, Lightbulb, Target } from "lucide-react";
-import type { V3EstimationResponse } from "@/types/estimatorV3";
+import type { V3EstimationResponse, V3PlatformContext } from "@/types/estimatorV3";
 import PercentileBar from "./PercentileBar";
+import { Store } from "lucide-react";
 
 interface MarketAnalysisSectionProps {
   result: V3EstimationResponse;
