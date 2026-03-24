@@ -103,7 +103,7 @@ export default function LegalNotice() {
             </p>
             <p>
               Pour exercer ces droits ou pour toute question sur le traitement de vos données,
-              vous pouvez nous contacter à l'adresse : privacy@monark.fr
+              vous pouvez nous contacter à l'adresse : privacy@monark-market.fr
             </p>
             <p>
               Pour plus d'informations, consultez notre <a href="/rgpd" className="text-primary hover:underline">Politique de confidentialité</a>.
