@@ -1,15 +1,15 @@
 // Hook for V3 Estimator — calls POST /v1/estimator/evaluate
+// Uses raw fetch (not apiFetch) because the endpoint returns a flat JSON object
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api/client";
+import { API_BASE_URL, getAccessToken } from "@/lib/api/client";
 import type {
   V3EstimationRequest,
   V3EstimationResponse,
   V3ErrorResponse,
 } from "@/types/estimatorV3";
-import { ApiException } from "@/lib/api/client";
 
-const EVALUATE_V3_ENDPOINT = "/v1/estimator/evaluate";
+const EVALUATE_ENDPOINT = `${API_BASE_URL}/v1/estimator/evaluate`;
 
 export function useEstimatorV3() {
   const queryClient = useQueryClient();
