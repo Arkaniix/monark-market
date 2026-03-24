@@ -154,6 +154,20 @@ export interface V3Negotiation {
   arguments: string[];
 }
 
+// ============= Response — Platform Context (Complete+) =============
+export interface V3PlatformContext {
+  platform: string;
+  label: string;
+  negotiation_culture: "strong" | "moderate" | "light";
+  negotiation_margin_pct: number;
+  estimated_real_price: number;
+  seller_fees_pct: number;
+  buyer_fees_pct: number;
+  buyer_fees_fixed: number;
+  buyer_total_cost: number;
+  tip: string;
+}
+
 // ============= Response — Resale =============
 export interface V3ResalePlatformData {
   recommended_price: number;
@@ -161,6 +175,10 @@ export interface V3ResalePlatformData {
   floor_price?: number;
   margin_eur: number;
   margin_pct: number;
+  seller_net_price?: number;
+  seller_fees_pct?: number;
+  net_margin_eur?: number;
+  net_margin_pct?: number;
   volume_30d: number;
   est_sell_days: number;
   sell_probability_30d_pct: number;
@@ -288,6 +306,7 @@ export interface V3EstimationResponse {
   liquidity?: V3Liquidity;
   volatility?: V3Volatility;
   negotiation?: V3Negotiation;
+  platform_context?: V3PlatformContext;
 
   // Pro fields
   resale?: V3Resale;

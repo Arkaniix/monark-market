@@ -29,7 +29,11 @@ function normalizePlatforms(resale: V3EstimationResponse["resale"]): Array<V3Res
 }
 
 function PlatformCard({ platform, isFirst }: { platform: ReturnType<typeof normalizePlatforms>[number]; isFirst: boolean }) {
-  const marginPositive = (platform.margin_eur ?? 0) >= 0;
+  const hasFees = (platform.seller_fees_pct ?? 0) > 0;
+  const displayMarginEur = hasFees ? (platform.net_margin_eur ?? platform.margin_eur ?? 0) : (platform.margin_eur ?? 0);
+  const displayMarginPct = hasFees ? (platform.net_margin_pct ?? platform.margin_pct ?? 0) : (platform.margin_pct ?? 0);
+  const marginPositive = displayMarginEur >= 0;
+
   return (
     <Card className={isFirst ? "border-2 border-primary/50" : ""}>
       <CardContent className="py-4">
@@ -47,12 +51,33 @@ function PlatformCard({ platform, isFirst }: { platform: ReturnType<typeof norma
             <p className="text-xs text-muted-foreground">Prix conseillé</p>
             <p className="font-bold">{platform.recommended_price ?? 0}€</p>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">Marge</p>
-            <p className={`font-bold ${marginPositive ? "text-green-600" : "text-red-600"}`}>
-              {marginPositive ? "+" : ""}{platform.margin_eur ?? 0}€ ({marginPositive ? "+" : ""}{(platform.margin_pct ?? 0).toFixed(0)}%)
-            </p>
-          </div>
+          {hasFees ? (
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Frais vendeur</p>
+              <p className="text-sm">~{platform.seller_fees_pct}%</p>
+            </div>
+          ) : (
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Marge</p>
+              <p className={`font-bold ${marginPositive ? "text-green-600" : "text-red-600"}`}>
+                {marginPositive ? "+" : ""}{displayMarginEur}€ ({marginPositive ? "+" : ""}{displayMarginPct.toFixed(0)}%)
+              </p>
+            </div>
+          )}
+          {hasFees && (
+            <>
+              <div>
+                <p className="text-xs text-muted-foreground">Vous recevez</p>
+                <p className="font-medium">{platform.seller_net_price ?? "—"}€</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Marge nette</p>
+                <p className={`font-bold ${marginPositive ? "text-green-600" : "text-red-600"}`}>
+                  {marginPositive ? "+" : ""}{displayMarginEur}€ ({marginPositive ? "+" : ""}{displayMarginPct.toFixed(0)}%)
+                </p>
+              </div>
+            </>
+          )}
           <div>
             <p className="text-xs text-muted-foreground">Volume</p>
             <p className="text-sm">{platform.volume_30d ?? 0} ventes/mois</p>
