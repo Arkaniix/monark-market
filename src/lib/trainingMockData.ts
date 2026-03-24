@@ -31,7 +31,7 @@ export interface Guide {
 
 export const mockUserProgress: UserProgress = {
   modules_completed: [],
-  total_modules: 7,
+  total_modules: mockTrainingModules.length,
   hours_spent: 0
 };
 
