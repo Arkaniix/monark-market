@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, AlertTriangle, TrendingDown, TrendingUp, Info, Search, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { RefreshCw, AlertTriangle, TrendingDown, TrendingUp, Info, Search, ArrowUp, ArrowDown, Download, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
