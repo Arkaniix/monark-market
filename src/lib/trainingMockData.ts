@@ -148,6 +148,11 @@ export const mockTrainingModules: TrainingModule[] = [
   }
 ];
 
+export const mockUserProgress: UserProgress = {
+  modules_completed: [],
+  total_modules: mockTrainingModules.length,
+  hours_spent: 0
+};
 
 
 export const mockQuizResult: QuizResult = {
