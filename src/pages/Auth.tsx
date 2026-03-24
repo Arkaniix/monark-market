@@ -28,7 +28,7 @@ const SIGNUP_PLANS = [{
   id: "free",
   name: "Free",
   price: 0,
-  credits: 20,
+  credits: 10,
   features: ["Market Score gratuit", "Catalogue complet", "Introduction plateforme"],
   icon: Zap,
   popular: false
@@ -36,15 +36,15 @@ const SIGNUP_PLANS = [{
   id: "standard",
   name: "Standard",
   price: 11.99,
-  credits: 200,
+  credits: 180,
   features: ["10 alertes", "Estimator complet", "Formation avancée"],
   icon: Award,
   popular: true
 }, {
   id: "pro",
   name: "Pro",
-  price: 24.99,
-  credits: 800,
+  price: 22.99,
+  credits: 600,
   features: ["100 alertes", "Scénarios + export", "Support prioritaire"],
   icon: Rocket,
   popular: false
