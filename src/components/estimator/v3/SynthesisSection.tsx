@@ -144,7 +144,7 @@ function ComponentSynthesis({ result }: { result: V3EstimationResponse }) {
           <span>·</span>
           <span className="text-muted-foreground">Votre prix :</span>
           <Badge variant="outline" className={priceDiffPct <= 0 ? "text-green-600 border-green-500/50" : "text-red-600 border-red-500/50"}>
-            {priceDiffPct > 0 ? "+" : ""}{priceDiffPct.toFixed(0)}%
+            {priceDiffPct > 0 ? "+" : ""}{priceDiffPct != null ? priceDiffPct.toFixed(0) : "—"}%
           </Badge>
         </div>
 
@@ -207,12 +207,12 @@ function BundleSynthesis({ result }: { result: V3EstimationResponse }) {
         <div className="rounded-lg border bg-muted/30 p-4 space-y-2 text-sm">
           <h4 className="font-medium text-muted-foreground mb-2">Analyse du lot</h4>
           <div className="flex justify-between"><span>Valeur composants séparés</span><span className="font-medium">{ba.total_parts_value}€</span></div>
-          <div className="flex justify-between"><span>Décote bundle ({ba.bundle_discount_pct}%)</span><span className="font-medium text-orange-500">-{ba.bundle_discount_eur}€</span></div>
-          <div className="flex justify-between border-t pt-2"><span className="font-medium">Valeur estimée du lot</span><span className="font-bold">{ba.estimated_bundle_value}€</span></div>
+          <div className="flex justify-between"><span>Décote bundle ({ba.bundle_discount_pct ?? 0}%)</span><span className="font-medium text-orange-500">-{ba.bundle_discount_eur ?? 0}€</span></div>
+          <div className="flex justify-between border-t pt-2"><span className="font-medium">Valeur estimée du lot</span><span className="font-bold">{ba.estimated_bundle_value ?? 0}€</span></div>
           <div className="flex justify-between">
             <span>Prix demandé</span>
-            <span className={ba.price_vs_bundle_pct > 0 ? "text-red-500" : "text-green-500"}>
-              {input.price}€ ({ba.price_vs_bundle_pct > 0 ? "+" : ""}{ba.price_vs_bundle_pct.toFixed(1)}%)
+            <span className={(ba.price_vs_bundle_pct ?? 0) > 0 ? "text-red-500" : "text-green-500"}>
+              {input.price}€ ({(ba.price_vs_bundle_pct ?? 0) > 0 ? "+" : ""}{(ba.price_vs_bundle_pct ?? 0).toFixed(1)}%)
             </span>
           </div>
           <div className="flex justify-between border-t pt-2">

@@ -25,10 +25,10 @@ function getVerdictBg(verdict: V3Verdict) {
 
 export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps) {
   const [highlightedIdx, setHighlightedIdx] = useState<number | null>(null);
-  const currentIdx = whatIf.price_points.findIndex(p => p.delta_pct === 0);
+  const pricePoints = whatIf?.price_points ?? [];
 
   // Preset buttons from price_points with delta_pct != 0, plus the current
-  const presetButtons = whatIf.price_points.filter(p =>
+  const presetButtons = pricePoints.filter(p =>
     p.delta_pct === -20 || p.delta_pct === -10 || p.delta_pct === 0 || p.delta_pct === 10 || p.delta_pct === 20
   );
 
@@ -49,14 +49,14 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
           {/* Preset buttons */}
           <div className="flex flex-wrap gap-2">
             {presetButtons.map((p, i) => {
-              const isActive = highlightedIdx === whatIf.price_points.indexOf(p);
+              const isActive = highlightedIdx === pricePoints.indexOf(p);
               const isCurrent = p.delta_pct === 0;
               return (
                 <Button
                   key={i}
                   variant={isActive || (highlightedIdx === null && isCurrent) ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setHighlightedIdx(whatIf.price_points.indexOf(p))}
+                  onClick={() => setHighlightedIdx(pricePoints.indexOf(p))}
                   className="text-xs"
                 >
                   {isCurrent ? `=${p.price}€=` : `${p.delta_pct > 0 ? "+" : ""}${p.delta_pct}%`}
@@ -77,7 +77,7 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
                 </tr>
               </thead>
               <tbody>
-                {whatIf.price_points.map((p, i) => {
+                {pricePoints.map((p, i) => {
                   const isCurrent = p.delta_pct === 0;
                   const isHighlighted = highlightedIdx === i || (highlightedIdx === null && isCurrent);
                   return (
@@ -95,8 +95,8 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
                           {VERDICT_ICONS[p.verdict]} {p.verdict_label}
                         </Badge>
                       </td>
-                      <td className={`py-2.5 text-right ${p.margin_at_median_pct >= 0 ? "text-green-600" : "text-red-600"}`}>
-                        {p.margin_at_median_pct > 0 ? "+" : ""}{p.margin_at_median_pct.toFixed(0)}%
+                      <td className={`py-2.5 text-right ${(p.margin_at_median_pct ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        {(p.margin_at_median_pct ?? 0) > 0 ? "+" : ""}{(p.margin_at_median_pct ?? 0).toFixed(0)}%
                       </td>
                     </tr>
                   );
@@ -107,7 +107,7 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
 
           {/* Cards — mobile */}
           <div className="sm:hidden space-y-2">
-            {whatIf.price_points.map((p, i) => {
+            {pricePoints.map((p, i) => {
               const isCurrent = p.delta_pct === 0;
               const isHighlighted = highlightedIdx === i || (highlightedIdx === null && isCurrent);
               return (
@@ -127,8 +127,8 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                     <span>Score: {p.score}</span>
-                    <span className={p.margin_at_median_pct >= 0 ? "text-green-600" : "text-red-600"}>
-                      Marge: {p.margin_at_median_pct > 0 ? "+" : ""}{p.margin_at_median_pct.toFixed(0)}%
+                    <span className={(p.margin_at_median_pct ?? 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                      Marge: {(p.margin_at_median_pct ?? 0) > 0 ? "+" : ""}{(p.margin_at_median_pct ?? 0).toFixed(0)}%
                     </span>
                   </div>
                 </div>
@@ -139,9 +139,9 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
           {/* Reference prices */}
           <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
             <p className="text-xs font-medium text-muted-foreground mb-1.5">Repères :</p>
-            <p>Plafond d'achat : <span className="font-medium">{whatIf.reference_prices.buy_ceiling}€</span></p>
-            <p>Plancher de revente : <span className="font-medium">{whatIf.reference_prices.sell_floor}€</span></p>
-            <p>Achat optimal : <span className="font-medium">{whatIf.reference_prices.optimal_buy}€</span></p>
+            <p>Plafond d'achat : <span className="font-medium">{whatIf?.reference_prices?.buy_ceiling ?? "—"}€</span></p>
+            <p>Plancher de revente : <span className="font-medium">{whatIf?.reference_prices?.sell_floor ?? "—"}€</span></p>
+            <p>Achat optimal : <span className="font-medium">{whatIf?.reference_prices?.optimal_buy ?? "—"}€</span></p>
           </div>
         </CardContent>
       </Card>

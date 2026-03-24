@@ -43,7 +43,7 @@ export interface V3ConfidenceFactor {
 
 export interface V3Confidence {
   level: "high" | "medium" | "low";
-  score: number;
+  score: number | null;
   factors: V3ConfidenceFactor[];
 }
 
@@ -51,16 +51,16 @@ export type V3Verdict = "BUY" | "NEGOTIATE" | "WAIT" | "AVOID";
 
 export interface V3Score {
   overall: number;
-  base_score: number;
-  percentile_rank: number;
-  percentile_label: string;
+  base_score: number | null;
+  percentile_rank: number | null;
+  percentile_label: string | null;
   verdict: V3Verdict;
   verdict_label: string;
   verdict_description: string;
   verdict_color: "green" | "yellow" | "orange" | "red";
   summary: string;
   confidence: V3Confidence;
-  modifiers: V3ScoreModifiers;
+  modifiers: V3ScoreModifiers | null;
 }
 
 // ============= Response — Model =============
@@ -101,9 +101,9 @@ export interface V3Market {
   median_price: number;
   fair_value: number | null;
   price_vs_median_pct: number;
-  percentile_rank: number;
-  percentile_label: string;
-  distribution: V3Distribution;
+  percentile_rank: number | null;
+  percentile_label: string | null;
+  distribution: V3Distribution | null;
   condition_adjusted: V3ConditionAdjusted | null;
   new_price: number | null;
   discount_vs_new_pct: number | null;
@@ -174,7 +174,21 @@ export interface V3ResalePlatform {
 }
 
 export interface V3Resale {
-  platforms: V3ResalePlatform[];
+  best_platform: string | null;
+  platforms: Record<string, V3ResalePlatformData> | V3ResalePlatform[];
+}
+
+export interface V3ResalePlatformData {
+  recommended_price: number;
+  premium_price?: number;
+  floor_price?: number;
+  margin_eur: number;
+  margin_pct: number;
+  volume_30d: number;
+  est_sell_days: number;
+  sell_probability_30d_pct: number;
+  is_recommended: boolean;
+  note: string | null;
 }
 
 // ============= Response — Scenarios =============
