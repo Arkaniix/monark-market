@@ -15,6 +15,7 @@ export function UserSettingsPanel() {
   const { data: settings, isLoading, error } = useUserSettings();
   const updateSettings = useUpdateUserSettings();
   const { toast } = useToast();
+  const { theme: currentTheme, setTheme } = useTheme();
   
   // Local state for form
   const [localSettings, setLocalSettings] = useState<UpdateUserSettingsPayload>({});
