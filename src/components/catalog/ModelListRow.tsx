@@ -93,7 +93,7 @@ export function ModelListRow({
           {/* Fair Value */}
           <div className="text-center sm:text-left">
             <p className="text-xl font-bold">
-              {model.fair_value_30d || model.price_median_30d || "N/A"}€
+              {model.fair_value_30d != null ? `${model.fair_value_30d}€` : model.price_median_30d != null ? `${model.price_median_30d}€` : "—"}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Fair Value 30j</p>
           </div>
@@ -101,7 +101,7 @@ export function ModelListRow({
           {/* Variations */}
           <div className="text-center sm:text-left">
             <div className="flex flex-col gap-1">
-              {model.var_7d_pct !== undefined && (
+              {model.var_7d_pct != null && (
                 <div className={`flex items-center justify-center sm:justify-start gap-1 text-sm ${model.var_7d_pct < 0 ? "text-success" : model.var_7d_pct > 0 ? "text-destructive" : "text-muted-foreground"}`}>
                   {model.var_7d_pct < 0 ? <TrendingDown className="h-4 w-4" /> : model.var_7d_pct > 0 ? <TrendingUp className="h-4 w-4" /> : null}
                   <span className="font-semibold">
@@ -110,7 +110,7 @@ export function ModelListRow({
                   <span className="text-muted-foreground text-xs">7j</span>
                 </div>
               )}
-              {model.var_30d_pct !== null && (
+              {model.var_30d_pct != null && (
                 <div className={`flex items-center justify-center sm:justify-start gap-1 text-sm ${model.var_30d_pct < 0 ? "text-success" : model.var_30d_pct > 0 ? "text-destructive" : "text-muted-foreground"}`}>
                   {model.var_30d_pct < 0 ? <TrendingDown className="h-4 w-4" /> : model.var_30d_pct > 0 ? <TrendingUp className="h-4 w-4" /> : null}
                   <span className="font-semibold">
@@ -118,6 +118,9 @@ export function ModelListRow({
                   </span>
                   <span className="text-muted-foreground text-xs">30j</span>
                 </div>
+              )}
+              {model.var_7d_pct == null && model.var_30d_pct == null && (
+                <span className="text-sm text-muted-foreground">—</span>
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Variations</p>
@@ -129,19 +132,19 @@ export function ModelListRow({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="inline-flex flex-col items-center sm:items-start cursor-help">
-                    <Badge variant={getLiquidityColor(model.liquidity)} className="text-xs px-2 py-0.5">
-                      {getLiquidityLabel(model.liquidity)}
+                    <Badge variant={getLiquidityColor(model.liquidity ?? 0)} className="text-xs px-2 py-0.5">
+                      {getLiquidityLabel(model.liquidity ?? 0)}
                     </Badge>
                     <div className="w-full max-w-[70px] h-2 bg-muted rounded-full mt-1.5 overflow-hidden">
                       <div 
                         className="h-full bg-primary rounded-full transition-all"
-                        style={{ width: `${Math.round(model.liquidity * 100)}%` }}
+                        style={{ width: `${Math.round((model.liquidity ?? 0) * 100)}%` }}
                       />
                     </div>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-[220px] text-sm">
-                  {getLiquidityTooltip(model.liquidity)}
+                  {getLiquidityTooltip(model.liquidity ?? 0)}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -152,7 +155,7 @@ export function ModelListRow({
           <div className="text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-1.5">
               <Package className="h-4 w-4 text-muted-foreground" />
-              <span className="text-base font-semibold">{model.ads_count}</span>
+              <span className="text-base font-semibold">{model.ads_count ?? 0}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">Annonces</p>
           </div>
