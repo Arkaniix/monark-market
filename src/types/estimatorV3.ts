@@ -1,5 +1,5 @@
 // ============= Estimator V3 API Types =============
-// Maps to POST /v1/estimator/evaluate-v3
+// Maps to POST /v1/estimator/evaluate
 
 // ============= Request =============
 export type EstimationLevel = "basic" | "complete" | "pro";
