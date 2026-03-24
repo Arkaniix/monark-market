@@ -197,7 +197,7 @@ export default function Estimator() {
 
                   {/* Section 4 — What-If Simulator (pro) */}
                   {planLevel === "pro" ? (
-                    result.what_if && <WhatIfSection whatIf={result.what_if} inputPrice={result.input.price} />
+                    result.what_if && <WhatIfSection whatIf={result.what_if} inputPrice={result.input?.price ?? 0} />
                   ) : planLevel === "complete" ? (
                     <SectionTeaser
                       title="🔒 Simulateur « Et si... »"
