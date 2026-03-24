@@ -261,6 +261,58 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
   );
 }
 
+function PlatformContextCard({ ctx, inputPrice }: { ctx: V3PlatformContext; inputPrice: number }) {
+  const cultureLabels: Record<string, { emoji: string; label: string }> = {
+    strong: { emoji: "🔴", label: "Forte" },
+    moderate: { emoji: "🟡", label: "Modérée" },
+    light: { emoji: "🟢", label: "Légère" },
+  };
+  const culture = cultureLabels[ctx.negotiation_culture] ?? { emoji: "⚪", label: ctx.negotiation_culture };
+
+  return (
+    <Card className="border-accent/30 bg-accent/5">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Store className="h-4 w-4 text-primary" />
+          Code plateforme : {ctx.label}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 text-sm">
+        <p>
+          Culture de négociation : <span className="font-medium">{culture.emoji} {culture.label}</span>
+        </p>
+        {ctx.negotiation_margin_pct > 0 && (
+          <p className="text-muted-foreground">
+            Les prix sont typiquement gonflés de ~{ctx.negotiation_margin_pct}%
+          </p>
+        )}
+        {ctx.negotiation_margin_pct > 0 && (
+          <div className="flex gap-6">
+            <span>Prix affiché : <span className="font-medium">{inputPrice}€</span></span>
+            <span>Prix de transaction estimé : <span className="font-medium text-green-600">~{ctx.estimated_real_price}€</span></span>
+          </div>
+        )}
+        {ctx.buyer_fees_pct > 0 && (
+          <p className="text-muted-foreground">
+            Frais acheteur : {ctx.buyer_fees_pct}%{ctx.buyer_fees_fixed > 0 ? ` + ${ctx.buyer_fees_fixed.toFixed(2)}€` : ""} → Coût total : {ctx.buyer_total_cost}€
+          </p>
+        )}
+        {ctx.seller_fees_pct > 0 && (
+          <p className="text-muted-foreground">
+            Frais vendeur : ~{ctx.seller_fees_pct}% — le vendeur ne reçoit que {(100 - ctx.seller_fees_pct)}% du prix
+          </p>
+        )}
+        {ctx.tip && (
+          <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 p-3 flex items-start gap-2 mt-1">
+            <Lightbulb className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+            <p className="text-sm">{ctx.tip}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function NegotiationCard({
   label, emoji, price, savings, savingsPct,
 }: {

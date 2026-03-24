@@ -306,6 +306,7 @@ export interface V3EstimationResponse {
   liquidity?: V3Liquidity;
   volatility?: V3Volatility;
   negotiation?: V3Negotiation;
+  platform_context?: V3PlatformContext;
 
   // Pro fields
   resale?: V3Resale;
