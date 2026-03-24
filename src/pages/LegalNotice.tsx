@@ -13,17 +13,11 @@ export default function LegalNotice() {
           <CardContent className="prose prose-sm max-w-none">
             <p>
               <strong>Nom de la société :</strong> Monark<br />
-              <strong>Forme juridique :</strong> [À compléter - SAS, SARL, etc.]<br />
-              <strong>Capital social :</strong> [À compléter]<br />
-              <strong>Siège social :</strong> [À compléter - Adresse complète]<br />
-              <strong>RCS :</strong> [À compléter - Ville + numéro]<br />
-              <strong>SIRET :</strong> [À compléter]<br />
-              <strong>Numéro de TVA intracommunautaire :</strong> [À compléter]
+              <strong>Statut :</strong> En cours d'immatriculation — informations à venir<br />
             </p>
             <p>
-              <strong>Directeur de la publication :</strong> [À compléter - Nom et prénom]<br />
-              <strong>Email :</strong> contact@monark.fr<br />
-              <strong>Téléphone :</strong> [À compléter]
+              <strong>Directeur de la publication :</strong> En cours d'immatriculation — informations à venir<br />
+              <strong>Email :</strong> contact@monark-market.fr
             </p>
           </CardContent>
         </Card>
@@ -109,7 +103,7 @@ export default function LegalNotice() {
             </p>
             <p>
               Pour exercer ces droits ou pour toute question sur le traitement de vos données,
-              vous pouvez nous contacter à l'adresse : privacy@monark.fr
+              vous pouvez nous contacter à l'adresse : privacy@monark-market.fr
             </p>
             <p>
               Pour plus d'informations, consultez notre <a href="/rgpd" className="text-primary hover:underline">Politique de confidentialité</a>.
@@ -190,8 +184,7 @@ export default function LegalNotice() {
               nous contacter :
             </p>
             <p>
-              <strong>Par email :</strong> contact@monark.fr<br />
-              <strong>Par courrier :</strong> [À compléter - Adresse postale complète]
+              <strong>Par email :</strong> contact@monark-market.fr
             </p>
           </CardContent>
         </Card>
