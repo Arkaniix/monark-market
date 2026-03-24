@@ -15,13 +15,10 @@ export interface V3ComponentRequest {
 
 export interface V3EstimationRequest {
   mode: EstimationMode;
-  // Component mode
   model_id?: number;
   price?: number;
-  // Bundle mode
   total_price?: number;
   components?: V3ComponentRequest[];
-  // Common
   condition?: ConditionValue | null;
   platform?: PlatformValue | null;
   level: EstimationLevel;
@@ -36,15 +33,11 @@ export interface V3ScoreModifiers {
   total_adjusted: number;
 }
 
-export interface V3ConfidenceFactor {
-  label: string;
-  impact: "positive" | "negative";
-}
-
+// Confidence factors are simple strings from the API
 export interface V3Confidence {
   level: "high" | "medium" | "low";
   score: number | null;
-  factors: V3ConfidenceFactor[];
+  factors: string[] | null;
 }
 
 export type V3Verdict = "BUY" | "NEGOTIATE" | "WAIT" | "AVOID";
@@ -91,10 +84,13 @@ export interface V3Distribution {
   p90: number;
 }
 
+// Matches actual API field names
 export interface V3ConditionAdjusted {
-  condition_label: string;
-  median_price: number;
-  price_vs_condition_pct: number;
+  used_specific_data: boolean;
+  condition_sample_size: number | null;
+  median_for_condition: number | null;
+  p25_for_condition: number | null;
+  p75_for_condition: number | null;
 }
 
 export interface V3Market {
@@ -145,39 +141,20 @@ export interface V3PrimaryRisk {
 }
 
 // ============= Response — Negotiation =============
-export interface V3NegotiationOffer {
-  price: number;
-  savings_eur: number;
-  savings_pct: number;
-}
-
+// Flat structure matching the actual API response
 export interface V3Negotiation {
-  aggressive: V3NegotiationOffer;
-  compromise: V3NegotiationOffer;
-  max: V3NegotiationOffer;
+  aggressive_offer: number;
+  compromise_offer: number;
+  max_price: number;
+  savings_aggressive_eur: number;
+  savings_aggressive_pct: number;
+  savings_compromise_eur: number;
+  savings_compromise_pct: number;
   tip: string;
   arguments: string[];
 }
 
 // ============= Response — Resale =============
-export interface V3ResalePlatform {
-  platform: string;
-  platform_label: string;
-  recommended_price: number;
-  margin_eur: number;
-  margin_pct: number;
-  volume_30d: number;
-  est_sell_days: number;
-  sell_probability_30d_pct: number;
-  is_recommended: boolean;
-  note: string | null;
-}
-
-export interface V3Resale {
-  best_platform: string | null;
-  platforms: Record<string, V3ResalePlatformData> | V3ResalePlatform[];
-}
-
 export interface V3ResalePlatformData {
   recommended_price: number;
   premium_price?: number;
@@ -191,15 +168,20 @@ export interface V3ResalePlatformData {
   note: string | null;
 }
 
+export interface V3Resale {
+  best_platform: string | null;
+  platforms: Record<string, V3ResalePlatformData> | V3ResalePlatformData[];
+}
+
 // ============= Response — Scenarios =============
+// API does NOT include id or label on scenario objects
 export interface V3Scenario {
-  id: "quick" | "optimal" | "patient";
-  label: string;
   sell_price: number;
   margin_eur: number;
   margin_pct: number;
   est_days: number;
   probability_pct: number;
+  capital_blocked_eur?: number;
 }
 
 export interface V3Timing {
@@ -223,12 +205,12 @@ export interface V3Scenarios {
 }
 
 // ============= Response — What-If =============
+// API does NOT include verdict_label
 export interface V3WhatIfPricePoint {
   price: number;
   delta_pct: number;
   score: number;
   verdict: V3Verdict;
-  verdict_label: string;
   margin_at_median_pct: number;
   label: string;
 }
@@ -257,15 +239,16 @@ export interface V3BundleComponent {
   image_url: string | null;
 }
 
+// Matches actual API field names
 export interface V3BundleAnalysis {
-  total_parts_value: number;
+  sum_individual_medians: number;
+  sum_individual_fair_values: number;
   bundle_discount_pct: number;
-  bundle_discount_eur: number;
-  estimated_bundle_value: number;
-  price_vs_bundle_pct: number;
-  savings_vs_separate_eur: number;
-  savings_vs_separate_pct: number;
-  key_component: string;
+  bundle_fair_value: number;
+  total_price: number;
+  price_vs_bundle_fair_pct: number;
+  savings_vs_individual_eur: number;
+  savings_vs_individual_pct: number;
 }
 
 // ============= Response — Upgrade Hint =============
@@ -276,13 +259,13 @@ export interface V3UpgradePreview {
   negotiation_savings_hint: string | null;
 }
 
+// API does NOT include next_level_label
 export interface V3UpgradeHint {
   next_level: EstimationLevel;
-  next_level_label: string;
   preview: V3UpgradePreview;
 }
 
-// ============= Response — Justifications =============
+// ============= Justifications =============
 export type V3Justification = string;
 
 // ============= Full V3 Response =============
@@ -347,6 +330,19 @@ export const VERDICT_ICONS: Record<V3Verdict, string> = {
   NEGOTIATE: "🟡",
   WAIT: "🟠",
   AVOID: "🔴",
+};
+
+export const VERDICT_LABELS: Record<V3Verdict, string> = {
+  BUY: "Acheter",
+  NEGOTIATE: "Négocier",
+  WAIT: "Attendre",
+  AVOID: "Éviter",
+};
+
+export const LEVEL_LABELS: Record<string, string> = {
+  basic: "Basic",
+  complete: "Standard",
+  pro: "Pro",
 };
 
 export const CONDITION_OPTIONS_V3 = [
