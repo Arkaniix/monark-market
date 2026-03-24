@@ -43,7 +43,7 @@ export interface V3ConfidenceFactor {
 
 export interface V3Confidence {
   level: "high" | "medium" | "low";
-  score: number;
+  score: number | null;
   factors: V3ConfidenceFactor[];
 }
 
