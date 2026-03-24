@@ -126,7 +126,7 @@ export default function ModelDetail() {
   const alertTarget: AlertTarget | null = model ? {
     type: 'model',
     id: model.id,
-    name: `${model.brand} ${model.name}`,
+    name: model.name,
     category: model.category,
     currentPrice: model.kpi.median_30d,
   } : null;
@@ -158,7 +158,7 @@ export default function ModelDetail() {
     if (!model) return '/estimator';
     const params = new URLSearchParams();
     params.set('model_id', String(model.id));
-    params.set('model_name', `${model.brand} ${model.name}`);
+    params.set('model_name', model.name);
     params.set('price', String(model.kpi.median_30d));
     return `/estimator?${params.toString()}`;
   };
@@ -257,14 +257,14 @@ export default function ModelDetail() {
             {model.images && model.images.length > 0 ? (
               <ImageGallery 
                 images={model.images} 
-                modelName={`${model.brand} ${model.name}`} 
+                modelName={model.name} 
               />
             ) : model.image_url ? (
               <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm">
                 <div className="aspect-[4/3] bg-muted/30">
                   <img
                     src={model.image_url}
-                    alt={`${model.brand} ${model.name}`}
+                    alt={model.name}
                     className="w-full h-full object-contain"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
