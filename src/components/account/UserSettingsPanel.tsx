@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { useUserSettings, useUpdateUserSettings, defaultUserSettings } from "@/hooks/useUserSettings";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,7 @@ export function UserSettingsPanel() {
   const { data: settings, isLoading, error } = useUserSettings();
   const updateSettings = useUpdateUserSettings();
   const { toast } = useToast();
+  const { theme: currentTheme, setTheme } = useTheme();
   
   // Local state for form
   const [localSettings, setLocalSettings] = useState<UpdateUserSettingsPayload>({});
@@ -84,8 +86,11 @@ export function UserSettingsPanel() {
           <div className="flex items-center justify-between">
             <Label htmlFor="theme">Thème</Label>
             <Select
-              value={currentSettings.theme}
-              onValueChange={(v) => handleChange('theme', v as 'light' | 'dark' | 'system')}
+              value={currentTheme || 'system'}
+              onValueChange={(v) => {
+                setTheme(v);
+                handleChange('theme', v as 'light' | 'dark' | 'system');
+              }}
             >
               <SelectTrigger className="w-40">
                 <SelectValue />

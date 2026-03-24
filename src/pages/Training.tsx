@@ -212,7 +212,7 @@ export default function Training() {
                             </span>
                             <span className="flex items-center gap-1">
                               <BookOpen className="h-3 w-3" />
-                              {module.lessons.length} leçons
+                              {module.lessons.length > 0 ? `${module.lessons.length} leçons` : "Bientôt disponible"}
                             </span>
                           </div>
                         </div>

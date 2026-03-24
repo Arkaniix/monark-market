@@ -21,13 +21,15 @@ export function WelcomeHeader({
   const [extensionDetected] = useState(false);
 
   const formatDate = (date?: string) => {
-    if (!date) return "jamais";
+    if (!date) return null;
     const d = new Date(date);
+    if (isNaN(d.getTime())) return null;
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays === 0) return "aujourd'hui";
     if (diffDays === 1) return "hier";
     if (diffDays < 7) return `il y a ${diffDays} jours`;
+    if (diffDays > 30) return "plus d'un mois";
     return d.toLocaleDateString('fr-FR');
   };
 
@@ -44,7 +46,10 @@ export function WelcomeHeader({
                 </h1>
               </div>
               <p className="text-muted-foreground text-lg">
-                Ta dernière analyse remonte à <span className="font-semibold text-foreground">{formatDate(lastAnalysisDate)}</span>
+                {formatDate(lastAnalysisDate)
+                  ? <>Ta dernière analyse remonte à <span className="font-semibold text-foreground">{formatDate(lastAnalysisDate)}</span></>
+                  : "Tu n'as pas encore d'analyse"
+                }
               </p>
               <div className="flex items-center gap-3 flex-wrap">
                 <Badge variant="outline" className="text-sm px-3 py-1.5">

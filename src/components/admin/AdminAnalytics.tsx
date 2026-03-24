@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, AlertTriangle, TrendingDown, TrendingUp, Info, Search, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { RefreshCw, AlertTriangle, TrendingDown, TrendingUp, Info, Search, ArrowUp, ArrowDown, Download, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,6 +127,8 @@ function PriceTrendsSection() {
 
   const categories = ["GPU", "CPU", "RAM", "SSD"];
 
+  const chartData = data?.data_points || data?.trends || [];
+
   return (
     <SectionCard title="📈 Tendances de prix par catégorie" loading={loading} error={error} onRetry={fetchData}>
       {data && (
@@ -151,18 +153,26 @@ function PriceTrendsSection() {
               ))}
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={data.data_points || data.trends || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => `${v}€`} />
-              <RTooltip contentStyle={chartTooltipStyle} formatter={(value: number, name: string) => [`${Math.round(value)} €`, name]} />
-              <Legend />
-              {categories.filter((c) => visibleCats[c]).map((cat) => (
-                <Line key={cat} type="monotone" dataKey={cat} stroke={CATEGORY_COLORS[cat]} strokeWidth={2} dot={false} />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
+          {chartData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <BarChart3 className="h-10 w-10 text-muted-foreground/40 mb-3" />
+              <p className="text-sm font-medium text-muted-foreground">Pas encore de données de tendances</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Les données s'accumuleront au fil des jours.</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => `${v}€`} />
+                <RTooltip contentStyle={chartTooltipStyle} formatter={(value: number, name: string) => [`${Math.round(value)} €`, name]} />
+                <Legend />
+                {categories.filter((c) => visibleCats[c]).map((cat) => (
+                  <Line key={cat} type="monotone" dataKey={cat} stroke={CATEGORY_COLORS[cat]} strokeWidth={2} dot={false} />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </>
       )}
     </SectionCard>

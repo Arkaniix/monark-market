@@ -71,7 +71,7 @@ export function VariantsSection({ variants, variantsCount }: VariantsSectionProp
     val != null ? `${val.toLocaleString("fr-FR")} ${suffix}` : "—";
 
   const fmtPrice = (val: number | null | undefined) =>
-    val != null ? `~${Math.round(val)}$` : "—";
+    val != null ? `~${Math.round(val * 0.92)} €` : "—";
 
   return (
     <Card>
@@ -117,7 +117,7 @@ export function VariantsSection({ variants, variantsCount }: VariantsSectionProp
                 </TableHead>
                 <TableHead>Couleur</TableHead>
                 <TableHead className="text-right">
-                  <SortHeader label="Prix neuf réf." colKey="price_usd" />
+                  <SortHeader label="Prix neuf réf. (est.)" colKey="price_usd" />
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -162,7 +162,7 @@ export function VariantsSection({ variants, variantsCount }: VariantsSectionProp
           </Table>
         </div>
         <p className="text-xs text-muted-foreground mt-3 italic">
-          💡 Les prix sont indicatifs (prix neuf PCPartPicker en USD) et ne reflètent pas les prix d'occasion Monark.
+          💡 Les prix sont estimés depuis les tarifs US (conversion approximative) et ne reflètent pas les prix d'occasion Monark.
         </p>
       </CardContent>
     </Card>

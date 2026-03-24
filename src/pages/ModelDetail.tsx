@@ -126,7 +126,7 @@ export default function ModelDetail() {
   const alertTarget: AlertTarget | null = model ? {
     type: 'model',
     id: model.id,
-    name: `${model.brand} ${model.name}`,
+    name: model.name,
     category: model.category,
     currentPrice: model.kpi.median_30d,
   } : null;
@@ -158,7 +158,7 @@ export default function ModelDetail() {
     if (!model) return '/estimator';
     const params = new URLSearchParams();
     params.set('model_id', String(model.id));
-    params.set('model_name', `${model.brand} ${model.name}`);
+    params.set('model_name', model.name);
     params.set('price', String(model.kpi.median_30d));
     return `/estimator?${params.toString()}`;
   };
@@ -257,14 +257,14 @@ export default function ModelDetail() {
             {model.images && model.images.length > 0 ? (
               <ImageGallery 
                 images={model.images} 
-                modelName={`${model.brand} ${model.name}`} 
+                modelName={model.name} 
               />
             ) : model.image_url ? (
               <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm">
                 <div className="aspect-[4/3] bg-muted/30">
                   <img
                     src={model.image_url}
-                    alt={`${model.brand} ${model.name}`}
+                    alt={model.name}
                     className="w-full h-full object-contain"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
@@ -299,13 +299,15 @@ export default function ModelDetail() {
 
           {/* Titre & Badges */}
           <div className="flex-1 space-y-3">
-            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">{model.brand} {model.name}</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">{model.name}</h1>
             <div className="flex gap-2 flex-wrap">
-              <Badge variant="default" className="bg-primary/90">
-                {model.brand}
-              </Badge>
               {model.manufacturer && (
-                <Badge variant="secondary">{model.manufacturer}</Badge>
+                <Badge variant="default" className="bg-primary/90">
+                  {model.manufacturer}
+                </Badge>
+              )}
+              {model.brand && model.brand !== model.manufacturer && (
+                <Badge variant="secondary">{model.brand}</Badge>
               )}
               <Badge variant="outline">{model.category}</Badge>
               {model.family && <Badge variant="outline">{model.family}</Badge>}
