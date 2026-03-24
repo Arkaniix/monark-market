@@ -77,7 +77,7 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
                 </tr>
               </thead>
               <tbody>
-                {whatIf.price_points.map((p, i) => {
+                {pricePoints.map((p, i) => {
                   const isCurrent = p.delta_pct === 0;
                   const isHighlighted = highlightedIdx === i || (highlightedIdx === null && isCurrent);
                   return (
