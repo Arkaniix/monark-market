@@ -49,14 +49,14 @@ export default function WhatIfSection({ whatIf, inputPrice }: WhatIfSectionProps
           {/* Preset buttons */}
           <div className="flex flex-wrap gap-2">
             {presetButtons.map((p, i) => {
-              const isActive = highlightedIdx === whatIf.price_points.indexOf(p);
+              const isActive = highlightedIdx === pricePoints.indexOf(p);
               const isCurrent = p.delta_pct === 0;
               return (
                 <Button
                   key={i}
                   variant={isActive || (highlightedIdx === null && isCurrent) ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setHighlightedIdx(whatIf.price_points.indexOf(p))}
+                  onClick={() => setHighlightedIdx(pricePoints.indexOf(p))}
                   className="text-xs"
                 >
                   {isCurrent ? `=${p.price}€=` : `${p.delta_pct > 0 ? "+" : ""}${p.delta_pct}%`}
