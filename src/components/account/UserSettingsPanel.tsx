@@ -86,8 +86,11 @@ export function UserSettingsPanel() {
           <div className="flex items-center justify-between">
             <Label htmlFor="theme">Thème</Label>
             <Select
-              value={currentSettings.theme}
-              onValueChange={(v) => handleChange('theme', v as 'light' | 'dark' | 'system')}
+              value={currentTheme || 'system'}
+              onValueChange={(v) => {
+                setTheme(v);
+                handleChange('theme', v as 'light' | 'dark' | 'system');
+              }}
             >
               <SelectTrigger className="w-40">
                 <SelectValue />
