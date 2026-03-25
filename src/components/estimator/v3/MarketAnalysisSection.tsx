@@ -213,14 +213,14 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
           <CardContent className="space-y-4">
             <div className="grid sm:grid-cols-3 gap-3">
               <NegotiationCard
-                label="Agressive"
+                label="Au culot"
                 emoji="🔴"
                 price={negotiation.aggressive_offer}
                 savings={negotiation.savings_aggressive_eur}
                 savingsPct={negotiation.savings_aggressive_pct}
               />
               <NegotiationCard
-                label="Compromis"
+                label="Offre raisonnable"
                 emoji="🟡"
                 price={negotiation.compromise_offer}
                 savings={negotiation.savings_compromise_eur}

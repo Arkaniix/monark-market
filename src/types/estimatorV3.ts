@@ -40,7 +40,7 @@ export interface V3Confidence {
   factors: string[] | null;
 }
 
-export type V3Verdict = "BUY" | "NEGOTIATE" | "WAIT" | "AVOID";
+export type V3Verdict = "BUY" | "NEGOTIATE" | "LOWBALL" | "AVOID";
 
 export interface V3Score {
   overall: number;
@@ -333,7 +333,7 @@ export interface V3ErrorResponse {
 export const VERDICT_COLORS: Record<V3Verdict, string> = {
   BUY: "#22c55e",
   NEGOTIATE: "#eab308",
-  WAIT: "#f97316",
+  LOWBALL: "#f97316",
   AVOID: "#ef4444",
 };
 
@@ -347,15 +347,15 @@ export const VERDICT_BG_CLASSES: Record<string, string> = {
 export const VERDICT_ICONS: Record<V3Verdict, string> = {
   BUY: "🟢",
   NEGOTIATE: "🟡",
-  WAIT: "🟠",
+  LOWBALL: "🟠",
   AVOID: "🔴",
 };
 
 export const VERDICT_LABELS: Record<V3Verdict, string> = {
-  BUY: "Acheter",
+  BUY: "Foncer",
   NEGOTIATE: "Négocier",
-  WAIT: "Attendre",
-  AVOID: "Éviter",
+  LOWBALL: "Tenter au culot",
+  AVOID: "Passer",
 };
 
 export const LEVEL_LABELS: Record<string, string> = {
