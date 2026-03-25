@@ -347,7 +347,7 @@ export const VERDICT_BG_CLASSES: Record<string, string> = {
 export const VERDICT_ICONS: Record<V3Verdict, string> = {
   BUY: "🟢",
   NEGOTIATE: "🟡",
-  WAIT: "🟠",
+  LOWBALL: "🟠",
   AVOID: "🔴",
 };
 
