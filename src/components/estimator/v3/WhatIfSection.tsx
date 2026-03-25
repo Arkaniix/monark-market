@@ -17,7 +17,7 @@ function getVerdictBg(verdict: V3Verdict) {
   const map: Record<V3Verdict, string> = {
     BUY: "bg-green-500/10 text-green-700 dark:text-green-400",
     NEGOTIATE: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
-    WAIT: "bg-orange-500/10 text-orange-700 dark:text-orange-400",
+    LOWBALL: "bg-orange-500/10 text-orange-700 dark:text-orange-400",
     AVOID: "bg-red-500/10 text-red-700 dark:text-red-400",
   };
   return map[verdict] || "";

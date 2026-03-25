@@ -220,7 +220,7 @@ export default function MarketAnalysisSection({ result }: MarketAnalysisSectionP
                 savingsPct={negotiation.savings_aggressive_pct}
               />
               <NegotiationCard
-                label="Compromis"
+                label="Offre raisonnable"
                 emoji="🟡"
                 price={negotiation.compromise_offer}
                 savings={negotiation.savings_compromise_eur}

@@ -352,10 +352,10 @@ export const VERDICT_ICONS: Record<V3Verdict, string> = {
 };
 
 export const VERDICT_LABELS: Record<V3Verdict, string> = {
-  BUY: "Acheter",
+  BUY: "Foncer",
   NEGOTIATE: "Négocier",
-  WAIT: "Attendre",
-  AVOID: "Éviter",
+  LOWBALL: "Tenter au culot",
+  AVOID: "Passer",
 };
 
 export const LEVEL_LABELS: Record<string, string> = {
