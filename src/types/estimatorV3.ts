@@ -40,7 +40,7 @@ export interface V3Confidence {
   factors: string[] | null;
 }
 
-export type V3Verdict = "BUY" | "NEGOTIATE" | "WAIT" | "AVOID";
+export type V3Verdict = "BUY" | "NEGOTIATE" | "LOWBALL" | "AVOID";
 
 export interface V3Score {
   overall: number;
