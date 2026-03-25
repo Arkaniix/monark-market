@@ -333,7 +333,7 @@ export interface V3ErrorResponse {
 export const VERDICT_COLORS: Record<V3Verdict, string> = {
   BUY: "#22c55e",
   NEGOTIATE: "#eab308",
-  WAIT: "#f97316",
+  LOWBALL: "#f97316",
   AVOID: "#ef4444",
 };
 
