@@ -998,6 +998,9 @@ export default function AdminScrapers() {
         )}
       </div>
 
+      {/* Monitoring section */}
+      <MonitoringSection />
+
       {/* Logs panel */}
       <div ref={logsPanelRef}>
         <ScraperLogsPanel
