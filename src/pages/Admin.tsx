@@ -86,6 +86,7 @@ export default function Admin() {
       case "analytics": return <AdminAnalytics />;
       case "pipeline": return <AdminPipelineCron />;
       case "scrapers": return <AdminScrapers />;
+      case "monitoring": return <AdminMonitoring />;
       case "health": return <AdminHealth />;
       case "logs": return <AdminLogs />;
       default: return <AdminDashboard />;
