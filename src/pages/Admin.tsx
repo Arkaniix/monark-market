@@ -19,14 +19,14 @@ import AdminPipelineCron from "@/components/admin/AdminPipelineCron";
 import AdminHealth from "@/components/admin/AdminHealth";
 import AdminLogs from "@/components/admin/AdminLogs";
 import AdminScrapers from "@/components/admin/AdminScrapers";
-import AdminMonitoring from "@/components/admin/AdminMonitoring";
+
 
 const LOADING_TIMEOUT_MS = 8000;
 
 export default function Admin() {
   const getInitialSection = () => {
     const hash = window.location.hash.replace("#", "");
-    const validSections = ["dashboard", "users", "subscriptions", "credits", "compta", "models", "observatory", "analytics", "pipeline", "scrapers", "monitoring", "health", "logs"];
+    const validSections = ["dashboard", "users", "subscriptions", "credits", "compta", "models", "observatory", "analytics", "pipeline", "scrapers", "health", "logs"];
     return validSections.includes(hash) ? hash : "dashboard";
   };
   const [activeSection, setActiveSection] = useState(getInitialSection);
@@ -86,7 +86,7 @@ export default function Admin() {
       case "analytics": return <AdminAnalytics />;
       case "pipeline": return <AdminPipelineCron />;
       case "scrapers": return <AdminScrapers />;
-      case "monitoring": return <AdminMonitoring />;
+      
       case "health": return <AdminHealth />;
       case "logs": return <AdminLogs />;
       default: return <AdminDashboard />;

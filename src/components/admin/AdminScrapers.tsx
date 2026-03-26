@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Play, Square, Pause, PlayCircle, Settings, ScrollText, Wifi, WifiOff, Loader2, Download, BarChart3, AlertTriangle, Activity } from "lucide-react";
+import MonitoringSection from "@/components/admin/MonitoringSection";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -996,6 +997,9 @@ export default function AdminScrapers() {
           </div>
         )}
       </div>
+
+      {/* Monitoring section */}
+      <MonitoringSection />
 
       {/* Logs panel */}
       <div ref={logsPanelRef}>
