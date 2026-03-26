@@ -19,6 +19,7 @@ import AdminPipelineCron from "@/components/admin/AdminPipelineCron";
 import AdminHealth from "@/components/admin/AdminHealth";
 import AdminLogs from "@/components/admin/AdminLogs";
 import AdminScrapers from "@/components/admin/AdminScrapers";
+import AdminMonitoring from "@/components/admin/AdminMonitoring";
 
 const LOADING_TIMEOUT_MS = 8000;
 
