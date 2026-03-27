@@ -54,6 +54,8 @@ interface ModelMonitoring {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
+const fmt = (v: number | null | undefined, decimals = 1) => (v ?? 0).toFixed(decimals);
+
 const STATUS_COLORS: Record<string, string> = {
   active: "hsl(142, 71%, 45%)",
   disappeared: "hsl(0, 72%, 51%)",
@@ -77,13 +79,14 @@ function relativeTime(iso: string | null): string {
   }
 }
 
-function medianBadge(days: number) {
-  if (days < 3) return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{days.toFixed(1)}j</Badge>;
-  if (days < 7) return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{days.toFixed(1)}j</Badge>;
-  return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">{days.toFixed(1)}j</Badge>;
+function medianBadge(days: number | null | undefined) {
+  const d = days ?? 0;
+  if (d < 3) return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{fmt(d)}j</Badge>;
+  if (d < 7) return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{fmt(d)}j</Badge>;
+  return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">{fmt(d)}j</Badge>;
 }
 
-function trendIcon(trend: string) {
+function trendIcon(trend: string | null | undefined) {
   switch (trend) {
     case "increasing": return <Badge className="bg-red-500/20 text-red-400 border-red-500/30 gap-1"><ArrowUp className="h-3 w-3" />Stock en hausse</Badge>;
     case "decreasing": return <Badge className="bg-green-500/20 text-green-400 border-green-500/30 gap-1"><ArrowDown className="h-3 w-3" />Stock en baisse</Badge>;
@@ -259,8 +262,8 @@ export default function MonitoringSection() {
                             <TableCell className="text-xs">{m.active}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                <Progress value={Math.min(m.sell_rate_7d, 100)} className="h-1.5 w-16" />
-                                <span className="text-[11px] text-muted-foreground">{m.sell_rate_7d.toFixed(1)}%</span>
+                                <Progress value={Math.min(m.sell_rate_7d ?? 0, 100)} className="h-1.5 w-16" />
+                                <span className="text-[11px] text-muted-foreground">{fmt(m.sell_rate_7d)}%</span>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -291,12 +294,12 @@ export default function MonitoringSection() {
 
               <div className="grid grid-cols-2 gap-3 mb-6">
                 {[
-                  { label: "Temps médian de vente", value: `${modelDetail.liquidity.median_days_to_sell.toFixed(1)} jours` },
-                  { label: "Taux de vente 7j", value: `${modelDetail.liquidity.sell_rate_7d.toFixed(1)}%` },
-                  { label: "Taux de vente 30j", value: `${modelDetail.liquidity.sell_rate_30d.toFixed(1)}%` },
-                  { label: "Annonces actives", value: String(modelDetail.liquidity.active_count) },
-                  { label: "Baisses de prix", value: `${modelDetail.liquidity.price_drop_rate.toFixed(1)}%` },
-                  { label: "Republications", value: `${modelDetail.liquidity.republish_rate.toFixed(1)}%` },
+                  { label: "Temps médian de vente", value: `${fmt(modelDetail.liquidity.median_days_to_sell)} jours` },
+                  { label: "Taux de vente 7j", value: `${fmt(modelDetail.liquidity.sell_rate_7d)}%` },
+                  { label: "Taux de vente 30j", value: `${fmt(modelDetail.liquidity.sell_rate_30d)}%` },
+                  { label: "Annonces actives", value: String(modelDetail.liquidity.active_count ?? 0) },
+                  { label: "Baisses de prix", value: `${fmt(modelDetail.liquidity.price_drop_rate)}%` },
+                  { label: "Republications", value: `${fmt(modelDetail.liquidity.republish_rate)}%` },
                 ].map(m => (
                   <div key={m.label} className="p-3 rounded-lg bg-muted/50 border border-border/50">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">{m.label}</p>
@@ -312,7 +315,7 @@ export default function MonitoringSection() {
                     <p className="text-xs font-medium mb-2 capitalize">{source}</p>
                     <div className="space-y-1 text-xs text-muted-foreground">
                       <p>Actives : <span className="text-foreground font-medium">{data.active}</span></p>
-                      <p>Temps médian : <span className="text-foreground font-medium">{data.median_days.toFixed(1)}j</span></p>
+                      <p>Temps médian : <span className="text-foreground font-medium">{fmt(data.median_days)}j</span></p>
                     </div>
                   </div>
                 ))}
