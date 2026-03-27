@@ -315,7 +315,7 @@ export default function MonitoringSection() {
                     <p className="text-xs font-medium mb-2 capitalize">{source}</p>
                     <div className="space-y-1 text-xs text-muted-foreground">
                       <p>Actives : <span className="text-foreground font-medium">{data.active}</span></p>
-                      <p>Temps médian : <span className="text-foreground font-medium">{data.median_days.toFixed(1)}j</span></p>
+                      <p>Temps médian : <span className="text-foreground font-medium">{fmt(data.median_days)}j</span></p>
                     </div>
                   </div>
                 ))}
