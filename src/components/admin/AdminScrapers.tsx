@@ -846,7 +846,12 @@ export default function AdminScrapers() {
     ? restScrapers.map((rest) => {
         const ws = wsScrapers[rest.name];
         if (!ws) return rest;
-        return { ...rest, ...ws, label: rest.label, description: rest.description, schedule: rest.schedule, timer: rest.timer };
+        const merged = { ...rest, ...ws, label: rest.label, description: rest.description, schedule: rest.schedule, timer: rest.timer };
+        if (ws.status !== "running" && ws.status !== "paused") {
+          merged.completed_at = rest.completed_at ?? ws.completed_at;
+          merged.updated_at = rest.updated_at ?? ws.updated_at;
+        }
+        return merged;
       })
     : Object.values(wsScrapers);
 
