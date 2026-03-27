@@ -262,8 +262,8 @@ export default function MonitoringSection() {
                             <TableCell className="text-xs">{m.active}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                <Progress value={Math.min(m.sell_rate_7d, 100)} className="h-1.5 w-16" />
-                                <span className="text-[11px] text-muted-foreground">{m.sell_rate_7d.toFixed(1)}%</span>
+                                <Progress value={Math.min(m.sell_rate_7d ?? 0, 100)} className="h-1.5 w-16" />
+                                <span className="text-[11px] text-muted-foreground">{fmt(m.sell_rate_7d)}%</span>
                               </div>
                             </TableCell>
                           </TableRow>
