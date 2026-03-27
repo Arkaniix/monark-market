@@ -54,6 +54,8 @@ interface ModelMonitoring {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────
+const fmt = (v: number | null | undefined, decimals = 1) => (v ?? 0).toFixed(decimals);
+
 const STATUS_COLORS: Record<string, string> = {
   active: "hsl(142, 71%, 45%)",
   disappeared: "hsl(0, 72%, 51%)",
@@ -77,13 +79,14 @@ function relativeTime(iso: string | null): string {
   }
 }
 
-function medianBadge(days: number) {
-  if (days < 3) return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{days.toFixed(1)}j</Badge>;
-  if (days < 7) return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{days.toFixed(1)}j</Badge>;
-  return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">{days.toFixed(1)}j</Badge>;
+function medianBadge(days: number | null | undefined) {
+  const d = days ?? 0;
+  if (d < 3) return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{fmt(d)}j</Badge>;
+  if (d < 7) return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{fmt(d)}j</Badge>;
+  return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">{fmt(d)}j</Badge>;
 }
 
-function trendIcon(trend: string) {
+function trendIcon(trend: string | null | undefined) {
   switch (trend) {
     case "increasing": return <Badge className="bg-red-500/20 text-red-400 border-red-500/30 gap-1"><ArrowUp className="h-3 w-3" />Stock en hausse</Badge>;
     case "decreasing": return <Badge className="bg-green-500/20 text-green-400 border-green-500/30 gap-1"><ArrowDown className="h-3 w-3" />Stock en baisse</Badge>;
