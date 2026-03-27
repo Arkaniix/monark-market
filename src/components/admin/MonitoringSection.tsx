@@ -294,12 +294,12 @@ export default function MonitoringSection() {
 
               <div className="grid grid-cols-2 gap-3 mb-6">
                 {[
-                  { label: "Temps médian de vente", value: `${modelDetail.liquidity.median_days_to_sell.toFixed(1)} jours` },
-                  { label: "Taux de vente 7j", value: `${modelDetail.liquidity.sell_rate_7d.toFixed(1)}%` },
-                  { label: "Taux de vente 30j", value: `${modelDetail.liquidity.sell_rate_30d.toFixed(1)}%` },
-                  { label: "Annonces actives", value: String(modelDetail.liquidity.active_count) },
-                  { label: "Baisses de prix", value: `${modelDetail.liquidity.price_drop_rate.toFixed(1)}%` },
-                  { label: "Republications", value: `${modelDetail.liquidity.republish_rate.toFixed(1)}%` },
+                  { label: "Temps médian de vente", value: `${fmt(modelDetail.liquidity.median_days_to_sell)} jours` },
+                  { label: "Taux de vente 7j", value: `${fmt(modelDetail.liquidity.sell_rate_7d)}%` },
+                  { label: "Taux de vente 30j", value: `${fmt(modelDetail.liquidity.sell_rate_30d)}%` },
+                  { label: "Annonces actives", value: String(modelDetail.liquidity.active_count ?? 0) },
+                  { label: "Baisses de prix", value: `${fmt(modelDetail.liquidity.price_drop_rate)}%` },
+                  { label: "Republications", value: `${fmt(modelDetail.liquidity.republish_rate)}%` },
                 ].map(m => (
                   <div key={m.label} className="p-3 rounded-lg bg-muted/50 border border-border/50">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">{m.label}</p>
