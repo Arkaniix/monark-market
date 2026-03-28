@@ -43,8 +43,8 @@ export default function Inventory() {
   }, []);
 
   const filters: InventoryFilters = {
-    status: statusFilter || undefined,
-    category: categoryFilter || undefined,
+    status: statusFilter === "all" ? undefined : statusFilter,
+    category: categoryFilter === "all" ? undefined : categoryFilter,
     search: debouncedSearch || undefined,
     sort,
     limit: PAGE_SIZE,
