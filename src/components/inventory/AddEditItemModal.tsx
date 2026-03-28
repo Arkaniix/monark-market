@@ -11,7 +11,7 @@ import { CalendarIcon, Search } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useModelSearch, useCreateItem, useUpdateItem, useListItem } from "@/hooks/useInventory";
+import { useModelSearch, useCreateItem, useUpdateItem, useListItem, type ModelAutocompleteResult } from "@/hooks/useInventory";
 import { useToast } from "@/hooks/use-toast";
 import { MARKETPLACE_PLATFORMS } from "@/lib/platforms";
 import type { InventoryItem, InventoryCategory, CreateInventoryPayload, UpdateInventoryPayload } from "@/types/inventory";
