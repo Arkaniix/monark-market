@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, Radar, Home, Eye, User, Menu, Calculator, Users, GraduationCap, LogOut, Shield, Scale, MessageCircle } from "lucide-react";
+import { Search, Radar, Home, Eye, User, Menu, Calculator, Users, GraduationCap, LogOut, Shield, Scale, MessageCircle, Package } from "lucide-react";
 import { useTheme } from "next-themes";
 import monarkLogoLight from "@/assets/logo.png";
 import monarkLogoDark from "@/assets/logo-dark-text.png";
