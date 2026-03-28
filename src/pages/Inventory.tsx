@@ -1,7 +1,6 @@
-import { useState, useCallback, useMemo } from "react";
-import { Package, TrendingUp, TrendingDown, Clock, Tag, ShoppingCart, MoreHorizontal, Plus, Download, Search, Pencil, Trash2, ArrowDownToLine, ArrowUpFromLine, DollarSign, CheckCircle } from "lucide-react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Package, TrendingUp, TrendingDown, Clock, Tag, ShoppingCart, MoreHorizontal, Plus, Download, Search, Pencil, Trash2, ArrowDownToLine, DollarSign, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,21 +13,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useInventoryList, useInventoryStats, useDeleteItem, useUnlistItem } from "@/hooks/useInventory";
 import { useEntitlements } from "@/hooks/useEntitlements";
-import { apiFetch } from "@/lib/api/client";
 import AddEditItemModal from "@/components/inventory/AddEditItemModal";
 import ListItemModal from "@/components/inventory/ListItemModal";
 import SellItemModal from "@/components/inventory/SellItemModal";
 import type { InventoryItem, InventoryStatus, InventoryCategory, InventorySort, InventoryFilters } from "@/types/inventory";
 import { CATEGORY_LABELS, CATEGORY_COLORS, STATUS_LABELS, STATUS_COLORS, SORT_OPTIONS } from "@/types/inventory";
-
-// ============= Debounce Hook =============
-function useDebounce(value: string, delay: number) {
-  const [debounced, setDebounced] = useState(value);
-  useMemo(() => {}, []); // removed broken implementation
-  // Use a ref-based approach
-  useState(() => {});
-  return debounced;
-}
 
 const PAGE_SIZE = 20;
 
@@ -40,18 +29,17 @@ export default function Inventory() {
   const [statusFilter, setStatusFilter] = useState<InventoryStatus | "">("");
   const [categoryFilter, setCategoryFilter] = useState<InventoryCategory | "">("");
   const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sort, setSort] = useState<InventorySort>("date_desc");
   const [page, setPage] = useState(0);
   const [statsDays, setStatsDays] = useState(90);
 
   // Debounce search
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  // Simple debounce with timeout ref
-  const searchTimeoutRef = useState<ReturnType<typeof setTimeout> | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleSearchChange = useCallback((val: string) => {
     setSearchInput(val);
-    if (searchTimeoutRef[0]) clearTimeout(searchTimeoutRef[0]);
-    searchTimeoutRef[0] = setTimeout(() => { setDebouncedSearch(val); setPage(0); }, 300);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => { setDebouncedSearch(val); setPage(0); }, 300);
   }, []);
 
   const filters: InventoryFilters = {
