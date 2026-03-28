@@ -36,10 +36,19 @@ export function useInventoryStats(days: number) {
 }
 
 // ============= Model search for autocomplete =============
+export interface ModelAutocompleteResult {
+  id: number;
+  name: string;
+  label: string;
+  manufacturer: string;
+  family?: string;
+  category_id?: number;
+}
+
 export function useModelSearch(query: string) {
-  return useQuery({
-    queryKey: ["models", "search", query],
-    queryFn: () => apiFetch<{ id: number; name: string; brand: string; category: string }[]>(`/v1/models/search?q=${encodeURIComponent(query)}`),
+  return useQuery<ModelAutocompleteResult[]>({
+    queryKey: ["models", "autocomplete", query],
+    queryFn: () => apiFetch<ModelAutocompleteResult[]>(`/v1/models/autocomplete?q=${encodeURIComponent(query)}&limit=10`),
     enabled: query.length >= 2,
     staleTime: 30_000,
   });

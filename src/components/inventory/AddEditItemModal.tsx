@@ -11,7 +11,7 @@ import { CalendarIcon, Search } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useModelSearch, useCreateItem, useUpdateItem, useListItem } from "@/hooks/useInventory";
+import { useModelSearch, useCreateItem, useUpdateItem, useListItem, type ModelAutocompleteResult } from "@/hooks/useInventory";
 import { useToast } from "@/hooks/use-toast";
 import { MARKETPLACE_PLATFORMS } from "@/lib/platforms";
 import type { InventoryItem, InventoryCategory, CreateInventoryPayload, UpdateInventoryPayload } from "@/types/inventory";
@@ -69,7 +69,7 @@ export default function AddEditItemModal({ open, onOpenChange, editItem }: AddEd
   const [listedPrice, setListedPrice] = useState("");
   const [listedPlatform, setListedPlatform] = useState("");
 
-  const { data: searchResults } = useModelSearch(searchQuery);
+  const { data: searchResults, isLoading: isSearching } = useModelSearch(searchQuery);
 
   // Reset on open / populate on edit
   useEffect(() => {
@@ -194,18 +194,28 @@ export default function AddEditItemModal({ open, onOpenChange, editItem }: AddEd
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9"
                   />
-                  {searchResults && searchResults.length > 0 && (
+                  {isSearching && searchQuery.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow-lg p-3 text-sm text-muted-foreground">
+                      Recherche…
+                    </div>
+                  )}
+                  {!isSearching && searchResults && searchResults.length > 0 && (
                     <div className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow-lg max-h-48 overflow-y-auto">
                       {searchResults.map((m) => (
                         <button
                           key={m.id}
                           className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
-                          onClick={() => { setSelectedModel({ id: m.id, name: m.name }); setSearchQuery(""); }}
+                          onClick={() => { setSelectedModel({ id: m.id, name: m.label || m.name }); setSearchQuery(""); }}
                         >
-                          <span className="font-medium">{m.name}</span>
-                          <span className="text-muted-foreground ml-2 text-xs">{m.brand}</span>
+                          <span className="font-medium">{m.label || m.name}</span>
+                          <span className="text-muted-foreground ml-2 text-xs">{m.manufacturer}</span>
                         </button>
                       ))}
+                    </div>
+                  )}
+                  {!isSearching && searchResults && searchResults.length === 0 && searchQuery.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow-lg p-3 text-sm text-muted-foreground">
+                      Aucun résultat
                     </div>
                   )}
                 </div>
