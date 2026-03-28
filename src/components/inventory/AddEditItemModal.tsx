@@ -69,7 +69,7 @@ export default function AddEditItemModal({ open, onOpenChange, editItem }: AddEd
   const [listedPrice, setListedPrice] = useState("");
   const [listedPlatform, setListedPlatform] = useState("");
 
-  const { data: searchResults } = useModelSearch(searchQuery);
+  const { data: searchResults, isLoading: isSearching } = useModelSearch(searchQuery);
 
   // Reset on open / populate on edit
   useEffect(() => {
