@@ -27,6 +27,7 @@ import NotFound from "./pages/NotFound";
 import Deals from "./pages/Deals";
 import AdDetail from "./pages/AdDetail";
 import JobDetail from "./pages/JobDetail";
+import Inventory from "./pages/Inventory";
 
 // Redirection legacy /trends vers /
 const TrendsRedirect = () => <Navigate to="/" replace />;
