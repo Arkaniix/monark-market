@@ -177,7 +177,7 @@ export default function Inventory() {
         <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as any); setPage(0); }}>
           <SelectTrigger className="w-32"><SelectValue placeholder="Statut" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tous</SelectItem>
+            <SelectItem value="all">Tous</SelectItem>
             <SelectItem value="in_stock">En stock</SelectItem>
             <SelectItem value="listed">En vente</SelectItem>
             <SelectItem value="sold">Vendus</SelectItem>
@@ -186,7 +186,7 @@ export default function Inventory() {
         <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v as any); setPage(0); }}>
           <SelectTrigger className="w-32"><SelectValue placeholder="Catégorie" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Toutes</SelectItem>
+            <SelectItem value="all">Toutes</SelectItem>
             <SelectItem value="gpu">GPU</SelectItem>
             <SelectItem value="cpu">CPU</SelectItem>
             <SelectItem value="ram">RAM</SelectItem>
