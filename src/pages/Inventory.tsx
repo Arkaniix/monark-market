@@ -26,8 +26,8 @@ export default function Inventory() {
   const { plan } = useEntitlements();
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState<InventoryStatus | "">("");
-  const [categoryFilter, setCategoryFilter] = useState<InventoryCategory | "">("");
+  const [statusFilter, setStatusFilter] = useState<InventoryStatus | "all">("all");
+  const [categoryFilter, setCategoryFilter] = useState<InventoryCategory | "all">("all");
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sort, setSort] = useState<InventorySort>("date_desc");
