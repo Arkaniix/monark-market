@@ -19,6 +19,7 @@ const navigation = [
   { name: "Suivi", href: "/tracking", icon: Radar },
   { name: "Mes Analyses", href: "/lens-history", icon: Eye },
   { name: "Catalogue", href: "/catalog", icon: Search },
+  { name: "Mon Stock", href: "/inventory", icon: Package },
   { name: "Estimator", href: "/estimator", icon: Calculator },
   { name: "Communauté", href: "/community", icon: Users },
   { name: "Formation", href: "/training", icon: GraduationCap },

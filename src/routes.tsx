@@ -126,6 +126,11 @@ export const routes: RouteConfig[] = [
     requiresAuth: true,
   },
   {
+    path: "/inventory",
+    component: Inventory,
+    requiresAuth: true,
+  },
+  {
     path: "/estimator",
     component: Estimator,
     requiresAuth: true,
