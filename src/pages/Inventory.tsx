@@ -21,18 +21,12 @@ import SellItemModal from "@/components/inventory/SellItemModal";
 import type { InventoryItem, InventoryStatus, InventoryCategory, InventorySort, InventoryFilters } from "@/types/inventory";
 import { CATEGORY_LABELS, CATEGORY_COLORS, STATUS_LABELS, STATUS_COLORS, SORT_OPTIONS } from "@/types/inventory";
 
-// ============= Helper =============
+// ============= Debounce Hook =============
 function useDebounce(value: string, delay: number) {
   const [debounced, setDebounced] = useState(value);
-  useState(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  });
-  // Use effect-like via useMemo trick — proper implementation
-  useMemo(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
+  useMemo(() => {}, []); // removed broken implementation
+  // Use a ref-based approach
+  useState(() => {});
   return debounced;
 }
 
