@@ -26,8 +26,8 @@ export default function Inventory() {
   const { plan } = useEntitlements();
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState<InventoryStatus | "">("");
-  const [categoryFilter, setCategoryFilter] = useState<InventoryCategory | "">("");
+  const [statusFilter, setStatusFilter] = useState<InventoryStatus | "all">("all");
+  const [categoryFilter, setCategoryFilter] = useState<InventoryCategory | "all">("all");
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sort, setSort] = useState<InventorySort>("date_desc");
@@ -43,8 +43,8 @@ export default function Inventory() {
   }, []);
 
   const filters: InventoryFilters = {
-    status: statusFilter || undefined,
-    category: categoryFilter || undefined,
+    status: statusFilter === "all" ? undefined : statusFilter,
+    category: categoryFilter === "all" ? undefined : categoryFilter,
     search: debouncedSearch || undefined,
     sort,
     limit: PAGE_SIZE,
@@ -177,7 +177,7 @@ export default function Inventory() {
         <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as any); setPage(0); }}>
           <SelectTrigger className="w-32"><SelectValue placeholder="Statut" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tous</SelectItem>
+            <SelectItem value="all">Tous</SelectItem>
             <SelectItem value="in_stock">En stock</SelectItem>
             <SelectItem value="listed">En vente</SelectItem>
             <SelectItem value="sold">Vendus</SelectItem>
@@ -186,7 +186,7 @@ export default function Inventory() {
         <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v as any); setPage(0); }}>
           <SelectTrigger className="w-32"><SelectValue placeholder="Catégorie" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Toutes</SelectItem>
+            <SelectItem value="all">Toutes</SelectItem>
             <SelectItem value="gpu">GPU</SelectItem>
             <SelectItem value="cpu">CPU</SelectItem>
             <SelectItem value="ram">RAM</SelectItem>

@@ -216,7 +216,9 @@ export async function apiFetch<T>(
       'id' in data ||
       'user' in data ||
       'stats' in data ||
-      'total' in data
+      'total' in data ||
+      // Inventory stats shape
+      'in_stock_count' in data
     );
     
     if (!hasExpectedShape) {
