@@ -106,7 +106,7 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
   const matchesCategory = (category: string) => {
     if (categoryFilter === "all") return true;
     if (categoryFilter === "Autres") {
-      return !["GPU", "CPU", "RAM", "SSD"].includes(category);
+      return !["GPU", "CPU", "MOTHERBOARD", "RAM", "SSD", "PSU"].includes(category);
     }
     return category === categoryFilter;
   };

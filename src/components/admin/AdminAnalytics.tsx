@@ -129,7 +129,7 @@ function PriceTrendsSection() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const categories = ["GPU", "CPU", "RAM", "SSD"];
+  const categories = ["GPU", "CPU", "MOTHERBOARD", "RAM", "SSD", "PSU"];
 
   const chartData = data?.data_points || data?.trends || [];
 

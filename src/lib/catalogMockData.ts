@@ -482,7 +482,7 @@ export const catalogSummary = {
 };
 
 export const facetOptions = {
-  categories: ["GPU", "CPU", "RAM", "SSD", "Motherboard", "PC"],
+  categories: ["GPU", "CPU", "Motherboard", "RAM", "SSD", "PSU", "PC"],
   brands: Array.from(new Set(Object.values(brands).flat())),
   families: Object.values(families).flat(),
   regions: ["IDF", "ARA", "PACA", "Occitanie", "Nouvelle-Aquitaine"]
