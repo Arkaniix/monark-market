@@ -17,10 +17,12 @@ import { MARKETPLACE_PLATFORMS } from "@/lib/platforms";
 import type { InventoryItem, InventoryCategory, CreateInventoryPayload, UpdateInventoryPayload } from "@/types/inventory";
 
 const CATEGORIES: { value: InventoryCategory; label: string }[] = [
-  { value: "gpu", label: "GPU" },
-  { value: "cpu", label: "CPU" },
-  { value: "ram", label: "RAM" },
+  { value: "gpu", label: "Carte Graphique" },
+  { value: "cpu", label: "Processeur" },
+  { value: "motherboard", label: "Carte Mère" },
+  { value: "ram", label: "Mémoire RAM" },
   { value: "ssd", label: "SSD" },
+  { value: "psu", label: "Alimentation" },
   { value: "other", label: "Autre" },
 ];
 

@@ -406,8 +406,10 @@ export default function AdminPipelineCron() {
                   <SelectItem value="all">Toutes</SelectItem>
                   <SelectItem value="gpu">GPU</SelectItem>
                   <SelectItem value="cpu">CPU</SelectItem>
+                  <SelectItem value="motherboard">Carte Mère</SelectItem>
                   <SelectItem value="ram">RAM</SelectItem>
                   <SelectItem value="ssd">SSD</SelectItem>
+                  <SelectItem value="psu">Alimentation</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={sortBy} onValueChange={setSortBy}>

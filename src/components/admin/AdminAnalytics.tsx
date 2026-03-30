@@ -26,15 +26,19 @@ import {
 const CATEGORY_COLORS: Record<string, string> = {
   GPU: "hsl(152, 69%, 41%)",
   CPU: "hsl(217, 91%, 60%)",
+  MOTHERBOARD: "hsl(263, 70%, 58%)",
   RAM: "hsl(270, 67%, 58%)",
   SSD: "hsl(25, 95%, 53%)",
+  PSU: "hsl(45, 93%, 47%)",
 };
 
 const CATEGORY_BADGE: Record<string, string> = {
   GPU: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
   CPU: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+  MOTHERBOARD: "bg-violet-500/10 text-violet-400 border-violet-500/30",
   RAM: "bg-purple-500/10 text-purple-400 border-purple-500/30",
   SSD: "bg-orange-500/10 text-orange-400 border-orange-500/30",
+  PSU: "bg-amber-500/10 text-amber-400 border-amber-500/30",
 };
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -108,7 +112,7 @@ function PriceTrendsSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState("30");
-  const [visibleCats, setVisibleCats] = useState<Record<string, boolean>>({ GPU: true, CPU: true, RAM: true, SSD: true });
+  const [visibleCats, setVisibleCats] = useState<Record<string, boolean>>({ GPU: true, CPU: true, MOTHERBOARD: true, RAM: true, SSD: true, PSU: true });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -125,7 +129,7 @@ function PriceTrendsSection() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const categories = ["GPU", "CPU", "RAM", "SSD"];
+  const categories = ["GPU", "CPU", "MOTHERBOARD", "RAM", "SSD", "PSU"];
 
   const chartData = data?.data_points || data?.trends || [];
 
@@ -596,8 +600,10 @@ function DecoteSection() {
               <SelectItem value="all">Toutes</SelectItem>
               <SelectItem value="GPU">GPU</SelectItem>
               <SelectItem value="CPU">CPU</SelectItem>
+              <SelectItem value="MOTHERBOARD">Carte Mère</SelectItem>
               <SelectItem value="RAM">RAM</SelectItem>
               <SelectItem value="SSD">SSD</SelectItem>
+              <SelectItem value="PSU">Alimentation</SelectItem>
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={setSortBy}>

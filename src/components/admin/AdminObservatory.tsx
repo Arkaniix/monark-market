@@ -55,8 +55,10 @@ function formatEur(v: number | null) {
 const CATEGORY_COLORS: Record<string, string> = {
   GPU: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
   CPU: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  MOTHERBOARD: "bg-violet-500/20 text-violet-400 border-violet-500/30",
   RAM: "bg-purple-500/20 text-purple-400 border-purple-500/30",
   SSD: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+  PSU: "bg-amber-500/20 text-amber-400 border-amber-500/30",
 };
 
 const REGIME_BADGE: Record<string, { label: string; cls: string; icon?: React.ReactNode }> = {
@@ -653,8 +655,10 @@ export default function AdminObservatory() {
                 <SelectItem value="all">Toutes</SelectItem>
                 <SelectItem value="GPU">GPU</SelectItem>
                 <SelectItem value="CPU">CPU</SelectItem>
+                <SelectItem value="MOTHERBOARD">Carte Mère</SelectItem>
                 <SelectItem value="RAM">RAM</SelectItem>
                 <SelectItem value="SSD">SSD</SelectItem>
+                <SelectItem value="PSU">Alimentation</SelectItem>
               </SelectContent>
             </Select>
 
