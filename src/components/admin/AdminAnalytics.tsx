@@ -112,7 +112,7 @@ function PriceTrendsSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState("30");
-  const [visibleCats, setVisibleCats] = useState<Record<string, boolean>>({ GPU: true, CPU: true, RAM: true, SSD: true });
+  const [visibleCats, setVisibleCats] = useState<Record<string, boolean>>({ GPU: true, CPU: true, MOTHERBOARD: true, RAM: true, SSD: true, PSU: true });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
