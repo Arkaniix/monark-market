@@ -26,8 +26,10 @@ import {
 const CATEGORY_COLORS: Record<string, string> = {
   GPU: "hsl(152, 69%, 41%)",
   CPU: "hsl(217, 91%, 60%)",
+  MOTHERBOARD: "hsl(263, 70%, 58%)",
   RAM: "hsl(270, 67%, 58%)",
   SSD: "hsl(25, 95%, 53%)",
+  PSU: "hsl(45, 93%, 47%)",
 };
 
 const CATEGORY_BADGE: Record<string, string> = {
