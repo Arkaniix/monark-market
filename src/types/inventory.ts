@@ -1,7 +1,7 @@
 // ============= Inventory Types =============
 
 export type InventoryStatus = "in_stock" | "listed" | "sold";
-export type InventoryCategory = "gpu" | "cpu" | "ram" | "ssd" | "other";
+export type InventoryCategory = "gpu" | "cpu" | "motherboard" | "ram" | "ssd" | "psu" | "other";
 export type InventorySort = "date_desc" | "date_asc" | "price_desc" | "price_asc" | "profit_desc";
 export type BuyCondition = "new" | "like_new" | "good" | "used" | "for_parts";
 
