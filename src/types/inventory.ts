@@ -131,10 +131,12 @@ export interface UpdateInventoryPayload {
 
 // UI helpers
 export const CATEGORY_LABELS: Record<InventoryCategory, string> = {
-  gpu: "GPU",
-  cpu: "CPU",
-  ram: "RAM",
+  gpu: "Carte Graphique",
+  cpu: "Processeur",
+  motherboard: "Carte Mère",
+  ram: "Mémoire RAM",
   ssd: "SSD",
+  psu: "Alimentation",
   other: "Autre",
 };
 
