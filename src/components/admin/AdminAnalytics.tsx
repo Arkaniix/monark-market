@@ -35,8 +35,10 @@ const CATEGORY_COLORS: Record<string, string> = {
 const CATEGORY_BADGE: Record<string, string> = {
   GPU: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
   CPU: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+  MOTHERBOARD: "bg-violet-500/10 text-violet-400 border-violet-500/30",
   RAM: "bg-purple-500/10 text-purple-400 border-purple-500/30",
   SSD: "bg-orange-500/10 text-orange-400 border-orange-500/30",
+  PSU: "bg-amber-500/10 text-amber-400 border-amber-500/30",
 };
 
 const SOURCE_COLORS: Record<string, string> = {
