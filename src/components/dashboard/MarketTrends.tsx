@@ -142,8 +142,10 @@ export function MarketTrends({ data, isLoading }: MarketTrendsProps) {
     switch (category) {
       case "GPU": return "text-primary";
       case "CPU": return "text-accent";
+      case "MOTHERBOARD": return "text-violet-500";
       case "RAM": return "text-green-500";
       case "SSD": return "text-amber-500";
+      case "PSU": return "text-yellow-500";
       case "CM": return "text-purple-500";
       default: return "text-muted-foreground";
     }
