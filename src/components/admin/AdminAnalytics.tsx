@@ -600,8 +600,10 @@ function DecoteSection() {
               <SelectItem value="all">Toutes</SelectItem>
               <SelectItem value="GPU">GPU</SelectItem>
               <SelectItem value="CPU">CPU</SelectItem>
+              <SelectItem value="MOTHERBOARD">Carte Mère</SelectItem>
               <SelectItem value="RAM">RAM</SelectItem>
               <SelectItem value="SSD">SSD</SelectItem>
+              <SelectItem value="PSU">Alimentation</SelectItem>
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={setSortBy}>

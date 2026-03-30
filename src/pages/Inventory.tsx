@@ -187,10 +187,12 @@ export default function Inventory() {
           <SelectTrigger className="w-32"><SelectValue placeholder="Catégorie" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toutes</SelectItem>
-            <SelectItem value="gpu">GPU</SelectItem>
-            <SelectItem value="cpu">CPU</SelectItem>
-            <SelectItem value="ram">RAM</SelectItem>
+            <SelectItem value="gpu">Carte Graphique</SelectItem>
+            <SelectItem value="cpu">Processeur</SelectItem>
+            <SelectItem value="motherboard">Carte Mère</SelectItem>
+            <SelectItem value="ram">Mémoire RAM</SelectItem>
             <SelectItem value="ssd">SSD</SelectItem>
+            <SelectItem value="psu">Alimentation</SelectItem>
             <SelectItem value="other">Autre</SelectItem>
           </SelectContent>
         </Select>
