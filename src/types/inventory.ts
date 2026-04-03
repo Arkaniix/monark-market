@@ -81,6 +81,10 @@ export interface InventoryStats {
   by_category: Record<string, InventoryCategoryStats>;
   best_deal: InventoryDeal | null;
   worst_deal: InventoryDeal | null;
+  // Transaction-related stats
+  custom_expenses?: number;
+  custom_income?: number;
+  real_profit_net?: number;
 }
 
 export interface InventoryFilters {
@@ -128,6 +132,76 @@ export interface UpdateInventoryPayload {
   fees_eur?: number;
   notes?: string;
 }
+
+// ============= Transaction Types =============
+
+export type TransactionType = "expense" | "income";
+export type TransactionCategory = "shipping" | "supplies" | "transport" | "platform_fee" | "subscription" | "other";
+
+export interface Transaction {
+  id: number;
+  user_id: number;
+  type: TransactionType;
+  amount: number;
+  description: string;
+  category: TransactionCategory | null;
+  platform: string | null;
+  transaction_date: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface TransactionPage {
+  items: Transaction[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface TransactionFilters {
+  type?: TransactionType | "";
+  category?: TransactionCategory | "";
+  limit?: number;
+  offset?: number;
+}
+
+export interface CreateTransactionPayload {
+  type: TransactionType;
+  amount: number;
+  description: string;
+  category?: TransactionCategory;
+  platform?: string | null;
+  transaction_date?: string;
+  notes?: string | null;
+}
+
+export interface UpdateTransactionPayload {
+  type?: TransactionType;
+  amount?: number;
+  description?: string;
+  category?: TransactionCategory | null;
+  platform?: string | null;
+  transaction_date?: string;
+  notes?: string | null;
+}
+
+export const TRANSACTION_CATEGORY_LABELS: Record<TransactionCategory, string> = {
+  shipping: "Port / Livraison",
+  supplies: "Fournitures",
+  transport: "Transport",
+  platform_fee: "Frais plateforme",
+  subscription: "Abonnement",
+  other: "Autre",
+};
+
+export const TRANSACTION_CATEGORY_OPTIONS: { value: TransactionCategory; label: string }[] = [
+  { value: "shipping", label: "Port / Livraison" },
+  { value: "supplies", label: "Fournitures" },
+  { value: "transport", label: "Transport / Déplacement" },
+  { value: "platform_fee", label: "Frais plateforme" },
+  { value: "subscription", label: "Abonnement" },
+  { value: "other", label: "Autre" },
+];
 
 // UI helpers
 export const CATEGORY_LABELS: Record<InventoryCategory, string> = {
