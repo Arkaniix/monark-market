@@ -8,6 +8,10 @@ import type {
   ListItemPayload,
   SellItemPayload,
   UpdateInventoryPayload,
+  TransactionPage,
+  TransactionFilters,
+  CreateTransactionPayload,
+  UpdateTransactionPayload,
 } from "@/types/inventory";
 
 // ============= Queries =============
@@ -51,6 +55,22 @@ export function useModelSearch(query: string) {
     queryFn: () => apiFetch<ModelAutocompleteResult[]>(`/v1/models/autocomplete?q=${encodeURIComponent(query)}&limit=10`),
     enabled: query.length >= 2,
     staleTime: 30_000,
+  });
+}
+
+// ============= Transactions Queries =============
+
+export function useTransactionList(filters: TransactionFilters) {
+  const params = new URLSearchParams();
+  if (filters.type) params.set("type", filters.type);
+  if (filters.category) params.set("category", filters.category);
+  params.set("limit", String(filters.limit ?? 20));
+  params.set("offset", String(filters.offset ?? 0));
+
+  const qs = params.toString();
+  return useQuery<TransactionPage>({
+    queryKey: ["inventory", "transactions", filters],
+    queryFn: () => apiFetch<TransactionPage>(`/v1/inventory/transactions?${qs}`),
   });
 }
 
@@ -113,6 +133,35 @@ export function useDeleteItem() {
   return useMutation({
     mutationFn: (id: number) =>
       apiFetch(`/v1/inventory/${id}`, { method: "DELETE" }),
+    onSuccess: invalidate,
+  });
+}
+
+// ============= Transaction Mutations =============
+
+export function useCreateTransaction() {
+  const invalidate = useInvalidateInventory();
+  return useMutation({
+    mutationFn: (payload: CreateTransactionPayload) =>
+      apiFetch("/v1/inventory/transactions", { method: "POST", body: payload }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateTransaction() {
+  const invalidate = useInvalidateInventory();
+  return useMutation({
+    mutationFn: ({ id, ...payload }: UpdateTransactionPayload & { id: number }) =>
+      apiFetch(`/v1/inventory/transactions/${id}`, { method: "PATCH", body: payload }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteTransaction() {
+  const invalidate = useInvalidateInventory();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiFetch(`/v1/inventory/transactions/${id}`, { method: "DELETE" }),
     onSuccess: invalidate,
   });
 }
