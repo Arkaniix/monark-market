@@ -42,11 +42,8 @@ interface Props {
 }
 
 function LucideIcon({ name, className }: { name: string; className?: string }) {
-  const pascalName = name
-    .split(/[-_]/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join("") as keyof typeof icons;
-  const Icon = icons[pascalName] || icons["HelpCircle"];
+  const key = (name || "").toLowerCase().replace(/[-_]/g, "");
+  const Icon = ICON_MAP[name?.toLowerCase()] || ICON_MAP[key] || HelpCircle;
   return <Icon className={className} />;
 }
 
