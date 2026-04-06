@@ -3,7 +3,35 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { RepairCategory, RepairSymptom } from "@/types/repair";
 import { REPAIR_CATEGORIES } from "@/types/repair";
-import { icons } from "lucide-react";
+import {
+  HelpCircle, Monitor, Thermometer, Zap, Volume2, Power, AlertTriangle,
+  Eye, Cpu, MemoryStick, HardDrive, CircuitBoard, Gauge, Fan, Wrench,
+  type LucideIcon as LucideIconType,
+} from "lucide-react";
+
+const ICON_MAP: Record<string, LucideIconType> = {
+  monitor: Monitor,
+  thermometer: Thermometer,
+  zap: Zap,
+  volume2: Volume2,
+  volume: Volume2,
+  power: Power,
+  "alert-triangle": AlertTriangle,
+  alerttriangle: AlertTriangle,
+  eye: Eye,
+  cpu: Cpu,
+  "memory-stick": MemoryStick,
+  memorystick: MemoryStick,
+  "hard-drive": HardDrive,
+  harddrive: HardDrive,
+  "circuit-board": CircuitBoard,
+  circuitboard: CircuitBoard,
+  gauge: Gauge,
+  fan: Fan,
+  wrench: Wrench,
+  "help-circle": HelpCircle,
+  helpcircle: HelpCircle,
+};
 
 interface Props {
   selectedCategory: RepairCategory | null;
@@ -14,11 +42,8 @@ interface Props {
 }
 
 function LucideIcon({ name, className }: { name: string; className?: string }) {
-  const pascalName = name
-    .split(/[-_]/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join("") as keyof typeof icons;
-  const Icon = icons[pascalName] || icons["HelpCircle"];
+  const key = (name || "").toLowerCase().replace(/[-_]/g, "");
+  const Icon = ICON_MAP[name?.toLowerCase()] || ICON_MAP[key] || HelpCircle;
   return <Icon className={className} />;
 }
 
