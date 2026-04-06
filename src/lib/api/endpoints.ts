@@ -206,6 +206,13 @@ export const MISSIONS = {
   PROGRESS: '/v1/missions/progress',
 } as const;
 
+// ============= Repair =============
+export const REPAIR = {
+  SYMPTOMS: '/v1/repair/symptoms',
+  GUIDE: (slug: string) => `/v1/repair/guide/${slug}`,
+  DEEP_DIAGNOSTIC: '/v1/repair/deep-diagnostic',
+} as const;
+
 // ============= Config (Extension) =============
 export const CONFIG = {
   SELECTORS: '/v1/config/selectors',
@@ -304,6 +311,7 @@ export const ENDPOINTS = {
   LENS,
   SIGNALS,
   MISSIONS,
+  REPAIR,
   CONFIG,
   ADMIN,
   HEALTH,

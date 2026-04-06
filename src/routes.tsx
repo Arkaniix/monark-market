@@ -28,6 +28,7 @@ import Deals from "./pages/Deals";
 import AdDetail from "./pages/AdDetail";
 import JobDetail from "./pages/JobDetail";
 import Inventory from "./pages/Inventory";
+import Repair from "./pages/Repair";
 
 // Redirection legacy /trends vers /
 const TrendsRedirect = () => <Navigate to="/" replace />;
@@ -128,6 +129,11 @@ export const routes: RouteConfig[] = [
   {
     path: "/inventory",
     component: Inventory,
+    requiresAuth: true,
+  },
+  {
+    path: "/repair",
+    component: Repair,
     requiresAuth: true,
   },
   {

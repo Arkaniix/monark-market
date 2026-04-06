@@ -218,7 +218,11 @@ export async function apiFetch<T>(
       'stats' in data ||
       'total' in data ||
       // Inventory stats shape
-      'in_stock_count' in data
+      'in_stock_count' in data ||
+      // Repair guide shape
+      'symptom' in data ||
+      'guide' in data ||
+      'deep_analysis' in data
     );
     
     if (!hasExpectedShape) {
