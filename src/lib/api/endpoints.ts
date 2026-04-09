@@ -211,6 +211,8 @@ export const REPAIR = {
   SYMPTOMS: '/v1/repair/symptoms',
   GUIDE: (slug: string) => `/v1/repair/guide/${slug}`,
   DEEP_DIAGNOSTIC: '/v1/repair/deep-diagnostic',
+  HISTORY: '/v1/repair/history',
+  OUTCOME: (id: number) => `/v1/repair/history/${id}/outcome`,
 } as const;
 
 // ============= Config (Extension) =============
