@@ -106,6 +106,37 @@ export interface DeepDiagnosticResponse {
   model_name: string;
 }
 
+// History
+export type RepairOutcome = "repaired" | "not_repaired" | "abandoned" | "pending";
+
+export interface RepairHistoryItem {
+  id: number;
+  user_id: number;
+  symptom_id: number;
+  symptom_title: string;
+  symptom_category: RepairCategory;
+  model_id: number | null;
+  model_name: string | null;
+  custom_name: string | null;
+  used_deep: boolean;
+  credits_spent: number;
+  outcome: RepairOutcome | null;
+  outcome_notes: string | null;
+  created_at: string;
+}
+
+export interface RepairHistoryPage {
+  items: RepairHistoryItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface RepairOutcomePayload {
+  outcome: RepairOutcome;
+  outcome_notes: string | null;
+}
+
 // Category config
 export const REPAIR_CATEGORIES: { key: RepairCategory; label: string; emoji: string }[] = [
   { key: "gpu", label: "Carte graphique", emoji: "🎮" },
@@ -135,3 +166,19 @@ export const CONFIDENCE_CONFIG = {
   medium: { label: "Moyenne", className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" },
   low: { label: "Faible", className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
 } as const;
+
+export const OUTCOME_CONFIG: Record<RepairOutcome, { label: string; className: string }> = {
+  repaired: { label: "Réparé", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  not_repaired: { label: "Non réparé", className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
+  abandoned: { label: "Abandonné", className: "bg-muted text-muted-foreground" },
+  pending: { label: "En attente", className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" },
+};
+
+export const CATEGORY_LABELS: Record<RepairCategory, string> = {
+  gpu: "GPU",
+  cpu: "CPU",
+  ram: "RAM",
+  ssd: "SSD",
+  motherboard: "Carte mère",
+  psu: "PSU",
+};
