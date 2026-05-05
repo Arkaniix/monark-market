@@ -31,6 +31,9 @@ const navigation = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const isFullbleed = FULLBLEED_ROUTE_PREFIXES.some(prefix =>
+    location.pathname === prefix || location.pathname.startsWith(prefix + "/")
+  );
   const { toast } = useToast();
   const { user, isAdmin, logout } = useAuth();
   const { resolvedTheme } = useTheme();
