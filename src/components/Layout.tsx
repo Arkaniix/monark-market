@@ -5,6 +5,8 @@ import monarkLogoLight from "@/assets/logo.png";
 import monarkLogoDark from "@/assets/logo-dark-text.png";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+
+const FULLBLEED_ROUTE_PREFIXES = ["/v2", "/auth-v2"];
 import {
   Sheet,
   SheetContent,
@@ -29,6 +31,9 @@ const navigation = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const isFullbleed = FULLBLEED_ROUTE_PREFIXES.some(prefix =>
+    location.pathname === prefix || location.pathname.startsWith(prefix + "/")
+  );
   const { toast } = useToast();
   const { user, isAdmin, logout } = useAuth();
   const { resolvedTheme } = useTheme();
@@ -43,6 +48,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       description: "Vous avez été déconnecté avec succès",
     });
   };
+
+  if (isFullbleed) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
