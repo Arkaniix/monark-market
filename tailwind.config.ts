@@ -67,6 +67,20 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        monark: {
+          bg: "#0A0A0B",
+          surface: "rgba(255,255,255,0.012)",
+          "surface-2": "rgba(255,255,255,0.015)",
+          accent: "#3B82F6",
+          bull: "#10B981",
+          bear: "#EF4444",
+          warn: "#F59E0B",
+          bold: "#8B5CF6",
+        },
+      },
+      fontFamily: {
+        monarkSans: ["Inter", "sans-serif"],
+        monarkMono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -90,10 +104,30 @@ export default {
             height: "0",
           },
         },
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+        "ticker-scroll": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
+        "pulse-soft": {
+          "0%, 100%": { opacity: "0.6" },
+          "50%": { opacity: "1" },
+        },
+        "draw-in": {
+          from: { strokeDashoffset: "1" },
+          to: { strokeDashoffset: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        shimmer: "shimmer 800ms ease-in-out",
+        "ticker-scroll": "ticker-scroll 40s linear infinite",
+        "pulse-soft": "pulse-soft 1.4s ease-in-out infinite",
+        "draw-in": "draw-in 1.6s ease-out forwards",
       },
     },
   },
