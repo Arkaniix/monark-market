@@ -5,6 +5,8 @@ import monarkLogoLight from "@/assets/logo.png";
 import monarkLogoDark from "@/assets/logo-dark-text.png";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+
+const FULLBLEED_ROUTE_PREFIXES = ["/v2", "/auth-v2"];
 import {
   Sheet,
   SheetContent,
