@@ -29,6 +29,7 @@ import AdDetail from "./pages/AdDetail";
 import JobDetail from "./pages/JobDetail";
 import Inventory from "./pages/Inventory";
 import Repair from "./pages/Repair";
+import LandingV2 from "./pages/LandingV2";
 
 // Redirection legacy /trends vers /
 const TrendsRedirect = () => <Navigate to="/" replace />;
@@ -46,6 +47,11 @@ export const routes: RouteConfig[] = [
   {
     path: "/landing",
     component: Landing,
+    requiresAuth: false,
+  },
+  {
+    path: "/v2",
+    component: LandingV2,
     requiresAuth: false,
   },
   {
