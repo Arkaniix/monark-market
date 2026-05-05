@@ -1,4 +1,7 @@
 import { Link } from "react-router-dom";
+import { useTheme } from "next-themes";
+import monarkLogoLight from "@/assets/logo.png";
+import monarkLogoDark from "@/assets/logo-dark-text.png";
 
 interface MonarkLogoProps {
   size?: "sm" | "md" | "lg";
@@ -6,30 +9,18 @@ interface MonarkLogoProps {
   href?: string;
 }
 
-const SIZE_MAP = {
-  sm: { diamond: 12, text: "text-base" },
-  md: { diamond: 16, text: "text-lg" },
-  lg: { diamond: 20, text: "text-2xl" },
+const IMG_SIZE_MAP = {
+  sm: "h-8 w-auto",
+  md: "h-10 w-auto",
+  lg: "h-14 w-auto",
 };
 
 export function MonarkLogo({ size = "md", withVersion = true, href = "/v2" }: MonarkLogoProps) {
-  const s = SIZE_MAP[size];
+  const { resolvedTheme } = useTheme();
+  const logoSrc = resolvedTheme === "dark" ? monarkLogoLight : monarkLogoDark;
   const content = (
-    <span className="inline-flex items-center gap-2">
-      <span
-        aria-hidden
-        className="inline-block rotate-45 shadow-inner"
-        style={{
-          width: s.diamond,
-          height: s.diamond,
-          background: "linear-gradient(135deg, #3B82F6, #2563EB)",
-          boxShadow: "inset 0 1px 2px rgba(255,255,255,0.15)",
-          borderRadius: 2,
-        }}
-      />
-      <span className={`font-monarkSans font-semibold tracking-tight text-zinc-100 ${s.text}`}>
-        Monark
-      </span>
+    <span className={`inline-flex items-center ${withVersion ? "gap-2" : "gap-0"}`}>
+      <img src={logoSrc} alt="Monark" className={IMG_SIZE_MAP[size]} />
       {withVersion && (
         <span className="font-monarkMono text-xs text-zinc-500">v3.2</span>
       )}
