@@ -49,6 +49,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     });
   };
 
+  if (isFullbleed) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
