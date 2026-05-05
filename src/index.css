@@ -144,3 +144,35 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .mk-card-flat-soft {
+    position: relative;
+    background: rgba(255, 255, 255, 0.012);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .mk-card-flat-soft::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent 50%);
+    pointer-events: none;
+  }
+  .mk-subcard-soft {
+    position: relative;
+    background: rgba(255, 255, 255, 0.015);
+    border-radius: 10px;
+  }
+  .mk-mono {
+    font-family: theme(fontFamily.monarkMono);
+    font-feature-settings: "tnum";
+  }
+  .mk-page-bg {
+    background-color: #0A0A0B;
+    min-height: 100vh;
+  }
+}
